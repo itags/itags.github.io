@@ -1,0 +1,41 @@
+.contributor-options {
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 5em;
+    left: 50%;
+    width: 25em;
+    margin-left: -12em;
+    position: relative;
+}
+.contributor-options a.pure-button {
+    margin: 1em 0;
+    font-size: 1.4em;
+    display: block;
+    width: 12em;
+}
+.center {
+    margin-top: 4em;
+    padding: 1.5em;
+    text-align: center;
+}
+td.border {
+    border: solid 1px #000;
+    text-align: center;
+    background-color: #DDD;
+}
+td.left-border {
+    border-left: solid 1px #000;
+}
+td.special {
+    color: #d61fb1;
+}
+td.module {
+    color: #0078e7;
+}
+.body-content.contribution table {
+    empty-cells: show;
+}
+.body-content.contribution td {
+    height: 1em;
+    padding: 0.3em;
+}
