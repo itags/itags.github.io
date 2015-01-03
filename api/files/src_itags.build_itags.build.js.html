@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>src/event-mobile/event-mobile.js - Itsa</title>
+    <title>src/itags.build/itags.build.js - Itsa</title>
     <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -43,25 +43,11 @@
             
                 <li><a href="../classes/Array.html">Array</a></li>
             
-                <li><a href="../classes/DD.html">DD</a></li>
-            
                 <li><a href="../classes/document.html">document</a></li>
             
                 <li><a href="../classes/Element.html">Element</a></li>
             
                 <li><a href="../classes/ElementArray.html">ElementArray</a></li>
-            
-                <li><a href="../classes/Event.html">Event</a></li>
-            
-                <li><a href="../classes/Event.Emitter.html">Event.Emitter</a></li>
-            
-                <li><a href="../classes/Event.Listener.html">Event.Listener</a></li>
-            
-                <li><a href="../classes/FocusManager.html">FocusManager</a></li>
-            
-                <li><a href="../classes/Function.html">Function</a></li>
-            
-                <li><a href="../classes/IO.html">IO</a></li>
             
                 <li><a href="../classes/ITSA.html">ITSA</a></li>
             
@@ -77,8 +63,6 @@
             
                 <li><a href="../classes/String.html">String</a></li>
             
-                <li><a href="../classes/USERAGENT.html">USERAGENT</a></li>
-            
                 <li><a href="../classes/Utils.html">Utils</a></li>
             
                 <li><a href="../classes/vnode.html">vnode</a></li>
@@ -91,53 +75,21 @@
             
                 <li><a href="../modules/attribute-extractor.html">attribute-extractor</a></li>
             
-                <li><a href="../modules/drag.html">drag</a></li>
-            
-                <li><a href="../modules/drag-drop.html">drag-drop</a></li>
-            
                 <li><a href="../modules/element-array.html">element-array</a></li>
             
                 <li><a href="../modules/element-plugin.html">element-plugin</a></li>
-            
-                <li><a href="../modules/event.html">event</a></li>
-            
-                <li><a href="../modules/event-dom.html">event-dom</a></li>
-            
-                <li><a href="../modules/event-emitter.html">event-emitter</a></li>
-            
-                <li><a href="../modules/event-hover.html">event-hover</a></li>
-            
-                <li><a href="../modules/event-listener.html">event-listener</a></li>
-            
-                <li><a href="../modules/event-mobile.html">event-mobile</a></li>
             
                 <li><a href="../modules/extend-document.html">extend-document</a></li>
             
                 <li><a href="../modules/extend-element.html">extend-element</a></li>
             
-                <li><a href="../modules/focusmanager.html">focusmanager</a></li>
-            
                 <li><a href="../modules/html-parser.html">html-parser</a></li>
-            
-                <li><a href="../modules/io.html">io</a></li>
-            
-                <li><a href="../modules/io-assets.html">io-assets</a></li>
-            
-                <li><a href="../modules/io-cors.html">io-cors</a></li>
-            
-                <li><a href="../modules/io-jsonp.html">io-jsonp</a></li>
-            
-                <li><a href="../modules/io-transfer.html">io-transfer</a></li>
-            
-                <li><a href="../modules/io-xml.html">io-xml</a></li>
             
                 <li><a href="../modules/itsa.build.html">itsa.build</a></li>
             
                 <li><a href="../modules/js-ext.html">js-ext</a></li>
             
                 <li><a href="../modules/lib_array.js.html">lib/array.js</a></li>
-            
-                <li><a href="../modules/lib_function.js.html">lib/function.js</a></li>
             
                 <li><a href="../modules/lib_object.js.html">lib/object.js</a></li>
             
@@ -148,8 +100,6 @@
                 <li><a href="../modules/node-parser.html">node-parser</a></li>
             
                 <li><a href="../modules/node-win.html">node-win</a></li>
-            
-                <li><a href="../modules/useragent.html">useragent</a></li>
             
                 <li><a href="../modules/utils.html">utils</a></li>
             
@@ -194,113 +144,33 @@
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-                        <h1 class="file-heading">File: src/event-mobile/event-mobile.js</h1>
+                        <h1 class="file-heading">File: src/itags.build/itags.build.js</h1>
 
 <div class="file">
     <pre class="code prettyprint linenums">
-&quot;use strict&quot;;
-
 /**
- * Integrates mobile-events to event-dom. more about DOM-events:
- * http://www.smashingmagazine.com/2013/11/12/an-introduction-to-dom-events/
+ * The ITSA module is an aggregator for all the individual modules that the library uses.
+ * The developer is free to use it as it is or tailor it to contain whatever modules
+ * he/she might need in the global namespace.
+ *
+ * The modules themselves work quite well independent of this module and can be used
+ * separately without the need of them being integrated under one globa namespace.
  *
  *
  * &lt;i&gt;Copyright (c) 2014 ITSA - https://github.com/itsa&lt;/i&gt;
  * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
  *
- * @example
- * Event = require(&#x27;event-mobile&#x27;)(window);
+ * @module itsa.build
  *
- * @module event
- * @submodule event-mobile
- * @class Event
- * @since 0.0.1
 */
+(function (window) {
 
-var NAME = &#x27;[event-mobile]: &#x27;;
+    &quot;use strict&quot;;
+    require(&#x27;itags.core&#x27;)(window);
+    require(&#x27;i-select&#x27;)(window);
+    require(&#x27;i-parcel&#x27;)(window);
 
-module.exports = function (window) {
-    /**
-     * The (only) Hammer-instance that &#x60;Event&#x60; uses. It is bound to the &#x60;body&#x60;-element.
-     *
-     * @property hammertime
-     * @type Hammer-instance
-     * @since 0.0.1
-     */
-    var Event = require(&#x27;event-dom&#x27;)(window),
-        document = window.document,
-        Hammer = require(&#x27;hammerjs&#x27;),
-        hammertime = Event.hammertime = new Hammer(document.body),
-        singletap, doubletap, tripletap;
-
-    if (window._ITSAmodules.EventMobile) {
-        return Event; // Event was already extended
-    }
-
-    // create reference to the HammerClass:
-    /**
-     * Adds the &#x60;Hammer&#x60;-class to Event, so it can be used from within Event.
-     *
-     * @property Hammer
-     * @type Hammer
-     * @since 0.0.1
-     */
-    Event.Hammer = Hammer;
-
-    // now we extend HammerJS with 2 events: doubletap and tripletap:
-    doubletap = new Hammer.Tap({ event: &#x27;doubletap&#x27;, taps: 2 });
-    tripletap = new Hammer.Tap({ event: &#x27;tripletap&#x27;, taps: 3 });
-    hammertime.add([
-        doubletap,
-        tripletap
-    ]);
-
-    // we want to recognize this simulatenous, so a doubletap and trippletap will be detected even while a tap has been recognized.
-    // the tap event will be emitted on every tap
-    singletap = hammertime.get(&#x27;tap&#x27;);
-    doubletap.recognizeWith(singletap);
-    tripletap.recognizeWith([doubletap, singletap]);
-
-    // patch Hammer.Manager.prototype.emit --&gt; it shouldn&#x27;t emit to its own listeners,
-    // but to our eventsystem. Inspired from Jorik Tangelder&#x27;s own jquery plugin: https://github.com/hammerjs/jquery.hammer.js
-    Hammer.Manager.prototype.emit = function(type, data) {
-        if (type===&#x27;hammer.input&#x27;) {
-            return;
-        }
-        console.log(NAME, &#x27;emit &#x27;+type);
-        // label the eventobject by being a Hammer-event
-        // is not being used internally, but we would like
-        // to inform the subscribers
-        data._isHammer = true;
-        data.type = type;
-
-        // Emitting &#x27;ParcelaEvent:eventmobile&#x27; --&gt; its defaultFn is defined inside &#x60;event-dom&#x60;
-        // which will transport the event through the special dom-cycle
-        /**
-         * Is emitted whenever hammerjs detects a gestureevent.
-         * By emitting its original event through ParcelaEvent:eventmobile, &#x60;event-dom&#x60;
-         * will catch it and process it through the dom-event cycle.
-         *
-         * @event ParcelaEvent:eventmobile
-         * @param e {Object} eventobject
-         * @since 0.1
-        **/
-        Event._domCallback(data);
-    };
-
-    Hammer.Manager.prototype.set = (function(originalSet) {
-        return function(options) {
-            delete options.domEvents; // we don&#x27;t want the user make Hammer fire domevents
-            originalSet.call(this, options);
-        };
-    })(Hammer.Manager.prototype.set);
-
-    // store module:
-    window._ITSAmodules.EventMobile = Event;
-
-    return Event;
-};
-
+})(global.window || require(&#x27;node-win&#x27;));
     </pre>
 </div>
 

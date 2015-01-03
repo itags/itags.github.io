@@ -1,7 +1,7 @@
 ---
 module: focusmanager
 maintainer: Marco Asbreuk
-title: Different focuskeys
+title: simple i-select
 intro: "This example shows how to setup a focusmanager that navigates with different keys: <b>arrow-up</b> and <b>arrow-down</b>. You could as wel use a plugin, with an additional config-object that looks like: <b>{keyup: 39, keydown: 41}</b>.<br><br>By setting the focus to the container, the first element gets focussed automaticly."
 ---
 
@@ -25,14 +25,9 @@ intro: "This example shows how to setup a focusmanager that navigates with diffe
         margin-top: 4em;
     }
 </style>
-
-<div class="container pure-form" fm-manage="true" fm-keyup="38" fm-keydown="40">
-    <input type="text" value="first"/>
-    <input type="text" value="second"/>
-    <input type="checkbox" />
-    <button class="pure-button pure-button-bordered">Cancel</button>
-    <button class="pure-button pure-button-bordered">OK</button>
-</div>
+<div id="test">before</div>
+<i-select>one</i-select>
+<i-select itag-rendered="true">two</i-select>
 
 <p class="spaced">Code-example:</p>
 
@@ -76,8 +71,10 @@ intro: "This example shows how to setup a focusmanager that navigates with diffe
 </script>
 ```
 
-<script src="../../dist/itsabuild-min.js"></script>
+<script src="../../dist/itagsbuild.js"></script>
 <script>
-    var ITSA = require('itsa');
-    document.getElement('.container').focus();
+    require('itags');
+    //document.getElement('.container').focus();
+    // document.getElement('#test').setHTML('<i-select>zero</i-select>');
+    document.getElement('#test').setHTML('<div>I am inner</div>');
 </script>
