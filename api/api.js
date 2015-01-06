@@ -4,6 +4,10 @@ YUI.add("yuidoc-meta", function(Y) {
         "Array",
         "Element",
         "ElementArray",
+        "Event",
+        "Event.Emitter",
+        "Event.Listener",
+        "Function",
         "ITSA",
         "NS-vdom",
         "Node",
@@ -20,12 +24,17 @@ YUI.add("yuidoc-meta", function(Y) {
         "attribute-extractor",
         "element-array",
         "element-plugin",
+        "event",
+        "event-dom",
+        "event-emitter",
+        "event-listener",
         "extend-document",
         "extend-element",
         "html-parser",
         "itsa.build",
         "js-ext",
         "lib/array.js",
+        "lib/function.js",
         "lib/object.js",
         "lib/promise.s",
         "lib/string.js",
@@ -34,6 +43,7 @@ YUI.add("yuidoc-meta", function(Y) {
         "utils",
         "vdom",
         "vdom-ns",
+        "vnode",
         "vnode"
     ],
     "allModules": [
@@ -51,6 +61,26 @@ YUI.add("yuidoc-meta", function(Y) {
             "displayName": "element-plugin",
             "name": "element-plugin",
             "description": "Integrates DOM-events to event. more about DOM-events:\nhttp://www.smashingmagazine.com/2013/11/12/an-introduction-to-dom-events/\n\n\n<i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>\nNew BSD License - http://choosealicense.com/licenses/bsd-3-clause/"
+        },
+        {
+            "displayName": "event",
+            "name": "event",
+            "description": "Defines the Event-Class, which should be instantiated to get its functionality\n\n\n<i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>\nNew BSD License - http://choosealicense.com/licenses/bsd-3-clause/"
+        },
+        {
+            "displayName": "event-dom",
+            "name": "event-dom",
+            "description": "Integrates DOM-events to event. more about DOM-events:\nhttp://www.smashingmagazine.com/2013/11/12/an-introduction-to-dom-events/\n\n\n<i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>\nNew BSD License - http://choosealicense.com/licenses/bsd-3-clause/"
+        },
+        {
+            "displayName": "event-emitter",
+            "name": "event-emitter",
+            "description": "Extends the Event-instance by adding the method `Emitter` to it.\nThe `Emitter-method` returns an object that should be merged into any Class-instance or object you\nwant to extend with the emit-methods, so the appropriate methods can be invoked on the instance.\n\n\n<i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>\nNew BSD License - http://choosealicense.com/licenses/bsd-3-clause/\n\n\nShould be called using  the provided `extend`-method like this:"
+        },
+        {
+            "displayName": "event-listener",
+            "name": "event-listener",
+            "description": "Extends the Event-instance by adding the object `Listener` to it.\nThe returned object should be merged into any Class-instance or object you want to\nextend with the listener-methods, so the appropriate methods can be invoked on the instance.\n\n\n<i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>\nNew BSD License - http://choosealicense.com/licenses/bsd-3-clause/\n\n\nShould be called using  the provided `extend`-method like this:"
         },
         {
             "displayName": "extend-document",
@@ -80,6 +110,11 @@ YUI.add("yuidoc-meta", function(Y) {
             "displayName": "lib/array.js",
             "name": "lib_array.js",
             "description": "Pollyfils for often used functionality for Arrays\n<i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>\n New BSD License - http://choosealicense.com/licenses/bsd-3-clause/"
+        },
+        {
+            "displayName": "lib/function.js",
+            "name": "lib_function.js",
+            "description": "Pollyfils for often used functionality for Functions\n<i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>\n New BSD License - http://choosealicense.com/licenses/bsd-3-clause/"
         },
         {
             "displayName": "lib/object.js",

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Plugins - Itsa</title>
+    <title>Event.Emitter - Itsa</title>
     <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -162,7 +162,7 @@
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-                        <h1>Plugins Class</h1>
+                        <h1>Event.Emitter Class</h1>
 <div class="box meta">
     
 
@@ -170,14 +170,14 @@
 
     
         <div class="foundat">
-            Defined in: <a href="../files/site-preview_dist_itagsbuild.js.html#l4999"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:4999</code></a>
+            Defined in: <a href="../files/site-preview_dist_itagsbuild.js.html#l1935"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1935</code></a>
         </div>
     
 
     
         
-            Module: <a href="../modules/extend-document.html">extend-document</a><br>
-            Parent Module: <a href="../modules/vdom.html">vdom</a>
+            Module: <a href="../modules/event-listener.html">event-listener</a><br>
+            Parent Module: <a href="../modules/event.html">event</a>
         
     
 
@@ -187,10 +187,12 @@
 
 
 <div class="box intro">
-    <p>Integrates DOM-events to event. more about DOM-events:
-<a href="http://www.smashingmagazine.com/2013/11/12/an-introduction-to-dom-events/">http://www.smashingmagazine.com/2013/11/12/an-introduction-to-dom-events/</a></p>
+    <p>Extends the Event-instance by adding the method <code>Emitter</code> to it.
+The <code>Emitter-method</code> returns an object that should be merged into any Class-instance or object you
+want to extend with the emit-methods, so the appropriate methods can be invoked on the instance.</p>
 <p><i>Copyright (c) 2014 ITSA - <a href="https://github.com/itsa">https://github.com/itsa</a></i>
 New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">http://choosealicense.com/licenses/bsd-3-clause/</a></p>
+<p>Should be called using  the provided <code>extend</code>-method like this:</p>
 
 </div>
 
@@ -219,42 +221,56 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
                     <ul class="index-list methods">
                         
                             <li class="index-item method">
-                                <a href="#method_isPlugged">isPlugged</a>
+                                <a href="#method_defineEvent">defineEvent</a>
 
                                 
                                 
                             </li>
                         
                             <li class="index-item method">
-                                <a href="#method_isPlugged">isPlugged</a>
+                                <a href="#method_defineEvent">defineEvent</a>
 
                                 
                                 
                             </li>
                         
                             <li class="index-item method">
-                                <a href="#method_plug">plug</a>
+                                <a href="#method_emit">emit</a>
 
                                 
                                 
                             </li>
                         
                             <li class="index-item method">
-                                <a href="#method_plug">plug</a>
+                                <a href="#method_emit">emit</a>
 
                                 
                                 
                             </li>
                         
                             <li class="index-item method">
-                                <a href="#method_unplug">unplug</a>
+                                <a href="#method_undefAllEvents">undefAllEvents</a>
 
                                 
                                 
                             </li>
                         
                             <li class="index-item method">
-                                <a href="#method_unplug">unplug</a>
+                                <a href="#method_undefAllEvents">undefAllEvents</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
+                                <a href="#method_undefEvent">undefEvent</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
+                                <a href="#method_undefEvent">undefEvent</a>
 
                                 
                                 
@@ -276,8 +292,8 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
                 <h2 class="off-left">Methods</h2>
 
                 
-                    <div id="method_isPlugged" class="method item">
-    <h3 class="name"><code>isPlugged</code></h3>
+                    <div id="method_defineEvent" class="method item">
+    <h3 class="name"><code>defineEvent</code></h3>
 
     
         <div class="args">
@@ -285,7 +301,7 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
             
                 <li class="arg">
                     
-                        <code>pluginClass</code>
+                        <code>eventName</code>
                     
                 </li>
             
@@ -295,7 +311,7 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
 
     
         <span class="returns-inline">
-            <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Boolean" class="crosslink external" target="_blank">Boolean</a></span>
+            <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
         </span>
     
 
@@ -315,7 +331,7 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
         
             
                 
-                    <p>Provided by the <a href="../modules/element-plugin.html">element-plugin</a> module.</p>
+                    <p>Provided by the <a href="../modules/event-emitter.html">event-emitter</a> module.</p>
                 
                 <p>
                 
@@ -324,7 +340,7 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l5036"><code>site&#x2F;dist&#x2F;itagsbuild.js:5036</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l1969"><code>site&#x2F;dist&#x2F;itagsbuild.js:1969</code></a>
         
         </p>
 
@@ -337,8 +353,19 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
     </div>
 
     <div class="description">
-        <p>Checks whether the plugin is plugged in at the HtmlElement. Checks whether all its attributes are set.</p>
-
+        <p>Defines a CustomEvent. If the eventtype already exists, it will not be overridden,
+unless you force to assign with <code>.forceAssign()</code></p>
+<p>The returned object comes with 4 methods which can be invoked chainable:</p>
+<ul>
+    <li>defaultFn() --&gt; the default-function of the event</li>
+    <li>preventedFn() --&gt; the function that should be invoked when the event is defaultPrevented</li>
+    <li>forceAssign() --&gt; overrides any previous definition</li>
+    <li>unHaltable() --&gt; makes the customEvent cannot be halted</li>
+    <li>unPreventable() --&gt; makes the customEvent&#39;s defaultFn cannot be prevented</li>
+    <li>unSilencable() --&gt; makes that emitters cannot make this event to perform silently (using e.silent)</li>
+    <li>unRenderPreventable() --&gt; makes that the customEvent&#39;s render cannot be prevented</li>
+    <li>noRender() --&gt; prevents this customEvent from render the dom. Overrules unRenderPreventable()</li>
+</ul>
     </div>
 
     
@@ -349,14 +376,16 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
             
                 <li class="param">
                     
-                        <code class="param-name">pluginClass</code>
-                        <span class="type">NodePlugin</span>
+                        <code class="param-name">eventName</code>
+                        <span class="type"><a href="../classes/String.html" class="crosslink">String</a></span>
                     
 
                     
 
                     <div class="param-description">
-                        <p>The plugin that should be plugged. Needs to be the Class, not an instance!</p>
+                        <p>name of the customEvent, without <code>emitterName</code>.
+       The final event that will be created has the syntax: <code>emitterName:eventName</code>,
+       where <code>emitterName:</code> is automaticly prepended.</p>
 
                     </div>
 
@@ -374,10 +403,16 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
             <div class="returns-description">
                 
                     
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Boolean" class="crosslink external" target="_blank">Boolean</a></span>:
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>:
                     
-                    <p>whether the plugin is plugged in</p>
-
+                    <p>with extra methods that can be chained:</p>
+<ul>
+     <li>unPreventable() --&gt; makes the customEvent&#39;s defaultFn cannot be prevented</li>
+     <li>unRenderPreventable() --&gt; makes that the customEvent&#39;s render cannot be prevented</li>
+     <li>forceAssign() --&gt; overrides any previous definition</li>
+     <li>defaultFn() --&gt; the default-function of the event</li>
+     <li>preventedFn() --&gt; the function that should be invoked when the event is defaultPrevented</li>
+</ul>
                 
             </div>
         </div>
@@ -387,8 +422,8 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
 </div>
 
                 
-                    <div id="method_isPlugged" class="method item">
-    <h3 class="name"><code>isPlugged</code></h3>
+                    <div id="method_defineEvent" class="method item">
+    <h3 class="name"><code>defineEvent</code></h3>
 
     
         <div class="args">
@@ -396,7 +431,7 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
             
                 <li class="arg">
                     
-                        <code>pluginClass</code>
+                        <code>eventName</code>
                     
                 </li>
             
@@ -406,7 +441,7 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
 
     
         <span class="returns-inline">
-            <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Boolean" class="crosslink external" target="_blank">Boolean</a></span>
+            <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
         </span>
     
 
@@ -426,7 +461,7 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
         
             
                 
-                    <p>Provided by the <a href="../modules/element-plugin.html">element-plugin</a> module.</p>
+                    <p>Provided by the <a href="../modules/event-emitter.html">event-emitter</a> module.</p>
                 
                 <p>
                 
@@ -435,7 +470,7 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l5036"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:5036</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l1969"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1969</code></a>
         
         </p>
 
@@ -448,8 +483,19 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
     </div>
 
     <div class="description">
-        <p>Checks whether the plugin is plugged in at the HtmlElement. Checks whether all its attributes are set.</p>
-
+        <p>Defines a CustomEvent. If the eventtype already exists, it will not be overridden,
+unless you force to assign with <code>.forceAssign()</code></p>
+<p>The returned object comes with 4 methods which can be invoked chainable:</p>
+<ul>
+    <li>defaultFn() --&gt; the default-function of the event</li>
+    <li>preventedFn() --&gt; the function that should be invoked when the event is defaultPrevented</li>
+    <li>forceAssign() --&gt; overrides any previous definition</li>
+    <li>unHaltable() --&gt; makes the customEvent cannot be halted</li>
+    <li>unPreventable() --&gt; makes the customEvent&#39;s defaultFn cannot be prevented</li>
+    <li>unSilencable() --&gt; makes that emitters cannot make this event to perform silently (using e.silent)</li>
+    <li>unRenderPreventable() --&gt; makes that the customEvent&#39;s render cannot be prevented</li>
+    <li>noRender() --&gt; prevents this customEvent from render the dom. Overrules unRenderPreventable()</li>
+</ul>
     </div>
 
     
@@ -460,14 +506,16 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
             
                 <li class="param">
                     
-                        <code class="param-name">pluginClass</code>
-                        <span class="type">NodePlugin</span>
+                        <code class="param-name">eventName</code>
+                        <span class="type"><a href="../classes/String.html" class="crosslink">String</a></span>
                     
 
                     
 
                     <div class="param-description">
-                        <p>The plugin that should be plugged. Needs to be the Class, not an instance!</p>
+                        <p>name of the customEvent, without <code>emitterName</code>.
+       The final event that will be created has the syntax: <code>emitterName:eventName</code>,
+       where <code>emitterName:</code> is automaticly prepended.</p>
 
                     </div>
 
@@ -485,10 +533,16 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
             <div class="returns-description">
                 
                     
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Boolean" class="crosslink external" target="_blank">Boolean</a></span>:
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>:
                     
-                    <p>whether the plugin is plugged in</p>
-
+                    <p>with extra methods that can be chained:</p>
+<ul>
+     <li>unPreventable() --&gt; makes the customEvent&#39;s defaultFn cannot be prevented</li>
+     <li>unRenderPreventable() --&gt; makes that the customEvent&#39;s render cannot be prevented</li>
+     <li>forceAssign() --&gt; overrides any previous definition</li>
+     <li>defaultFn() --&gt; the default-function of the event</li>
+     <li>preventedFn() --&gt; the function that should be invoked when the event is defaultPrevented</li>
+</ul>
                 
             </div>
         </div>
@@ -498,8 +552,8 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
 </div>
 
                 
-                    <div id="method_plug" class="method item">
-    <h3 class="name"><code>plug</code></h3>
+                    <div id="method_emit" class="method item">
+    <h3 class="name"><code>emit</code></h3>
 
     
         <div class="args">
@@ -507,13 +561,13 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
             
                 <li class="arg">
                     
-                        <code>pluginClass</code>
+                        <code>eventName</code>
                     
                 </li>
             
                 <li class="arg">
                     
-                        <code>config</code>
+                        <code>payload</code>
                     
                 </li>
             
@@ -522,7 +576,9 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
     
 
     
-
+        <span class="returns-inline">
+            <span class="type"><a href="../classes/Promise.html" class="crosslink">Promise</a></span>
+        </span>
     
 
     
@@ -532,7 +588,7 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
     
 
     
-        <span class="flag chainable">chainable</span>
+
     
 
     
@@ -541,7 +597,7 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
         
             
                 
-                    <p>Provided by the <a href="../modules/element-plugin.html">element-plugin</a> module.</p>
+                    <p>Provided by the <a href="../modules/event-emitter.html">event-emitter</a> module.</p>
                 
                 <p>
                 
@@ -550,7 +606,7 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l5048"><code>site&#x2F;dist&#x2F;itagsbuild.js:5048</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l2004"><code>site&#x2F;dist&#x2F;itagsbuild.js:2004</code></a>
         
         </p>
 
@@ -563,7 +619,7 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
     </div>
 
     <div class="description">
-        <p>Plugs in the plugin on the HtmlElement, and gives is special behaviour by setting the appropriate attributes.</p>
+        <p>Emits the event <code>eventName</code> on behalf of the instance holding this method.</p>
 
     </div>
 
@@ -575,14 +631,16 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
             
                 <li class="param">
                     
-                        <code class="param-name">pluginClass</code>
-                        <span class="type">NodePlugin</span>
+                        <code class="param-name">eventName</code>
+                        <span class="type"><a href="../classes/String.html" class="crosslink">String</a></span>
                     
 
                     
 
                     <div class="param-description">
-                        <p>The plugin that should be plugged. Needs to be the Class, not an instance!</p>
+                        <p>name of the event to be sent (available as e.type)
+       you could pass a customEvent here &#39;emitterName:eventName&#39;, which would
+       overrule the <code>instance-emitterName</code></p>
 
                     </div>
 
@@ -591,14 +649,14 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
             
                 <li class="param">
                     
-                        <code class="param-name">config</code>
+                        <code class="param-name">payload</code>
                         <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
                     
 
                     
 
                     <div class="param-description">
-                        <p>any config that should be passed through when the class is instantiated.</p>
+                        <p>extra payload to be added to the event-object</p>
 
                     </div>
 
@@ -610,13 +668,29 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
     
 
     
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="../classes/Promise.html" class="crosslink">Promise</a></span>:
+                    
+                    <ul>
+    <li>on success: returnValue {Any} of the defaultFn</li>
+    <li>on error: reason {Any} Either: description &#39;event was halted&#39;, &#39;event was defaultPrevented&#39; or the returnvalue of the preventedFn</li>
+</ul>
+                
+            </div>
+        </div>
+    
 
     
 </div>
 
                 
-                    <div id="method_plug" class="method item">
-    <h3 class="name"><code>plug</code></h3>
+                    <div id="method_emit" class="method item">
+    <h3 class="name"><code>emit</code></h3>
 
     
         <div class="args">
@@ -624,13 +698,13 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
             
                 <li class="arg">
                     
-                        <code>pluginClass</code>
+                        <code>eventName</code>
                     
                 </li>
             
                 <li class="arg">
                     
-                        <code>config</code>
+                        <code>payload</code>
                     
                 </li>
             
@@ -639,7 +713,9 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
     
 
     
-
+        <span class="returns-inline">
+            <span class="type"><a href="../classes/Promise.html" class="crosslink">Promise</a></span>
+        </span>
     
 
     
@@ -649,7 +725,7 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
     
 
     
-        <span class="flag chainable">chainable</span>
+
     
 
     
@@ -658,7 +734,7 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
         
             
                 
-                    <p>Provided by the <a href="../modules/element-plugin.html">element-plugin</a> module.</p>
+                    <p>Provided by the <a href="../modules/event-emitter.html">event-emitter</a> module.</p>
                 
                 <p>
                 
@@ -667,7 +743,7 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l5048"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:5048</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l2004"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:2004</code></a>
         
         </p>
 
@@ -680,7 +756,7 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
     </div>
 
     <div class="description">
-        <p>Plugs in the plugin on the HtmlElement, and gives is special behaviour by setting the appropriate attributes.</p>
+        <p>Emits the event <code>eventName</code> on behalf of the instance holding this method.</p>
 
     </div>
 
@@ -692,14 +768,16 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
             
                 <li class="param">
                     
-                        <code class="param-name">pluginClass</code>
-                        <span class="type">NodePlugin</span>
+                        <code class="param-name">eventName</code>
+                        <span class="type"><a href="../classes/String.html" class="crosslink">String</a></span>
                     
 
                     
 
                     <div class="param-description">
-                        <p>The plugin that should be plugged. Needs to be the Class, not an instance!</p>
+                        <p>name of the event to be sent (available as e.type)
+       you could pass a customEvent here &#39;emitterName:eventName&#39;, which would
+       overrule the <code>instance-emitterName</code></p>
 
                     </div>
 
@@ -708,14 +786,14 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
             
                 <li class="param">
                     
-                        <code class="param-name">config</code>
+                        <code class="param-name">payload</code>
                         <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
                     
 
                     
 
                     <div class="param-description">
-                        <p>any config that should be passed through when the class is instantiated.</p>
+                        <p>extra payload to be added to the event-object</p>
 
                     </div>
 
@@ -727,13 +805,147 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
     
 
     
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="../classes/Promise.html" class="crosslink">Promise</a></span>:
+                    
+                    <ul>
+    <li>on success: returnValue {Any} of the defaultFn</li>
+    <li>on error: reason {Any} Either: description &#39;event was halted&#39;, &#39;event was defaultPrevented&#39; or the returnvalue of the preventedFn</li>
+</ul>
+                
+            </div>
+        </div>
+    
 
     
 </div>
 
                 
-                    <div id="method_unplug" class="method item">
-    <h3 class="name"><code>unplug</code></h3>
+                    <div id="method_undefAllEvents" class="method item">
+    <h3 class="name"><code>undefAllEvents</code></h3>
+
+    
+        <span class="paren">()</span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                    <p>Provided by the <a href="../modules/event-emitter.html">event-emitter</a> module.</p>
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site_dist_itagsbuild.js.html#l2023"><code>site&#x2F;dist&#x2F;itagsbuild.js:2023</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Removes all event-definitions of the instance holding this method.</p>
+
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="method_undefAllEvents" class="method item">
+    <h3 class="name"><code>undefAllEvents</code></h3>
+
+    
+        <span class="paren">()</span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                    <p>Provided by the <a href="../modules/event-emitter.html">event-emitter</a> module.</p>
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l2023"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:2023</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Removes all event-definitions of the instance holding this method.</p>
+
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="method_undefEvent" class="method item">
+    <h3 class="name"><code>undefEvent</code></h3>
 
     
         <div class="args">
@@ -741,7 +953,7 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
             
                 <li class="arg">
                     
-                        <code>pluginClass</code>
+                        <code>eventName</code>
                     
                 </li>
             
@@ -760,8 +972,6 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
     
 
     
-        <span class="flag chainable">chainable</span>
-    
 
     
 
@@ -769,7 +979,7 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
         
             
                 
-                    <p>Provided by the <a href="../modules/element-plugin.html">element-plugin</a> module.</p>
+                    <p>Provided by the <a href="../modules/event-emitter.html">event-emitter</a> module.</p>
                 
                 <p>
                 
@@ -778,7 +988,7 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l5062"><code>site&#x2F;dist&#x2F;itagsbuild.js:5062</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l2033"><code>site&#x2F;dist&#x2F;itagsbuild.js:2033</code></a>
         
         </p>
 
@@ -791,7 +1001,7 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
     </div>
 
     <div class="description">
-        <p>Unplugs a NodePlugin from the HtmlElement.</p>
+        <p>Removes the event-definition of the specified customEvent.</p>
 
     </div>
 
@@ -803,14 +1013,16 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
             
                 <li class="param">
                     
-                        <code class="param-name">pluginClass</code>
-                        <span class="type">NodePlugin</span>
+                        <code class="param-name">eventName</code>
+                        <span class="type"><a href="../classes/String.html" class="crosslink">String</a></span>
                     
 
                     
 
                     <div class="param-description">
-                        <p>The plugin that should be unplugged. Needs to be the Class, not an instance!</p>
+                        <p>name of the customEvent, without <code>emitterName</code>.
+       The calculated customEvent which will be undefined, will have the syntax: <code>emitterName:eventName</code>.
+       where <code>emitterName:</code> is automaticly prepended.</p>
 
                     </div>
 
@@ -827,8 +1039,8 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
 </div>
 
                 
-                    <div id="method_unplug" class="method item">
-    <h3 class="name"><code>unplug</code></h3>
+                    <div id="method_undefEvent" class="method item">
+    <h3 class="name"><code>undefEvent</code></h3>
 
     
         <div class="args">
@@ -836,7 +1048,7 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
             
                 <li class="arg">
                     
-                        <code>pluginClass</code>
+                        <code>eventName</code>
                     
                 </li>
             
@@ -855,8 +1067,6 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
     
 
     
-        <span class="flag chainable">chainable</span>
-    
 
     
 
@@ -864,7 +1074,7 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
         
             
                 
-                    <p>Provided by the <a href="../modules/element-plugin.html">element-plugin</a> module.</p>
+                    <p>Provided by the <a href="../modules/event-emitter.html">event-emitter</a> module.</p>
                 
                 <p>
                 
@@ -873,7 +1083,7 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l5062"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:5062</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l2033"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:2033</code></a>
         
         </p>
 
@@ -886,7 +1096,7 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
     </div>
 
     <div class="description">
-        <p>Unplugs a NodePlugin from the HtmlElement.</p>
+        <p>Removes the event-definition of the specified customEvent.</p>
 
     </div>
 
@@ -898,14 +1108,16 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
             
                 <li class="param">
                     
-                        <code class="param-name">pluginClass</code>
-                        <span class="type">NodePlugin</span>
+                        <code class="param-name">eventName</code>
+                        <span class="type"><a href="../classes/String.html" class="crosslink">String</a></span>
                     
 
                     
 
                     <div class="param-description">
-                        <p>The plugin that should be unplugged. Needs to be the Class, not an instance!</p>
+                        <p>name of the customEvent, without <code>emitterName</code>.
+       The calculated customEvent which will be undefined, will have the syntax: <code>emitterName:eventName</code>.
+       where <code>emitterName:</code> is automaticly prepended.</p>
 
                     </div>
 

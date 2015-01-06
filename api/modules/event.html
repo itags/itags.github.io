@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>extend-element - Itsa</title>
+    <title>event - Itsa</title>
     <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -162,7 +162,7 @@
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-                        <h1>extend-element Module</h1>
+                        <h1>event Module</h1>
 <div class="box clearfix meta">
     
 
@@ -170,7 +170,7 @@
 
     
         <div class="foundat">
-            Defined in: <a href="../files/site-preview_dist_itagsbuild.js.html#l5131"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:5131</code></a>
+            Defined in: <a href="../files/site-preview_dist_itagsbuild.js.html#l1935"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1935</code></a>
         </div>
     
 
@@ -182,9 +182,8 @@
 
 
 <div class="box intro">
-    <p>Provides several methods that override native Element-methods to work with the vdom.</p>
+    <p>Defines the Event-Class, which should be instantiated to get its functionality</p>
 <p><i>Copyright (c) 2014 ITSA - <a href="https://github.com/itsa">https://github.com/itsa</a></i>
-<br>
 New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">http://choosealicense.com/licenses/bsd-3-clause/</a></p>
 
 </div>
@@ -199,14 +198,14 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
             <ul class="module-classes">
             
                 <li class="module-class">
-                    <a href="../classes/document.html">
-                        document
+                    <a href="../classes/Event.html">
+                        Event
                     </a>
                 </li>
             
                 <li class="module-class">
-                    <a href="../classes/Node.html">
-                        Node
+                    <a href="../classes/Event.Emitter.html">
+                        Event.Emitter
                     </a>
                 </li>
             
@@ -215,6 +214,46 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
     </div>
 
     <div class="yui3-u-1-2">
+        
+            <p>This module is a rollup of the following modules:</p>
+
+            <ul class="module-submodules">
+            
+                <li class="module-submodule">
+                    <a href="../modules/event-dom.html">
+                        event-dom
+                    </a>
+
+                    <div class="module-submodule-description">
+                        Integrates DOM-events to event. more about DOM-events:
+http://www.smashingmagazine.com/2013/11/12/an-introduction-to-dom-events/
+
+
+<i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+                    </div>
+                </li>
+            
+                <li class="module-submodule">
+                    <a href="../modules/event-emitter.html">
+                        event-emitter
+                    </a>
+
+                    <div class="module-submodule-description">
+                        Extends the Event-instance by adding the method <code>Emitter</code> to it.
+The <code>Emitter-method</code> returns an object that should be merged into any Class-instance or object you
+want to extend with the emit-methods, so the appropriate methods can be invoked on the instance.
+
+
+<i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+
+
+Should be called using  the provided <code>extend</code>-method like this:
+                    </div>
+                </li>
+            
+            </ul>
         
     </div>
 </div>

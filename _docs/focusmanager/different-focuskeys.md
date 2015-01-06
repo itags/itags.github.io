@@ -27,7 +27,9 @@ intro: "This example shows how to setup a focusmanager that navigates with diffe
 </style>
 <div id="test">before</div>
 <i-select>one</i-select>
-<i-select itag-rendered="true">two</i-select>
+<i-select>two</i-select>
+
+<div id="test2">before</div>
 
 <p class="spaced">Code-example:</p>
 
@@ -75,6 +77,12 @@ intro: "This example shows how to setup a focusmanager that navigates with diffe
 <script>
     require('itags');
     //document.getElement('.container').focus();
-    // document.getElement('#test').setHTML('<i-select>zero</i-select>');
-    document.getElement('#test').setHTML('<div>I am inner</div>');
+    document.getElement('#test').setHTML('<i-select>zero</i-select>');
+    // document.getElement('#test').setHTML('<div>I am inner</div>');
+
+var iSelectNode = new ITAGS['I-SELECT']();
+document.getElement('#test2').append(iSelectNode);
+
+console.info('dummyFn: '+document.getElement('i-select').dummyFn);
+
 </script>

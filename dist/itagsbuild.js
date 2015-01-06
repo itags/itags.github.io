@@ -38,1036 +38,2388 @@ module.exports.byUrl = function(url) {
 };
 
 },{}],2:[function(require,module,exports){
-(function (process,Buffer){
 "use strict";
 
 /**
- * Wrapper for built-in http.js to emulate the browser XMLHttpRequest object.
- *
- * This can be used with JS designed for browsers to improve reuse of code and
- * allow the use of existing libraries.
- *
- * Usage: include("XMLHttpRequest.js") and use XMLHttpRequest per W3C specs.
- *
- * @author Dan DeFelippi <dan@driverdan.com>
- * @contributor David Ellis <d.f.ellis@ieee.org>
- * @license MIT
- */
-
-var Url = require("url"),
-    spawn = require("child_process").spawn,
-    fs = require('fs'),
-    XmlDOMParser = require('xmldom').DOMParser;
-
-exports.XMLHttpRequest = function() {
-  /**
-   * Private variables
-   */
-  var self = this;
-  var http = require('http');
-  var https = require('https');
-
-  // Holds http.js objects
-  var request;
-  var response;
-
-  // Request settings
-  var settings = {};
-
-  // Disable header blacklist.
-  // Not part of XHR specs.
-  var disableHeaderCheck = false;
-
-  // Set some default headers
-  var defaultHeaders = {
-    "User-Agent": "node-XMLHttpRequest",
-    "Accept": "*/*"
-  };
-
-  var headers = defaultHeaders;
-
-  // These headers are not user setable.
-  // The following are allowed but banned in the spec:
-  // * user-agent
-  var forbiddenRequestHeaders = [
-    "accept-charset",
-    "accept-encoding",
-    "access-control-request-headers",
-    "access-control-request-method",
-    "connection",
-    "content-length",
-    "content-transfer-encoding",
-    "cookie",
-    "cookie2",
-    "date",
-    "expect",
-    "host",
-    "keep-alive",
-    "origin",
-    "referer",
-    "te",
-    "trailer",
-    "transfer-encoding",
-    "upgrade",
-    "via"
-  ];
-
-  // These request methods are not allowed
-  var forbiddenRequestMethods = [
-    "TRACE",
-    "TRACK",
-    "CONNECT"
-  ];
-
-  // Send flag
-  var sendFlag = false;
-  // Error flag, used when errors occur or abort is called
-  var errorFlag = false;
-
-  // Event listeners
-  var listeners = {};
-
-  /**
-   * Constants
-   */
-
-  this.UNSENT = 0;
-  this.OPENED = 1;
-  this.HEADERS_RECEIVED = 2;
-  this.LOADING = 3;
-  this.DONE = 4;
-
-  /**
-   * Public vars
-   */
-
-  // Current state
-  this.readyState = this.UNSENT;
-
-  // default ready state change handler in case one is not set or is set late
-  this.onreadystatechange = null;
-
-  // Result & response
-  this.responseText = "";
-  this.responseXML = null;
-  this.status = null;
-  this.statusText = null;
-
-  /**
-   * Private methods
-   */
-
-  var isXMLRequest = function() {
-      return /^text\/xml/.test(response.headers['content-type']);
-  };
-
-  /**
-   * Check if the specified header is allowed.
-   *
-   * @param string header Header to validate
-   * @return boolean False if not allowed, otherwise true
-   */
-  var isAllowedHttpHeader = function(header) {
-    return disableHeaderCheck || (header && forbiddenRequestHeaders.indexOf(header.toLowerCase()) === -1);
-  };
-
-  /**
-   * Check if the specified method is allowed.
-   *
-   * @param string method Request method to validate
-   * @return boolean False if not allowed, otherwise true
-   */
-  var isAllowedHttpMethod = function(method) {
-    return (method && forbiddenRequestMethods.indexOf(method) === -1);
-  };
-
-  /**
-   * Public methods
-   */
-
-  /**
-   * Open the connection. Currently supports local server requests.
-   *
-   * @param string method Connection method (eg GET, POST)
-   * @param string url URL for the connection.
-   * @param boolean async Asynchronous connection. Default is true.
-   * @param string user Username for basic authentication (optional)
-   * @param string password Password for basic authentication (optional)
-   */
-  this.open = function(method, url, async, user, password) {
-    this.abort();
-    errorFlag = false;
-
-    // Check for valid request method
-    if (!isAllowedHttpMethod(method)) {
-      throw "SecurityError: Request method not allowed";
-    }
-
-    settings = {
-      "method": method,
-      "url": url.toString(),
-      "async": (typeof async !== "boolean" ? true : async),
-      "user": user || null,
-      "password": password || null
-    };
-
-    setState(this.OPENED);
-  };
-
-  /**
-   * Disables or enables isAllowedHttpHeader() check the request. Enabled by default.
-   * This does not conform to the W3C spec.
-   *
-   * @param boolean state Enable or disable header checking.
-   */
-  this.setDisableHeaderCheck = function(state) {
-    disableHeaderCheck = state;
-  };
-
-  /**
-   * Sets a header for the request.
-   *
-   * @param string header Header name
-   * @param string value Header value
-   */
-  this.setRequestHeader = function(header, value) {
-    if (this.readyState != this.OPENED) {
-      throw "INVALID_STATE_ERR: setRequestHeader can only be called when state is OPEN";
-    }
-    if (!isAllowedHttpHeader(header)) {
-      console.warn('Refused to set unsafe header "' + header + '"');
-      return;
-    }
-    if (sendFlag) {
-      throw "INVALID_STATE_ERR: send flag is true";
-    }
-    headers[header] = value;
-  };
-
-  /**
-   * Gets a header from the server response.
-   *
-   * @param string header Name of header to get.
-   * @return string Text of the header or null if it doesn't exist.
-   */
-  this.getResponseHeader = function(header) {
-    if (typeof header === "string" && this.readyState > this.OPENED && response.headers[header.toLowerCase()] && !errorFlag) {
-      return response.headers[header.toLowerCase()];
-    }
-
-    return null;
-  };
-
-  /**
-   * Gets all the response headers.
-   *
-   * @return string A string with all response headers separated by CR+LF
-   */
-  this.getAllResponseHeaders = function() {
-    if (this.readyState < this.HEADERS_RECEIVED || errorFlag) {
-      return "";
-    }
-    var result = "";
-
-    for (var i in response.headers) {
-      // Cookie headers are excluded
-      if (i !== "set-cookie" && i !== "set-cookie2") {
-        result += i + ": " + response.headers[i] + "\r\n";
-      }
-    }
-    return result.substr(0, result.length - 2);
-  };
-
-  /**
-   * Gets a request header
-   *
-   * @param string name Name of header to get
-   * @return string Returns the request header or empty string if not set
-   */
-  this.getRequestHeader = function(name) {
-    // @TODO Make this case insensitive
-    if (typeof name === "string" && headers[name]) {
-      return headers[name];
-    }
-
-    return "";
-  };
-
-  /**
-   * Sends the request to the server.
-   *
-   * @param string data Optional data to send as request body.
-   */
-  this.send = function(data) {
-    if (this.readyState != this.OPENED) {
-      throw "INVALID_STATE_ERR: connection must be opened before send() is called";
-    }
-
-    if (sendFlag) {
-      throw "INVALID_STATE_ERR: send has already been called";
-    }
-
-    var ssl = false, local = false;
-    var url = Url.parse(settings.url);
-    var host, responseHandler, errorHandler;
-    // Determine the server
-    switch (url.protocol) {
-      case 'https:':
-        ssl = true;
-        host = url.hostname;
-        break;
-
-      case 'http:':
-        host = url.hostname;
-        break;
-
-      case 'file:':
-        local = true;
-        break;
-
-      case undefined:
-      case '':
-        host = "localhost";
-        break;
-
-      default:
-        throw "Protocol not supported.";
-    }
-
-    // Load files off the local filesystem (file://)
-    if (local) {
-      if (settings.method !== "GET") {
-        throw "XMLHttpRequest: Only GET method is supported";
-      }
-
-      if (settings.async) {
-        fs.readFile(url.pathname, 'utf8', function(error, data) {
-          if (error) {
-            self.handleError(error);
-          } else {
-            self.status = 200;
-            self.responseText = data;
-            self.responseXML = isXMLRequest() ? new XmlDOMParser().parseFromString(data) : null;
-            setState(self.DONE);
-          }
-        });
-      } else {
-        try {
-          this.responseText = fs.readFileSync(url.pathname, 'utf8');
-          self.responseXML = isXMLRequest() ? new XmlDOMParser().parseFromString(this.responseText) : null;
-          this.status = 200;
-          setState(self.DONE);
-        } catch(e) {
-          this.handleError(e);
-        }
-      }
-
-      return;
-    }
-
-    // Default to port 80. If accessing localhost on another port be sure
-    // to use http://localhost:port/path
-    var port = url.port || (ssl ? 443 : 80);
-    // Add query string if one is used
-    var uri = url.pathname + (url.search ? url.search : '');
-
-    // Set the Host header or the server may reject the request
-    headers.Host = host;
-    if (!((ssl && port === 443) || port === 80)) {
-      headers.Host += ':' + url.port;
-    }
-
-    // Set Basic Auth if necessary
-    if (settings.user) {
-      if (typeof settings.password == "undefined") {
-        settings.password = "";
-      }
-      var authBuf = new Buffer(settings.user + ":" + settings.password);
-      headers.Authorization = "Basic " + authBuf.toString("base64");
-    }
-
-    // Set content length header
-    if (settings.method === "GET" || settings.method === "HEAD") {
-      data = null;
-    } else if (data) {
-      headers["Content-Length"] = Buffer.isBuffer(data) ? data.length : Buffer.byteLength(data);
-
-      if (!headers["Content-Type"]) {
-        headers["Content-Type"] = "text/plain;charset=UTF-8";
-      }
-    } else if (settings.method === "POST") {
-      // For a post with no data set Content-Length: 0.
-      // This is required by buggy servers that don't meet the specs.
-      headers["Content-Length"] = 0;
-    }
-
-    var options = {
-      host: host,
-      port: port,
-      path: uri,
-      method: settings.method,
-      headers: headers,
-      agent: false
-    };
-
-    // Reset error flag
-    errorFlag = false;
-
-    // Handle async requests
-    if (settings.async) {
-      // Use the proper protocol
-      var doRequest = ssl ? https.request : http.request;
-
-      // Request is being sent, set send flag
-      sendFlag = true;
-
-      // As per spec, this is called here for historical reasons.
-      self.dispatchEvent("readystatechange");
-
-      // Handler for the response
-      responseHandler = function(resp) {
-        // Set response var to the response we got back
-        // This is so it remains accessable outside this scope
-        response = resp;
-        // Check for redirect
-        // @TODO Prevent looped redirects
-        if (response.statusCode === 302 || response.statusCode === 303 || response.statusCode === 307) {
-          // Change URL to the redirect location
-          settings.url = response.headers.location;
-          var url = Url.parse(settings.url);
-          // Set host var in case it's used later
-          host = url.hostname;
-          // Options for the new request
-          var newOptions = {
-            hostname: url.hostname,
-            port: url.port,
-            path: url.path,
-            method: response.statusCode === 303 ? 'GET' : settings.method,
-            headers: headers
-          };
-
-          // Issue the new request
-          request = doRequest(newOptions, responseHandler).on('error', errorHandler);
-          request.end();
-          // @TODO Check if an XHR event needs to be fired here
-          return;
-        }
-
-        response.setEncoding("utf8");
-
-        setState(self.HEADERS_RECEIVED);
-        self.status = response.statusCode;
-
-        response.on('data', function(chunk) {
-          // Make sure there's some data
-          if (chunk) {
-            self.responseText += chunk;
-          }
-          // Don't emit state changes if the connection has been aborted.
-          if (sendFlag) {
-            setState(self.LOADING);
-          }
-        });
-
-        response.on('end', function() {
-          if (sendFlag) {
-            self.responseXML = isXMLRequest() ? new XmlDOMParser().parseFromString(self.responseText) : null;
-            // Discard the 'end' event if the connection has been aborted
-            setState(self.DONE);
-            sendFlag = false;
-          }
-        });
-
-        response.on('error', function(error) {
-          self.handleError(error);
-        });
-      };
-
-      // Error handler for the request
-      errorHandler = function(error) {
-        self.handleError(error);
-      };
-
-      // Create the request
-      request = doRequest(options, responseHandler).on('error', errorHandler);
-
-      // Node 0.4 and later won't accept empty data. Make sure it's needed.
-      if (data) {
-        request.write(data);
-      }
-
-      request.end();
-
-      self.dispatchEvent("loadstart");
-    } else { // Synchronous
-      // Create a temporary file for communication with the other Node process
-      var contentFile = ".node-xmlhttprequest-content-" + process.pid;
-      var syncFile = ".node-xmlhttprequest-sync-" + process.pid;
-      fs.writeFileSync(syncFile, "", "utf8");
-      // The async request the other Node process executes
-      var execString = "var http = require('http'), https = require('https'), fs = require('fs');" +
-        "var doRequest = http" + (ssl ? "s" : "") + ".request;" +
-        "var options = " + JSON.stringify(options) + ";" +
-        "var responseText = '';" +
-        "var req = doRequest(options, function(response) {" +
-        "response.setEncoding('utf8');" +
-        "response.on('data', function(chunk) {" +
-        "  responseText += chunk;" +
-        "});" +
-        "response.on('end', function() {" +
-        "fs.writeFileSync('" + contentFile + "', 'NODE-XMLHTTPREQUEST-STATUS:' + response.statusCode + ',' + responseText, 'utf8');" +
-        "fs.unlinkSync('" + syncFile + "');" +
-        "});" +
-        "response.on('error', function(error) {" +
-        "fs.writeFileSync('" + contentFile + "', 'NODE-XMLHTTPREQUEST-ERROR:' + JSON.stringify(error), 'utf8');" +
-        "fs.unlinkSync('" + syncFile + "');" +
-        "});" +
-        "}).on('error', function(error) {" +
-        "fs.writeFileSync('" + contentFile + "', 'NODE-XMLHTTPREQUEST-ERROR:' + JSON.stringify(error), 'utf8');" +
-        "fs.unlinkSync('" + syncFile + "');" +
-        "});" +
-        (data ? "req.write('" + data.replace(/'/g, "\\'") + "');":"") +
-        "req.end();";
-      // Start the other Node Process, executing this string
-      var syncProc = spawn(process.argv[0], ["-e", execString]);
-/*jshint noempty:true */
-      // Wait while the sync file is empty
-      while (fs.existsSync(syncFile)) {}
-/*jshint noempty:false */
-      self.responseText = fs.readFileSync(contentFile, 'utf8');
-      self.responseXML = isXMLRequest() ? new XmlDOMParser().parseFromString(self.responseText) : null;
-      // Kill the child process once the file has data
-      syncProc.stdin.end();
-      // Remove the temporary file
-      fs.unlinkSync(contentFile);
-      if (self.responseText.match(/^NODE-XMLHTTPREQUEST-ERROR:/)) {
-        // If the file returned an error, handle it
-        var errorObj = self.responseText.replace(/^NODE-XMLHTTPREQUEST-ERROR:/, "");
-        self.handleError(errorObj);
-      } else {
-        // If the file returned okay, parse its data and move to the DONE state
-        self.status = self.responseText.replace(/^NODE-XMLHTTPREQUEST-STATUS:([0-9]*),.*/, "$1");
-        self.responseText = self.responseText.replace(/^NODE-XMLHTTPREQUEST-STATUS:[0-9]*,(.*)/, "$1");
-        setState(self.DONE);
-      }
-    }
-  };
-
-  /**
-   * Called when an error is encountered to deal with it.
-   */
-  this.handleError = function(error) {
-    this.status = 503;
-    this.statusText = error;
-    this.responseText = error.stack;
-    errorFlag = true;
-    setState(this.DONE);
-  };
-
-  /**
-   * Aborts a request.
-   */
-  this.abort = function() {
-    if (request) {
-      request.abort();
-      request = null;
-    }
-
-    headers = defaultHeaders;
-    this.responseText = "";
-    this.responseXML = "";
-
-    errorFlag = true;
-
-    if (this.readyState !== this.UNSENT && (this.readyState !== this.OPENED || sendFlag) && this.readyState !== this.DONE) {
-      sendFlag = false;
-      setState(this.DONE);
-    }
-    this.readyState = this.UNSENT;
-  };
-
-  /**
-   * Adds an event listener. Preferred method of binding to events.
-   */
-  this.addEventListener = function(event, callback) {
-    if (!(event in listeners)) {
-      listeners[event] = [];
-    }
-    // Currently allows duplicate callbacks. Should it?
-    listeners[event].push(callback);
-  };
-
-  /**
-   * Remove an event callback that has already been bound.
-   * Only works on the matching funciton, cannot be a copy.
-   */
-  this.removeEventListener = function(event, callback) {
-    if (event in listeners) {
-      // Filter will return a new array with the callback removed
-      listeners[event] = listeners[event].filter(function(ev) {
-        return ev !== callback;
-      });
-    }
-  };
-
-  /**
-   * Dispatch any events, including both "on" methods and events attached using addEventListener.
-   */
-  this.dispatchEvent = function(event) {
-    if (typeof self["on" + event] === "function") {
-      self["on" + event]();
-    }
-    if (event in listeners) {
-      for (var i = 0, len = listeners[event].length; i < len; i++) {
-        listeners[event][i].call(self);
-      }
-    }
-  };
-
-  /**
-   * Changes readyState and calls onreadystatechange.
-   *
-   * @param int state New state
-   */
-  var setState = function(state) {
-    if ((self.readyState !== state) || (settings.async && (self.readyState===self.LOADING))) {
-      self.readyState = state;
-
-      if (settings.async || self.readyState < self.OPENED || self.readyState === self.DONE) {
-          self.dispatchEvent("readystatechange");
-      }
-
-      if (settings.async && (self.readyState===self.LOADING)) {
-          self.dispatchEvent("progress");
-      }
-
-      if (self.readyState === self.DONE && !errorFlag) {
-          self.dispatchEvent("load");
-          // @TODO figure out InspectorInstrumentation::didLoadXHR(cookie)
-          self.dispatchEvent("loadend");
-      }
-    }
-
-  };
-};
-
-}).call(this,require('_process'),require("buffer").Buffer)
-},{"_process":59,"buffer":48,"child_process":47,"fs":47,"http":52,"https":56,"url":77,"xmldom":41}],3:[function(require,module,exports){
-"use strict";
-
-/**
- * Emulation of browser `window` and `dom`. Just enough to make ITSA work.
+ * Integrates DOM-events to event. more about DOM-events:
+ * http://www.smashingmagazine.com/2013/11/12/an-introduction-to-dom-events/
  *
  *
  * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
  * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
  *
- * @module node-win
- * @class window
- * @static
+ * @example
+ * Event = require('event-dom')(window);
+ *
+ * @module event
+ * @submodule event-dom
+ * @class Event
+ * @since 0.0.1
 */
 
-require('js-ext/lib/array.js');
 
-var xmlhttprequest = require('./lib/XMLHttpRequest.js').XMLHttpRequest,
-    xmlDOMParser = require('xmldom').DOMParser,
-	Url = require('url'),
-    used = {},
-    vNodeParser = /(?:(^|#|\.)([^#\.\[\]]+))|(\[.+?\])/g,
-    count, doc, win, getHTML, reset;
-    EventTypes = {
-		MouseEvents: function () {
-			this.initMouseEvent = function (type, bubbles, cancelable, view, detail,
-					screenX, screenY, clientX, clientY,
-					ctrlKey, altKey, shiftKey, metaKey,
-					button, relatedTarget) {
-				count('initMouseEvent');
-				this.ev = {
-					type:type,
-					bubbles:bubbles,
-					cancelable:cancelable,
-					view:view,
-					detail:detail,
-					screenX:screenX,
-					screenY:screenY,
-					clientX:clientX,
-					clientY:clientY,
-					ctrlKey:ctrlKey,
-					altKey:altKey,
-					shiftKey:shiftKey,
-					metaKey:metaKey,
-					button:button,
-					relatedTarget:relatedTarget
-				};
-			};
-		}
-	};
+var NAME = '[event-dom]: ',
+    Event = require('event'),
+    later = require('utils').later,
+    OUTSIDE = 'outside',
+    REGEXP_NODE_ID = /^#\S+$/,
+    REGEXP_EXTRACT_NODE_ID = /#(\S+)/,
+    REGEXP_UI_OUTSIDE = /^.+outside$/,
+    TIME_BTN_PRESSED = 200,
+    PURE_BUTTON_ACTIVE = 'pure-button-active',
+    UI = 'UI:',
+    NODE = 'node',
+    REMOVE = 'remove',
+    INSERT = 'insert',
+    CHANGE = 'change',
+    ATTRIBUTE = 'attribute',
+    EV_REMOVED = UI+NODE+REMOVE,
+    EV_INSERTED = UI+NODE+INSERT,
+    EV_CONTENT_CHANGE = UI+NODE+'content'+CHANGE,
+    EV_ATTRIBUTE_REMOVED = UI+ATTRIBUTE+REMOVE,
+    EV_ATTRIBUTE_CHANGED = UI+ATTRIBUTE+CHANGE,
+    EV_ATTRIBUTE_INSERTED = UI+ATTRIBUTE+INSERT,
 
-count = function (method) {
-	if (!used[method]) {
-		used[method] = 1;
-	} else {
-		used[method] += 1;
-	}
+    /*
+     * Internal hash containing all DOM-events that are listened for (at `document`).
+     *
+     * DOMEvents = {
+     *     'click': callbackFn,
+     *     'mousemove': callbackFn,
+     *     'keypress': callbackFn
+     * }
+     *
+     * @property DOMEvents
+     * @default {}
+     * @type Object
+     * @private
+     * @since 0.0.1
+    */
+    DOMEvents = {};
+
+    require('js-ext/lib/string.js');
+    require('js-ext/lib/array.js');
+    require('js-ext/lib/object.js');
+    require('polyfill/polyfill-base.js');
+
+module.exports = function (window) {
+    var DOCUMENT = window.document,
+        _domSelToFunc, _evCallback, _findCurrentTargets, _preProcessor, _setupEvents, _setupMutationListener, _teardownMutationListener,
+        _setupDomListener, _teardownDomListener, SORT, _sortFunc, _sortFuncReversed, _getSubscribers, _selToFunc, MUTATION_EVENTS;
+
+    require('vdom')(window);
+
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', {});
+
+    if (window._ITSAmodules.EventDom) {
+        return Event; // Event was already extended
+    }
+
+    MUTATION_EVENTS = [EV_REMOVED, EV_INSERTED, EV_CONTENT_CHANGE, EV_ATTRIBUTE_REMOVED, , EV_ATTRIBUTE_CHANGED, EV_ATTRIBUTE_INSERTED];
+
+    /*
+     * Transfprms the selector to a valid function
+     *
+     * @method _evCallback
+     * @param customEvent {String} the customEvent that is transported to the eventsystem
+     * @param subscriber {Object} subscriber
+     * @param subscriber.o {Object} context
+     * @param subscriber.cb {Function} callbackFn
+     * @param subscriber.f {Function|String} filter
+     * @private
+     * @since 0.0.1
+     */
+    _selToFunc = function(customEvent, subscriber) {
+        Event._sellist.some(function(selFn) {
+            return selFn(customEvent, subscriber);
+        });
+    };
+
+    /*
+     * Creates a filterfunction out of a css-selector. To be used for catching any dom-element, without restrictions
+     * of any context (like Parcels can --> Parcel.Event uses _parcelSelToDom instead)
+     * On "non-outside" events, subscriber.t is set to the node that first matches the selector
+     * so it can be used to set as e.target in the final subscriber
+     *
+     * @method _domSelToFunc
+     * @param customEvent {String} the customEvent that is transported to the eventsystem
+     * @param subscriber {Object} subscriber
+     * @param subscriber.o {Object} context
+     * @param subscriber.cb {Function} callbackFn
+     * @param subscriber.f {Function|String} filter
+     * @private
+     * @since 0.0.1
+     */
+    _domSelToFunc = function(customEvent, subscriber) {
+        // this stage is runned during subscription
+        var outsideEvent = REGEXP_UI_OUTSIDE.test(customEvent),
+            selector = subscriber.f,
+            nodeid, byExactId;
+
+        console.log(NAME, '_domSelToFunc type of selector = '+typeof selector);
+        // note: selector could still be a function: in case another subscriber
+        // already changed it.
+        if (!selector || (typeof selector === 'function')) {
+            subscriber.n || (subscriber.n=DOCUMENT);
+            return true;
+        }
+
+        nodeid = selector.match(REGEXP_EXTRACT_NODE_ID);
+        nodeid ? (subscriber.nId=nodeid[1]) : (subscriber.n=DOCUMENT);
+
+        byExactId = REGEXP_NODE_ID.test(selector);
+
+        subscriber.f = function(e) {
+            // this stage is runned when the event happens
+            console.log(NAME, '_domSelToFunc inside filter. selector: '+selector);
+            var node = e.target,
+                vnode = node.vnode,
+                character1 = selector.substr(1),
+                match = false;
+            // e.target is the most deeply node in the dom-tree that caught the event
+            // our listener uses `selector` which might be a node higher up the tree.
+            // we will reset e.target to this node (if there is a match)
+            // note that e.currentTarget will always be `document` --> we're not interested in that
+            // also, we don't check for `node`, but for node.matchesSelector: the highest level `document`
+            // is not null, yet it doesn;t have .matchesSelector so it would fail
+            if (vnode) {
+                // we go through the vdom
+                while (vnode && !match) {
+                    console.log(NAME, '_domSelToFunc inside filter check match using the vdom');
+                    match = byExactId ? (vnode.id===character1) : vnode.matchesSelector(selector);
+                    // if there is a match, then set
+                    // e.target to the target that matches the selector
+                    if (match && !outsideEvent) {
+                        subscriber.t = vnode.domNode;
+                    }
+                    vnode = vnode.vParent;
+                }
+            }
+            else {
+                // we go through the dom
+                while (node.matchesSelector && !match) {
+                    console.log(NAME, '_domSelToFunc inside filter check match using the dom');
+                    match = byExactId ? (node.id===character1) : node.matchesSelector(selector);
+                    // if there is a match, then set
+                    // e.target to the target that matches the selector
+                    if (match && !outsideEvent) {
+                        subscriber.t = node;
+                    }
+                    node = node.parentNode;
+                }
+            }
+            console.log(NAME, '_domSelToFunc filter returns '+(!outsideEvent ? match : !match));
+            return !outsideEvent ? match : !match;
+        };
+        return true;
+    };
+
+    // at this point, we need to find out what are the current node-refs. whenever there is
+    // a filter that starts with `#` --> in those cases we have a bubble-chain, because the selector isn't
+    // set up with `document` at its root.
+    // we couldn't do this at time of subscribtion, for the nodes might not be there at that time.
+    // however, we only need to do this once: we store the value if we find them
+    // no problem when the nodes leave the dom later: the previous filter wouldn't pass
+    _findCurrentTargets = function(subscribers) {
+        console.log(NAME, '_findCurrentTargets');
+        subscribers.forEach(
+            function(subscriber) {
+                console.log(NAME, '_findCurrentTargets for single subscriber. nId: '+subscriber.nId);
+                subscriber.nId && (subscriber.n=DOCUMENT.getElementById(subscriber.nId));
+            }
+        );
+    };
+
+    /*
+     * Generates an event through our Event-system. Does the actual transportation from DOM-events
+     * into our Eventsystem. It also looks at the response of our Eventsystem: if our system
+     * halts or preventDefaults the customEvent, then the original DOM-event will be preventDefaulted.
+     *
+     * @method _evCallback
+     * @param e {Object} eventobject
+     * @private
+     * @since 0.0.1
+     */
+    _evCallback = function(e) {
+        console.log(NAME, '_evCallback');
+        var allSubscribers = Event._subs,
+            eventName = e.type,
+            customEvent = 'UI:'+eventName,
+            eventobject, subs, wildcard_named_subs, named_wildcard_subs, wildcard_wildcard_subs, subsOutside,
+            subscribers, eventobjectOutside, wildcard_named_subsOutside;
+
+        subs = allSubscribers[customEvent];
+        wildcard_named_subs = allSubscribers['*:'+eventName];
+        named_wildcard_subs = allSubscribers['UI:*'];
+        wildcard_wildcard_subs = allSubscribers['*:*'];
+
+        // Emit the dom-event though our eventsystem:
+        // NOTE: emit() needs to be synchronous! otherwise we wouldn't be able
+        // to preventDefault in time
+        //
+        // e = eventobject from the DOM-event OR gesture-event
+        // eventobject = eventobject from our Eventsystem, which get returned by calling `emit()`
+
+        subscribers = _getSubscribers(e, true, subs, wildcard_named_subs, named_wildcard_subs, wildcard_wildcard_subs);
+        eventobject = Event._emit(e.target, customEvent, e, subscribers, [], _preProcessor);
+
+        // now check outside subscribers
+        subsOutside = allSubscribers[customEvent+OUTSIDE];
+        wildcard_named_subsOutside = allSubscribers['*:'+eventName+OUTSIDE];
+        subscribers = _getSubscribers(e, true, subsOutside, wildcard_named_subsOutside);
+        eventobjectOutside = Event._emit(e.target, customEvent+OUTSIDE, e, subscribers, [], _preProcessor);
+
+        // if eventobject was preventdefaulted or halted: take appropriate action on
+        // the original dom-event. Note: only the original event can caused this, not the outsideevent
+        // stopPropagation on the original eventobject has no impact on our eventsystem, but who know who else is watching...
+        // be carefull though: not all gesture events have e.stopPropagation
+        eventobject.status.halted && e.stopPropagation && e.stopPropagation();
+        // now we might need to preventDefault the original event.
+        // be carefull though: not all gesture events have e.preventDefault
+        if ((eventobject.status.halted || eventobject.status.defaultPrevented || eventobject.status.defaultPreventedContinue) && e.preventDefault) {
+            e.preventDefault();
+        }
+
+        if (eventobject.status.ok) {
+            // last step: invoke the aftersubscribers
+            // we need to do this asynchronous: this way we pass them AFTER the DOM-event's defaultFn
+            // also make sure to paas-in the payload of the manipulated eventobject
+            subscribers = _getSubscribers(e, false, subs, wildcard_named_subs, named_wildcard_subs, wildcard_wildcard_subs);
+            (subscribers.length>0) && later(Event._emit.bind(Event, e.target, customEvent, eventobject, [], subscribers, _preProcessor, true), 10, false);
+
+            // now check outside subscribers
+            subscribers = _getSubscribers(e, false, subsOutside, wildcard_named_subsOutside);
+            (subscribers.length>0) && later(Event._emit.bind(Event, e.target, customEvent+OUTSIDE, eventobjectOutside, [], subscribers, _preProcessor, true), 10, false);
+        }
+    };
+
+    /*
+     * Creates an array of subscribers in the right order, conform their position in the DOM.
+     * Only subscribers that match the filter are involved.
+     *
+     * @method _getSubscribers
+     * @param e {Object} eventobject
+     * @param before {Boolean} whether it is a before- or after-subscriber
+     * @param subs {Array} array with subscribers
+     * @param wildcard_named_subs {Array} array with subscribers
+     * @param named_wildcard_subs {Array} array with subscribers
+     * @param wildcard_wildcard_subs {Array} array with subscribers
+     * @private
+     * @since 0.0.1
+     */
+    _getSubscribers = function(e, before, subs, wildcard_named_subs, named_wildcard_subs, wildcard_wildcard_subs) {
+        var subscribers = [],
+            beforeOrAfter = before ? 'b' : 'a',
+            saveConcat = function(extrasubs) {
+                extrasubs && extrasubs[beforeOrAfter] && (subscribers=subscribers.concat(extrasubs[beforeOrAfter]));
+            };
+        saveConcat(subs);
+        saveConcat(wildcard_named_subs);
+        saveConcat(named_wildcard_subs);
+        saveConcat(wildcard_wildcard_subs);
+        if (subscribers.length>0) {
+            subscribers = function(array, testFunc) {
+                // quickest way to filter an array: see http://jsperf.com/array-filter-performance/4
+                var filtered = array.slice(0), i;
+                for (i=array.length-1; i>=0; i--) {
+                    console.log(NAME, 'filtercheck for subscriber');
+                    testFunc(array[i]) || filtered.splice(i, 1);
+                }
+                return filtered;
+            }(subscribers, function(subscriber) {return (!subscriber.f || subscriber.f.call(subscriber.o, e));});
+            if (subscribers.length>0) {
+                _findCurrentTargets(subscribers);
+                // sorting, based upon the sortFn
+                subscribers.sort(SORT);
+            }
+        }
+        return subscribers;
+    };
+
+    /*
+     * Sets e.target, e.currentTarget and e.sourceTarget for the single subscriber.
+     * Needs to be done for evenry single subscriber, because with a single event, these values change for each subscriber
+     *
+     * @method _preProcessor
+     * @param subscriber {Object} subscriber
+     * @param subscriber.o {Object} context
+     * @param subscriber.cb {Function} callbackFn
+     * @param subscriber.f {Function|String} filter
+     * @param e {Object} eventobject
+     * @private
+     * @since 0.0.1
+     */
+    _preProcessor = function(subscriber, e) {
+        console.log(NAME, '_preProcessor');
+        // inside the aftersubscribers, we may need exit right away.
+        // this would be the case whenever stopPropagation or stopImmediatePropagation was called
+        // in case the subscribernode equals the node on which stopImmediatePropagation was called: return true
+        var propagationStopped, immediatePropagationStopped,
+            targetnode = (subscriber.t || subscriber.n);
+
+        immediatePropagationStopped = e.status.immediatePropagationStopped;
+        if (immediatePropagationStopped && ((immediatePropagationStopped===targetnode) || !immediatePropagationStopped.contains(targetnode))) {
+            console.log(NAME, '_preProcessor will return true because of immediatePropagationStopped');
+            return true;
+        }
+        // in case the subscribernode does not fall within or equals the node on which stopPropagation was called: return true
+        propagationStopped = e.status.propagationStopped;
+        if (propagationStopped && (propagationStopped!==targetnode) && !propagationStopped.contains(targetnode)) {
+            console.log(NAME, '_preProcessor will return true because of propagationStopped');
+            return true;
+        }
+
+        e.currentTarget = subscriber.n;
+        // now we might need to set e.target to the right node:
+        // the filterfunction might have found the true domnode that should act as e.target
+        // and set it at subscriber.t
+        // also, we need to backup the original e.target: this one should be reset when
+        // we encounter a subscriber with its own filterfunction instead of selector
+        if (subscriber.t) {
+            e.sourceTarget || (e.sourceTarget=e.target);
+            e.target = subscriber.t;
+        }
+        else {
+            e.sourceTarget && (e.target=e.sourceTarget);
+        }
+        return false;
+    };
+
+    /*
+     * Transports DOM-events to the Event-system. Catches events at their most early stage:
+     * their capture-phase. When these events happen, a new customEvent is generated by our own
+     * Eventsystem, by calling _evCallback(). This way we keep DOM-events and our Eventsystem completely separated.
+     *
+     * @method _setupDomListener
+     * @param customEvent {String} the customEvent that is transported to the eventsystem
+     * @param subscriber {Object} subscriber
+     * @param subscriber.o {Object} context
+     * @param subscriber.cb {Function} callbackFn
+     * @param subscriber.f {Function|String} filter
+     * @private
+     * @since 0.0.1
+     */
+    _setupDomListener = function(customEvent, subscriber) {
+        console.log(NAME, '_setupDomListener');
+        var eventSplitted = customEvent.split(':'),
+            eventName = eventSplitted[1],
+            outsideEvent = REGEXP_UI_OUTSIDE.test(eventName);
+
+        // be careful: anyone could also register an `outside`-event.
+        // in those cases, the DOM-listener must be set up without `outside`
+        outsideEvent && (eventName=eventName.substring(0, eventName.length-7));
+
+        // if eventName equals `mouseover` or `mouseleave` then we quit:
+        // people should use `mouseover` and `mouseout`
+        if ((eventName==='mouseenter') || (eventName==='mouseleave')) {
+            console.warn(NAME, 'Subscription to '+eventName+' not supported, use mouseover and mouseout: this eventsystem uses these non-noisy so they act as mouseenter and mouseleave');
+            return;
+        }
+
+        // now transform the subscriber's filter from css-string into a filterfunction
+        _selToFunc(customEvent, subscriber);
+
+        // already registered? then return, also return if someone registered for UI:*
+        if (DOMEvents[eventName] || (eventName==='*')) {
+            // cautious: one might have registered the event, but not yet the outsideevent.
+            // in that case: save this setting:
+            outsideEvent && (DOMEvents[eventName+OUTSIDE]=true);
+            return;
+        }
+
+        // one exception: windowresize should listen to the window-object
+        if (eventName==='resize') {
+            window.addEventListener(eventName, _evCallback);
+        }
+        else {
+            // important: set the third argument `true` so we listen to the capture-phase.
+            DOCUMENT.addEventListener(eventName, _evCallback, true);
+        }
+        DOMEvents[eventName] = true;
+        outsideEvent && (DOMEvents[eventName+OUTSIDE]=true);
+    };
+
+    _setupEvents = function() {
+
+        // make sure disabled buttons don't work:
+        Event.before(['click', 'tap'], function(e) {
+            e.preventDefault();
+        }, '.pure-button-disabled, button[disabled]');
+
+        // make sure that a focussed button which recieves an keypress also fires the `tap`-event
+        // note: the `click`-event will always be fired by the browser
+        Event.before(
+            'keydown',
+            function(e) {
+                e._buttonPressed = true;
+                Event.emit(e.target, 'UI:tap', e);
+            },
+            function(e) {
+                var keyCode = e.keyCode;
+                return (e.target.getTagName()==='BUTTON') && ((keyCode===13) || (keyCode===32));
+            }
+        );
+
+        // make sure that a focussed button which recieves an keypress also fires the `tap`-event
+        // note: the `click`-event will always be fired by the browser
+        Event.after(
+            'tap',
+            function(e) {
+                var buttonNode = e.target;
+                if (e._buttonPressed) {
+                    buttonNode.setClass(PURE_BUTTON_ACTIVE);
+                    // even if the node isn't in the DOM, we can still try to manipulate it:
+                    // the vdom makes sure no errors occur when the node is already removed
+                    later(buttonNode.removeClass.bind(buttonNode, PURE_BUTTON_ACTIVE), TIME_BTN_PRESSED);
+                }
+            }
+        );
+
+    };
+
+    _setupMutationListener = function() {
+        DOCUMENT.hasMutationSubs = true;
+    };
+
+    /*
+     *
+     * @method _sortFunc
+     * @param customEvent {String}
+     * @private
+     * @return {Function|undefined} sortable function
+     * @since 0.0.1
+     */
+    _sortFunc = function(subscriberOne, subscriberTwo) {
+        return (subscriberTwo.t || subscriberTwo.n).contains(subscriberOne.t || subscriberOne.n) ? -1 : 1;
+    };
+
+    /*
+     *
+     * @method _sortFunc
+     * @param customEvent {String}
+     * @private
+     * @return {Function|undefined} sortable function
+     * @since 0.0.1
+     */
+    _sortFuncReversed = function(subscriberOne, subscriberTwo) {
+        return (subscriberOne.t || subscriberOne.n).contains(subscriberTwo.t || subscriberTwo.n) ? 1 : -1;
+    };
+
+    /*
+     * Removes DOM-eventsubscribers from document when they are no longer needed.
+     *
+     * @method _teardownDomListener
+     * @param customEvent {String} the customEvent that is transported to the eventsystem
+     * @private
+     * @since 0.0.2
+     */
+    _teardownDomListener = function(customEvent) {
+        var customEventWithoutOutside = customEvent.endsWith(OUTSIDE) ? customEvent.substr(0, customEvent.length-7) : customEvent,
+            eventSplitted = customEventWithoutOutside.split(':'),
+            eventName = eventSplitted[1];
+
+        if (!Event._subs[customEventWithoutOutside] && !Event._subs[customEventWithoutOutside+OUTSIDE]) {
+            console.log(NAME, '_teardownDomListener '+customEvent);
+            // remove eventlistener from `document`
+            // one exeption: windowresize should listen to the window-object
+            if (eventName==='resize') {
+                window.removeEventListener(eventName, _evCallback);
+            }
+            else {
+                // important: set the third argument `true` so we listen to the capture-phase.
+                DOCUMENT.removeEventListener(eventName, _evCallback, true);
+            }
+            delete DOMEvents[eventName];
+        }
+    };
+
+    _teardownMutationListener = function() {
+        if (!Event._subs[EV_REMOVED] &&
+            !Event._subs[EV_INSERTED] &&
+            !Event._subs[EV_CONTENT_CHANGE] &&
+            !Event._subs[EV_ATTRIBUTE_REMOVED] &&
+            !Event._subs[EV_ATTRIBUTE_CHANGED] &&
+            !Event._subs[EV_ATTRIBUTE_INSERTED]
+        ) {
+            DOCUMENT.hasMutationSubs = false;
+        }
+    };
+
+    // Now a very tricky one:
+    // Some browsers do an array.sort down-top instead of top-down.
+    // In those cases we need another sortFn, for the position on an equal match should fall
+    // behind instead of before (which is the case on top-down sort)
+    [1,2].sort(function(a /*, b */) {
+        SORT || (SORT=(a===2) ? _sortFuncReversed : _sortFunc);
+    });
+
+    // Now we do some initialization in order to make DOM-events work:
+
+    // Notify when someone subscribes to an UI:* event
+    // if so: then we might need to define a customEvent for it:
+    // alse define the specific DOM-methods that can be called on the eventobject: `stopPropagation` and `stopImmediatePropagation`
+    Event.notify(UI+'*', _setupDomListener, Event)
+         ._setEventObjProperty('stopPropagation', function() {this.status.ok || (this.status.propagationStopped = this.target);})
+         ._setEventObjProperty('stopImmediatePropagation', function() {this.status.ok || (this.status.immediatePropagationStopped = this.target);});
+
+    // Notify when someone detaches an UI:* event
+    // if so: then we might need to detach the native listener on `document`
+    Event.notifyDetach(UI+'*', _teardownDomListener, Event);
+
+    Event._sellist = [_domSelToFunc];
+
+    _setupEvents();
+
+    // making HTMLElement to be able to emit using event-emitter:
+    (function(HTMLElementPrototype) {
+        HTMLElementPrototype.merge(Event.Emitter('UI'));
+    }(window.HTMLElement.prototype));
+
+
+
+
+
+
+
+
+    // Notify when someone subscribes to an UI:* event
+    // if so: then we might need to define a customEvent for it:
+    // alse define the specific DOM-methods that can be called on the eventobject: `stopPropagation` and `stopImmediatePropagation`
+    Event.notify(MUTATION_EVENTS, _setupMutationListener, Event);
+
+    // Notify when someone detaches an UI:* event
+    // if so: then we might need to detach the native listener on `document`
+    Event.notifyDetach(MUTATION_EVENTS, _teardownMutationListener, Event);
+
+    // Note: window.document has no prototype
+    DOCUMENT.suppressMutationEvents = function(suppress) {
+        this._suppressMutationEvents = suppress;
+    };
+
+
+
+
+
+
+    // Event._domCallback is the only method that is added to Event.
+    // We need to do this, because `event-mobile` needs access to the same method.
+    // We could have done without this method and instead listen for a custom-event to handle
+    // Mobile events, however, that would lead into 2 eventcycli which isn't performant.
+
+   /**
+    * Does the actual transportation from DOM-events into the Eventsystem. It also looks at the response of
+    * the Eventsystem: on e.halt() or e.preventDefault(), the original DOM-event will be preventDefaulted.
+    *
+    * @method _domCallback
+    * @param eventName {String} the customEvent that is transported to the eventsystem
+    * @param e {Object} eventobject
+    * @private
+    * @since 0.0.1
+    */
+    Event._domCallback = function(e) {
+        _evCallback(e);
+    };
+
+    // store module:
+    window._ITSAmodules.EventDom = Event;
+    return Event;
 };
 
-getHTML = function (node) {
-	var prop, val,
-		style, styles = [],
-		html = '';
+},{"event":6,"js-ext/lib/array.js":15,"js-ext/lib/object.js":16,"js-ext/lib/string.js":17,"polyfill/polyfill-base.js":23,"utils":24,"vdom":68}],3:[function(require,module,exports){
+(function (global){
+/**
+ * Defines the Event-Class, which should be instantiated to get its functionality
+ *
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ *
+ * @module event
+ * @class Event
+ * @constructor
+ * @since 0.0.1
+*/
 
-	if (!node.nodeName && node.nodeValue) {
-		// For text nodes, I return the uppercase text
-		// so that you can tell the parts generated at the server
-		// from the normal lowercase of the actual app when run on the client
-		return node.nodeValue.toUpperCase();
-	}
-	html += '<' + node.nodeName;
-	for (prop in node) {
-		val = node[prop];
+require('polyfill/polyfill-base.js');
+require('js-ext/lib/function.js');
+require('js-ext/lib/object.js');
 
-		// Ignore functions, those will be revived on the client side.
-		if (typeof val == 'function') continue;
-		switch (prop) {
-		case 'nodeName':
-		case 'parentNode':
-		case 'childNodes':
-		case 'pathname':
-		case 'search':
-			continue;
-		case 'checked':
-			if (val == 'false') continue;
-			break;
-		case 'href':
-			val = node.pathname;
-			break;
-		case 'className':
-			prop = 'class';
-			break;
-		case 'style':
-			if (val) {
-				for (style in val) {
-					if (val[style]) {
-						styles.push(style + ': ' + val[style]);
-					}
-				}
-				if (!styles.length) {
-					continue;
-				}
-				val = styles.join(';');
-			}
-			break;
-		}
-		html += ' ' + prop + '="' + val.replace('"', '\\"') + '"';
-	}
+// to prevent multiple Event instances
+// (which might happen: http://nodejs.org/docs/latest/api/modules.html#modules_module_caching_caveats)
+// we make sure Event is defined only once. Therefore we bind it to `global` and return it if created before
 
-	if (node.childNodes.length) {
-		html += '>' + node.childNodes.reduce(function (prev, node) {
-			return prev + getHTML(node);
-		}, '') + '</' + node.nodeName + '>';
-	}
-	else {
-		// I don't know why Mithril assigns the content of textareas
-		// to its value attribute instead of the innerHTML property.
-		// Since it doesn't have children, the closing tag has to be forced.
-		if (node.nodeName == 'TEXTAREA') {
-			html += '></TEXTAREA>';
-		} else {
-			html += '/>';
-		}
-	}
-	return html;
+
+(function (global, factory) {
+
+    "use strict";
+
+    global._ITSAmodules || Object.protectedProp(global, '_ITSAmodules', {});
+    global._ITSAmodules.Event || (global._ITSAmodules.Event = factory());
+
+    module.exports = global._ITSAmodules.Event;
+
+}(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this, function () {
+
+    "use strict";
+
+    var NAME = '[core-event]: ',
+        REGEXP_CUSTOMEVENT = /^((?:\w|-)+):((?:\w|-)+)$/,
+        REGEXP_WILDCARD_CUSTOMEVENT = /^(?:((?:(?:\w|-)+)|\*):)?((?:(?:\w|-)+)|\*)$/,
+        /* REGEXP_WILDCARD_CUSTOMEVENT :
+         *
+         * valid:
+         * 'red:save'
+         * 'red:*'
+         * '*:save'
+         * '*:*'
+         * 'save'
+         *
+         * invalid:
+         * '*red:save'
+         * 're*d:save'
+         * 'red*:save'
+         * 'red:*save'
+         * 'red:sa*ve'
+         * 'red:save*'
+         * ':save'
+         */
+        REGEXP_EVENTNAME_WITH_SEMICOLON = /:((?:\w|-)+)$/,
+        DEFINE_IMMUTAL_PROPERTY = function (obj, property, value) {
+            Object.defineProperty(obj, property, {
+                configurable: false,
+                enumerable: false,
+                writable: false,
+                value: value // `writable` is false means we cannot chance the value-reference, but we can change {} or [] its members
+            });
+        },
+        Event;
+
+    Event = {
+        /**
+         * Subscribes to a customEvent. The callback will be executed `after` the defaultFn.
+         *
+         * @static
+         * @method after
+         * @param customEvent {String|Array} the custom-event (or Array of events) to subscribe to. CustomEvents should
+         *        have the syntax: `emitterName:eventName`. Wildcard `*` may be used for both `emitterName` as well as `eventName`.
+         *        If `emitterName` is not defined, `UI` is assumed.
+         * @param callback {Function} subscriber:will be invoked when the event occurs. An `eventobject` will be passed
+         *        as its only argument.
+         * @param [context] {Object} the instance that subscribes to the event.
+         *        any object can passed through, even those are not extended with event-listener methods.
+         *        Note: Objects who are extended with listener-methods should use instance.after() instead.
+         * @param [filter] {String|Function} to filter the event.
+         *        Use a String if you want to filter DOM-events by a `selector`
+         *        Use a function if you want to filter by any other means. If the function returns a trully value, the
+         *        subscriber gets invoked. The function gets the `eventobject` as its only argument and the context is
+         *        the subscriber.
+         * @param [prepend=false] {Boolean} whether the subscriber should be the first in the list of after-subscribers.
+         * @return {Object} handler with a `detach()`-method which can be used to detach the subscriber
+         * @since 0.0.1
+        */
+        after: function(customEvent, callback, context, filter, prepend) {
+            console.log(NAME, 'add after subscriber to: '+customEvent);
+            return this._addMultiSubs(false, customEvent, callback, context, filter, prepend);
+        },
+
+        /**
+         * Subscribes to a customEvent. The callback will be executed `before` the defaultFn.
+         *
+         * @static
+         * @method before
+         * @param customEvent {String|Array} the custom-event (or Array of events) to subscribe to. CustomEvents should
+         *        have the syntax: `emitterName:eventName`. Wildcard `*` may be used for both `emitterName` as well as `eventName`.
+         *        If `emitterName` is not defined, `UI` is assumed.
+         * @param callback {Function} subscriber:will be invoked when the event occurs. An `eventobject` will be passed
+         *        as its only argument.
+         * @param [context] {Object} the instance that subscribes to the event.
+         *        any object can passed through, even those are not extended with event-listener methods.
+         *        Note: Objects who are extended with listener-methods should use instance.before() instead.
+         * @param [filter] {String|Function} to filter the event.
+         *        Use a String if you want to filter DOM-events by a `selector`
+         *        Use a function if you want to filter by any other means. If the function returns a trully value, the
+         *        subscriber gets invoked. The function gets the `eventobject` as its only argument and the context is
+         *        the subscriber.
+         * @param [prepend=false] {Boolean} whether the subscriber should be the first in the list of before-subscribers.
+         * @return {Object} handler with a `detach()`-method which can be used to detach the subscriber
+         * @since 0.0.1
+        */
+        before: function(customEvent, callback, context, filter, prepend) {
+            console.log(NAME, 'add before subscriber to: '+customEvent);
+            return this._addMultiSubs(true, customEvent, callback, context, filter, prepend);
+        },
+
+        /**
+         * Defines an emitterName into the instance (emitter).
+         * This will add a protected property `_emitterName` to the instance.
+         *
+         * @static
+         * @method defineEmitter
+         * @param emitter {Object} instance that should hold the emitterName
+         * @param emitterName {String} identifier that will be added when events are sent (`emitterName:eventName`)
+         * @since 0.0.1
+         */
+        defineEmitter: function (emitter, emitterName) {
+            console.log(NAME, 'defineEmitter: '+emitterName);
+            // ennumerable MUST be set `true` to enable merging
+            Object.defineProperty(emitter, '_emitterName', {
+                configurable: false,
+                enumerable: true,
+                writable: false,
+                value: emitterName
+            });
+        },
+
+        /**
+         * Defines a CustomEvent. If the eventtype already exists, it will not be overridden,
+         * unless you force to assign with `.forceAssign()`
+         *
+         * The returned object comes with 4 methods which can be invoked chainable:
+         *
+         * <ul>
+         *     <li>defaultFn() --> the default-function of the event</li>
+         *     <li>preventedFn() --> the function that should be invoked when the event is defaultPrevented</li>
+         *     <li>forceAssign() --> overrides any previous definition</li>
+         *     <li>unHaltable() --> makes the customEvent cannot be halted</li>
+         *     <li>unPreventable() --> makes the customEvent's defaultFn cannot be prevented</li>
+         *     <li>unSilencable() --> makes that emitters cannot make this event to perform silently (using e.silent)</li>
+         *     <li>unRenderPreventable() --> makes that the customEvent's render cannot be prevented</li>
+         *     <li>noRender() --> prevents this customEvent from render the dom. Overrules unRenderPreventable()</li>
+         * </ul>
+         *
+         * @static
+         * @method defineEvent
+         * @param customEvent {String} name of the customEvent conform the syntax: `emitterName:eventName`
+         * @return {Object} with extra methods that can be chained:
+         * <ul>
+         *      <li>unPreventable() --> makes the customEvent's defaultFn cannot be prevented</li>
+         *      <li>unRenderPreventable() --> makes that the customEvent's render cannot be prevented</li>
+         *      <li>forceAssign() --> overrides any previous definition</li>
+         *      <li>defaultFn() --> the default-function of the event</li>
+         *      <li>preventedFn() --> the function that should be invoked when the event is defaultPrevented</li>
+         * </ul>
+         * @since 0.0.1
+         */
+        defineEvent: function (customEvent) {
+            console.log(NAME, 'Events.defineEvent: '+customEvent);
+            var instance = this,
+                customevents = instance._ce,
+                extract, exists, newCustomEvent;
+
+            if (typeof customEvent!=='string') {
+                console.error(NAME, 'defineEvent should have a String-type as argument');
+                return;
+            }
+            extract = customEvent.match(REGEXP_CUSTOMEVENT);
+            if (!extract) {
+                console.error(NAME, 'defined Customevent '+customEvent+' does not match pattern');
+                return;
+            }
+            newCustomEvent = {
+                preventable: true,
+                renderPreventable: true
+            };
+            exists = customevents[customEvent];
+            // if customEvent not yet exists, we can add it
+            // else, we might need to wait for `forceAssign` to be called
+            if (!exists) {
+                // we can add it
+                customevents[customEvent] = newCustomEvent;
+            }
+            return {
+                defaultFn: function(defFn) {
+                    newCustomEvent.defaultFn = defFn;
+                    return this;
+                },
+                preventedFn: function(prevFn) {
+                    newCustomEvent.preventedFn = prevFn;
+                    return this;
+                },
+                unHaltable: function() {
+                    newCustomEvent.unHaltable = true;
+                    return this;
+                },
+                unSilencable: function() {
+                    newCustomEvent.unSilencable = true;
+                    return this;
+                },
+                unPreventable: function() {
+                    newCustomEvent.unPreventable = true;
+                    return this;
+                },
+                unRenderPreventable: function() {
+                    newCustomEvent.unRenderPreventable = true;
+                    return this;
+                },
+                noRender: function() {
+                    newCustomEvent.noRender = true;
+                    return this;
+                },
+                forceAssign: function() {
+                    // only needed when not yet added:
+                    // exists || (customevents[customEvent]=newCustomEvent);
+                    customevents[customEvent] = newCustomEvent;
+                    return this;
+                }
+            };
+        },
+
+        /**
+         * Detaches (unsubscribes) the listener from the specified customEvent.
+         *
+         * @static
+         * @method detach
+         * @param [listener] {Object} The instance that is going to detach the customEvent.
+         *        When not passed through (or undefined), all customevents of all instances are detached
+         * @param customEvent {String} conform the syntax: `emitterName:eventName`, wildcard `*` may be used for both
+         *        `emitterName` as well as only `eventName`, in which case 'UI' will become the emitterName.
+         *        Can be set as the only argument.
+         * @since 0.0.1
+        */
+        detach: function(listener, customEvent) {
+            console.log('detach instance-subscriber: '+customEvent);
+            // (typeof listener === 'string') means: only `customEvent` passed through
+            (typeof listener === 'string') ? this._removeSubscribers(undefined, listener) : this._removeSubscribers(listener, customEvent);
+        },
+
+        /**
+         * Detaches (unsubscribes) the listener from all customevents.
+         *
+         * @static
+         * @method detachAll
+         * @param listener {Object} The instance that is going to detach the customEvent
+         * @since 0.0.1
+        */
+        detachAll: function(listener) {
+            console.log(NAME, 'detach '+(listener ? 'all instance-' : 'ALL')+' subscribers');
+            var instance = this;
+            if (listener) {
+                instance._removeSubscribers(listener, '*:*');
+            }
+            else {
+                // we cannot just redefine _subs, for it is set as readonly
+                instance._subs.each(
+                    function(value, key) {
+                        delete instance._subs[key];
+                    }
+                );
+            }
+        },
+
+        /**
+         * Emits the event `eventName` on behalf of `emitter`, which becomes e.target in the eventobject.
+         * During this process, all subscribers and the defaultFn/preventedFn get an eventobject passed through.
+         * The eventobject is created with at least these properties:
+         *
+         * <ul>
+         *     <li>e.target --> source that triggered the event (instance or DOM-node), specified by `emitter`</li>
+         *     <li>e.type --> eventName</li>
+         *     <li>e.emitter --> emitterName</li>
+         *     <li>e.status --> status-information:
+         *          <ul>
+         *               <li>e.status.ok --> `true|false` whether the event got executed (not halted or defaultPrevented)</li>
+         *               <li>e.status.defaultFn (optional) --> `true` if any defaultFn got invoked</li>
+         *               <li>e.status.preventedFn (optional) --> `true` if any preventedFn got invoked</li>
+         *               <li>e.status.rendered (optional) --> `true` the vDOM rendered the dom</li>
+         *               <li>e.status.halted (optional) --> `reason|true` if the event got halted and optional the why</li>
+         *               <li>e.status.defaultPrevented (optional) -->  `reason|true` if the event got defaultPrevented and optional the why</li>
+         *               <li>e.status.renderPrevented (optional) -->  `reason|true` if the event got renderPrevented and optional the why</li>
+         *          </ul>
+         *     </li>
+         * </ul>
+         *
+         * The optional `payload` is merged into the eventobject and could be used by the subscribers and the defaultFn/preventedFn.
+         * If payload.silent is set true, the subscribers are not getting invoked: only the defaultFn.
+         *
+         * The eventobject also has these methods:
+         *
+         * <ul>
+         *     <li>e.halt() --> stops immediate all actions: no mer subscribers are invoked, no defaultFn/preventedFn</li>
+         *     <li>e.preventDefault() --> instead of invoking defaultFn, preventedFn will be invoked. No aftersubscribers</li>
+         *     <li>e.preventRender() --> by default, any event will trigger the vDOM (if exists) to re-render, this can be prevented by calling e.preventRender()</li>
+         * </ul>
+         *
+         * <ul>
+         *     <li>First, before-subscribers are invoked: this is the place where you might call `e.halt()`, `a.preventDefault()` or `e.preventRender()`</li>
+         *     <li>Next, defaultFn or preventedFn gets invoked, depending on whether e.halt() or a.preventDefault() has been called</li>
+         *     <li>Next, after-subscribers get invoked (unless e.halt() or a.preventDefault() has been called)</li>
+         *     <li>Finally, the finalization takes place: any subscribers are invoked, unless e.halt() or a.preventDefault() has been called</li>
+         * <ul>
+         *
+         * @static
+         * @method emit
+         * @param [emitter] {Object} instance that emits the events
+         * @param customEvent {String} Full customEvent conform syntax `emitterName:eventName`.
+         *        `emitterName` is available as **e.emitter**, `eventName` as **e.type**.
+         * @param payload {Object} extra payload to be added to the event-object
+         * @return {Object|undefined} eventobject or undefined when the event was halted or preventDefaulted.
+         * @since 0.0.1
+         */
+        emit: function (emitter, customEvent, payload) {
+            var instance = this;
+            if (typeof emitter === 'string') {
+                // emit is called with signature emit(customEvent, payload)
+                // thus the source-emitter is the Event-instance
+                payload = customEvent;
+                customEvent = emitter;
+                emitter = instance;
+            }
+            return instance._emit(emitter, customEvent, payload);
+        },
+
+        /**
+         * Adds a subscriber to the finalization-cycle, which happens after the after-subscribers.
+         * Only get invoked when the cycle was not preventDefaulted or halted.
+         *
+         * @method finalize
+         * @param finallySubscriber {Function} callback to be invoked
+         *        Function recieves the eventobject as its only argument
+         * @return {Object} handler with a `detach()`-method which can be used to detach the subscriber
+         * @since 0.0.1
+         */
+        finalize: function (finallySubscriber) {
+            console.log(NAME, 'finalize');
+            var finalHash = this._final;
+            finalHash.push(finallySubscriber);
+            return {
+                detach: function() {
+                    console.log(NAME, 'detach finalizer');
+                    var index = finalHash.indexOf(finallySubscriber);
+                    (index===-1) || finalHash.splice(index, 1);
+                }
+            };
+        },
+
+        /**
+         * Creates a notifier for the customEvent.
+         * You can use this to create delayed `defineEvents`. When the customEvent is called, the callback gets invoked
+         * (even before the subsrcibers). Use this callback for delayed customEvent-definitions.
+         *
+         * Use **no** wildcards for the emitterName. You might use wildcards for the eventName. Without wildcards, the
+         * notification will be unNotified (callback automaticly detached) on the first time the event occurs.
+
+         * You **must** specify the full `emitterName:eventName` syntax.
+         * The module `core-event-dom` uses `notify` to auto-define DOM-events (UI:*).
+         *
+         * @static
+         * @method notify
+         * @param customEvent {String|Array} the custom-event (or Array of events) to subscribe to. CustomEvents should
+         *        have the syntax: `emitterName:eventName`. Wildcard `*` may be used only  for`eventName`.
+         *        If `emitterName` should be defined.
+         * @param callback {Function} subscriber: will be invoked when the customEvent is called (before any subscribers.
+         *                 Recieves 2 arguments: the `customEvent` and `subscriber-object`.
+         * @param context {Object} context of the callback
+         * @param [once=false] {Boolean} whether the subscriptions should be removed after the first invokation
+         * @chainable
+         * @since 0.0.1
+        */
+        notify: function(customEvent, callback, context, once) {
+            console.log(NAME, 'notify');
+            var i, len, ce;
+            Array.isArray(customEvent) || (customEvent=[customEvent]);
+            len = customEvent.length;
+            for (i=0; i<len; i++) {
+                ce = customEvent[i];
+                this._notifiers[ce] = {
+                    cb: callback,
+                    o: context,
+                    r: once // r = remove automaticly
+                };
+            }
+            return this;
+        },
+
+        /**
+         * Creates a detach-notifier for the customEvent.
+         * You can use this to get informed whenever a subscriber detaches.
+         *
+         * Use **no** wildcards for the emitterName. You might use wildcards for the eventName. Without wildcards, the
+         * notification will be unNotified (callback automaticly detached) on the first time the event occurs.
+
+         * You **must** specify the full `emitterName:eventName` syntax.
+         * The module `core-event-dom` uses `notify` to auto-define DOM-events (UI:*).
+         *
+         * @static
+         * @method notifyDetach
+         * @param customEvent {String|Array} the custom-event (or Array of events) to subscribe to. CustomEvents should
+         *        have the syntax: `emitterName:eventName`. Wildcard `*` may be used only  for`eventName`.
+         *        If `emitterName` should be defined.
+         * @param callback {Function} subscriber: will be invoked when the customEvent is called (before any subscribers.
+         *                 Recieves 1 arguments: the `customEvent`.
+         * @param context {Object} context of the callback
+         * @param [once=false] {Boolean} whether the subscriptions should be removed after the first invokation
+         * @chainable
+         * @since 0.0.1
+        */
+        notifyDetach: function(customEvent, callback, context, once) {
+            console.log(NAME, 'notifyDetach');
+            var i, len, ce;
+            Array.isArray(customEvent) || (customEvent=[customEvent]);
+            len = customEvent.length;
+            for (i=0; i<len; i++) {
+                ce = customEvent[i];
+                this._detachNotifiers[ce] = {
+                    cb: callback,
+                    o: context,
+                    r: once // r = remove automaticly
+                };
+            }
+            return this;
+        },
+
+        /**
+         * Subscribes to a customEvent. The callback will be executed `after` the defaultFn.
+         * The subscriber will be automaticly removed once the callback executed the first time.
+         * No need to `detach()` (unless you want to undescribe before the first event)
+         *
+         * @static
+         * @method onceAfter
+         * @param customEvent {String|Array} the custom-event (or Array of events) to subscribe to. CustomEvents should
+         *        have the syntax: `emitterName:eventName`. Wildcard `*` may be used for both `emitterName` as well as `eventName`.
+         *        If `emitterName` is not defined, `UI` is assumed.
+         * @param callback {Function} subscriber:will be invoked when the event occurs. An `eventobject` will be passed
+         *        as its only argument.
+         * @param [context] {Object} the instance that subscribes to the event.
+         *        any object can passed through, even those are not extended with event-listener methods.
+         *        Note: Objects who are extended with listener-methods should use instance.onceAfter() instead.
+         * @param [filter] {String|Function} to filter the event.
+         *        Use a String if you want to filter DOM-events by a `selector`
+         *        Use a function if you want to filter by any other means. If the function returns a trully value, the
+         *        subscriber gets invoked. The function gets the `eventobject` as its only argument and the context is
+         *        the subscriber.
+         * @param [prepend=false] {Boolean} whether the subscriber should be the first in the list of after-subscribers.
+         * @return {Object} handler with a `detach()`-method which can be used to detach the subscriber
+         * @since 0.0.1
+        */
+        onceAfter: function(customEvent, callback, context, filter, prepend) {
+            var instance = this,
+                handler, wrapperFn;
+            console.log(NAME, 'add onceAfter subscriber to: '+customEvent);
+            wrapperFn = function(e) {
+                // CAUTIOUS: removeing the handler right now would lead into a mismatch of the dispatcher
+                // who loops through the array of subscribers!
+                // therefore, we must remove once the eventcycle has finished --> we detach by setting it
+                // at the end of the global-eventstack:
+                // yet there still is a change that the event is called multiple times BEFORE it
+                // will reach the defined `setTimeout` --> to avoid multiple invocations, handler is
+                // extended with the property `_detached`
+                handler._detached  || callback.call(this, e);
+                handler._detached = true;
+                setTimeout(function() {handler.detach();}, 0);
+            };
+            handler = instance._addMultiSubs(false, customEvent, wrapperFn, context, filter, prepend);
+            return handler;
+        },
+
+        /**
+         * Subscribes to a customEvent. The callback will be executed `before` the defaultFn.
+         * The subscriber will be automaticly removed once the callback executed the first time.
+         * No need to `detach()` (unless you want to undescribe before the first event)
+         *
+         * @static
+         * @method onceBefore
+         * @param customEvent {String|Array} the custom-event (or Array of events) to subscribe to. CustomEvents should
+         *        have the syntax: `emitterName:eventName`. Wildcard `*` may be used for both `emitterName` as well as `eventName`.
+         *        If `emitterName` is not defined, `UI` is assumed.
+         * @param callback {Function} subscriber:will be invoked when the event occurs. An `eventobject` will be passed
+         *        as its only argument.
+         * @param [context] {Object} the instance that subscribes to the event.
+         *        any object can passed through, even those are not extended with event-listener methods.
+         *        Note: Objects who are extended with listener-methods should use instance.onceBefore() instead.
+         * @param [filter] {String|Function} to filter the event.
+         *        Use a String if you want to filter DOM-events by a `selector`
+         *        Use a function if you want to filter by any other means. If the function returns a trully value, the
+         *        subscriber gets invoked. The function gets the `eventobject` as its only argument and the context is
+         *        the subscriber.
+         * @param [prepend=false] {Boolean} whether the subscriber should be the first in the list of before-subscribers.
+         * @return {Object} handler with a `detach()`-method which can be used to detach the subscriber
+         * @since 0.0.1
+        */
+        onceBefore: function(customEvent, callback, context, filter, prepend) {
+            var instance = this,
+                handler, wrapperFn;
+            console.log(NAME, 'add onceBefore subscriber to: '+customEvent);
+            wrapperFn = function(e) {
+                // CAUTIOUS: removeing the handler right now would lead into a mismatch of the dispatcher
+                // who loops through the array of subscribers!
+                // therefore, we must remove once the eventcycle has finished --> we detach by setting it
+                // at the end of the global-eventstack.
+                // yet there still is a change that the event is called multiple times BEFORE it
+                // will reach the defined `setTimeout` --> to avoid multiple invocations, handler is
+                // extended with the property `_detached`
+                handler._detached  || callback.call(this, e);
+                handler._detached = true;
+                setTimeout(function() {handler.detach();}, 0);
+            };
+            handler = instance._addMultiSubs(true, customEvent, wrapperFn, context, filter, prepend);
+            return handler;
+        },
+
+        /**
+         * Removes all event-definitions of an emitter, specified by its `emitterName`.
+         * When `emitterName` is not set, ALL event-definitions will be removed.
+         *
+         * @static
+         * @method undefAllEvents
+         * @param [emitterName] {String} name of the customEvent conform the syntax: `emitterName:eventName`
+         * @since 0.0.1
+         */
+        undefAllEvents: function (emitterName) {
+            console.log(NAME, 'undefAllEvents');
+            var instance = this,
+                pattern;
+            if (emitterName) {
+                pattern = new RegExp('^'+emitterName+':');
+                instance._ce.each(
+                    function(value, key) {
+                        key.match(pattern) && (delete instance._ce[key]);
+                    }
+                );
+            }
+            else {
+                instance._ce.each(
+                    function(value, key) {
+                        delete instance._ce[key];
+                    }
+                );
+            }
+        },
+
+        /**
+         * Removes the event-definition of the specified customEvent.
+         *
+         * @static
+         * @method undefEvent
+         * @param customEvent {String} name of the customEvent conform the syntax: `emitterName:eventName`
+         * @since 0.0.1
+         */
+        undefEvent: function (customEvent) {
+            console.log(NAME, 'undefEvent '+customEvent);
+            delete this._ce[customEvent];
+        },
+
+        /**
+         * unNotifies (unsubscribes) the notifier of the specified customEvent.
+         *
+         * @static
+         * @method unNotify
+         * @param customEvent {String} conform the syntax: `emitterName:eventName`.
+         * @since 0.0.1
+        */
+        unNotify: function(customEvent) {
+            console.log(NAME, 'unNotify '+customEvent);
+            delete this._notifiers[customEvent];
+        },
+
+        /**
+         * unNotifies (unsubscribes) the detach-notifier of the specified customEvent.
+         *
+         * @static
+         * @method unNotifyDetach
+         * @param customEvent {String} conform the syntax: `emitterName:eventName`.
+         * @since 0.0.1
+        */
+        unNotifyDetach: function(customEvent) {
+            console.log(NAME, 'unNotifyDetach '+customEvent);
+            delete this._detachNotifiers[customEvent];
+        },
+
+        //====================================================================================================
+        // private methods:
+        //====================================================================================================
+
+        /**
+         * Creates a subscriber to the specified customEvent. The customEvent must conform the syntax:
+         * `emitterName:eventName`. Wildcard `*` may be used for both `emitterName` as well as `eventName`
+         * If `emitterName` is not defined, `UI` is assumed.
+         *
+         * Examples of valid customevents:
+         *
+         * <ul>
+         *     <li>'redmodel:save'</li>
+         *     <li>'UI:click'</li>
+         *     <li>'click' --> alias for 'UI:click'</li>
+         *     <li>'`*`:click' --> careful: will listen to both UIs and non-UI- click-events</li>
+         *     <li>'redmodel:`*`'</li>
+         *     <li>'`*`:`*`'</li>
+         * </ul>
+         *
+         * @static
+         * @method _addMultiSubs
+         * @param before {Boolean} whether the subscriber is a `before` subscriber. On falsy, an `after`-subscriber is assumed.
+         * @param customEvent {Array} Array of Strings. customEvent should conform the syntax: `emitterName:eventName`, wildcard `*`
+         *         may be used for both `emitterName` as well as only `eventName`, in which case 'UI' will become the emitterName.
+         * @param callback {Function} subscriber to the event.
+         * @param listener {Object} Object that creates the subscriber (and will be listening by `listener.after(...)`)
+         * @param [filter] {String|Function} to filter the event.
+         *        Use a String if you want to filter DOM-events by a `selector`
+         *        Use a function if you want to filter by any other means. If the function returns a trully value, the
+         *        subscriber gets invoked. The function gets the `eventobject` as its only argument and the context is
+         *        the subscriber.
+         * @param [prepend=false] {Boolean} whether to make the subscriber the first in the list. By default it will pe appended.
+         * @return {Object} handler with a `detach()`-method which can be used to detach the subscriber
+         * @private
+         * @since 0.0.1
+        */
+        _addMultiSubs: function(before, customEvent, callback, listener, filter, prepend) {
+            console.log(NAME, '_addMultiSubs');
+            var instance = this,
+                subscribers;
+            if ((typeof listener === 'string') || (typeof listener === 'function')) {
+                prepend = filter;
+                filter = listener;
+                listener = null;
+            }
+            else if (typeof listener === 'boolean') {
+                prepend = listener;
+                filter = null;
+                listener = null;
+            }
+            if ((typeof filter==='boolean') || (typeof filter===undefined) || (typeof filter===null)) {
+                // filter was not set, instead `prepend` is set at this position
+                prepend = filter;
+                filter = null;
+            }
+            if (!Array.isArray(customEvent)) {
+                return instance._addSubscriber(listener, before, customEvent, callback, filter, prepend);
+            }
+            subscribers = [];
+            customEvent.forEach(
+                function(ce) {
+                    subscribers.push(instance._addSubscriber(listener, before, ce, callback, filter, prepend));
+                }
+            );
+            return {
+                detach: function() {
+                    subscribers.each(
+                        function(subscriber) {
+                            subscriber.detach();
+                        }
+                    );
+                }
+            };
+        },
+
+        /**
+         * Creates a subscriber to the specified customEvent. The customEvent must conform the syntax:
+         * `emitterName:eventName`. Wildcard `*` may be used for both `emitterName` as well as `eventName`
+         * If `emitterName` is not defined, `UI` is assumed.
+         *
+         * Examples of valid customevents:
+         *
+         * <ul>
+         *     <li>'redmodel:save'</li>
+         *     <li>'UI:click'</li>
+         *     <li>'click' --> alias for 'UI:click'</li>
+         *     <li>'`*`:click' --> careful: will listen to both UIs and non-UI- click-events</li>
+         *     <li>'redmodel:`*`'</li>
+         *     <li>'`*`:`*`'</li>
+         * </ul>
+         *
+         * @static
+         * @method _addSubscriber
+         * @param listener {Object} Object that creates the subscriber (and will be listening by `listener.after(...)`)
+         * @param before {Boolean} whether the subscriber is a `before` subscriber. On falsy, an `after`-subscriber is assumed.
+         * @param customEvent {String} conform the syntax: `emitterName:eventName`, wildcard `*` may be used for both
+         *        `emitterName` as well as only `eventName`, in which case 'UI' will become the emitterName.
+         * @param callback {Function} subscriber to the event.
+         * @param [filter] {String|Function} to filter the event.
+         *        Use a String if you want to filter DOM-events by a `selector`
+         *        Use a function if you want to filter by any other means. If the function returns a trully value, the
+         *        subscriber gets invoked. The function gets the `eventobject` as its only argument and the context is
+         *        the subscriber.
+         * @param [prepend=false] {Boolean} whether to make the subscriber the first in the list. By default it will pe appended.
+         * @return {Object} handler with a `detach()`-method which can be used to detach the subscriber
+         * @private
+         * @since 0.0.1
+        */
+        _addSubscriber: function(listener, before, customEvent, callback, filter, prepend) {
+            var instance = this,
+                allSubscribers = instance._subs,
+                extract = customEvent.match(REGEXP_WILDCARD_CUSTOMEVENT),
+                hashtable, item, notifier, customEventWildcardEventName;
+
+            if (!extract) {
+                console.error(NAME, 'subscribe-error: eventname does not match pattern');
+                return;
+            }
+
+            item = {
+                o: listener || instance,
+                cb: callback,
+                f: filter
+            };
+
+            // if extract[1] is undefined, a simple customEvent is going to subscribe (without :)
+            // therefore: recomposite customEvent:
+            extract[1] || (customEvent='UI:'+customEvent);
+
+            // if extract[1] === 'this', then a listener to its own emitterName is supposed
+            if (extract[1]==='this') {
+                if (listener._emitterName) {
+                    customEvent = listener._emitterName+':'+extract[2];
+                    item.s = true; // s --> self
+                }
+                else {
+                    console.error(NAME, 'subscribe-error: "this" cannot be detemined because the object is no emitter');
+                    return;
+                }
+            }
+
+            allSubscribers[customEvent] || (allSubscribers[customEvent]={});
+            if (before) {
+                allSubscribers[customEvent].b || (allSubscribers[customEvent].b=[]);
+            }
+            else {
+                allSubscribers[customEvent].a || (allSubscribers[customEvent].a=[]);
+            }
+
+            hashtable = allSubscribers[customEvent][before ? 'b' : 'a'];
+            // we need to be able to process an array of customevents
+
+            // in case of a defined subscription (no wildcard), we should look for notifiers
+            if ((extract[1]!=='*') && (extract[2]!=='*')) {
+                // before subscribing: we might need to activate notifiers --> with defined eventName should also be cleaned up:
+                notifier = instance._notifiers[customEvent];
+                if (notifier) {
+                    notifier.cb.call(notifier.o, customEvent, item);
+                    if (notifier.r) {
+                        delete instance._notifiers[customEvent];
+                    }
+                }
+                // check the same for wildcard eventName:
+                customEventWildcardEventName = customEvent.replace(REGEXP_EVENTNAME_WITH_SEMICOLON, ':*');
+                if ((customEventWildcardEventName !== customEvent) && (notifier=instance._notifiers[customEventWildcardEventName])) {
+                    notifier.cb.call(notifier.o, customEvent, item);
+                    if (notifier.r) {
+                        delete instance._notifiers[customEvent];
+                    }
+                }
+            }
+
+            console.log(NAME, '_addSubscriber to customEvent: '+customEvent);
+            prepend ? hashtable.unshift(item) : hashtable.push(item);
+
+            return {
+                detach: function() {
+                    instance._removeSubscriber(listener, before, customEvent, callback);
+                }
+            };
+        },
+
+        /**
+         * Emits the event `eventName` on behalf of `emitter`, which becomes e.target in the eventobject.
+         * During this process, all subscribers and the defaultFn/preventedFn get an eventobject passed through.
+         * The eventobject is created with at least these properties:
+         *
+         * <ul>
+         *     <li>e.target --> source that triggered the event (instance or DOM-node), specified by `emitter`</li>
+         *     <li>e.type --> eventName</li>
+         *     <li>e.emitter --> emitterName</li>
+         *     <li>e.status --> status-information:
+         *          <ul>
+         *               <li>e.status.ok --> `true|false` whether the event got executed (not halted or defaultPrevented)</li>
+         *               <li>e.status.defaultFn (optional) --> `true` if any defaultFn got invoked</li>
+         *               <li>e.status.preventedFn (optional) --> `true` if any preventedFn got invoked</li>
+         *               <li>e.status.rendered (optional) --> `true` the vDOM rendered the dom</li>
+         *               <li>e.status.halted (optional) --> `reason|true` if the event got halted and optional the why</li>
+         *               <li>e.status.defaultPrevented (optional) -->  `reason|true` if the event got defaultPrevented and optional the why</li>
+         *               <li>e.status.renderPrevented (optional) -->  `reason|true` if the event got renderPrevented and optional the why</li>
+         *          </ul>
+         *     </li>
+         * </ul>
+         *
+         * The optional `payload` is merged into the eventobject and could be used by the subscribers and the defaultFn/preventedFn.
+         * If payload.silent is set true, the subscribers are not getting invoked: only the defaultFn.
+         *
+         * The eventobject also has these methods:
+         *
+         * <ul>
+         *     <li>e.halt() --> stops immediate all actions: no mer subscribers are invoked, no defaultFn/preventedFn</li>
+         *     <li>e.preventDefault() --> instead of invoking defaultFn, preventedFn will be invoked. No aftersubscribers</li>
+         *     <li>e.preventRender() --> by default, any event will trigger the vDOM (if exists) to re-render, this can be prevented by calling e.preventRender()</li>
+         * </ul>
+         *
+         * <ul>
+         *     <li>First, before-subscribers are invoked: this is the place where you might call `e.halt()`, `a.preventDefault()` or `e.preventRender()`</li>
+         *     <li>Next, defaultFn or preventedFn gets invoked, depending on whether e.halt() or a.preventDefault() has been called</li>
+         *     <li>Next, after-subscribers get invoked (unless e.halt() or a.preventDefault() has been called)</li>
+         *     <li>Finally, the finalization takes place: any subscribers are invoked, unless e.halt() or a.preventDefault() has been called</li>
+         * <ul>
+         *
+         * @static
+         * @method emit
+         * @param [emitter] {Object} instance that emits the events
+         * @param customEvent {String} Full customEvent conform syntax `emitterName:eventName`.
+         *        `emitterName` is available as **e.emitter**, `eventName` as **e.type**.
+         * @param payload {Object} extra payload to be added to the event-object
+         * @param [beforeSubscribers] {Array} array of functions to act as beforesubscribers. <b>should not be used</b> other than
+         *                            by any submodule like `event-dom`. If used, than this list of subscribers gets invoked instead
+         *                            of the subscribers that actually subscribed to the event.
+         * @param [afterSubscribers] {Array} array of functions to act as afterSubscribers. <b>should not be used</b> other than
+         *                            by any submodule like `event-dom`. If used, than this list of subscribers gets invoked instead
+         *                            of the subscribers that actually subscribed to the event.
+         * @param [preProcessor] {Function} if passed, this function will be invoked before every single subscriber
+         *                       It is meant to manipulate the eventobject, something that `event-dom` needs to do
+         *                       This function expects 2 arguments: `subscriber` and `eventobject`.
+         *                       <b>should not be used</b> other than by any submodule like `event-dom`.
+         * @param [keepPayload] {Boolean} whether `payload` should be used as the ventobject instead of creating a new
+         *                      eventobject and merge payload. <b>should not be used</b> other than by any submodule like `event-dom`.
+         * @return {Object|undefined} eventobject or undefined when the event was halted or preventDefaulted.
+         * @since 0.0.1
+         */
+        _emit: function (emitter, customEvent, payload, beforeSubscribers, afterSubscribers, preProcessor, keepPayload) {
+            // NOTE: emit() needs to be synchronous! otherwise we wouldn't be able
+            // to preventDefault DOM-events in time.
+            var instance = this,
+                allCustomEvents = instance._ce,
+                allSubscribers = instance._subs,
+                customEventDefinition, extract, emitterName, eventName, subs, wildcard_named_subs,
+                named_wildcard_subs, wildcard_wildcard_subs, e, invokeSubs, key;
+
+            (customEvent.indexOf(':') !== -1) || (customEvent = emitter._emitterName+':'+customEvent);
+            console.log(NAME, 'customEvent.emit: '+customEvent);
+
+            extract = customEvent.match(REGEXP_CUSTOMEVENT);
+            if (!extract) {
+                console.error(NAME, 'defined emit-event does not match pattern');
+                return;
+            }
+            emitterName = extract[1];
+            eventName = extract[2];
+            customEventDefinition = allCustomEvents[customEvent];
+
+            subs = allSubscribers[customEvent];
+            wildcard_named_subs = allSubscribers['*:'+eventName];
+            named_wildcard_subs = allSubscribers[emitterName+':*'];
+            wildcard_wildcard_subs = allSubscribers['*:*'];
+
+            if (keepPayload) {
+                e = payload;
+            }
+            else {
+                e = Object.create(instance._defaultEventObj);
+                // e.target = (payload && payload.target) || emitter; // make it possible to force a specific e.target
+                e.target = emitter;
+                e.type = eventName;
+                e.emitter = emitterName;
+                e.status = {};
+                if (customEventDefinition) {
+                    e._unPreventable = customEventDefinition.unPreventable;
+                    e._unHaltable = customEventDefinition.unHaltable;
+                    e._unRenderPreventable = customEventDefinition.unRenderPreventable;
+                    customEventDefinition.unSilencable && (e.status.unSilencable = true);
+                }
+                if (payload) {
+                    // e.merge(payload); is not enough --> DOM-eventobject has many properties that are not "own"-properties
+                    for (key in payload) {
+                        e[key] || (e[key]=payload[key]);
+                    }
+                }
+                if (e.status.unSilencable && e.silent) {
+                    console.warn(NAME, ' event '+e.emitter+':'+e.type+' cannot made silent: this customEvent is defined as unSilencable');
+                    e.silent = false;
+                }
+            }
+            if (beforeSubscribers) {
+                instance._invokeSubs(e, false, true, preProcessor, {b: beforeSubscribers});
+            }
+            else {
+                invokeSubs = instance._invokeSubs.bind(instance, e, true, true, false);
+                [subs, named_wildcard_subs, wildcard_named_subs, wildcard_wildcard_subs].forEach(invokeSubs);
+            }
+            e.status.ok = !e.status.halted && !e.status.defaultPrevented;
+            // in case any subscriber changed e.target inside its filter (event-dom does this),
+            // then we reset e.target to its original. But only if e._noResetSourceTarget is undefined:
+            // (e._noResetSourceTarget can be used to supress this behaviour --> dragdrop uses this)
+            e.sourceTarget && !e._noResetSourceTarget && (e.target=e.sourceTarget);
+            if (customEventDefinition && !e.status.halted) {
+                // now invoke defFn
+                e.returnValue = (e.status.defaultPrevented || e.status.defaultPreventedContinue) ?
+                                (customEventDefinition.preventedFn && (e.status.preventedFn=true) && customEventDefinition.preventedFn.call(e.target, e)) :
+                                (customEventDefinition.defaultFn && (e.status.defaultFn=true) && customEventDefinition.defaultFn.call(e.target, e));
+            }
+
+            if (e.status.ok) {
+                if (afterSubscribers) {
+                    instance._invokeSubs(e, false, false, preProcessor, {a: afterSubscribers});
+                }
+                else {
+                    invokeSubs = instance._invokeSubs.bind(instance, e, true, false, false);
+                    [subs, named_wildcard_subs, wildcard_named_subs, wildcard_wildcard_subs].forEach(invokeSubs);
+                }
+                if (!e.silent) {
+                    // in case any subscriber changed e.target inside its filter (event-dom does this),
+                    // then we reset e.target to its original:
+                    e.sourceTarget && (e.target=e.sourceTarget);
+                    instance._final.some(function(finallySubscriber) {
+                        !e.silent && finallySubscriber(e);
+                        if (e.status.unSilencable && e.silent) {
+                            console.warn(NAME, ' event '+e.emitter+':'+e.type+' cannot made silent: this customEvent is defined as unSilencable');
+                            e.silent = false;
+                        }
+                        return e.silent;
+                    });
+                }
+            }
+            return e;
+        },
+
+        /**
+         * Does the actual invocation of a subscriber.
+         *
+         * @method _invokeSubs
+         * @param e {Object} event-object
+         * @param [checkFilter] {Boolean}
+         * @param [before] {Boolean} whether it concerns before subscribers
+         * @param [checkFilter] {Boolean}
+         * @param subscribers {Array} contains subscribers (objects) with these members:
+         * <ul>
+         *     <li>subscriber.o {Object} context of the callback</li>
+         *     <li>subscriber.cb {Function} callback to be invoked</li>
+         *     <li>subscriber.f {Function} filter to be applied</li>
+         *     <li>subscriber.t {DOM-node} target for the specific selector, which will be set as e.target
+         *         only when event-dom is active and there are filter-selectors</li>
+         *     <li>subscriber.n {DOM-node} highest dom-node that acts as the container for delegation.
+         *         only when event-dom is active and there are filter-selectors</li>
+         *     <li>subscriber.s {Boolean} true when the subscription was set to itself by using "this:eventName"</li>
+         * </ul>
+         * @private
+         * @since 0.0.1
+         */
+        _invokeSubs: function (e, checkFilter, before, preProcessor, subscribers) { // subscribers, plural
+            console.log(NAME, '_invokeSubs');
+            var subs, passesThis, passesFilter;
+            if (subscribers && !e.status.halted && !e.silent) {
+                subs = before ? subscribers.b : subscribers.a;
+                subs && subs.some(function(subscriber) {
+                    console.log(NAME, '_invokeSubs checking invokation for single subscriber');
+                    if (preProcessor && preProcessor(subscriber, e)) {
+                        return true;
+                    }
+                    // check: does it need to be itself because of subscribing through 'this'
+                    passesThis = (!subscriber.s || (subscriber.o===e.target));
+                    // check: does it pass the filter
+                    passesFilter = (!checkFilter || !subscriber.f || subscriber.f.call(subscriber.o, e));
+                    if (passesThis && passesFilter) {
+                        // finally: invoke subscriber
+                        console.log(NAME, '_invokeSubs is going to invoke subscriber');
+                        subscriber.cb.call(subscriber.o, e);
+                    }
+                    if (e.status.unSilencable && e.silent) {
+                        console.warn(NAME, ' event '+e.emitter+':'+e.type+' cannot made silent: this customEvent is defined as unSilencable');
+                        e.silent = false;
+                    }
+                    return e.silent || (before && e.status.halted);  // remember to check whether it was halted for any reason
+                });
+            }
+        },
+
+        /**
+         * Removes a subscriber from the specified customEvent. The customEvent must conform the syntax:
+         * `emitterName:eventName`.
+         *
+         * @static
+         * @method _removeSubscriber
+         * @param listener {Object} Object that creates the subscriber (and will be listening by `listener.after(...)`)
+         * @param before {Boolean} whether the subscriber is a `before` subscriber. On falsy, an `after`-subscriber is assumed.
+         * @param customEvent {String} conform the syntax: `emitterName:eventName`, wildcard `*` may be used for both
+         *        `emitterName` as well as only `eventName`, in which case 'UI' will become the emmiterName.
+         * @param [callback] {Function} subscriber to the event, when not set, all subscribers of the listener to this customEvent
+         *                   will be removed.
+         * @private
+         * @since 0.0.1
+        */
+        _removeSubscriber: function(listener, before, customEvent, callback) {
+            console.log('_removeSubscriber: '+customEvent);
+            var instance = this,
+                eventSubscribers = instance._subs[customEvent],
+                hashtable = eventSubscribers && eventSubscribers[before ? 'b' : 'a'],
+                i, subscriber, beforeUsed, afterUsed, extract, detachNotifier, customEventWildcardEventName;
+            if (hashtable) {
+                // unfortunatly we cannot search by reference, because the array has composed objects
+                // also: can't use native Array.forEach: removing items within its callback change the array
+                // during runtime, making it to skip the next item of the one that's being removed
+               for (i=0; i<hashtable.length; ++i) {
+                    console.log(NAME, '_removeSubscriber for single subscriber');
+                    subscriber = hashtable[i];
+                    if ((subscriber.o===(listener || instance)) && (!callback || (subscriber.cb===callback))) {
+                        console.log('removing subscriber');
+                        hashtable.splice(i--, 1);
+                    }
+                }
+            }
+            // After removal subscriber: check whether both eventSubscribers.a and eventSubscribers.b are empty
+            // if so, remove the member from Event._subs to cleanup memory
+            if (eventSubscribers) {
+                beforeUsed = eventSubscribers.b && (eventSubscribers.b.length>0);
+                afterUsed = eventSubscribers.a && (eventSubscribers.a.length>0);
+                if (!beforeUsed && !afterUsed) {
+                    delete instance._subs[customEvent];
+                }
+            }
+            extract = customEvent.match(REGEXP_CUSTOMEVENT);
+            // in case of a defined subscription (no wildcard),
+            // we need to inform any detachNotifier of the unsubscription:
+            if (extract && ((extract[1]!=='*') && (extract[2]!=='*'))) {
+                detachNotifier = instance._detachNotifiers[customEvent];
+                if (detachNotifier) {
+                    detachNotifier.cb.call(detachNotifier.o, customEvent);
+                    if (detachNotifier.r) {
+                        delete instance._detachNotifiers[customEvent];
+                    }
+                }
+                // check the same for wildcard eventName:
+                customEventWildcardEventName = customEvent.replace(REGEXP_EVENTNAME_WITH_SEMICOLON, ':*');
+                if ((customEventWildcardEventName !== customEvent) && (detachNotifier=instance._detachNotifiers[customEventWildcardEventName])) {
+                    detachNotifier.cb.call(detachNotifier.o, customEvent);
+                    if (detachNotifier.r) {
+                        delete instance._detachNotifiers[customEvent];
+                    }
+                }
+            }
+        },
+
+        /**
+         * Removes subscribers from the multiple customevents. The customEvent must conform the syntax:
+         * `emitterName:eventName`. Wildcard `*` may be used for both `emitterName` as well as `eventName`
+         * If `emitterName` is not defined, `UI` is assumed.
+         *
+         * Examples of valid customevents:
+         *
+         * <ul>
+         *     <li>'redmodel:save'</li>
+         *     <li>'UI:click'</li>
+         *     <li>'click' --> alias for 'UI:click'</li>
+         *     <li>'`*`:click' --> careful: will listen to both UIs and non-UI- click-events</li>
+         *     <li>'redmodel:`*`'</li>
+         *     <li>'`*`:`*`'</li>
+         * </ul>
+         *
+         * @static
+         * @method _removeSubscriber
+         * @param listener {Object} Object that creates the subscriber (and will be listening by `listener.after(...)`)
+         * @param customEvent {String} conform the syntax: `emitterName:eventName`, wildcard `*` may be used for both
+         *        `emitterName` as well as only `eventName`, in which case 'UI' will become the emmiterName.
+         * @private
+         * @since 0.0.1
+        */
+        _removeSubscribers: function(listener, customEvent) {
+            console.log('_removeSubscribers: '+customEvent);
+            var instance = this,
+                emitterName, eventName,
+                extract = customEvent.match(REGEXP_WILDCARD_CUSTOMEVENT);
+            if (!extract) {
+                console.error(NAME, '_removeSubscribers-error: customEvent '+customEvent+' does not match pattern');
+                return;
+            }
+            emitterName = extract[1] || 'UI';
+            eventName = extract[2];
+            if ((emitterName!=='*') && (eventName!=='*')) {
+                instance._removeSubscriber(listener, true, customEvent);
+                instance._removeSubscriber(listener, false, customEvent);
+            }
+            else {
+                // wildcard, we need to look at all the members of Event._subs
+                instance._subs.each(
+                    function(value, key) {
+                        var localExtract = key.match(REGEXP_WILDCARD_CUSTOMEVENT),
+                            emitterMatch = (emitterName==='*') || (emitterName===localExtract[1]),
+                            eventMatch = (eventName==='*') || (eventName===localExtract[2]);
+                        if (emitterMatch && eventMatch) {
+                            instance._removeSubscriber(listener, true, key);
+                            instance._removeSubscriber(listener, false, key);
+                        }
+                    }
+                );
+            }
+        },
+
+        /**
+         * Adds a property to the default eventobject's prototype which passes through all eventcycles.
+         * Goes through Object.defineProperty with configurable, enumerable and writable
+         * all set to false.
+         *
+         * @method _setEventObjProperty
+         * @param property {String} event-object
+         * @param value {Any}
+         * @chainable
+         * @private
+         * @since 0.0.1
+         */
+        _setEventObjProperty: function (property, value) {
+            console.log(NAME, '_setEventObjProperty');
+            DEFINE_IMMUTAL_PROPERTY(this._defaultEventObj, property, value);
+            return this;
+        }
+
+    };
+
+    /**
+     * Objecthash containing all defined custom-events
+     * which has a structure like this:
+     *
+     * _ce = {
+     *     'UI:click': {
+     *         preventable: true,
+     *         defaultFn: function(){...},
+     *         preventedFn: function(){...},
+     *         renderPreventable: true
+     *     },
+     *     'redmodel:save': {
+     *         preventable: true,
+     *         defaultFn: function(){...},
+     *         preventedFn: function(){...},
+     *         renderPreventable: true
+     *     }
+     * }
+     *
+     * @property _ce
+     * @default {}
+     * @type Object
+     * @private
+     * @since 0.0.1
+    */
+    Object.defineProperty(Event, '_ce', {
+        configurable: false,
+        enumerable: false,
+        writable: false,
+        value: {} // `writable` is false means we cannot chance the value-reference, but we can change {}'s properties itself
+    });
+
+    /**
+     * Objecthash containing all defined before and after subscribers
+     * which has a structure like this (`b` represents `before` and `a` represents `after`)
+     * Every item that gets in the array consist by itself of 3 properties:
+     *                                                          subscriberitem = {
+     *                                                              o: listener,
+     *                                                              cb: callbackFn(e),
+     *                                                              f: filter
+     *                                                          };
+     *
+     * _subs = {
+     *     'UI:click': {
+     *         b: [
+     *             item,
+     *             item
+     *         ],
+     *         a: [
+     *             item,
+     *             item
+     *         ]
+     *     },
+     *     '*:click': {
+     *         b: [
+     *             item,
+     *             item
+     *         ],
+     *         a: [
+     *             item,
+     *             item
+     *         ]
+     *     },
+     *     'redmodel:save': {
+     *         b: [
+     *             item,
+     *             item
+     *         ],
+     *         a: [
+     *             item,
+     *             item
+     *         ]
+     *     }
+     * }
+     *
+     * @property _ce
+     * @default {}
+     * @type Object
+     * @private
+     * @since 0.0.1
+    */
+    DEFINE_IMMUTAL_PROPERTY(Event, '_subs', {});
+
+    /**
+     * Internal list of finalize-subscribers which are invoked at the finalization-cycle, which happens after the after-subscribers.
+     * Is an array of function-references.
+     *
+     * @property _final
+     * @default []
+     * @type Array
+     * @private
+     * @since 0.0.1
+    */
+    DEFINE_IMMUTAL_PROPERTY(Event, '_final', []);
+
+    /**
+     * Object that acts as the prototype of the eventobject.
+     * To add more methods, you can use `_setEventObjProperty`
+     *
+     * @property _defaultEventObj
+     * @default {
+     *    halt: function()
+     *    preventDefault: function()
+     *    preventRender: function()
+     * }
+     * @type Object
+     * @private
+     * @since 0.0.1
+    */
+    DEFINE_IMMUTAL_PROPERTY(Event, '_defaultEventObj', {});
+
+    /**
+     * Objecthash containing all detach-notifiers, keyed by customEvent name.
+     * This list is maintained by `notifyDetach` and `unNotifyDetach`
+     *
+     * _detachNotifiers = {
+     *     'UI:click': {
+     *         cb:function() {}
+     *         o: {} // context
+     *     },
+     *     'redmodel:*': {
+     *         cb:function() {}
+     *         o: {} // context
+     *     },
+     *     'bluemodel:save': {
+     *         cb:function() {}
+     *         o: {} // context
+     *     }
+     * }
+     *
+     * @property _detachNotifiers
+     * @default {}
+     * @type Object
+     * @private
+     * @since 0.0.1
+    */
+    DEFINE_IMMUTAL_PROPERTY(Event, '_detachNotifiers', {});
+
+    /**
+     * Objecthash containing all notifiers, keyed by customEvent name.
+     * This list is maintained by `notify` and `unNotify`
+     *
+     * _notifiers = {
+     *     'UI:click': {
+     *         cb:function() {}
+     *         o: {} // context
+     *     },
+     *     'redmodel:*': {
+     *         cb:function() {}
+     *         o: {} // context
+     *     },
+     *     'bluemodel:save': {
+     *         cb:function() {}
+     *         o: {} // context
+     *     }
+     * }
+     *
+     * @property _notifiers
+     * @default {}
+     * @type Object
+     * @private
+     * @since 0.0.1
+    */
+    DEFINE_IMMUTAL_PROPERTY(Event, '_notifiers', {});
+
+    Event._setEventObjProperty('halt', function(reason) {this.status.ok || this._unHaltable || (this.status.halted = (reason || true));})
+         ._setEventObjProperty('preventDefault', function(reason) {this.status.ok || this._unPreventable || (this.status.defaultPrevented = (reason || true));})
+         ._setEventObjProperty('preventDefaultContinue', function(reason) {this.status.ok || this._unPreventable || (this.status.defaultPreventedContinue = (reason || true));})
+         ._setEventObjProperty('preventRender', function(reason) {this.status.ok || this._unRenderPreventable || (this.status.renderPrevented = (reason || true));});
+
+    return Event;
+}));
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"js-ext/lib/function.js":7,"js-ext/lib/object.js":8,"polyfill/polyfill-base.js":14}],4:[function(require,module,exports){
+"use strict";
+
+/**
+ * Extends the Event-instance by adding the method `Emitter` to it.
+ * The `Emitter-method` returns an object that should be merged into any Class-instance or object you
+ * want to extend with the emit-methods, so the appropriate methods can be invoked on the instance.
+ *
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ *
+ * Should be called using  the provided `extend`-method like this:
+ * @example
+ *     var Event = require('event');<br>
+ *
+ * @module event
+ * @submodule event-emitter
+ * @class Event.Emitter
+ * @since 0.0.1
+*/
+
+var NAME = '[event-emitter]: ',
+    REGEXP_EMITTER = /^(\w|-)+$/,
+    Event = require('./index.js');
+
+Event.Emitter = function(emitterName) {
+    var composeCustomevent = function(eventName) {
+            return emitterName+':'+eventName;
+        },
+        newEmitter;
+    if (!REGEXP_EMITTER.test(emitterName)) {
+        console.error(NAME, 'Emitter invoked with invalid argument: you must specify a valid emitterName');
+        return;
+    }
+    newEmitter = {
+        /**
+         * Defines a CustomEvent. If the eventtype already exists, it will not be overridden,
+         * unless you force to assign with `.forceAssign()`
+         *
+         * The returned object comes with 4 methods which can be invoked chainable:
+         *
+         * <ul>
+         *     <li>defaultFn() --> the default-function of the event</li>
+         *     <li>preventedFn() --> the function that should be invoked when the event is defaultPrevented</li>
+         *     <li>forceAssign() --> overrides any previous definition</li>
+         *     <li>unHaltable() --> makes the customEvent cannot be halted</li>
+         *     <li>unPreventable() --> makes the customEvent's defaultFn cannot be prevented</li>
+         *     <li>unSilencable() --> makes that emitters cannot make this event to perform silently (using e.silent)</li>
+         *     <li>unRenderPreventable() --> makes that the customEvent's render cannot be prevented</li>
+         *     <li>noRender() --> prevents this customEvent from render the dom. Overrules unRenderPreventable()</li>
+         * </ul>
+         *
+         * @method defineEvent
+         * @param eventName {String} name of the customEvent, without `emitterName`.
+         *        The final event that will be created has the syntax: `emitterName:eventName`,
+         *        where `emitterName:` is automaticly prepended.
+         * @return {Object} with extra methods that can be chained:
+         * <ul>
+         *      <li>unPreventable() --> makes the customEvent's defaultFn cannot be prevented</li>
+         *      <li>unRenderPreventable() --> makes that the customEvent's render cannot be prevented</li>
+         *      <li>forceAssign() --> overrides any previous definition</li>
+         *      <li>defaultFn() --> the default-function of the event</li>
+         *      <li>preventedFn() --> the function that should be invoked when the event is defaultPrevented</li>
+         * </ul>
+         * @since 0.0.1
+         */
+        defineEvent: function (eventName) {
+            return Event.defineEvent(composeCustomevent(eventName));
+        },
+
+        /**
+         * Emits the event `eventName` on behalf of the instance holding this method.
+         *
+         * @method emit
+         * @param eventName {String} name of the event to be sent (available as e.type)
+         *        you could pass a customEvent here 'emitterName:eventName', which would
+         *        overrule the `instance-emitterName`
+         * @param payload {Object} extra payload to be added to the event-object
+         * @return {Promise}
+         * <ul>
+         *     <li>on success: returnValue {Any} of the defaultFn</li>
+         *     <li>on error: reason {Any} Either: description 'event was halted', 'event was defaultPrevented' or the returnvalue of the preventedFn</li>
+         * </ul>
+         * @since 0.0.1
+         */
+        emit: function(eventName, payload) {
+            return Event.emit(this, eventName, payload);
+        },
+
+        /**
+         * Removes all event-definitions of the instance holding this method.
+         *
+         * @method undefAllEvents
+         * @since 0.0.1
+         */
+        undefAllEvents: function () {
+            Event.undefEvent(emitterName);
+        },
+
+        /**
+         * Removes the event-definition of the specified customEvent.
+         *
+         * @method undefEvent
+         * @param eventName {String} name of the customEvent, without `emitterName`.
+         *        The calculated customEvent which will be undefined, will have the syntax: `emitterName:eventName`.
+         *        where `emitterName:` is automaticly prepended.
+         * @since 0.0.1
+         */
+        undefEvent: function (eventName) {
+            Event.undefEvent(composeCustomevent(eventName));
+        }
+
+    };
+    // register the emittername:
+    Event.defineEmitter(newEmitter, emitterName);
+    return newEmitter;
 };
+},{"./index.js":6}],5:[function(require,module,exports){
+"use strict";
 
+/**
+ * Extends the Event-instance by adding the object `Listener` to it.
+ * The returned object should be merged into any Class-instance or object you want to
+ * extend with the listener-methods, so the appropriate methods can be invoked on the instance.
+ *
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ *
+ * Should be called using  the provided `extend`-method like this:
+ * @example
+ *     var Event = require('event');<br>
+ *
+ * @module event
+ * @submodule event-listener
+ * @class Event.Listener
+ * @since 0.0.1
+*/
 
-win = {
-    cancelAnimationFrame: function() {
+var Event = require('./index.js');
 
+Event.Listener = {
+    /**
+     * Subscribes to a customEvent on behalf of the object who calls this method.
+     * The callback will be executed `after` the defaultFn.
+     *
+     * @method after
+     * @param customEvent {String|Array} the custom-event (or Array of events) to subscribe to. CustomEvents should
+     *        have the syntax: `emitterName:eventName`. Wildcard `*` may be used for both `emitterName` as well as `eventName`.
+     *        If `emitterName` is not defined, `UI` is assumed.
+     * @param callback {Function} subscriber:will be invoked when the event occurs. An `eventobject` will be passed
+     *        as its only argument.
+     * @param [filter] {String|Function} to filter the event.
+     *        Use a String if you want to filter DOM-events by a `selector`
+     *        Use a function if you want to filter by any other means. If the function returns a trully value, the
+     *        subscriber gets invoked. The function gets the `eventobject` as its only argument and the context is
+     *        the subscriber.
+     * @param [prepend=false] {Boolean} whether the subscriber should be the first in the list of after-subscribers.
+     * @return {Object} handler with a `detach()`-method which can be used to detach the subscriber
+     * @since 0.0.1
+    */
+    after: function (customEvent, callback, filter, prepend) {
+        return Event.after(customEvent, callback, this, filter, prepend);
     },
 
-    console: require('polyfill/lib/window.console.js'),
+    /**
+     * Subscribes to a customEvent on behalf of the object who calls this method.
+     * The callback will be executed `before` the defaultFn.
+     *
+     * @method before
+     * @param customEvent {String|Array} the custom-event (or Array of events) to subscribe to. CustomEvents should
+     *        have the syntax: `emitterName:eventName`. Wildcard `*` may be used for both `emitterName` as well as `eventName`.
+     *        If `emitterName` is not defined, `UI` is assumed.
+     * @param callback {Function} subscriber:will be invoked when the event occurs. An `eventobject` will be passed
+     *        as its only argument.
+     * @param [filter] {String|Function} to filter the event.
+     *        Use a String if you want to filter DOM-events by a `selector`
+     *        Use a function if you want to filter by any other means. If the function returns a trully value, the
+     *        subscriber gets invoked. The function gets the `eventobject` as its only argument and the context is
+     *        the subscriber.
+     * @param [prepend=false] {Boolean} whether the subscriber should be the first in the list of before-subscribers.
+     * @return {Object} handler with a `detach()`-method which can be used to detach the subscriber
+     * @since 0.0.1
+    */
+    before: function (customEvent, callback, filter, prepend) {
+        return Event.before(customEvent, callback, this, filter, prepend);
+    },
 
-    CSSStyleDeclaration: {},
+    /**
+     * Detaches (unsubscribes) the listener from the specified customEvent,
+     * on behalf of the object who calls this method.
+     *
+     * @method detach
+     * @param customEvent {String} conform the syntax: `emitterName:eventName`, wildcard `*` may be used for both
+     *        `emitterName` as well as only `eventName`, in which case 'UI' will become the emitterName.
+     * @since 0.0.1
+    */
+    detach: function(customEvent) {
+        Event.detach(this, customEvent);
+    },
 
-	document: doc,
+    /**
+     * Detaches (unsubscribes) the listener from all customevents,
+     * on behalf of the object who calls this method.
+     *
+     * @method detachAll
+     * @since 0.0.1
+    */
+    detachAll: function() {
+        Event.detachAll(this);
+    },
 
-    DOMParser: xmlDOMParser,
+    /**
+     * Subscribes to a customEvent on behalf of the object who calls this method.
+     * The callback will be executed `after` the defaultFn.
+     * The subscriber will be automaticly removed once the callback executed the first time.
+     * No need to `detach()` (unless you want to undescribe before the first event)
+     *
+     * @method onceAfter
+     * @param customEvent {String|Array} the custom-event (or Array of events) to subscribe to. CustomEvents should
+     *        have the syntax: `emitterName:eventName`. Wildcard `*` may be used for both `emitterName` as well as `eventName`.
+     *        If `emitterName` is not defined, `UI` is assumed.
+     * @param callback {Function} subscriber:will be invoked when the event occurs. An `eventobject` will be passed
+     *        as its only argument.
+     * @param [filter] {String|Function} to filter the event.
+     *        Use a String if you want to filter DOM-events by a `selector`
+     *        Use a function if you want to filter by any other means. If the function returns a trully value, the
+     *        subscriber gets invoked. The function gets the `eventobject` as its only argument and the context is
+     *        the subscriber.
+     * @param [prepend=false] {Boolean} whether the subscriber should be the first in the list of after-subscribers.
+     * @return {Object} handler with a `detach()`-method which can be used to detach the subscriber
+     * @since 0.0.1
+    */
+    onceAfter: function (customEvent, callback, filter, prepend) {
+        return Event.onceAfter(customEvent, callback, this, filter, prepend);
+    },
 
-    HTMLCollection: Array,
-
-    location: {},
-
-	navigator: {
-		userAgent: 'fake',
-		stats: {
-			clear: function () {
-				used = {};
-			},
-			get: function () {
-				return used;
-			}
-		},
-		reset: reset,
-		getHTML: function () {
-			return getHTML(doc.body);
-		},
-		navigate: function (url) {
-			var u = Url.parse(url, false, true);
-			window.location.search = u.search || '';
-			window.location.pathname = u.pathname || '';
-			window.location.hash = u.hash || '';
-		}
-	},
-
-    NodeList: Array,
-
-	performance: function () {
-		var timestamp = 50;
-		this.$elapse = function(amount) {
-			timestamp += amount;
-		};
-		this.now = function() {
-			return timestamp;
-		};
-	},
-
-	requestAnimationFrame: function(callback) {
-		var instance = this;
-		instance.requestAnimationFrame.$callback = callback;
-		instance.requestAnimationFrame.$resolve = function() {
-			instance.requestAnimationFrame.$callback && instance.requestAnimationFrame.$callback();
-			instance.requestAnimationFrame.$callback = null;
-			instance.performance.$elapse(20);
-		};
-	},
-
-    XMLHttpRequest: xmlhttprequest
-
+    /**
+     * Subscribes to a customEvent on behalf of the object who calls this method.
+     * The callback will be executed `before` the defaultFn.
+     * The subscriber will be automaticly removed once the callback executed the first time.
+     * No need to `detach()` (unless you want to undescribe before the first event)
+     *
+     * @method onceBefore
+     * @param customEvent {String|Array} the custom-event (or Array of events) to subscribe to. CustomEvents should
+     *        have the syntax: `emitterName:eventName`. Wildcard `*` may be used for both `emitterName` as well as `eventName`.
+     *        If `emitterName` is not defined, `UI` is assumed.
+     * @param callback {Function} subscriber:will be invoked when the event occurs. An `eventobject` will be passed
+     *        as its only argument.
+     * @param [filter] {String|Function} to filter the event.
+     *        Use a String if you want to filter DOM-events by a `selector`
+     *        Use a function if you want to filter by any other means. If the function returns a trully value, the
+     *        subscriber gets invoked. The function gets the `eventobject` as its only argument and the context is
+     *        the subscriber.
+     * @param [prepend=false] {Boolean} whether the subscriber should be the first in the list of before-subscribers.
+     * @return {Object} handler with a `detach()`-method which can be used to detach the subscriber
+     * @since 0.0.1
+    */
+    onceBefore: function (customEvent, callback, filter, prepend) {
+        return Event.onceBefore(customEvent, callback, this, filter, prepend);
+    }
 };
-
-reset = function () {
-	var body = doc.createElement('body');
-	win.location.search = "?/";
-	win.location.pathname = "/";
-	win.location.hash = "";
-	win.history = {};
-	win.history.pushState = function(data, title, url) {
-		win.location.pathname = win.location.search = win.location.hash = url;
-	},
-	win.history.replaceState = function(data, title, url) {
-		win.location.pathname = win.location.search = win.location.hash = url;
-	};
-	doc.appendChild(body);
-	doc.body = body;
-};
-
-reset();
-
-module.exports = win;
-},{"./lib/XMLHttpRequest.js":2,"js-ext/lib/array.js":4,"polyfill/lib/window.console.js":8,"url":77,"xmldom":41}],4:[function(require,module,exports){
+},{"./index.js":6}],6:[function(require,module,exports){
+module.exports = require('./event-base.js');
+require('./event-emitter.js');
+require('./event-listener.js');
+},{"./event-base.js":3,"./event-emitter.js":4,"./event-listener.js":5}],7:[function(require,module,exports){
 /**
  *
- * Pollyfils for often used functionality for Arrays
+ * Pollyfils for often used functionality for Functions
  *
  * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
  * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
  *
  * @module js-ext
- * @submodule lib/array.js
- * @class Array
+ * @submodule lib/function.js
+ * @class Function
  *
- */
+*/
 
 "use strict";
 
 require('polyfill/polyfill-base.js');
 
-var cloneObj = function(obj) {
-    var copy, i, len, value;
-
-    // Handle Array
-    if (obj instanceof Array) {
-        copy = [];
-        len = obj.length;
-        for (i=0; i<len; i++) {
-            value = obj[i];
-            copy[i] = ((value===null) || (typeof value!=='object')) ? value : cloneObj(value);
-        }
-        return copy;
-    }
-
-    // Handle Date
-    if (obj instanceof Date) {
-        copy = new Date();
-        copy.setTime(obj.getTime());
-        return copy;
-    }
-
-    // Handle Object
-    else if (obj instanceof Object) {
-        copy = obj.deepClone();
-    }
-
-    return copy;
+// Define configurable, writable and non-enumerable props
+// if they don't exist.
+var defineProperty = function (object, name, method, force) {
+	if (!force && (name in object)) {
+		return;
+	}
+	Object.defineProperty(object, name, {
+		configurable: true,
+		enumerable: false,
+		writable: true,
+		value: method
+	});
 };
+var defineProperties = function (object, map, force) {
+	var names = Object.keys(map),
+		l = names.length,
+		i = -1,
+		name;
+	while (++i < l) {
+		name = names[i];
+		defineProperty(object, name, map[name], force);
+	}
+};
+var NOOP = function () {};
 
-(function(ArrayPrototype) {
+/**
+ * Pollyfils for often used functionality for Function
+ * @class Function
+*/
 
-    /**
-     * Checks whether an item is inside the Array.
-     * Alias for (array.indexOf(item) > -1)
+defineProperties(Function.prototype, {
+
+	/**
+	 * Merges the given map of properties into the `prototype` of the Class.
+	 * **Not** to be used on instances.
+	 *
+	 * The members in the hash map will become members with
+	 * instances of the merged class.
+	 *
+	 * By default, this method will not override existing prototype members,
+	 * unless the second argument `force` is true.
+	 *
+	 * @method mergePrototypes
+	 * @param map {Object} Hash map of properties to add to the prototype of this object
+	 * @param force {Boolean}  If true, existing members will be overwritten
+	 * @chainable
+	 */
+	mergePrototypes: function (map, force) {
+		var proto = this.prototype;
+
+		var names = Object.keys(map || {}),
+			l = names.length,
+			i = -1,
+			name;
+		while (++i < l) {
+			name = names[i];
+			if (!force && name in proto) continue;
+			proto[name] = map[name];
+		}
+		return this;
+
+	},
+
+	/**
+	 * Returns a newly created class inheriting from this class
+	 * using the given `constructor` with the
+	 * prototypes listed in `prototypes` merged in.
+	 *
+	 *
+	 * The newly created class has the `$super` static property
+	 * available to access all of is ancestor's instance methods.
+	 *
+	 * Further methods can be added via the [mergePrototypes](#method_mergePrototypes).
+	 *
+	 * @example
+	 *
+	 * 	var Circle = Shape.subClass(
+	 * 		function (x, y, r) {
+	 * 			this.r = r;
+	 * 			Circle.$super.constructor.call(this, x, y);
+	 * 		},
+	 * 		{
+	 * 			area: function () {
+	 * 				return this.r * this.r * Math.PI;
+	 * 			}
+	 * 		}
+	 * 	);
+	 *
+	 * @method subClass
+	 * @param [constructor] {Function} The function that will serve as constructor for the new class.
+	 *        If `undefined` defaults to `Object.constructor`
+	 * @param [prototypes] {Object} Hash map of properties to be added to the prototype of the new class.
+	 * @return the new class.
+	 */
+	subClass: function (constructor, prototypes) {
+
+		if ((arguments.length === 1) && (typeof constructor !== 'function')) {
+			prototypes = constructor;
+			constructor = null;
+		}
+
+
+		constructor = constructor || function (ancestor) {
+			return function () {
+				ancestor.apply(this, arguments);
+			};
+		}(this);
+
+
+		var baseProt = this.prototype,
+			rp = Object.create(baseProt);
+		constructor.prototype = rp;
+
+		rp.constructor = constructor;
+		constructor.$super = baseProt;
+		constructor.$orig = {};
+
+		constructor.mergePrototypes(prototypes, true);
+		return constructor;
+	},
+
+	/**
+	 * Overwrites the given prototype functions with the ones given in
+	 * the hashmap while still providing a means of calling the original
+	 * overridden method.
      *
-     * @method contains
-     * @param item {Any} the item to seek
-     * @return {Boolean} whether the item is part of the Array
-     */
-    Array.contains || (ArrayPrototype.contains=function(item) {
-        return (this.indexOf(item) > -1);
-    });
-
-    /**
-     * Removes an item from the array
+	 * The patching function will receive a reference to the original method
+	 * prepended to the arguments the original would have received.
      *
-     * @method remove
-     * @param item {any|Array} the item (or an hash of items) to be removed
-     * @param [arrayItem=false] {Boolean} whether `item` is an arrayItem that should be treated as a single item to be removed
-     *        You need to set `arrayItem=true` in those cases. Otherwise, all single items from `item` are removed separately.
-     * @chainable
-     */
-    Array.remove || (ArrayPrototype.remove=function(item, arrayItem) {
-        var instance = this,
-            removeItem = function(oneItem) {
-                var index = instance.indexOf(oneItem);
-                (index > -1) && instance.splice(index, 1);
-            };
-        if (!arrayItem && Array.isArray(item)) {
-            item.forEach(removeItem);
-        }
-        else {
-            removeItem(item);
-        }
-        return instance;
-    });
+	 * @method patch
+	 * @param map {Object} Hash map of method names to their new implementation.
+	 * @chainable
+	*/
+	patch: function (map) {
+		var proto = this.prototype;
 
-    /**
-     * Replaces an item in the array. If the previous item is not part of the array, the new item is appended.
-     *
-     * @method replace
-     * @param prevItem {any} the item to be replaced
-     * @param newItem {any} the item to be added
-     * @chainable
-     */
-    Array.replace || (ArrayPrototype.replace=function(prevItem, newItem) {
-        var instance = this,
-            index = instance.indexOf(prevItem);
-        (index!==-1) ? instance.splice(index, 1, newItem) : instance.push(newItem);
-        return instance;
-    });
+		var names = Object.keys(map || {}),
+			l = names.length,
+			i = -1,
+			name;
+		while (++i < l) {
+			name = names[i];
+			/*jshint -W083 */
+			proto[name] = (function (original) {
+				return function () {
+					/*jshint +W083 */
+					var a = Array.prototype.slice.call(arguments, 0);
+					a.unshift(original || NOOP);
+					return map[name].apply(this, a);
+				};
+			})(proto[name]);
+		}
+		return this;
+	},
 
-    /**
-     * Inserts an item in the array at the specified position. If index is larger than array.length, the new item(s) will be appended.
-     *
-     * @method insertAt
-     * @param item {any|Array} the item to be replaced, may be an Array of items
-     * @param index {Number} the position where to add the item(s). When larger than Array.length, the item(s) will be appended.
-     * @chainable
-     */
-    Array.insertAt || (ArrayPrototype.insertAt=function(item, index) {
-        this.splice(index, 0, item);
-        return this;
-    });
+	/**
+	 * Sets the context of which the function will be execute. in the
+	 * supplied object's context, optionally adding any additional
+	 * supplied parameters to the end of the arguments the function
+	 * is executed with.
+	 *
+	 * @method rbind
+	 * @param [context] {Object} the execution context.
+	 *        The value is ignored if the bound function is constructed using the new operator.
+	 * @param [args*] {any} args* 0..n arguments to append to the end of
+	 *        arguments collection supplied to the function.
+	 * @return {function} the wrapped function.
+	 */
+	rbind: function (context /*, args* */ ) {
+		var thisFunction = this,
+			arrayArgs,
+			slice = Array.prototype.slice;
+		context || (context = this);
+		if (arguments.length > 1) {
+			// removing `context` (first item) by slicing it out:
+			arrayArgs = slice.call(arguments, 1);
+		}
 
-    /**
-     * Shuffles the items in the Array randomly
-     *
-     * @method shuffle
-     * @chainable
-     */
-    Array.shuffle || (ArrayPrototype.shuffle=function() {
-        var instance = this,
-            counter = instance.length,
-            temp, index;
-        // While there are elements in the instance
-        while (counter>0) {
-            // Pick a random index
-            index = Math.floor(Math.random() * counter);
+		return (arrayArgs ?
+			function () {
+				// over here, `arguments` will be the "new" arguments when the final function is called!
+				return thisFunction.apply(context, slice.call(arguments, 0).concat(arrayArgs));
+			} :
+			function () {
+				// over here, `arguments` will be the "new" arguments when the final function is called!
+				return thisFunction.apply(context, arguments);
+			}
+		);
+	}
+});
 
-            // Decrease counter by 1
-            counter--;
-
-            // And swap the last element with it
-            temp = instance[counter];
-            instance[counter] = instance[index];
-            instance[index] = temp;
-        }
-        return instance;
-    });
-
-    /**
-     * Returns a deep copy of the Array.
-     * Only handles members of primary types, Dates, Arrays and Objects.
-     *
-     * @method deepClone
-     * @return {Array} deep-copy of the original
-     */
-     ArrayPrototype.deepClone = function () {
-        return cloneObj(this);
-     };
-
-}(Array.prototype));
-},{"polyfill/polyfill-base.js":7}],5:[function(require,module,exports){
-(function (global){
-// based upon https://gist.github.com/jonathantneal/3062955
-(function (global) {
-    "use strict";
-
-    global.Element && (function(ElementPrototype) {
-        ElementPrototype.matchesSelector ||
-            (ElementPrototype.matchesSelector = ElementPrototype.mozMatchesSelector ||
-                                                ElementPrototype.msMatchesSelector ||
-                                                ElementPrototype.oMatchesSelector ||
-                                                ElementPrototype.webkitMatchesSelector ||
-                                                function (selector) {
-                                                    var node = this,
-                                                        nodes = (node.parentNode || global.document).querySelectorAll(selector),
-                                                        i = -1;
-                                                    while (nodes[++i] && (nodes[i] !== node));
-                                                    return !!nodes[i];
-                                                }
-            );
-    }(global.Element.prototype));
-
-}(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this));
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],6:[function(require,module,exports){
-(function (global){
-(function (global) {
-    "use strict";
-
-    var CONSOLE = {
-            log: function() { /* NOOP */ },
-            info: function() { /* NOOP */ },
-            warn: function() { /* NOOP */ },
-            error: function() { /* NOOP */ }
-        };
-
-    global.console || (function(GlobalPrototype) {
-        GlobalPrototype.console = CONSOLE;
-    }(global.prototype));
-
-    module.exports = CONSOLE;
-}(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this));
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],7:[function(require,module,exports){
-require('./lib/window.console.js');
-require('./lib/matchesselector.js');
-},{"./lib/matchesselector.js":5,"./lib/window.console.js":6}],8:[function(require,module,exports){
-module.exports=require(6)
-},{}],9:[function(require,module,exports){
-var css = ".itsa-notrans, .itsa-notrans2,\n.itsa-notrans:before, .itsa-notrans2:before,\n.itsa-notrans:after, .itsa-notrans2:after {\n    -webkit-transition: none !important;\n    -moz-transition: none !important;\n    -ms-transition: none !important;\n    -o-transition: all 0s !important; /* opera doesn't support none */\n    transition: none !important;\n}\n\n.itsa-no-overflow {\n    overflow: hidden !important;\n}\n\n.itsa-invisible {\n    position: absolute !important;\n}\n\n.itsa-invisible-relative {\n    position: relative !important;\n}\n\n.itsa-invisible,\n.itsa-invisible-relative {\n    visibility: hidden !important;\n    z-index: -1;\n}\n\n.itsa-invisible *,\n.itsa-invisible-relative * {\n    visibility: hidden !important;\n}\n\n.itsa-transparent {\n    opacity: 0;\n}\n\n.itsa-hidden {\n    visibility: hidden !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n}\n\n.itsa-block {\n    display: block !important;\n}\n\n.itsa-borderbox {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],10:[function(require,module,exports){
-module.exports=require(4)
-},{"polyfill/polyfill-base.js":16}],11:[function(require,module,exports){
+/**
+ * Returns a base class with the given constructor and prototype methods
+ *
+ * @for Object
+ * @method createClass
+ * @param [constructor] {Function} constructor for the class
+ * @param [prototype] {Object} Hash map of prototype members of the new class
+ * @return {Function} the new class
+*/
+defineProperty(Object.prototype, 'createClass', function () {
+	return Function.prototype.subClass.apply(this, arguments);
+});
+},{"polyfill/polyfill-base.js":11}],8:[function(require,module,exports){
 /**
  *
  * Pollyfils for often used functionality for Objects
@@ -1306,22 +2658,6 @@ defineProperties(Object.prototype, {
     },
 
     /**
-     * Creates a protected property on the object.
-     *
-     * @method protectedProp
-     * @chainable
-     */
-    protectedProp: function(property, value) {
-        Object.defineProperty(this, property, {
-            configurable: false,
-            enumerable: false,
-            writable: false,
-            value: value
-        });
-        return this;
-    },
-
-    /**
      * Returns a shallow copy of the object.
      * It does not clone objects within the object, it does a simple, shallow clone.
      * Fast, mostly useful for plain hash maps.
@@ -1430,10 +2766,26 @@ defineProperties(Object.prototype, {
 * Returns true if the item is an object, but no Array, Function, RegExp, Date or Error object
 *
 * @method isObject
+* @static
 * @return {Boolean} true if the object is empty
 */
 Object.isObject = function (item) {
    return !!(!TYPES[typeof item] && !TYPES[({}.toString).call(item)] && item);
+};
+
+/**
+ * Creates a protected property on the object.
+ *
+ * @method protectedProp
+ * @static
+ */
+Object.protectedProp = function(obj, property, value) {
+    Object.defineProperty(obj, property, {
+        configurable: false,
+        enumerable: false,
+        writable: false,
+        value: value
+    });
 };
 
 /**
@@ -1460,7 +2812,788 @@ Object.merge = function () {
     });
     return m;
 };
-},{"polyfill/polyfill-base.js":16}],12:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":11}],9:[function(require,module,exports){
+(function (global){
+// based upon https://gist.github.com/jonathantneal/3062955
+(function (global) {
+    "use strict";
+
+    global.Element && (function(ElementPrototype) {
+        ElementPrototype.matchesSelector ||
+            (ElementPrototype.matchesSelector = ElementPrototype.mozMatchesSelector ||
+                                                ElementPrototype.msMatchesSelector ||
+                                                ElementPrototype.oMatchesSelector ||
+                                                ElementPrototype.webkitMatchesSelector ||
+                                                function (selector) {
+                                                    var node = this,
+                                                        nodes = (node.parentNode || global.document).querySelectorAll(selector),
+                                                        i = -1;
+                                                    while (nodes[++i] && (nodes[i] !== node));
+                                                    return !!nodes[i];
+                                                }
+            );
+    }(global.Element.prototype));
+
+}(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this));
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],10:[function(require,module,exports){
+(function (global){
+(function (global) {
+    "use strict";
+
+    var CONSOLE = {
+            log: function() { /* NOOP */ },
+            info: function() { /* NOOP */ },
+            warn: function() { /* NOOP */ },
+            error: function() { /* NOOP */ }
+        };
+
+    global.console || (function(GlobalPrototype) {
+        GlobalPrototype.console = CONSOLE;
+    }(global.prototype));
+
+    module.exports = CONSOLE;
+}(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this));
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],11:[function(require,module,exports){
+require('./lib/window.console.js');
+require('./lib/matchesselector.js');
+},{"./lib/matchesselector.js":9,"./lib/window.console.js":10}],12:[function(require,module,exports){
+module.exports=require(9)
+},{}],13:[function(require,module,exports){
+module.exports=require(10)
+},{}],14:[function(require,module,exports){
+module.exports=require(11)
+},{"./lib/matchesselector.js":12,"./lib/window.console.js":13}],15:[function(require,module,exports){
+/**
+ *
+ * Pollyfils for often used functionality for Arrays
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ * @module js-ext
+ * @submodule lib/array.js
+ * @class Array
+ *
+ */
+
+"use strict";
+
+require('polyfill/polyfill-base.js');
+
+var cloneObj = function(obj) {
+    var copy, i, len, value;
+
+    // Handle Array
+    if (obj instanceof Array) {
+        copy = [];
+        len = obj.length;
+        for (i=0; i<len; i++) {
+            value = obj[i];
+            copy[i] = ((value===null) || (typeof value!=='object')) ? value : cloneObj(value);
+        }
+        return copy;
+    }
+
+    // Handle Date
+    if (obj instanceof Date) {
+        copy = new Date();
+        copy.setTime(obj.getTime());
+        return copy;
+    }
+
+    // Handle Object
+    else if (obj instanceof Object) {
+        copy = obj.deepClone();
+    }
+
+    return copy;
+};
+
+(function(ArrayPrototype) {
+
+    /**
+     * Checks whether an item is inside the Array.
+     * Alias for (array.indexOf(item) > -1)
+     *
+     * @method contains
+     * @param item {Any} the item to seek
+     * @return {Boolean} whether the item is part of the Array
+     */
+    Array.contains || (ArrayPrototype.contains=function(item) {
+        return (this.indexOf(item) > -1);
+    });
+
+    /**
+     * Removes an item from the array
+     *
+     * @method remove
+     * @param item {any|Array} the item (or an hash of items) to be removed
+     * @param [arrayItem=false] {Boolean} whether `item` is an arrayItem that should be treated as a single item to be removed
+     *        You need to set `arrayItem=true` in those cases. Otherwise, all single items from `item` are removed separately.
+     * @chainable
+     */
+    Array.remove || (ArrayPrototype.remove=function(item, arrayItem) {
+        var instance = this,
+            removeItem = function(oneItem) {
+                var index = instance.indexOf(oneItem);
+                (index > -1) && instance.splice(index, 1);
+            };
+        if (!arrayItem && Array.isArray(item)) {
+            item.forEach(removeItem);
+        }
+        else {
+            removeItem(item);
+        }
+        return instance;
+    });
+
+    /**
+     * Replaces an item in the array. If the previous item is not part of the array, the new item is appended.
+     *
+     * @method replace
+     * @param prevItem {any} the item to be replaced
+     * @param newItem {any} the item to be added
+     * @chainable
+     */
+    Array.replace || (ArrayPrototype.replace=function(prevItem, newItem) {
+        var instance = this,
+            index = instance.indexOf(prevItem);
+        (index!==-1) ? instance.splice(index, 1, newItem) : instance.push(newItem);
+        return instance;
+    });
+
+    /**
+     * Inserts an item in the array at the specified position. If index is larger than array.length, the new item(s) will be appended.
+     *
+     * @method insertAt
+     * @param item {any|Array} the item to be replaced, may be an Array of items
+     * @param index {Number} the position where to add the item(s). When larger than Array.length, the item(s) will be appended.
+     * @chainable
+     */
+    Array.insertAt || (ArrayPrototype.insertAt=function(item, index) {
+        this.splice(index, 0, item);
+        return this;
+    });
+
+    /**
+     * Shuffles the items in the Array randomly
+     *
+     * @method shuffle
+     * @chainable
+     */
+    Array.shuffle || (ArrayPrototype.shuffle=function() {
+        var instance = this,
+            counter = instance.length,
+            temp, index;
+        // While there are elements in the instance
+        while (counter>0) {
+            // Pick a random index
+            index = Math.floor(Math.random() * counter);
+
+            // Decrease counter by 1
+            counter--;
+
+            // And swap the last element with it
+            temp = instance[counter];
+            instance[counter] = instance[index];
+            instance[index] = temp;
+        }
+        return instance;
+    });
+
+    /**
+     * Returns a deep copy of the Array.
+     * Only handles members of primary types, Dates, Arrays and Objects.
+     *
+     * @method deepClone
+     * @return {Array} deep-copy of the original
+     */
+     ArrayPrototype.deepClone = function () {
+        return cloneObj(this);
+     };
+
+}(Array.prototype));
+},{"polyfill/polyfill-base.js":20}],16:[function(require,module,exports){
+module.exports=require(8)
+},{"polyfill/polyfill-base.js":20}],17:[function(require,module,exports){
+/**
+ *
+ * Pollyfils for often used functionality for Strings
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ * @module js-ext
+ * @submodule lib/string.js
+ * @class String
+ *
+ */
+
+"use strict";
+
+(function(StringPrototype) {
+    var SUBREGEX  = /\{\s*([^|}]+?)\s*(?:\|([^}]*))?\s*\}/g,
+        DATEPATTERN = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z/,
+        WHITESPACE_CLASS = "[\\s\uFEFF\xA0]+",
+        TRIM_LEFT_REGEX  = new RegExp('^' + WHITESPACE_CLASS),
+        TRIM_RIGHT_REGEX = new RegExp(WHITESPACE_CLASS + '$'),
+        TRIMREGEX        = new RegExp(TRIM_LEFT_REGEX.source + '|' + TRIM_RIGHT_REGEX.source, 'g'),
+        PATTERN_EMAIL = new RegExp('^[\\w!#$%&\'*+/=?`{|}~^-]+(?:\\.[\\w!#$%&\'*+/=?`{|}~^-]+)*@(?:[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]\\.)+[a-zA-Z]{2,}$'),
+        PATTERN_URLEND = '([a-zA-Z0-9]+\\.)*(?:[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]\\.)+[a-zA-Z]{2,}(/[\\w-]+)*$',
+        PATTERN_URLHTTP = new RegExp('^http://'+PATTERN_URLEND),
+        PATTERN_URLHTTPS = new RegExp('^https://'+PATTERN_URLEND),
+        PATTERN_URL = new RegExp('^(https?://)?'+PATTERN_URLEND),
+        PATTERN_INTEGER = /^(([-]?[1-9][0-9]*)|0)$/,
+        PATTERN_FLOAT_START = '^([-]?(([1-9][0-9]*)|0))?(\\',
+        PATTERN_FLOAT_END = '[0-9]+)?$',
+        PATTERN_FLOAT_COMMA = new RegExp(PATTERN_FLOAT_START + ',' + PATTERN_FLOAT_END),
+        PATTERN_FLOAT_DOT = new RegExp(PATTERN_FLOAT_START + '.' + PATTERN_FLOAT_END),
+        PATTERN_HEX_COLOR_ALPHA = /^#?[0-9A-F]{4}([0-9A-F]{4})?$/,
+        PATTERN_HEX_COLOR = /^#?[0-9A-F]{3}([0-9A-F]{3})?$/;
+
+    /**
+     * Checks whether the substring is part if this String.
+     * Alias for (String.indexOf(substring) > -1)
+     *
+     * @method contains
+     * @param substring {String} the substring to test for
+     * @param [caseInsensitive=false] {Boolean} whether to ignore case-sensivity
+     * @return {Boolean} whether the substring is found
+     */
+    String.contains || (StringPrototype.contains=function(substring, caseInsensitive) {
+        return caseInsensitive ? (this.toLowerCase().indexOf(substring.toLowerCase()) > -1) : (this.indexOf(substring) > -1);
+    });
+
+    /**
+     * Checks if the string ends with the value specified by `test`
+     *
+     * @method endsWith
+     * @param test {String} the string to test for
+     * @param [caseInsensitive=false] {Boolean} whether to ignore case-sensivity
+     * @return {Boolean} whether the string ends with `test`
+     */
+    String.endsWith || (StringPrototype.endsWith=function(test, caseInsensitive) {
+        return (new RegExp(test+'$', caseInsensitive ? 'i': '')).test(this);
+    });
+
+    /**
+     * Checks if the string can be parsed into a number when using `parseInt()`
+     *
+     * @method parsable
+     * @return {Boolean} whether the string is parsable
+     */
+    String.parsable || (StringPrototype.parsable=function() {
+        // strange enough, NaN doen't let compare itself, so we need a strange test:
+        // parseInt(value, 10)===parseInt(value, 10)
+        // which returns `true` for a parsable value, otherwise false
+        return (parseInt(this)===parseInt(this));
+    });
+
+    /**
+     * Checks if the string starts with the value specified by `test`
+     *
+     * @method startsWith
+     * @param test {String} the string to test for
+     * @param [caseInsensitive=false] {Boolean} whether to ignore case-sensivity
+     * @return {Boolean} whether the string starts with `test`
+     */
+    String.startsWith || (StringPrototype.startsWith=function(test, caseInsensitive) {
+        return (new RegExp('^'+test, caseInsensitive ? 'i': '')).test(this);
+    });
+
+    /**
+     * Performs `{placeholder}` substitution on a string. The object passed
+     * provides values to replace the `{placeholder}`s.
+     * `{placeholder}` token names must match property names of the object.
+     *
+     * `{placeholder}` tokens that are undefined on the object map will be removed.
+     *
+     * @example
+     * var greeting = '{message} {who}!';
+     * greeting.substitute({message: 'Hello'}); // results into 'Hello !'
+     *
+     * @method substitute
+     * @param obj {Object} Object containing replacement values.
+     * @return {String} the substitute result.
+     */
+    String.substitute || (StringPrototype.substitute=function(obj) {
+        return this.replace(SUBREGEX, function (match, key) {
+            return (obj[key]===undefined) ? '' : obj[key];
+        });
+    });
+
+    /**
+     * Returns a ISO-8601 Date-object build by the String's value.
+     * If the String-value doesn't match ISO-8601, `null` will be returned.
+     *
+     * ISO-8601 Date's are generated by JSON.stringify(), so it's very handy to be able to reconvert them.
+     *
+     * @example
+     * var birthday = '2010-02-10T14:45:30.000Z';
+     * birthday.toDate(); // --> Wed Feb 10 2010 15:45:30 GMT+0100 (CET)
+     *
+     * @method toDate
+     * @return {Date|null} the Date represented by the String's value or null when invalid
+     */
+    String.toDate || (StringPrototype.toDate=function() {
+        return DATEPATTERN.test(this) ? new Date(this) : null;
+    });
+
+    /**
+     * Generated the string without any white-spaces at the start or end.
+     *
+     * @method trim
+     * @return {String} new String without leading and trailing white-spaces
+     */
+    String.trim || (StringPrototype.trim=function() {
+        return this.replace(TRIMREGEX, '');
+    });
+
+    /**
+     * Generated the string without any white-spaces at the beginning.
+     *
+     * @method trimLeft
+     * @return {String} new String without leading white-spaces
+     */
+    String.trimLeft || (StringPrototype.trimLeft=function() {
+        return this.replace(TRIM_LEFT_REGEX, '');
+    });
+
+    /**
+     * Generated the string without any white-spaces at the end.
+     *
+     * @method trimRight
+     * @return {String} new String without trailing white-spaces
+     */
+    String.trimRight || (StringPrototype.trimRight=function() {
+        return this.replace(TRIM_RIGHT_REGEX, '');
+    });
+
+    /**
+     * Validates if the String's value represents a valid emailaddress.
+     *
+     * @method validateEmail
+     * @return {Boolean} whether the String's value is a valid emailaddress.
+     */
+    StringPrototype.validateEmail = function() {
+        return PATTERN_EMAIL.test(this);
+    };
+
+    /**
+     * Validates if the String's value represents a valid floated number.
+     *
+     * @method validateFloat
+     * @param [comma] {Boolean} whether to use a comma as decimal separator instead of a dot
+     * @return {Boolean} whether the String's value is a valid floated number.
+     */
+    StringPrototype.validateFloat = function(comma) {
+        return comma ? PATTERN_FLOAT_COMMA.test(this) : PATTERN_FLOAT_DOT.test(this);
+    };
+
+    /**
+     * Validates if the String's value represents a hexadecimal color.
+     *
+     * @method validateHexaColor
+     * @param [alpha=false] {Boolean} whether to accept alpha transparancy
+     * @return {Boolean} whether the String's value is a valid hexadecimal color.
+     */
+    StringPrototype.validateHexaColor = function(alpha) {
+        return alpha ? PATTERN_HEX_COLOR_ALPHA.test(this) : PATTERN_HEX_COLOR.test(this);
+    };
+
+    /**
+     * Validates if the String's value represents a valid integer number.
+     *
+     * @method validateNumber
+     * @return {Boolean} whether the String's value is a valid integer number.
+     */
+    StringPrototype.validateNumber = function() {
+        return PATTERN_INTEGER.test(this);
+    };
+
+    /**
+     * Validates if the String's value represents a valid boolean.
+     *
+     * @method validateNumber
+     * @return {Boolean} whether the String's value is a valid integer number.
+     */
+    StringPrototype.validateBoolean = function() {
+        var length = this.length,
+            check;
+        if ((length<4) || (length>5)) {
+            return false;
+        }
+        check = this.toUpperCase();
+        return ((check==='TRUE') || (check==='FALSE'));
+    };
+
+    /**
+     * Validates if the String's value represents a valid URL.
+     *
+     * @method validateURL
+     * @param [options] {Object}
+     * @param [options.http] {Boolean} to force matching starting with `http://`
+     * @param [options.https] {Boolean} to force matching starting with `https://`
+     * @return {Boolean} whether the String's value is a valid URL.
+     */
+    StringPrototype.validateURL = function(options) {
+        var instance = this;
+        options || (options={});
+        if (options.http && options.https) {
+            return false;
+        }
+        return options.http ? PATTERN_URLHTTP.test(instance) : (options.https ? PATTERN_URLHTTPS.test(instance) : PATTERN_URL.test(instance));
+    };
+
+}(String.prototype));
+
+},{}],18:[function(require,module,exports){
+module.exports=require(9)
+},{}],19:[function(require,module,exports){
+module.exports=require(10)
+},{}],20:[function(require,module,exports){
+module.exports=require(11)
+},{"./lib/matchesselector.js":18,"./lib/window.console.js":19}],21:[function(require,module,exports){
+module.exports=require(9)
+},{}],22:[function(require,module,exports){
+module.exports=require(10)
+},{}],23:[function(require,module,exports){
+module.exports=require(11)
+},{"./lib/matchesselector.js":21,"./lib/window.console.js":22}],24:[function(require,module,exports){
+module.exports = {
+	idGenerator: require('./lib/idgenerator.js').idGenerator,
+	later: require('./lib/timers.js').later,
+	async: require('./lib/timers.js').async
+};
+},{"./lib/idgenerator.js":25,"./lib/timers.js":26}],25:[function(require,module,exports){
+"use strict";
+
+require('polyfill/polyfill-base.js');
+
+var UNDEFINED_NS = '__undefined__';
+var namespaces = {};
+
+/**
+ * Collection of various utility functions.
+ *
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ * @module utils
+ * @class Utils
+ * @static
+*/
+
+
+/**
+ * Generates an unique id with the signature: "namespace-follownr"
+ *
+ * @example
+ *
+ *     var generator = require('core-utils-idgenerator');
+ *
+ *     console.log(generator()); // --> 1
+ *     console.log(generator()); // --> 2
+ *     console.log(generator(1000)); // --> 1000
+ *     console.log(generator()); // --> 1001
+ *     console.log(generator('Parcel, 500')); // -->"Parcel-500"
+ *     console.log(generator('Parcel')); // -->"Parcel-501"
+ *
+ *
+ * @method idGenerator
+ * @param [namespace] {String} namespace to prepend the generated id.
+ *        When ignored, the generator just returns a number.
+ * @param [start] {Number} startvalue for the next generated id. Any further generated id's will preceed this id.
+ *        If `start` is lower or equal than the last generated id, it will be ignored.
+ * @return {Number|String} an unique id. Either a number, or a String (digit prepended with "namespace-")
+ */
+module.exports.idGenerator = function(namespace, start) {
+	// in case `start` is set at first argument, transform into (null, start)
+	(typeof namespace==='number') && (start=namespace) && (namespace=null);
+	namespace || (namespace=UNDEFINED_NS);
+
+	if (!namespaces[namespace]) {
+		namespaces[namespace] = start || 1;
+	}
+	else if (start && (namespaces[namespace]<start)) {
+		namespaces[namespace] = start;
+	}
+	return (namespace===UNDEFINED_NS) ? namespaces[namespace]++ : namespace+'-'+namespaces[namespace]++;
+};
+
+},{"polyfill/polyfill-base.js":29}],26:[function(require,module,exports){
+(function (process,global){
+/**
+ * Collection of various utility functions.
+ *
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ * @module utils
+ * @class Utils
+ * @static
+*/
+
+
+(function (global) {
+
+	"use strict";
+
+	require('polyfill/polyfill-base.js');
+
+	var NAME = '[utils-timers]: ',
+	    _asynchronizer, _async;
+
+	/**
+	 * Forces a function to be run asynchronously, but as fast as possible. In Node.js
+	 * this is achieved using `setImmediate` or `process.nextTick`.
+	 *
+	 * @method _asynchronizer
+	 * @param callbackFn {Function} The function to call asynchronously
+	 * @static
+	 * @private
+	**/
+	_asynchronizer = (typeof setImmediate !== 'undefined') ? function (fn) {setImmediate(fn);} :
+                        ((typeof process !== 'undefined') && process.nextTick) ? process.nextTick : function (fn) {setTimeout(fn, 0);};
+
+	/**
+	 * Invokes the callbackFn once in the next turn of the JavaScript event loop. If the function
+	 * requires a specific execution context or arguments, wrap it with Function.bind.
+	 *
+	 * I.async returns an object with a cancel method.  If the cancel method is
+	 * called before the callback function, the callback function won't be called.
+	 *
+	 * @method async
+	 * @param {Function} callbackFn
+	 * @param [invokeAfterFn=true] {boolean} set to false to prevent the _afterSyncFn to be invoked
+	 * @return {Object} An object with a cancel method.  If the cancel method is
+	 * called before the callback function, the callback function won't be called.
+	**/
+	_async = function (callbackFn, invokeAfterFn) {
+		console.log(NAME, 'async');
+		var host = this || global,
+			canceled;
+
+		invokeAfterFn = (typeof invokeAfterFn === 'boolean') ? invokeAfterFn : true;
+		(typeof callbackFn==='function') && _asynchronizer(function () {
+			if (!canceled) {
+	        	console.log(NAME, 'async is running its callbakcFn');
+				callbackFn();
+				// in case host._afterAsyncFn is defined: invoke it, to identify that later has been executed
+				invokeAfterFn && host._afterAsyncFn && host._afterAsyncFn();
+			}
+		});
+
+		return {
+			cancel: function () {
+				canceled = true;
+			}
+		};
+	};
+
+	/**
+	 * Invokes the callbackFn once in the next turn of the JavaScript event loop. If the function
+	 * requires a specific execution context or arguments, wrap it with Function.bind.
+	 *
+	 * I.async returns an object with a cancel method.  If the cancel method is
+	 * called before the callback function, the callback function won't be called.
+	 *
+	 * @method async
+	 * @param {Function} callbackFn
+	 * @param [invokeAfterFn=true] {boolean} set to false to prevent the _afterSyncFn to be invoked
+	 * @return {Object} An object with a cancel method.  If the cancel method is
+	 * called before the callback function, the callback function won't be called.
+	**/
+	module.exports.async = _async;
+
+	/**
+	 * Invokes the callbackFn after a timeout (asynchronous). If the function
+	 * requires a specific execution context or arguments, wrap it with Function.bind.
+	 *
+	 * To invoke the callback function periodic, set 'periodic' either 'true', or specify a second timeout.
+	 * If number, then periodic is considered 'true' but with a perdiod defined by 'periodic',
+	 * which means: the first timer executes after 'timeout' and next timers after 'period'.
+	 *
+	 * I.later returns an object with a cancel method.  If the cancel() method is
+	 * called before the callback function, the callback function won't be called.
+	 *
+	 * @method later
+	 * @param callbackFn {Function} the function to execute.
+	 * @param [timeout] {Number} the number of milliseconds to wait until the callbackFn is executed.
+	 * when not set, the callback function is invoked once in the next turn of the JavaScript event loop.
+	 * @param [periodic] {boolean|Number} if true, executes continuously at supplied, if number, then periodic is considered 'true' but with a perdiod
+	 * defined by 'periodic', which means: the first timer executes after 'timeout' and next timers after 'period'.
+	 * The interval executes until canceled.
+	 * @param [invokeAfterFn=true] {boolean} set to false to prevent the _afterSyncFn to be invoked
+	 * @return {object} a timer object. Call the cancel() method on this object to stop the timer.
+	*/
+	module.exports.later = function (callbackFn, timeout, periodic, invokeAfterFn) {
+		console.log(NAME, 'later --> timeout: '+timeout+'ms | periodic: '+periodic);
+		var host = this || global,
+			canceled = false;
+		invokeAfterFn = (typeof invokeAfterFn === 'boolean') ? invokeAfterFn : true;
+		if (!timeout) {
+			return _async(callbackFn);
+		}
+		var interval = periodic,
+			secondtimeout = (typeof interval==='number'),
+			secondairId,
+			wrapper = function() {
+				// IE 8- and also nodejs may execute a callback, so in order to preserve
+				// the cancel() === no more runny-run, we have to build in an extra conditional
+				if (!canceled) {
+	            	console.log(NAME, 'later is running its callbakcFn');
+					callbackFn();
+					secondtimeout && (secondairId=setInterval(wrapperInterval, interval));
+					// in case host._afterAsyncFn is defined: invoke it, to identify that later has been executed
+					invokeAfterFn && host._afterAsyncFn && host._afterAsyncFn();
+					// break closure inside returned object:
+					id = null;
+				}
+			},
+			wrapperInterval = function() {
+				// IE 8- and also nodejs may execute a setInterval callback one last time
+				// after clearInterval was called, so in order to preserve
+				// the cancel() === no more runny-run, we have to build in an extra conditional
+				if (!canceled) {
+	            	console.log(NAME, 'later is running its callbakcFn');
+					callbackFn();
+					// in case host._afterAsyncFn is defined: invoke it, to identify that later has been executed
+					invokeAfterFn && host._afterAsyncFn && host._afterAsyncFn();
+				}
+			},
+			id;
+		(typeof callbackFn==='function') && (id=(interval && !secondtimeout) ? setInterval(wrapperInterval, timeout) : setTimeout(wrapper, timeout));
+
+		return {
+			cancel: function() {
+				canceled = true;
+				(interval && !secondtimeout) ? clearInterval(id) : clearTimeout(id);
+				secondairId && clearInterval(secondairId);
+				// break closure:
+				id = null;
+				secondairId = null;
+			}
+		};
+	};
+
+}(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this));
+
+}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"_process":146,"polyfill/polyfill-base.js":29}],27:[function(require,module,exports){
+module.exports=require(9)
+},{}],28:[function(require,module,exports){
+module.exports=require(10)
+},{}],29:[function(require,module,exports){
+module.exports=require(11)
+},{"./lib/matchesselector.js":27,"./lib/window.console.js":28}],30:[function(require,module,exports){
+var css = ".itsa-notrans, .itsa-notrans2,\n.itsa-notrans:before, .itsa-notrans2:before,\n.itsa-notrans:after, .itsa-notrans2:after {\n    -webkit-transition: none !important;\n    -moz-transition: none !important;\n    -ms-transition: none !important;\n    -o-transition: all 0s !important; /* opera doesn't support none */\n    transition: none !important;\n}\n\n.itsa-no-overflow {\n    overflow: hidden !important;\n}\n\n.itsa-invisible {\n    position: absolute !important;\n}\n\n.itsa-invisible-relative {\n    position: relative !important;\n}\n\n.itsa-invisible,\n.itsa-invisible-relative {\n    visibility: hidden !important;\n    z-index: -1;\n}\n\n.itsa-invisible *,\n.itsa-invisible-relative * {\n    visibility: hidden !important;\n}\n\n.itsa-transparent {\n    opacity: 0;\n}\n\n.itsa-hidden {\n    visibility: hidden !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n}\n\n.itsa-block {\n    display: block !important;\n}\n\n.itsa-borderbox {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],31:[function(require,module,exports){
+(function (global){
+/**
+ *
+ * Pollyfils for often used functionality for Strings
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ * @module js-ext
+ * @submodule lib/string.js
+ * @class String
+ *
+ */
+(function (global) {
+
+    "use strict";
+
+    require('../lib/function.js');
+    require('../lib/array.js');
+    require('../lib/object.js');
+    require('polyfill/lib/weakmap.js');
+
+    var LightMap;
+
+    global.LightMap = LightMap = Object.createClass(
+        function() {
+            Object.protectedProp(this, '_array', []);
+            Object.protectedProp(this, '_map', new global.WeakMap());
+        },
+        {
+            each: function(fn, context) {
+                var instance = this,
+                    array = instance._array,
+                    l = array.length,
+                    i = -1,
+                    obj, value;
+                while (++i < l) {
+                    obj = array[i];
+                    value = instance.get(obj); // read from WeakMap
+                    fn.call(context, value, obj, instance);
+                }
+                return instance;
+            },
+            some: function(fn, context) {
+                var instance = this,
+                    array = instance._array,
+                    l = array.length,
+                    i = -1,
+                    obj, value;
+                while (++i < l) {
+                    obj = array[i];
+                    value = instance.get(obj); // read from WeakMap
+                    if (fn.call(context, value, obj, instance)) {
+                        return true;
+                    }
+                }
+                return false;
+            },
+            clear: function() {
+                var instance = this,
+                    array = instance._array;
+                array.forEach(function(key) {
+                    instance.delete(key, true);
+                });
+                array.length = 0;
+            },
+            has: function(object) {
+                return this._map.has(object);
+            },
+            get: function(key, fallback) {
+                return this._map.get(key, fallback);
+            },
+            set: function (key, value) {
+                var instance = this,
+                    array = instance._array,
+                    map = instance._map;
+                map.set(key, value);
+                array.contains(key) || array.push(key);
+                return instance;
+            },
+            'delete': function (key) {
+                var instance = this,
+                    array = instance._array,
+                    map = instance._map,
+                    silent = arguments[1], // hidden feature used by `clear()`
+                    returnValue = map.delete(key);
+                silent || array.remove(key);
+                return returnValue;
+            }
+        }
+    );
+
+}(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this));
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"../lib/array.js":32,"../lib/function.js":33,"../lib/object.js":34,"polyfill/lib/weakmap.js":38}],32:[function(require,module,exports){
+module.exports=require(15)
+},{"polyfill/polyfill-base.js":40}],33:[function(require,module,exports){
+module.exports=require(7)
+},{"polyfill/polyfill-base.js":40}],34:[function(require,module,exports){
+module.exports=require(8)
+},{"polyfill/polyfill-base.js":40}],35:[function(require,module,exports){
 "use strict";
 
 /**
@@ -1765,245 +3898,125 @@ Promise.manage = function (callbackFn) {
     return promise;
 };
 
-},{"polyfill":16}],13:[function(require,module,exports){
-/**
- *
- * Pollyfils for often used functionality for Strings
- *
- * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
- * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
- *
- * @module js-ext
- * @submodule lib/string.js
- * @class String
- *
- */
+},{"polyfill":40}],36:[function(require,module,exports){
+module.exports=require(17)
+},{}],37:[function(require,module,exports){
+module.exports=require(9)
+},{}],38:[function(require,module,exports){
+(function (global){
+// based upon https://gist.github.com/Gozala/1269991
 
-"use strict";
+(function (global) {
+    "use strict";
+    var defineNamespace, Name, guard;
 
-(function(StringPrototype) {
-    var SUBREGEX  = /\{\s*([^|}]+?)\s*(?:\|([^}]*))?\s*\}/g,
-        DATEPATTERN = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z/,
-        WHITESPACE_CLASS = "[\\s\uFEFF\xA0]+",
-        TRIM_LEFT_REGEX  = new RegExp('^' + WHITESPACE_CLASS),
-        TRIM_RIGHT_REGEX = new RegExp(WHITESPACE_CLASS + '$'),
-        TRIMREGEX        = new RegExp(TRIM_LEFT_REGEX.source + '|' + TRIM_RIGHT_REGEX.source, 'g'),
-        PATTERN_EMAIL = new RegExp('^[\\w!#$%&\'*+/=?`{|}~^-]+(?:\\.[\\w!#$%&\'*+/=?`{|}~^-]+)*@(?:[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]\\.)+[a-zA-Z]{2,}$'),
-        PATTERN_URLEND = '([a-zA-Z0-9]+\\.)*(?:[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]\\.)+[a-zA-Z]{2,}(/[\\w-]+)*$',
-        PATTERN_URLHTTP = new RegExp('^http://'+PATTERN_URLEND),
-        PATTERN_URLHTTPS = new RegExp('^https://'+PATTERN_URLEND),
-        PATTERN_URL = new RegExp('^(https?://)?'+PATTERN_URLEND),
-        PATTERN_INTEGER = /^(([-]?[1-9][0-9]*)|0)$/,
-        PATTERN_FLOAT_START = '^([-]?(([1-9][0-9]*)|0))?(\\',
-        PATTERN_FLOAT_END = '[0-9]+)?$',
-        PATTERN_FLOAT_COMMA = new RegExp(PATTERN_FLOAT_START + ',' + PATTERN_FLOAT_END),
-        PATTERN_FLOAT_DOT = new RegExp(PATTERN_FLOAT_START + '.' + PATTERN_FLOAT_END),
-        PATTERN_HEX_COLOR_ALPHA = /^#?[0-9A-F]{4}([0-9A-F]{4})?$/,
-        PATTERN_HEX_COLOR = /^#?[0-9A-F]{3}([0-9A-F]{3})?$/;
+    if (!global.WeakMap) {
+        defineNamespace = function(object, namespace) {
+            /**
+            Utility function takes `object` and `namespace` and overrides `valueOf`
+            method of `object`, so that when called with a `namespace` argument,
+            `private` object associated with this `namespace` is returned. If argument
+            is different, `valueOf` falls back to original `valueOf` property.
+            **/
 
-    /**
-     * Checks whether the substring is part if this String.
-     * Alias for (String.indexOf(substring) > -1)
-     *
-     * @method contains
-     * @param substring {String} the substring to test for
-     * @param [caseInsensitive=false] {Boolean} whether to ignore case-sensivity
-     * @return {Boolean} whether the substring is found
-     */
-    String.contains || (StringPrototype.contains=function(substring, caseInsensitive) {
-        return caseInsensitive ? (this.toLowerCase().indexOf(substring.toLowerCase()) > -1) : (this.indexOf(substring) > -1);
-    });
+            // Private inherits from `object`, so that `this.foo` will refer to the
+            // `object.foo`. Also, original `valueOf` is saved in order to be able to
+            // delegate to it when necessary.
+            var privates = Object.create(object),
+                base = object.valueOf;
+            Object.defineProperty(object, 'valueOf', {
+                value: function valueOf(value) {
+                    // If `this` or `namespace` is not associated with a `privates` being
+                    // stored we fallback to original `valueOf`, otherwise we return privates.
+                    return ((value !== namespace) || (this !== object)) ? base.apply(this, arguments) : privates;
+                },
+                configurable: true
+            });
+            return privates;
+        };
 
-    /**
-     * Checks if the string ends with the value specified by `test`
-     *
-     * @method endsWith
-     * @param test {String} the string to test for
-     * @param [caseInsensitive=false] {Boolean} whether to ignore case-sensivity
-     * @return {Boolean} whether the string ends with `test`
-     */
-    String.endsWith || (StringPrototype.endsWith=function(test, caseInsensitive) {
-        return (new RegExp(test+'$', caseInsensitive ? 'i': '')).test(this);
-    });
+        Name = function() {
+            /**
+            Desugared implementation of private names proposal. API is different as
+            it's not possible to implement API proposed for harmony with in ES5. In
+            terms of provided functionality it supposed to be same.
+            http://wiki.ecmascript.org/doku.php?id=strawman:private_names
+            **/
 
-    /**
-     * Checks if the string can be parsed into a number when using `parseInt()`
-     *
-     * @method parsable
-     * @return {Boolean} whether the string is parsable
-     */
-    String.parsable || (StringPrototype.parsable=function() {
-        // strange enough, NaN doen't let compare itself, so we need a strange test:
-        // parseInt(value, 10)===parseInt(value, 10)
-        // which returns `true` for a parsable value, otherwise false
-        return (parseInt(this)===parseInt(this));
-    });
+            var namespace = {};
+            return function name(object) {
+                var privates = object.valueOf(namespace);
+                return (privates !== object) ? privates : defineNamespace(object, namespace);
+            };
+        };
 
-    /**
-     * Checks if the string starts with the value specified by `test`
-     *
-     * @method startsWith
-     * @param test {String} the string to test for
-     * @param [caseInsensitive=false] {Boolean} whether to ignore case-sensivity
-     * @return {Boolean} whether the string starts with `test`
-     */
-    String.startsWith || (StringPrototype.startsWith=function(test, caseInsensitive) {
-        return (new RegExp('^'+test, caseInsensitive ? 'i': '')).test(this);
-    });
+        guard = function(key) {
+            /**
+            Utility function to guard WeakMap methods from keys that are not
+            a non-null objects.
+            **/
 
-    /**
-     * Performs `{placeholder}` substitution on a string. The object passed
-     * provides values to replace the `{placeholder}`s.
-     * `{placeholder}` token names must match property names of the object.
-     *
-     * `{placeholder}` tokens that are undefined on the object map will be removed.
-     *
-     * @example
-     * var greeting = '{message} {who}!';
-     * greeting.substitute({message: 'Hello'}); // results into 'Hello !'
-     *
-     * @method substitute
-     * @param obj {Object} Object containing replacement values.
-     * @return {String} the substitute result.
-     */
-    String.substitute || (StringPrototype.substitute=function(obj) {
-        return this.replace(SUBREGEX, function (match, key) {
-            return (obj[key]===undefined) ? '' : obj[key];
-        });
-    });
+            if (key !== Object(key)) {
+                throw new TypeError("value is not a non-null object");
+            }
+            return key;
+        };
 
-    /**
-     * Returns a ISO-8601 Date-object build by the String's value.
-     * If the String-value doesn't match ISO-8601, `null` will be returned.
-     *
-     * ISO-8601 Date's are generated by JSON.stringify(), so it's very handy to be able to reconvert them.
-     *
-     * @example
-     * var birthday = '2010-02-10T14:45:30.000Z';
-     * birthday.toDate(); // --> Wed Feb 10 2010 15:45:30 GMT+0100 (CET)
-     *
-     * @method toDate
-     * @return {Date|null} the Date represented by the String's value or null when invalid
-     */
-    String.toDate || (StringPrototype.toDate=function() {
-        return DATEPATTERN.test(this) ? new Date(this) : null;
-    });
+        global.WeakMap = function() {
+            /**
+            Implementation of harmony `WeakMaps`, in ES5. This implementation will
+            work only with keys that have configurable `valueOf` property (which is
+            a default for all non-frozen objects).
+            http://wiki.ecmascript.org/doku.php?id=harmony:weak_maps
+            **/
 
-    /**
-     * Generated the string without any white-spaces at the start or end.
-     *
-     * @method trim
-     * @return {String} new String without leading and trailing white-spaces
-     */
-    String.trim || (StringPrototype.trim=function() {
-        return this.replace(TRIMREGEX, '');
-    });
+            var privates = new Name();
 
-    /**
-     * Generated the string without any white-spaces at the beginning.
-     *
-     * @method trimLeft
-     * @return {String} new String without leading white-spaces
-     */
-    String.trimLeft || (StringPrototype.trimLeft=function() {
-        return this.replace(TRIM_LEFT_REGEX, '');
-    });
+            return Object.freeze(Object.create(WeakMap.prototype, {
+                has: {
+                    value: function has(object) {
+                        return 'value' in privates(object);
+                    },
+                    configurable: true,
+                    enumerable: false,
+                    writable: true
+                },
+                get: {
+                    value: function get(key, fallback) {
+                        return privates(guard(key)).value || fallback;
+                    },
+                    configurable: true,
+                    enumerable: false,
+                    writable: true
+                },
+                set: {
+                    value: function set(key, value) {
+                        privates(guard(key)).value = value;
+                        return this;
+                    },
+                    configurable: true,
+                    enumerable: false,
+                    writable: true
+                },
+                'delete': {
+                    value: function set(key) {
+                        return delete privates(guard(key)).value;
+                    },
+                    configurable: true,
+                    enumerable: false,
+                    writable: true
+                }
+            }));
+        };
+    }
 
-    /**
-     * Generated the string without any white-spaces at the end.
-     *
-     * @method trimRight
-     * @return {String} new String without trailing white-spaces
-     */
-    String.trimRight || (StringPrototype.trimRight=function() {
-        return this.replace(TRIM_RIGHT_REGEX, '');
-    });
-
-    /**
-     * Validates if the String's value represents a valid emailaddress.
-     *
-     * @method validateEmail
-     * @return {Boolean} whether the String's value is a valid emailaddress.
-     */
-    StringPrototype.validateEmail = function() {
-        return PATTERN_EMAIL.test(this);
-    };
-
-    /**
-     * Validates if the String's value represents a valid floated number.
-     *
-     * @method validateFloat
-     * @param [comma] {Boolean} whether to use a comma as decimal separator instead of a dot
-     * @return {Boolean} whether the String's value is a valid floated number.
-     */
-    StringPrototype.validateFloat = function(comma) {
-        return comma ? PATTERN_FLOAT_COMMA.test(this) : PATTERN_FLOAT_DOT.test(this);
-    };
-
-    /**
-     * Validates if the String's value represents a hexadecimal color.
-     *
-     * @method validateHexaColor
-     * @param [alpha=false] {Boolean} whether to accept alpha transparancy
-     * @return {Boolean} whether the String's value is a valid hexadecimal color.
-     */
-    StringPrototype.validateHexaColor = function(alpha) {
-        return alpha ? PATTERN_HEX_COLOR_ALPHA.test(this) : PATTERN_HEX_COLOR.test(this);
-    };
-
-    /**
-     * Validates if the String's value represents a valid integer number.
-     *
-     * @method validateNumber
-     * @return {Boolean} whether the String's value is a valid integer number.
-     */
-    StringPrototype.validateNumber = function() {
-        return PATTERN_INTEGER.test(this);
-    };
-
-    /**
-     * Validates if the String's value represents a valid boolean.
-     *
-     * @method validateNumber
-     * @return {Boolean} whether the String's value is a valid integer number.
-     */
-    StringPrototype.validateBoolean = function() {
-        var length = this.length,
-            check;
-        if ((length<4) || (length>5)) {
-            return false;
-        }
-        check = this.toUpperCase();
-        return ((check==='TRUE') || (check==='FALSE'));
-    };
-
-    /**
-     * Validates if the String's value represents a valid URL.
-     *
-     * @method validateURL
-     * @param [options] {Object}
-     * @param [options.http] {Boolean} to force matching starting with `http://`
-     * @param [options.https] {Boolean} to force matching starting with `https://`
-     * @return {Boolean} whether the String's value is a valid URL.
-     */
-    StringPrototype.validateURL = function(options) {
-        var instance = this;
-        options || (options={});
-        if (options.http && options.https) {
-            return false;
-        }
-        return options.http ? PATTERN_URLHTTP.test(instance) : (options.https ? PATTERN_URLHTTPS.test(instance) : PATTERN_URL.test(instance));
-    };
-
-}(String.prototype));
-
-},{}],14:[function(require,module,exports){
-module.exports=require(5)
-},{}],15:[function(require,module,exports){
-module.exports=require(6)
-},{}],16:[function(require,module,exports){
-module.exports=require(7)
-},{"./lib/matchesselector.js":14,"./lib/window.console.js":15}],17:[function(require,module,exports){
+}(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this));
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{}],39:[function(require,module,exports){
+module.exports=require(10)
+},{}],40:[function(require,module,exports){
+module.exports=require(11)
+},{"./lib/matchesselector.js":37,"./lib/window.console.js":39}],41:[function(require,module,exports){
 "use strict";
 
 /*
@@ -2014,6 +4027,7 @@ module.exports=require(7)
 
 module.exports = function (window) {
 
+    // NOTE: CANNOT use dependency to js-ext/lib/object.js --> would be circular!
     if (!window._ITSAmodules) {
         Object.defineProperty(window, '_ITSAmodules', {
             configurable: false,
@@ -2052,11 +4066,12 @@ module.exports = function (window) {
 
     return transition;
 };
-},{}],18:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 "use strict";
 
 module.exports = function (window) {
 
+    // NOTE: CANNOT use dependency to js-ext/lib/object.js --> would be circular!
     if (!window._ITSAmodules) {
         Object.defineProperty(window, '_ITSAmodules', {
             configurable: false,
@@ -2093,7 +4108,7 @@ module.exports = function (window) {
 
     return transitionEnd;
 };
-},{}],19:[function(require,module,exports){
+},{}],43:[function(require,module,exports){
 (function (global){
 "use strict";
 
@@ -2102,8 +4117,6 @@ module.exports = function (window) {
  *
  * `transform`, `-webkit-transform`, `-moz-transform`, `-ms-transform`, `-o-transform` or `undefined` when not supported
  */
-
-require('js-ext/lib/object.js');
 
 var toCamelCase = function(input) {
         return input.replace(/-(.)/g, function(match, group) {
@@ -2114,6 +4127,7 @@ var toCamelCase = function(input) {
 
 module.exports = function (window) {
 
+    // NOTE: CANNOT use dependency to js-ext/lib/object.js --> would be circular!
     if (!window._ITSAmodules) {
         Object.defineProperty(window, '_ITSAmodules', {
             configurable: false,
@@ -2163,260 +4177,38 @@ module.exports = function (window) {
     return vendorCSS;
 };
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"js-ext/lib/object.js":11}],20:[function(require,module,exports){
-module.exports=require(5)
-},{}],21:[function(require,module,exports){
-module.exports=require(6)
-},{}],22:[function(require,module,exports){
-module.exports=require(7)
-},{"./lib/matchesselector.js":20,"./lib/window.console.js":21}],23:[function(require,module,exports){
-module.exports = {
-	idGenerator: require('./lib/idgenerator.js').idGenerator,
-	later: require('./lib/timers.js').later,
-	async: require('./lib/timers.js').async
-};
-},{"./lib/idgenerator.js":24,"./lib/timers.js":25}],24:[function(require,module,exports){
-"use strict";
-
-require('polyfill/polyfill-base.js');
-
-var UNDEFINED_NS = '__undefined__';
-var namespaces = {};
-
-/**
- * Collection of various utility functions.
- *
- *
- * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
- * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
- *
- * @module utils
- * @class Utils
- * @static
-*/
-
-
-/**
- * Generates an unique id with the signature: "namespace-follownr"
- *
- * @example
- *
- *     var generator = require('core-utils-idgenerator');
- *
- *     console.log(generator()); // --> 1
- *     console.log(generator()); // --> 2
- *     console.log(generator(1000)); // --> 1000
- *     console.log(generator()); // --> 1001
- *     console.log(generator('Parcel, 500')); // -->"Parcel-500"
- *     console.log(generator('Parcel')); // -->"Parcel-501"
- *
- *
- * @method idGenerator
- * @param [namespace] {String} namespace to prepend the generated id.
- *        When ignored, the generator just returns a number.
- * @param [start] {Number} startvalue for the next generated id. Any further generated id's will preceed this id.
- *        If `start` is lower or equal than the last generated id, it will be ignored.
- * @return {Number|String} an unique id. Either a number, or a String (digit prepended with "namespace-")
- */
-module.exports.idGenerator = function(namespace, start) {
-	// in case `start` is set at first argument, transform into (null, start)
-	(typeof namespace==='number') && (start=namespace) && (namespace=null);
-	namespace || (namespace=UNDEFINED_NS);
-
-	if (!namespaces[namespace]) {
-		namespaces[namespace] = start || 1;
-	}
-	else if (start && (namespaces[namespace]<start)) {
-		namespaces[namespace] = start;
-	}
-	return (namespace===UNDEFINED_NS) ? namespaces[namespace]++ : namespace+'-'+namespaces[namespace]++;
-};
-
-},{"polyfill/polyfill-base.js":28}],25:[function(require,module,exports){
-(function (process,global){
-/**
- * Collection of various utility functions.
- *
- *
- * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
- * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
- *
- * @module utils
- * @class Utils
- * @static
-*/
-
-
-(function (global) {
-
-	"use strict";
-
-	require('polyfill/polyfill-base.js');
-
-	var NAME = '[utils-timers]: ',
-	    _asynchronizer, _async;
-
-	/**
-	 * Forces a function to be run asynchronously, but as fast as possible. In Node.js
-	 * this is achieved using `setImmediate` or `process.nextTick`.
-	 *
-	 * @method _asynchronizer
-	 * @param callbackFn {Function} The function to call asynchronously
-	 * @static
-	 * @private
-	**/
-	_asynchronizer = (typeof setImmediate !== 'undefined') ? function (fn) {setImmediate(fn);} :
-                        ((typeof process !== 'undefined') && process.nextTick) ? process.nextTick : function (fn) {setTimeout(fn, 0);};
-
-	/**
-	 * Invokes the callbackFn once in the next turn of the JavaScript event loop. If the function
-	 * requires a specific execution context or arguments, wrap it with Function.bind.
-	 *
-	 * I.async returns an object with a cancel method.  If the cancel method is
-	 * called before the callback function, the callback function won't be called.
-	 *
-	 * @method async
-	 * @param {Function} callbackFn
-	 * @param [invokeAfterFn=true] {boolean} set to false to prevent the _afterSyncFn to be invoked
-	 * @return {Object} An object with a cancel method.  If the cancel method is
-	 * called before the callback function, the callback function won't be called.
-	**/
-	_async = function (callbackFn, invokeAfterFn) {
-		console.log(NAME, 'async');
-		var host = this || global,
-			canceled;
-
-		invokeAfterFn = (typeof invokeAfterFn === 'boolean') ? invokeAfterFn : true;
-		(typeof callbackFn==='function') && _asynchronizer(function () {
-			if (!canceled) {
-	        	console.log(NAME, 'async is running its callbakcFn');
-				callbackFn();
-				// in case host._afterAsyncFn is defined: invoke it, to identify that later has been executed
-				invokeAfterFn && host._afterAsyncFn && host._afterAsyncFn();
-			}
-		});
-
-		return {
-			cancel: function () {
-				canceled = true;
-			}
-		};
-	};
-
-	/**
-	 * Invokes the callbackFn once in the next turn of the JavaScript event loop. If the function
-	 * requires a specific execution context or arguments, wrap it with Function.bind.
-	 *
-	 * I.async returns an object with a cancel method.  If the cancel method is
-	 * called before the callback function, the callback function won't be called.
-	 *
-	 * @method async
-	 * @param {Function} callbackFn
-	 * @param [invokeAfterFn=true] {boolean} set to false to prevent the _afterSyncFn to be invoked
-	 * @return {Object} An object with a cancel method.  If the cancel method is
-	 * called before the callback function, the callback function won't be called.
-	**/
-	module.exports.async = _async;
-
-	/**
-	 * Invokes the callbackFn after a timeout (asynchronous). If the function
-	 * requires a specific execution context or arguments, wrap it with Function.bind.
-	 *
-	 * To invoke the callback function periodic, set 'periodic' either 'true', or specify a second timeout.
-	 * If number, then periodic is considered 'true' but with a perdiod defined by 'periodic',
-	 * which means: the first timer executes after 'timeout' and next timers after 'period'.
-	 *
-	 * I.later returns an object with a cancel method.  If the cancel() method is
-	 * called before the callback function, the callback function won't be called.
-	 *
-	 * @method later
-	 * @param callbackFn {Function} the function to execute.
-	 * @param [timeout] {Number} the number of milliseconds to wait until the callbackFn is executed.
-	 * when not set, the callback function is invoked once in the next turn of the JavaScript event loop.
-	 * @param [periodic] {boolean|Number} if true, executes continuously at supplied, if number, then periodic is considered 'true' but with a perdiod
-	 * defined by 'periodic', which means: the first timer executes after 'timeout' and next timers after 'period'.
-	 * The interval executes until canceled.
-	 * @param [invokeAfterFn=true] {boolean} set to false to prevent the _afterSyncFn to be invoked
-	 * @return {object} a timer object. Call the cancel() method on this object to stop the timer.
-	*/
-	module.exports.later = function (callbackFn, timeout, periodic, invokeAfterFn) {
-		console.log(NAME, 'later --> timeout: '+timeout+'ms | periodic: '+periodic);
-		var host = this || global,
-			canceled = false;
-		invokeAfterFn = (typeof invokeAfterFn === 'boolean') ? invokeAfterFn : true;
-		if (!timeout) {
-			return _async(callbackFn);
-		}
-		var interval = periodic,
-			secondtimeout = (typeof interval==='number'),
-			secondairId,
-			wrapper = function() {
-				// IE 8- and also nodejs may execute a callback, so in order to preserve
-				// the cancel() === no more runny-run, we have to build in an extra conditional
-				if (!canceled) {
-	            	console.log(NAME, 'later is running its callbakcFn');
-					callbackFn();
-					secondtimeout && (secondairId=setInterval(wrapperInterval, interval));
-					// in case host._afterAsyncFn is defined: invoke it, to identify that later has been executed
-					invokeAfterFn && host._afterAsyncFn && host._afterAsyncFn();
-					// break closure inside returned object:
-					id = null;
-				}
-			},
-			wrapperInterval = function() {
-				// IE 8- and also nodejs may execute a setInterval callback one last time
-				// after clearInterval was called, so in order to preserve
-				// the cancel() === no more runny-run, we have to build in an extra conditional
-				if (!canceled) {
-	            	console.log(NAME, 'later is running its callbakcFn');
-					callbackFn();
-					// in case host._afterAsyncFn is defined: invoke it, to identify that later has been executed
-					invokeAfterFn && host._afterAsyncFn && host._afterAsyncFn();
-				}
-			},
-			id;
-		(typeof callbackFn==='function') && (id=(interval && !secondtimeout) ? setInterval(wrapperInterval, timeout) : setTimeout(wrapper, timeout));
-
-		return {
-			cancel: function() {
-				canceled = true;
-				(interval && !secondtimeout) ? clearInterval(id) : clearTimeout(id);
-				secondairId && clearInterval(secondairId);
-				// break closure:
-				id = null;
-				secondairId = null;
-			}
-		};
-	};
-
-}(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this));
-
-}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":59,"polyfill/polyfill-base.js":28}],26:[function(require,module,exports){
-module.exports=require(5)
-},{}],27:[function(require,module,exports){
-module.exports=require(6)
-},{}],28:[function(require,module,exports){
-module.exports=require(7)
-},{"./lib/matchesselector.js":26,"./lib/window.console.js":27}],29:[function(require,module,exports){
+},{}],44:[function(require,module,exports){
+module.exports=require(9)
+},{}],45:[function(require,module,exports){
+module.exports=require(10)
+},{}],46:[function(require,module,exports){
+module.exports=require(11)
+},{"./lib/matchesselector.js":44,"./lib/window.console.js":45}],47:[function(require,module,exports){
+module.exports=require(24)
+},{"./lib/idgenerator.js":48,"./lib/timers.js":49}],48:[function(require,module,exports){
+module.exports=require(25)
+},{"polyfill/polyfill-base.js":52}],49:[function(require,module,exports){
+module.exports=require(26)
+},{"_process":146,"polyfill/polyfill-base.js":52}],50:[function(require,module,exports){
+module.exports=require(9)
+},{}],51:[function(require,module,exports){
+module.exports=require(10)
+},{}],52:[function(require,module,exports){
+module.exports=require(11)
+},{"./lib/matchesselector.js":50,"./lib/window.console.js":51}],53:[function(require,module,exports){
 "use strict";
 
 module.exports = function (window) {
     require('./lib/sizes.js')(window);
 };
-},{"./lib/sizes.js":30}],30:[function(require,module,exports){
+},{"./lib/sizes.js":54}],54:[function(require,module,exports){
 "use strict";
+
+require('js-ext/lib/object.js');
 
 module.exports = function (window) {
 
-    if (!window._ITSAmodules) {
-        Object.defineProperty(window, '_ITSAmodules', {
-            configurable: false,
-            enumerable: false,
-            writable: false,
-            value: {} // `writable` is false means we cannot chance the value-reference, but we can change {} its members
-        });
-    }
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', {});
 
     if (window._ITSAmodules.WindowSizes) {
         return; // WindowSizes was already created
@@ -2512,7 +4304,15 @@ module.exports = function (window) {
     };
 
 };
-},{}],31:[function(require,module,exports){
+},{"js-ext/lib/object.js":55}],55:[function(require,module,exports){
+module.exports=require(8)
+},{"polyfill/polyfill-base.js":58}],56:[function(require,module,exports){
+module.exports=require(9)
+},{}],57:[function(require,module,exports){
+module.exports=require(10)
+},{}],58:[function(require,module,exports){
+module.exports=require(11)
+},{"./lib/matchesselector.js":56,"./lib/window.console.js":57}],59:[function(require,module,exports){
 "use strict";
 
 /**
@@ -2530,17 +4330,11 @@ module.exports = function (window) {
 
 require('js-ext/lib/string.js');
 require('js-ext/lib/object.js');
+require('polyfill');
 
 module.exports = function (window) {
 
-    if (!window._ITSAmodules) {
-        Object.defineProperty(window, '_ITSAmodules', {
-            configurable: false,
-            enumerable: false,
-            writable: false,
-            value: {} // `writable` is false means we cannot chance the value-reference, but we can change {} its members
-        });
-    }
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', {});
 
     if (window._ITSAmodules.AttributeExtractor) {
         return window._ITSAmodules.AttributeExtractor; // AttributeExtractor was already created
@@ -2814,7 +4608,7 @@ module.exports = function (window) {
     return extractor;
 
 };
-},{"js-ext/lib/object.js":11,"js-ext/lib/string.js":13,"polyfill/extra/transition.js":17,"polyfill/extra/vendorCSS.js":19}],32:[function(require,module,exports){
+},{"js-ext/lib/object.js":34,"js-ext/lib/string.js":36,"polyfill":46,"polyfill/extra/transition.js":41,"polyfill/extra/vendorCSS.js":43}],60:[function(require,module,exports){
 "use strict";
 
 /**
@@ -2832,19 +4626,12 @@ module.exports = function (window) {
  * @since 0.0.1
 */
 
-require('polyfill/polyfill-base.js');
+require('polyfill');
 require('js-ext/lib/object.js');
 
 module.exports = function (window) {
 
-    if (!window._ITSAmodules) {
-        Object.defineProperty(window, '_ITSAmodules', {
-            configurable: false,
-            enumerable: false,
-            writable: false,
-            value: {} // `writable` is false means we cannot chance the value-reference, but we can change {} its members
-        });
-    }
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', {});
 
     if (window._ITSAmodules.ElementArray) {
         return window._ITSAmodules.ElementArray; // ElementArray was already created
@@ -3206,7 +4993,7 @@ module.exports = function (window) {
 
     return ElementArray;
 };
-},{"js-ext/lib/object.js":11,"polyfill/polyfill-base.js":22}],33:[function(require,module,exports){
+},{"js-ext/lib/object.js":34,"polyfill":46}],61:[function(require,module,exports){
 "use strict";
 
 /**
@@ -3226,6 +5013,7 @@ module.exports = function (window) {
 
 require('js-ext/lib/object.js');
 require('js-ext/lib/string.js');
+require('polyfill');
 
 var fromCamelCase = function(input) {
         return input.replace(/[a-z]([A-Z])/g, function(match, group) {
@@ -3235,7 +5023,7 @@ var fromCamelCase = function(input) {
 
 module.exports = function (window) {
 
-    window._ITSAmodules || window.protectedProp('_ITSAmodules', {});
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', {});
 
     if (window._ITSAmodules.ElementPlugin) {
         return window._ITSAmodules.ElementPlugin; // ElementPlugin was already created
@@ -3322,7 +5110,7 @@ module.exports = function (window) {
             Object.isObject(defaults) || (defaults = {});
             (typeof ns==='string') || (ns = 'invalid_ns');
             ns = ns.replace(/ /g, '').replace(/-/g, '');
-            newPlugin.protectedProp('ns', ns);
+            Object.protectedProp(newPlugin, 'ns', ns);
             newPlugin.defaults = defaults;
             return newPlugin;
         }
@@ -3337,7 +5125,7 @@ module.exports = function (window) {
 
     return ElementPlugin;
 };
-},{"js-ext/lib/object.js":11,"js-ext/lib/string.js":13}],34:[function(require,module,exports){
+},{"js-ext/lib/object.js":34,"js-ext/lib/string.js":36,"polyfill":46}],62:[function(require,module,exports){
 "use strict";
 
 /**
@@ -3354,16 +5142,12 @@ module.exports = function (window) {
  * @since 0.0.1
 */
 
+require('polyfill');
+require('js-ext/lib/object.js');
+
 module.exports = function (window) {
 
-    if (!window._ITSAmodules) {
-        Object.defineProperty(window, '_ITSAmodules', {
-            configurable: false,
-            enumerable: false,
-            writable: false,
-            value: {} // `writable` is false means we cannot chance the value-reference, but we can change {} its members
-        });
-    }
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', {});
 
     if (window._ITSAmodules.ExtendDocument) {
         return; // ExtendDocument was already created
@@ -4016,7 +5800,7 @@ module.exports = function (window) {
 
 
 
-},{"./vdom-ns.js":38}],35:[function(require,module,exports){
+},{"./vdom-ns.js":66,"js-ext/lib/object.js":34,"polyfill":46}],63:[function(require,module,exports){
 (function (global){
 "use strict";
 
@@ -4043,14 +5827,7 @@ require('polyfill');
 
 module.exports = function (window) {
 
-    if (!window._ITSAmodules) {
-        Object.defineProperty(window, '_ITSAmodules', {
-            configurable: false,
-            enumerable: false,
-            writable: false,
-            value: {} // `writable` is false means we cannot chance the value-reference, but we can change {} its members
-        });
-    }
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', {});
 
     if (window._ITSAmodules.ExtendElement) {
         return; // ExtendElement was already created
@@ -4338,10 +6115,10 @@ module.exports = function (window) {
             }
             unFreeze = function(options) {
                 var bkpFreezedStyle = node.getData(bkpFreezed),
-                    bkpFreezedData1 = node.getData(bkpFreezedData1),
                     finish = options && options.finish,
                     cancel = options && options.cancel,
                     transitioned = !finish;
+                bkpFreezedData1 = node.getData(bkpFreezedData1);
                 if (bkpFreezedStyle!==undefined) {
                     if (finish || cancel) {
                         node.setClass(NO_TRANS2);
@@ -4947,10 +6724,11 @@ module.exports = function (window) {
         * @param content {Element|ElementArray|String} content to append
         * @param [escape] {Boolean} whether to insert `escaped` content, leading it into only text inserted
         * @param [refElement] {Element} reference Element where the content should be appended
+        * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
         * @return {Element} the created Element (or the last when multiple)
         * @since 0.0.1
         */
-        ElementPrototype.append = function(content, escape, refElement) {
+        ElementPrototype.append = function(content, escape, refElement, silent) {
             var instance = this,
                 vnode = instance.vnode,
                 i, len, item, createdElement, vnodes, vRefElement,
@@ -4958,6 +6736,7 @@ module.exports = function (window) {
                 escape && (oneItem.nodeType===1) && (oneItem=DOCUMENT.createTextNode(oneItem.getOuterHTML()));
                 createdElement = refElement ? vnode._insertBefore(oneItem.vnode, refElement.vnode) : vnode._appendChild(oneItem.vnode);
             };
+            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
             vnode._noSync()._normalizable(false);
             if (refElement && (vnode.vChildNodes.indexOf(refElement.vnode)!==-1)) {
                 vRefElement = refElement.vnode.vNext;
@@ -4982,6 +6761,7 @@ module.exports = function (window) {
                 doAppend(content);
             }
             vnode._normalizable(true)._normalize();
+            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(false);
             return createdElement;
         };
 
@@ -5013,12 +6793,7 @@ module.exports = function (window) {
                 cloned = instance._cloneNode(deep),
                 cloneData = function(srcVNode, targetVNode) {
                     if (srcVNode._data) {
-                        Object.defineProperty(targetVNode, '_data', {
-                            configurable: false,
-                            enumerable: false,
-                            writable: false,
-                            value: {} // `writable` is false means we cannot chance the value-reference, but we can change {}'s properties itself
-                        });
+                        Object.protectedProp(targetVNode, '_data', {});
                         targetVNode._data.merge(srcVNode._data);
                     }
                 },
@@ -5164,11 +6939,14 @@ module.exports = function (window) {
         * Alias for thisNode.vTextContent = '';
         *
         * @method empty
+        * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
         * @chainable
         * @since 0.0.1
         */
-        ElementPrototype.empty = function() {
-            this.setText('');
+        ElementPrototype.empty = function(silent) {
+            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
+            this.vnode.empty();
+            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(false);
         };
 
         /**
@@ -5923,6 +7701,9 @@ module.exports = function (window) {
         * @since 0.0.1
         */
         ElementPrototype.inDOM = function() {
+            if (this.vnode.removedFromDOM) {
+                return false;
+            }
             return DOCUMENT.contains(this);
         };
 
@@ -6082,10 +7863,11 @@ module.exports = function (window) {
         * @param content {Element|Element|ElementArray|String} content to prepend
         * @param [escape] {Boolean} whether to insert `escaped` content, leading it into only text inserted
         * @param [refElement] {Element} reference Element where the content should be prepended
+        * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
         * @return {Element} the created Element (or the last when multiple)
         * @since 0.0.1
         */
-        ElementPrototype.prepend = function(content, escape, refElement) {
+        ElementPrototype.prepend = function(content, escape, refElement, silent) {
             var instance = this,
                 vnode = instance.vnode,
                 i, len, item, createdElement, vnodes, vChildNodes, vRefElement,
@@ -6095,6 +7877,7 @@ module.exports = function (window) {
                 // CAUTIOUS: when using TextNodes, they might get merged (vnode._normalize does this), which leads into disappearance of refElement:
                 refElement = createdElement;
             };
+            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
             vnode._noSync()._normalizable(false);
             if (!refElement) {
                 vChildNodes = vnode.vChildNodes;
@@ -6122,6 +7905,7 @@ module.exports = function (window) {
                 doPrepend(content);
             }
             vnode._normalizable(true)._normalize();
+            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(false);
             return createdElement;
         };
 
@@ -6279,6 +8063,27 @@ module.exports = function (window) {
         };
 
        /**
+         * Removes multiple attributes on the Element.
+         * The argument should be one ore more AttributeNames.
+         *
+         * @example
+         * instance.removeAttrs(['tabIndex', 'style']);
+         *
+         * @method removeAttrs
+         * @param attributeData {Array|String}
+         * @chainable
+         * @since 0.0.1
+        */
+        ElementPrototype.removeAttrs = function(attributeData) {
+            var instance = this;
+            Array.isArray(attributeData) || (attributeData=[attributeData]);
+            attributeData.forEach(function(item) {
+                instance.removeAttribute(item);
+            });
+            return instance;
+        };
+
+       /**
         * Removes the attribute from the Element.
         *
         * Use removeAttr() to be able to chain.
@@ -6340,26 +8145,29 @@ module.exports = function (window) {
         * When no arguments are passed, all node-data (key-value pairs) will be removed.
         *
         * @method removeData
-        * @param key {string} name of the key
+        * @param [key] {string} name of the key, when not set, all data is removed
+        * @param [deep] {Boolean} whether to set the data to all descendants recursively
         * @chainable
         * @since 0.0.1
         */
-        ElementPrototype.removeData = function(key) {
-            var vnode = this.vnode;
+        ElementPrototype.removeData = function(key, deep) {
+            var instance = this,
+                vnode = instance.vnode;
             if (vnode._data) {
                 if (key) {
                     delete vnode._data[key];
                 }
                 else {
                     // we cannot just redefine _data, for it is set as readonly
-                    vnode._data.each(
-                        function(value, key) {
-                            delete vnode._data[key];
-                        }
-                    );
+                    vnode._cleanData();
+                    if (deep) {
+                        instance.getChildren().forEach(function(element) {
+                            element.removeData(key, true);
+                        });
+                    }
                 }
             }
-            return this;
+            return instance;
         };
 
        /**
@@ -6734,7 +8542,7 @@ module.exports = function (window) {
             var instance = this,
                 vnode = instance.vnode;
             (value==='') && (value=null);
-            value ? vnode._setAttr(attributeName, value) : vnode._removeAttr(attributeName);
+            ((value!==null) && (value!==undefined)) ? vnode._setAttr(attributeName, value) : vnode._removeAttr(attributeName);
         };
 
        /**
@@ -6797,21 +8605,23 @@ module.exports = function (window) {
          * @method setData
          * @param key {string} name of the key
          * @param value {Any} the value that belongs to `key`
+         * @param [deep] {Boolean} whether to set the data to all descendants recursively
          * @chainable
          * @since 0.0.1
         */
-        ElementPrototype.setData = function(key, value) {
-            var vnode = this.vnode;
+        ElementPrototype.setData = function(key, value, deep) {
+            var instance = this,
+                vnode = instance.vnode;
             if (value!==undefined) {
-                vnode._data ||  Object.defineProperty(vnode, '_data', {
-                    configurable: false,
-                    enumerable: false,
-                    writable: false,
-                    value: {} // `writable` is false means we cannot chance the value-reference, but we can change {}'s properties itself
-                });
+                vnode._data || Object.protectedProp(vnode, '_data', {});
                 vnode._data[key] = value;
+                if (deep) {
+                    instance.getChildren().forEach(function(element) {
+                        element.setData(key, value, true);
+                    });
+                }
             }
-            return this;
+            return instance;
         };
 
         /**
@@ -6824,12 +8634,16 @@ module.exports = function (window) {
          *
          * @method setHTML
          * @param val {String} the new value to be set
+         * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
          * @chainable
          * @since 0.0.1
          */
-        ElementPrototype.setHTML = function(val) {
-            this.vnode.innerHTML = val;
-            return this;
+        ElementPrototype.setHTML = function(val, silent) {
+            var instance = this;
+            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
+            instance.vnode.innerHTML = val;
+            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(false);
+            return instance;
         };
 
        /**
@@ -7125,12 +8939,16 @@ module.exports = function (window) {
          *
          * @method setOuterHTML
          * @param val {String} the new value to be set
+         * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
          * @chainable
          * @since 0.0.1
          */
-        ElementPrototype.setOuterHTML = function(val) {
-            this.vnode.outerHTML = val;
-            return this;
+        ElementPrototype.setOuterHTML = function(val, silent) {
+            var instance = this;
+            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
+            instance.vnode.outerHTML = val;
+            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(false);
+            return instance;
         };
 
         /**
@@ -7143,12 +8961,16 @@ module.exports = function (window) {
          *
          * @method setText
          * @param val {String} the textContent to be set
+         * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
          * @chainable
          * @since 0.0.1
          */
-        ElementPrototype.setText = function(val) {
-            this.vnode.textContent = val;
-            return this;
+        ElementPrototype.setText = function(val, silent) {
+            var instance = this;
+            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
+            instance.vnode.textContent = val;
+            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(false);
+            return instance;
         };
 
        /**
@@ -8332,7 +10154,7 @@ for (j=0; j<len2; j++) {
 * @since 0.0.1
 */
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../css/element.css":9,"./attribute-extractor.js":31,"./element-array.js":32,"./html-parser.js":36,"./node-parser.js":37,"./vdom-ns.js":38,"./vnode.js":39,"js-ext/lib/object.js":11,"js-ext/lib/promise.js":12,"js-ext/lib/string.js":13,"polyfill":22,"polyfill/extra/transition.js":17,"polyfill/extra/transitionend.js":18,"polyfill/extra/vendorCSS.js":19,"utils":23,"window-ext":29}],36:[function(require,module,exports){
+},{"../css/element.css":30,"./attribute-extractor.js":59,"./element-array.js":60,"./html-parser.js":64,"./node-parser.js":65,"./vdom-ns.js":66,"./vnode.js":67,"js-ext/lib/object.js":34,"js-ext/lib/promise.js":35,"js-ext/lib/string.js":36,"polyfill":46,"polyfill/extra/transition.js":41,"polyfill/extra/transitionend.js":42,"polyfill/extra/vendorCSS.js":43,"utils":47,"window-ext":53}],64:[function(require,module,exports){
 "use strict";
 
 /**
@@ -8348,16 +10170,12 @@ for (j=0; j<len2; j++) {
  * @since 0.0.1
 */
 
+require('polyfill');
+require('js-ext/lib/object.js');
+
 module.exports = function (window) {
 
-    if (!window._ITSAmodules) {
-        Object.defineProperty(window, '_ITSAmodules', {
-            configurable: false,
-            enumerable: false,
-            writable: false,
-            value: {} // `writable` is false means we cannot chance the value-reference, but we can change {} its members
-        });
-    }
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', {});
 
     if (window._ITSAmodules.HtmlParser) {
         return window._ITSAmodules.HtmlParser; // HtmlParser was already created
@@ -8447,7 +10265,7 @@ module.exports = function (window) {
                 vnodes = [],
                 parentVNode = arguments[2], // private pass through-argument, only available when internal looped
                 insideTagDefinition, insideComment, innerText, endTagCount, stringMarker, attributeisString, attribute, attributeValue,
-                j, character, character2, vnode, isBoolean, checkBoolean, tag, isBeginTag, isEndTag, scriptVNode, extractClass, extractStyle;
+                j, character, character2, vnode, tag, isBeginTag, isEndTag, scriptVNode, extractClass, extractStyle;
             while (i<len) {
                 character = htmlString[i];
                 character2 = htmlString[i+1];
@@ -8482,9 +10300,6 @@ module.exports = function (window) {
                                         }
                                         // need to set the position one step behind --> the attributeloop will increase it and would otherwise miss a character
                                         i--;
-                                        isBoolean = ((attributeValue.length>3) && (attributeValue.length<6) && (checkBoolean=attributeValue.toUpperCase()) && ((checkBoolean==='FALSE') || (checkBoolean==='TRUE')));
-                                        // typecast the value to either Boolean or Number:
-                                        attributeValue = isBoolean ? (checkBoolean==='TRUE') : parseFloat(attributeValue);
                                     }
                                 }
                                 else {
@@ -8664,7 +10479,7 @@ module.exports = function (window) {
     return htmlToVNodes;
 
 };
-},{"./attribute-extractor.js":31,"./vdom-ns.js":38}],37:[function(require,module,exports){
+},{"./attribute-extractor.js":59,"./vdom-ns.js":66,"js-ext/lib/object.js":34,"polyfill":46}],65:[function(require,module,exports){
 "use strict";
 
 /**
@@ -8679,16 +10494,12 @@ module.exports = function (window) {
  * @since 0.0.1
 */
 
+require('polyfill');
+require('js-ext/lib/object.js');
+
 module.exports = function (window) {
 
-    if (!window._ITSAmodules) {
-        Object.defineProperty(window, '_ITSAmodules', {
-            configurable: false,
-            enumerable: false,
-            writable: false,
-            value: {} // `writable` is false means we cannot chance the value-reference, but we can change {} its members
-        });
-    }
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', {});
 
     if (window._ITSAmodules.NodeParser) {
         return window._ITSAmodules.NodeParser; // NodeParser was already created
@@ -8735,7 +10546,7 @@ module.exports = function (window) {
                 len = attributes.length;
                 for (i=0; i<len; i++) {
                     attr = attributes[i];
-                    vnode.attrs[attr.name] = attr.value;
+                    vnode.attrs[attr.name] = String(attr.value);
                 }
 
                 vnode.id = vnode.attrs.id;
@@ -8787,7 +10598,7 @@ module.exports = function (window) {
     return domNodeToVNode;
 
 };
-},{"./attribute-extractor.js":31,"./vdom-ns.js":38,"./vnode.js":39}],38:[function(require,module,exports){
+},{"./attribute-extractor.js":59,"./vdom-ns.js":66,"./vnode.js":67,"js-ext/lib/object.js":34,"polyfill":46}],66:[function(require,module,exports){
 /**
  * Creates a Namespace that can be used accros multiple vdom-modules to share information.
  *
@@ -8806,18 +10617,12 @@ module.exports = function (window) {
 "use strict";
 
 require('js-ext/lib/object.js');
+require('polyfill');
 
 module.exports = function (window) {
     var NS;
 
-    if (!window._ITSAmodules) {
-        Object.defineProperty(window, '_ITSAmodules', {
-            configurable: false,
-            enumerable: false,
-            writable: false,
-            value: {} // `writable` is false means we cannot chance the value-reference, but we can change {} its members
-        });
-    }
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', {});
 
     if (window._ITSAmodules.VDOM_NS) {
         return window._ITSAmodules.VDOM_NS; // VDOM_NS was already created
@@ -8895,7 +10700,7 @@ module.exports = function (window) {
 
     return NS;
 };
-},{"js-ext/lib/object.js":11}],39:[function(require,module,exports){
+},{"js-ext/lib/object.js":34,"polyfill":46}],67:[function(require,module,exports){
 "use strict";
 
 /**
@@ -8920,17 +10725,12 @@ module.exports = function (window) {
 require('js-ext/lib/array.js');
 require('js-ext/lib/object.js');
 require('js-ext/lib/string.js');
+require('js-ext/extra/lightmap.js');
+require('polyfill');
 
 module.exports = function (window) {
 
-    if (!window._ITSAmodules) {
-        Object.defineProperty(window, '_ITSAmodules', {
-            configurable: false,
-            enumerable: false,
-            writable: false,
-            value: {} // `writable` is false means we cannot chance the value-reference, but we can change {} its members
-        });
-    }
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', {});
 
     if (window._ITSAmodules.VNode) {
         return window._ITSAmodules.VNode; // VNODE was already created
@@ -8939,14 +10739,34 @@ module.exports = function (window) {
     var NS = require('./vdom-ns.js')(window),
         extractor = require('./attribute-extractor.js')(window),
         DOCUMENT = window.document,
+        MUTATION_EVENTS = new window.LightMap(),
+        BATCH_WILL_RUN = false,
         nodeids = NS.nodeids,
         htmlToVNodes = require('./html-parser.js')(window),
-        async = require('utils/lib/timers.js').async,
+        timers = require('utils/lib/timers.js'),
+        async = timers.async,
+        later = timers.later,
+
+        // cleanup memory after 1 minute: removed nodes SHOULD NOT be accessed afterwards
+        // because vnode would be recalculated and might be different from before
+        DESTROY_DELAY = 60000,
+
         NTH_CHILD_REGEXP = /^(?:(\d*)[n|N])([\+|\-](\d+))?$/, // an+b
         STRING = 'string',
         CLASS = 'class',
         STYLE = 'style',
         ID = 'id',
+        NODE= 'node',
+        REMOVE = 'remove',
+        INSERT = 'insert',
+        CHANGE = 'change',
+        ATTRIBUTE = 'attribute',
+        EV_REMOVED = NODE+REMOVE,
+        EV_INSERTED = NODE+INSERT,
+        EV_CONTENT_CHANGE = NODE+'content'+CHANGE,
+        EV_ATTRIBUTE_REMOVED = ATTRIBUTE+REMOVE,
+        EV_ATTRIBUTE_CHANGED = ATTRIBUTE+CHANGE,
+        EV_ATTRIBUTE_INSERTED = ATTRIBUTE+INSERT,
         SPLIT_CHARACTER = {
             ' ': true,
             '>': true,
@@ -9082,9 +10902,8 @@ module.exports = function (window) {
          * @since 0.0.1
          */
         PSEUDO_REQUIRED_CHILDREN = {},
-        _matchesSelectorItem, _matchesOneSelector, _findElementSibling, vNodeProto,
-        _splitSelector, _findNodeSibling, _matchNthChild;
-
+        _matchesSelectorItem, _matchesOneSelector, _findElementSibling, vNodeProto, _markRemoved,
+        _splitSelector, _findNodeSibling, _matchNthChild, _batchEmit, _emitDestroyChildren;
         PSEUDO_REQUIRED_CHILDREN[PSEUDO_FIRST_CHILD] = true;
         PSEUDO_REQUIRED_CHILDREN[PSEUDO_FIRST_OF_TYPE] = true;
         PSEUDO_REQUIRED_CHILDREN[PSEUDO_LAST_CHILD] = true;
@@ -9158,19 +10977,25 @@ module.exports = function (window) {
     * @since 0.0.1
     */
     _matchNthChild = function(pseudoArg, index) {
-        var match, k, a, b, nodeOk, nthIndex, sign;
+        var match, k, a, b, nodeOk, nthIndex, sign, isNumber;
         (pseudoArg==='even') && (pseudoArg='2n');
         (pseudoArg==='odd') && (pseudoArg='2n+1');
 
-        match = pseudoArg.match(NTH_CHILD_REGEXP);
+        match = pseudoArg.match(NTH_CHILD_REGEXP) || (isNumber=pseudoArg.validateNumber());
         if (!match) {
             return false;
         }
         // pseudoArg follows the pattern: `an+b`
-        a = match[1];
-        sign = match[2];
-        b = match[3];
-        (b==='') && (b=0);
+        if (!isNumber) {
+            a = match[1];
+            sign = match[2];
+            b = match[3] || 0;
+            (b==='') && (b=0);
+        }
+        else {
+            b = pseudoArg;
+        }
+        sign && (sign=sign[0]);
         if (!a) {
             // only fixed index to match
             return (sign==='-') ? false : (parseInt(b, 10)===index);
@@ -9706,6 +11531,52 @@ module.exports = function (window) {
         return list;
     };
 
+    _batchEmit = function() {
+        MUTATION_EVENTS.each(function (mutationEvents, vnode) {
+            var domNode = vnode.domNode;
+            if (mutationEvents[EV_REMOVED]) {
+                domNode.emit(EV_REMOVED);
+            }
+            else if (mutationEvents[EV_INSERTED]) {
+                domNode.emit(EV_INSERTED);
+            }
+            else {
+                // contentchange and attributechanges can go hand in hand
+                mutationEvents.each(function(value, evt) {
+                    domNode.emit(evt, (evt===EV_CONTENT_CHANGE) ? null : {changed: value});
+                });
+            }
+        });
+        MUTATION_EVENTS.clear();
+        BATCH_WILL_RUN = false;
+    };
+
+    _emitDestroyChildren = function(vnode) {
+        var children = vnode.vChildren,
+            len = children.length,
+            i, vChild;
+        for (i=0; i<len; i++) {
+            vChild = children[i];
+            vChild._emit(EV_REMOVED);
+            _emitDestroyChildren(vChild);
+        }
+    };
+
+    _markRemoved = function(vnode) {
+        var vChildNodes = vnode.vChildNodes,
+            len, i, vChildNode;
+        if (vnode.nodeType===1) {
+            Object.protectedProp(vnode, 'removedFromDOM', true);
+            if (vChildNodes) {
+                len = vChildNodes.length;
+                for (i=0; i < len; i++) {
+                    vChildNode = vChildNodes[i];
+                    vChildNode && _markRemoved(vChildNode);
+                }
+            }
+        }
+    };
+
     vNodeProto = window._ITSAmodules.VNode = {
        /**
         * Check whether the vnode's domNode is equal, or contains the specified Element.
@@ -9715,10 +11586,17 @@ module.exports = function (window) {
         * @since 0.0.1
         */
         contains: function(otherVNode) {
+            if (otherVNode.destroyed) {
+                return false;
+            }
             while (otherVNode && (otherVNode!==this)) {
                 otherVNode = otherVNode.vParent;
             }
             return (otherVNode===this);
+        },
+
+        empty: function() {
+            this._setChildNodes([]);
         },
 
        /**
@@ -9852,7 +11730,7 @@ module.exports = function (window) {
                 attributeValue = domNode._getAttribute(attributeName),
                 attrs = instance.attrs,
                 extractStyle, extractClass;
-            if (instance.nodeType==1) {
+            if (instance.nodeType===1) {
                 attributeValue || (attributeValue='');
                 if (attributeValue==='') {
                     delete attrs[attributeName];
@@ -9947,6 +11825,7 @@ module.exports = function (window) {
                 // if the size changed, then the domNode was merged
                 (size===instance.vChildNodes.length) || (domNode=instance.vChildNodes[instance.vChildNodes.length-1].domNode);
             }
+            VNode._emit(EV_INSERTED);
             return domNode;
         },
 
@@ -9971,6 +11850,17 @@ module.exports = function (window) {
             return instance;
         },
 
+        _cleanData: function() {
+            var instance = this,
+                data = instance._data;
+            data && data.each(
+                function(value, key) {
+                    delete data[key];
+                }
+            );
+            return instance;
+        },
+
        /**
         * Destroys the vnode and all its vnode-vChildNodes.
         * Removes it from its vParent.vChildNodes list,
@@ -9983,34 +11873,172 @@ module.exports = function (window) {
         * @chainable
         * @since 0.0.1
         */
-        _destroy: function() {
+        _destroy: function(silent) {
             var instance = this,
                 vChildNodes = instance.vChildNodes,
-                len, i, vChildNode;
+                len, i, vChildNode, vParent, treeNodes;
             if (!instance.destroyed) {
-                Object.defineProperty(instance, 'destroyed', {
-                    value: true,
-                    writable: false,
-                    configurable: false,
-                    enumerable: true
-                });
-                // first: _remove all its vChildNodes
-                if ((instance.nodeType===1) && vChildNodes) {
-                    len = vChildNodes.length;
-                    for (i=0; i < len; i++) {
-                        vChildNode = vChildNodes[i];
-                        vChildNode && vChildNode._destroy();
-                    }
+                silent || instance._emit(EV_REMOVED);
+                Object.protectedProp(instance, 'destroyed', true);
+
+                // first: determine the dom-tree, which module `event-dom` needs to determine where the node was before it was destroyed:
+                treeNodes = [instance];
+                vParent = instance.vParent;
+                while (vParent) {
+                    treeNodes[treeNodes.length] = vParent;
+                    vParent = vParent.vParent;
                 }
-                instance._vChildren = null;
-                // explicitely set instance.domNode._vnode and instance.domNode to null in order to prevent problems with the GC (we break the circular reference)
-                delete instance.domNode._vnode;
-                // if valid id, then _remove the DOMnodeRef from internal hash
-                instance.id && delete nodeids[instance.id];
+
+                // mark all its vChildNodes so we can see if the node is in the DOM
+                _markRemoved(instance);
+
+                // The definite cleanup needs to be done after a timeout:
+                // someone might need to handle the Element when removed (fe to cleanup specific things)
+                later(function() {
+                    instance._cleanData();
+                    // _destroy all its vChildNodes
+                    if ((instance.nodeType===1) && vChildNodes) {
+                        len = vChildNodes.length;
+                        for (i=0; i < len; i++) {
+                            vChildNode = vChildNodes[i];
+                            vChildNode && vChildNode._destroy(true);
+                        }
+                    }
+                    instance._vChildren = null;
+                    // explicitely set instance.domNode._vnode and instance.domNode to null in order to prevent problems with the GC (we break the circular reference)
+                    delete instance.domNode._vnode;
+                    // if valid id, then _remove the DOMnodeRef from internal hash
+                    instance.id && delete nodeids[instance.id];
+                }, silent ? 0 : DESTROY_DELAY);
+
                 instance._deleteFromParent();
-                async(function() {
-                    instance.domNode = null;
-                });
+                // Do not make domNode `null` --> it could be used even when not in the dom
+            }
+            return instance;
+        },
+
+        _emit: function(evt, attribute, newValue, prevValue) {
+           /**
+            * Emitted by every Element that gets inserted.
+            *
+            * @event nodeinsert
+            * @param e {Object} eventobject including:
+            * @param e.target {HtmlElement} the HtmlElement that is being dragged
+            * @param e.currentTarget {HtmlElement} the HtmlElement that is delegating
+            * @since 0.1
+            */
+
+           /**
+            * Emitted by every Element that gets removed.
+            *
+            * @event noderemove
+            * @param e {Object} eventobject including:
+            * @param e.target {HtmlElement} the HtmlElement that is being dragged
+            * @param e.currentTarget {HtmlElement} the HtmlElement that is delegating
+            * @since 0.1
+            */
+
+           /**
+            * Emitted by every Element that gets its content changed (innerHTML/innerText).
+            *
+            * @event nodecontentchange
+            * @param e {Object} eventobject including:
+            * @param e.target {HtmlElement} the HtmlElement that is being dragged
+            * @param e.currentTarget {HtmlElement} the HtmlElement that is delegating
+            * @since 0.1
+            */
+
+           /**
+            * Emitted by every Element that gets an attribute inserted.
+            *
+            * @event attributeinsert
+            * @param e {Object} eventobject including:
+            * @param e.target {HtmlElement} the HtmlElement that is being dragged
+            * @param e.currentTarget {HtmlElement} the HtmlElement that is delegating
+            * @param e.changed {Array} Array with Objects having three properties:
+            * <ul>
+            *     <li>attribute</li>
+            *     <li>newValue</li>
+            * </ul>
+            * @since 0.1
+            */
+
+           /**
+            * Emitted by every Element that gets an attribute removed.
+            *
+            * @event attributeremove
+            * @param e {Object} eventobject including:
+            * @param e.target {HtmlElement} the HtmlElement that is being dragged
+            * @param e.currentTarget {HtmlElement} the HtmlElement that is delegating
+            * @param e.changed {Array} Array with Strings of the attributeNames that are removed
+            * @since 0.1
+            */
+
+           /**
+            * Emitted by every Element that gets an attribute changed.
+            *
+            * @event attributechange
+            * @param e {Object} eventobject including:
+            * @param e.target {HtmlElement} the HtmlElement that is being dragged
+            * @param e.currentTarget {HtmlElement} the HtmlElement that is delegating
+            * @param e.changed {Array} Array with Objects having three properties:
+            * <ul>
+            *     <li>attribute</li>
+            *     <li>newValue</li>
+            *     <li>prevValue</li>
+            * </ul>
+            * @since 0.1
+            */
+
+            var instance = this,
+                silent, attrMutations, mutationEvents, mutation, vParent;
+            if (!DOCUMENT.hasMutationSubs || (instance.nodeType!==1)) {
+                return;
+            }
+            silent = !!DOCUMENT._suppressMutationEvents;
+            if (!silent && !instance.destroyed) {
+                mutationEvents = MUTATION_EVENTS.get(instance) || {};
+                if (attribute) {
+                    attrMutations = mutationEvents[evt] || [];
+                    if (evt===EV_ATTRIBUTE_REMOVED) {
+                        mutation = attribute;
+                    }
+                    else {
+                        mutation = {
+                            attribute: attribute
+                        };
+                        if ((evt===EV_ATTRIBUTE_INSERTED) || (evt===EV_ATTRIBUTE_CHANGED)) {
+                            mutation.newValue = newValue;
+                        }
+                        if ((evt===EV_ATTRIBUTE_CHANGED) && prevValue) {
+                            mutation.prevValue = prevValue;
+                        }
+                    }
+                    attrMutations.push(mutation);
+                    mutationEvents[evt] = attrMutations;
+                }
+                else {
+                    mutationEvents[evt] = true;
+                }
+                MUTATION_EVENTS.set(instance, mutationEvents);
+                // now set all parent to have a nodecontentchange:
+                vParent = instance;
+/*jshint boss:true */
+                while (vParent=vParent.vParent) {
+/*jshint boss:false */
+                    vParent._emit(EV_CONTENT_CHANGE);
+                }
+
+                // in case of removal we need to emit EV_REMOVED for all children right now
+                // for they will be actually removed silently after a delay of 1 minute
+                (evt===EV_REMOVED) && _emitDestroyChildren(instance);
+
+                if (!BATCH_WILL_RUN) {
+                    BATCH_WILL_RUN = true;
+                    async(function() {
+                        _batchEmit();
+                    });
+                }
             }
             return instance;
         },
@@ -10035,6 +12063,7 @@ module.exports = function (window) {
                 newVNode._moveToParent(instance, index);
                 instance.domNode._insertBefore(domNode, refVNode.domNode);
                 (newVNode.nodeType===3) && instance._normalize();
+                newVNode._emit(EV_INSERTED);
             }
             return domNode;
         },
@@ -10079,6 +12108,7 @@ module.exports = function (window) {
             var instance = this,
                 domNode = instance.domNode,
                 vChildNodes = instance.vChildNodes,
+                changed = false,
                 i, preChildNode, vChildNode;
             if (!instance._unNormalizable && vChildNodes) {
                 for (i=vChildNodes.length-1; i>=0; i--) {
@@ -10088,16 +12118,19 @@ module.exports = function (window) {
                         if (vChildNode.text==='') {
                             domNode._removeChild(vChildNode.domNode);
                             vChildNode._destroy();
+                            changed = true;
                         }
                         else if (preChildNode && preChildNode.nodeType===3) {
                             preChildNode.text += vChildNode.text;
                             preChildNode.domNode.nodeValue = preChildNode.text;
                             domNode._removeChild(vChildNode.domNode);
                             vChildNode._destroy();
+                            changed = true;
                         }
                     }
                 }
             }
+            changed && instance._emit(EV_CONTENT_CHANGE);
             return instance;
         },
 
@@ -10150,16 +12183,19 @@ module.exports = function (window) {
         */
         _removeAttr: function(attributeName) {
             var instance = this;
-            delete instance.attrs[attributeName];
-            // in case of STYLE attribute --> special treatment
-            (attributeName===STYLE) && (instance.styles={});
-            // in case of CLASS attribute --> special treatment
-            (attributeName===CLASS) && (instance.classNames={});
-            if (attributeName===ID) {
-                delete nodeids[instance.id];
-                delete instance.id;
+            if (instance.attrs[attributeName]!==undefined) {
+                delete instance.attrs[attributeName];
+                // in case of STYLE attribute --> special treatment
+                (attributeName===STYLE) && (instance.styles={});
+                // in case of CLASS attribute --> special treatment
+                (attributeName===CLASS) && (instance.classNames={});
+                if (attributeName===ID) {
+                    delete nodeids[instance.id];
+                    delete instance.id;
+                }
+                instance.domNode._removeAttribute(attributeName);
+                instance._emit(EV_ATTRIBUTE_REMOVED, attributeName);
             }
-            instance.domNode._removeAttribute(attributeName);
             return instance;
         },
 
@@ -10229,12 +12265,17 @@ module.exports = function (window) {
         _setAttr: function(attributeName, value) {
             var instance = this,
                 extractStyle, extractClass,
-                attrs = instance.attrs;
-            if (attrs[attributeName]!==value) {
-                if ((value===undefined) || (value===undefined)) {
+                attrs = instance.attrs,
+                prevVal = attrs[attributeName];
+            // don't check by !== --> value isn't parsed into a String yet
+
+            if (prevVal!=value) {
+                if ((value===undefined) || (value===null)) {
                     instance._removeAttr(attributeName);
                     return instance;
                 }
+                // attribute-values are always Strings:
+                value = String(value);
                 attrs[attributeName] = value;
                 // in case of STYLE attribute --> special treatment
                 if (attributeName===STYLE) {
@@ -10266,6 +12307,7 @@ module.exports = function (window) {
                     nodeids[value] = instance.domNode;
                 }
                 instance.domNode._setAttribute(attributeName, value);
+                instance._emit(prevVal ? EV_ATTRIBUTE_CHANGED : EV_ATTRIBUTE_INSERTED, attributeName, value, prevVal);
             }
             return instance;
         },
@@ -10376,6 +12418,7 @@ module.exports = function (window) {
                                 newChild._setChildNodes(bkpChildNodes);
                                 newChild.id && (nodeids[newChild.id]=newChild.domNode);
                                 oldChild._replaceAtParent(newChild);
+                                newChild._emit(EV_INSERTED);
                             }
                             else {
                                 // same tag --> only update what is needed
@@ -10383,6 +12426,9 @@ module.exports = function (window) {
                                 oldChild._setAttrs(newChild.attrs);
                                 // next: sync the vChildNodes:
                                 oldChild._setChildNodes(newChild.vChildNodes);
+                                // reset ref. to the domNode, for it might heva been changed by newChild:
+                                oldChild.id && (nodeids[oldChild.id]=childDomNode);
+                                newVChildNodes[i] = oldChild;
                             }
                             break;
                         case 2: // oldNodeType==Element, newNodeType==TextNode
@@ -10393,27 +12439,31 @@ module.exports = function (window) {
                             domNode._replaceChild(newChild.domNode, childDomNode);
                             newChild.vParent = instance;
                             oldChild._replaceAtParent(newChild);
+                            instance._emit(EV_CONTENT_CHANGE);
                             break;
                         case 4: // oldNodeType==TextNode, newNodeType==Element
                                 // case4 and case7 should be treated the same
                         case 7: // oldNodeType==Comment, newNodeType==Element
-                                bkpAttrs = newChild.attrs;
-                                bkpChildNodes = newChild.vChildNodes;
-                                newChild.attrs = {}; // reset, to force defined by `_setAttrs`
-                                newChild.vChildNodes = []; // reset to current state, to force defined by `_setAttrs`
-                                domNode._replaceChild(newChild.domNode, childDomNode);
-                                newChild._setAttrs(bkpAttrs);
-                                newChild._setChildNodes(bkpChildNodes);
-                                newChild.id && (nodeids[newChild.id]=newChild.domNode);
-                                oldChild.isVoid = newChild.isVoid;
-                                delete oldChild.text;
-
+                            bkpAttrs = newChild.attrs;
+                            bkpChildNodes = newChild.vChildNodes;
+                            newChild.attrs = {}; // reset, to force defined by `_setAttrs`
+                            newChild.vChildNodes = []; // reset to current state, to force defined by `_setAttrs`
+                            domNode._replaceChild(newChild.domNode, childDomNode);
+                            newChild._setAttrs(bkpAttrs);
+                            newChild._setChildNodes(bkpChildNodes);
+                            newChild.id && (nodeids[newChild.id]=newChild.domNode);
+                            oldChild.isVoid = newChild.isVoid;
+                            delete oldChild.text;
+                            instance._emit(EV_CONTENT_CHANGE);
+                            newChild._emit(EV_INSERTED);
                             break;
-
                         case 5: // oldNodeType==TextNode, newNodeType==TextNode
                                 // case5 and case9 should be treated the same
                         case 9: // oldNodeType==Comment, newNodeType==Comment
-                            (oldChild.text===newChild.text) || (oldChild.domNode.nodeValue = oldChild.text = newChild.text);
+                            if (oldChild.text!==newChild.text) {
+                                oldChild.domNode.nodeValue = oldChild.text = newChild.text;
+                                instance._emit(EV_CONTENT_CHANGE);
+                            }
                             newVChildNodes[i] = oldChild;
                             break;
                         case 6: // oldNodeType==TextNode, newNodeType==Comment
@@ -10422,6 +12472,7 @@ module.exports = function (window) {
                             newChild.domNode.nodeValue = newChild.text;
                             domNode._replaceChild(newChild.domNode, childDomNode);
                             newChild.vParent = oldChild.vParent;
+                            instance._emit(EV_CONTENT_CHANGE);
                     }
                     if ((nodeswitch===2) || (nodeswitch===5) || (nodeswitch===8)) {
                         needNormalize = true;
@@ -10430,7 +12481,7 @@ module.exports = function (window) {
                 else {
                     // _remove previous definition
                     domNode._removeChild(oldChild.domNode);
-                    // the oldChild needs to be removed, however, this canoot be done right now, for it would effect the loop
+                    // the oldChild needs to be removed, however, this cannot be done right now, for it would effect the loop
                     // so we store it inside a hash to remove it later
                     forRemoval[forRemoval.length] = oldChild;
                 }
@@ -10453,14 +12504,16 @@ module.exports = function (window) {
                         domNode._appendChild(newChild.domNode);
                         newChild._setAttrs(bkpAttrs);
                         newChild._setChildNodes(bkpChildNodes);
+                        newChild._emit(EV_INSERTED);
                         break;
-                    case 3: // Element
+                    case 3: // TextNode
                         needNormalize = true;
                         // we need to break through --> no `break`
                         /* falls through */
                     default: // TextNode or CommentNode
                         newChild.domNode.nodeValue = newChild.text;
                         domNode._appendChild(newChild.domNode);
+                        instance._emit(EV_CONTENT_CHANGE);
                 }
                 newChild.storeId();
             }
@@ -10612,11 +12665,14 @@ module.exports = function (window) {
                 return ((instance.nodeType===3) || (instance.nodeType===8)) ? instance.text : null;
             },
             set: function(v) {
-                var instance = this;
+                var instance = this,
+                    newTextContent, prevTextContent;
                 if ((instance.nodeType===3) || (instance.nodeType===8)) {
+                    prevTextContent = instance.domNode.textContent;
                     instance.domNode.textContent = v;
                     // set .text AFTER the dom-node is updated --> the content might be escaped!
-                    instance.text = instance.domNode.textContent;
+                    newTextContent = instance.text = instance.domNode.textContent;
+                    (newTextContent!==prevTextContent) && instance._emit(EV_CONTENT_CHANGE);
                 }
             }
         },
@@ -10683,6 +12739,7 @@ module.exports = function (window) {
                             // vnode.vChildNodes = bkpChildNodes;
                             vnode.id && (nodeids[vnode.id]=vnode.domNode);
                             instance._replaceAtParent(vnode);
+                            vnode._emit(EV_INSERTED);
                         }
                         else {
                             instance._setAttrs(vnode.attrs);
@@ -10694,6 +12751,7 @@ module.exports = function (window) {
                         vnode.domNode.nodeValue = vnode.text;
                         vParent.domNode._replaceChild(vnode.domNode, instance.domNode);
                         instance._replaceAtParent(vnode);
+                        vnode._emit(EV_INSERTED);
                     }
                 }
                 for (i=1; i<len; i++) {
@@ -10705,6 +12763,7 @@ module.exports = function (window) {
                             vnode.attrs = {}; // reset, to force defined by `_setAttrs`
                             vnode.vChildNodes = []; // reset to current state, to force defined by `_setAttrs`
                             isLastChildNode ? vParent.domNode._appendChild(vnode.domNode) : vParent.domNode._insertBefore(vnode.domNode, refDomNode);
+                            vnode._emit(EV_INSERTED);
                             vnode._setAttrs(bkpAttrs);
                             vnode._setChildNodes(bkpChildNodes);
                             break;
@@ -10778,6 +12837,7 @@ module.exports = function (window) {
                         (vChildNode.nodeType===1) && (children[children.length]=vChildNode);
                     }
                 }
+                children || (children = instance._vChildren = []);
                 return children;
             }
         },
@@ -10968,19 +13028,14 @@ module.exports = function (window) {
     return vNodeProto;
 
 };
-},{"./attribute-extractor.js":31,"./html-parser.js":36,"./vdom-ns.js":38,"js-ext/lib/array.js":10,"js-ext/lib/object.js":11,"js-ext/lib/string.js":13,"utils/lib/timers.js":25}],40:[function(require,module,exports){
+},{"./attribute-extractor.js":59,"./html-parser.js":64,"./vdom-ns.js":66,"js-ext/extra/lightmap.js":31,"js-ext/lib/array.js":32,"js-ext/lib/object.js":34,"js-ext/lib/string.js":36,"polyfill":46,"utils/lib/timers.js":49}],68:[function(require,module,exports){
 "use strict";
+
+require('js-ext/lib/object.js');
 
 module.exports = function (window) {
 
-    if (!window._ITSAmodules) {
-        Object.defineProperty(window, '_ITSAmodules', {
-            configurable: false,
-            enumerable: false,
-            writable: false,
-            value: {} // `writable` is false means we cannot chance the value-reference, but we can change {} its members
-        });
-    }
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', {});
 
     if (window._ITSAmodules.VDOM) {
         return window._ITSAmodules.VDOM; // VDOM was already created
@@ -11016,7 +13071,3517 @@ module.exports = function (window) {
 
     return vdom;
 };
-},{"./partials/element-plugin.js":33,"./partials/extend-document.js":34,"./partials/extend-element.js":35,"./partials/node-parser.js":37}],41:[function(require,module,exports){
+},{"./partials/element-plugin.js":61,"./partials/extend-document.js":62,"./partials/extend-element.js":63,"./partials/node-parser.js":65,"js-ext/lib/object.js":34}],69:[function(require,module,exports){
+/**
+ *
+ * Pollyfils for often used functionality for Functions
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ * @module js-ext
+ * @submodule lib/function.js
+ * @class Function
+ *
+*/
+
+"use strict";
+
+require('polyfill/polyfill-base.js');
+
+// Define configurable, writable and non-enumerable props
+// if they don't exist.
+var defineProperty = function (object, name, method, force) {
+	if (!force && (name in object)) {
+		return;
+	}
+	Object.defineProperty(object, name, {
+		configurable: true,
+		enumerable: false,
+		writable: true,
+		value: method
+	});
+};
+var defineProperties = function (object, map, force) {
+	var names = Object.keys(map),
+		l = names.length,
+		i = -1,
+		name;
+	while (++i < l) {
+		name = names[i];
+		defineProperty(object, name, map[name], force);
+	}
+};
+var NOOP = function () {};
+
+/**
+ * Pollyfils for often used functionality for Function
+ * @class Function
+*/
+
+defineProperties(Function.prototype, {
+
+	/**
+	 * Merges the given map of properties into the `prototype` of the Class.
+	 * **Not** to be used on instances.
+	 *
+	 * The members in the hash map will become members with
+	 * instances of the merged class.
+	 *
+	 * By default, this method will not override existing prototype members,
+	 * unless the second argument `force` is true.
+	 *
+	 * @method mergePrototypes
+	 * @param map {Object} Hash map of properties to add to the prototype of this object
+	 * @param force {Boolean}  If true, existing members will be overwritten
+	 * @chainable
+	 */
+  mergePrototypes: function (map, force) {
+console.warn('START');
+    var instance = this,
+        proto = instance.prototype,
+        names = Object.keys(map || {}),
+      l = names.length,
+      i = -1,
+      name, nameInProto;
+    while (++i < l) {
+      name = names[i];
+console.warn('TRY '+name);
+      nameInProto = (name in proto);
+      if (!nameInProto || force) {
+console.warn('HANDLING '+name);
+        // if nameInProto: set the property, but also backup for chaining using $orig
+        if (typeof map[name] === 'function') {
+          proto[name] = (function (original, methodName) {
+            return function () {
+              instance.$orig[methodName] = original;
+              return map[methodName].apply(this, arguments);
+            };
+          })(proto[name] || NOOP, name);
+        }
+        else {
+console.warn('setting '+name+' --> '+map[name]);
+            proto[name] = map[name];
+        }
+      }
+    }
+    return instance;
+  },
+
+	/**
+	 * Returns a newly created class inheriting from this class
+	 * using the given `constructor` with the
+	 * prototypes listed in `prototypes` merged in.
+	 *
+	 *
+	 * The newly created class has the `$super` static property
+	 * available to access all of is ancestor's instance methods.
+	 *
+	 * Further methods can be added via the [mergePrototypes](#method_mergePrototypes).
+	 *
+	 * @example
+	 *
+	 * 	var Circle = Shape.subClass(
+	 * 		function (x, y, r) {
+	 * 			this.r = r;
+	 * 			Circle.$super.constructor.call(this, x, y);
+	 * 		},
+	 * 		{
+	 * 			area: function () {
+	 * 				return this.r * this.r * Math.PI;
+	 * 			}
+	 * 		}
+	 * 	);
+	 *
+	 * @method subClass
+	 * @param [constructor] {Function} The function that will serve as constructor for the new class.
+	 *        If `undefined` defaults to `Object.constructor`
+	 * @param [prototypes] {Object} Hash map of properties to be added to the prototype of the new class.
+	 * @return the new class.
+	 */
+	subClass: function (constructor, prototypes) {
+
+		if ((arguments.length === 1) && (typeof constructor !== 'function')) {
+			prototypes = constructor;
+			constructor = null;
+		}
+
+
+		constructor = constructor || function (ancestor) {
+			return function () {
+				ancestor.apply(this, arguments);
+			};
+		}(this);
+
+
+		var baseProt = this.prototype,
+			rp = Object.create(baseProt);
+		constructor.prototype = rp;
+
+		rp.constructor = constructor;
+		constructor.$super = baseProt;
+		constructor.$orig = {};
+
+		constructor.mergePrototypes(prototypes, true);
+		return constructor;
+	},
+
+	/**
+	 * Overwrites the given prototype functions with the ones given in
+	 * the hashmap while still providing a means of calling the original
+	 * overridden method.
+     *
+	 * The patching function will receive a reference to the original method
+	 * prepended to the arguments the original would have received.
+     *
+	 * @method patch
+	 * @param map {Object} Hash map of method names to their new implementation.
+	 * @chainable
+	*/
+	patch: function (map) {
+		var proto = this.prototype;
+
+		var names = Object.keys(map || {}),
+			l = names.length,
+			i = -1,
+			name;
+		while (++i < l) {
+			name = names[i];
+			/*jshint -W083 */
+			proto[name] = (function (original) {
+				return function () {
+					/*jshint +W083 */
+					var a = Array.prototype.slice.call(arguments, 0);
+					a.unshift(original || NOOP);
+					return map[name].apply(this, a);
+				};
+			})(proto[name]);
+		}
+		return this;
+	},
+
+	/**
+	 * Sets the context of which the function will be execute. in the
+	 * supplied object's context, optionally adding any additional
+	 * supplied parameters to the end of the arguments the function
+	 * is executed with.
+	 *
+	 * @method rbind
+	 * @param [context] {Object} the execution context.
+	 *        The value is ignored if the bound function is constructed using the new operator.
+	 * @param [args*] {any} args* 0..n arguments to append to the end of
+	 *        arguments collection supplied to the function.
+	 * @return {function} the wrapped function.
+	 */
+	rbind: function (context /*, args* */ ) {
+		var thisFunction = this,
+			arrayArgs,
+			slice = Array.prototype.slice;
+		context || (context = this);
+		if (arguments.length > 1) {
+			// removing `context` (first item) by slicing it out:
+			arrayArgs = slice.call(arguments, 1);
+		}
+
+		return (arrayArgs ?
+			function () {
+				// over here, `arguments` will be the "new" arguments when the final function is called!
+				return thisFunction.apply(context, slice.call(arguments, 0).concat(arrayArgs));
+			} :
+			function () {
+				// over here, `arguments` will be the "new" arguments when the final function is called!
+				return thisFunction.apply(context, arguments);
+			}
+		);
+	}
+});
+
+/**
+ * Returns a base class with the given constructor and prototype methods
+ *
+ * @for Object
+ * @method createClass
+ * @param [constructor] {Function} constructor for the class
+ * @param [prototype] {Object} Hash map of prototype members of the new class
+ * @return {Function} the new class
+*/
+defineProperty(Object.prototype, 'createClass', function () {
+	return Function.prototype.subClass.apply(this, arguments);
+});
+},{"polyfill/polyfill-base.js":73}],70:[function(require,module,exports){
+module.exports=require(8)
+},{"polyfill/polyfill-base.js":73}],71:[function(require,module,exports){
+module.exports=require(9)
+},{}],72:[function(require,module,exports){
+module.exports=require(10)
+},{}],73:[function(require,module,exports){
+module.exports=require(11)
+},{"./lib/matchesselector.js":71,"./lib/window.console.js":72}],74:[function(require,module,exports){
+(function (process,Buffer){
+"use strict";
+
+/**
+ * Wrapper for built-in http.js to emulate the browser XMLHttpRequest object.
+ *
+ * This can be used with JS designed for browsers to improve reuse of code and
+ * allow the use of existing libraries.
+ *
+ * Usage: include("XMLHttpRequest.js") and use XMLHttpRequest per W3C specs.
+ *
+ * @author Dan DeFelippi <dan@driverdan.com>
+ * @contributor David Ellis <d.f.ellis@ieee.org>
+ * @license MIT
+ */
+
+var Url = require("url"),
+    spawn = require("child_process").spawn,
+    fs = require('fs'),
+    XmlDOMParser = require('xmldom').DOMParser;
+
+exports.XMLHttpRequest = function() {
+  /**
+   * Private variables
+   */
+  var self = this;
+  var http = require('http');
+  var https = require('https');
+
+  // Holds http.js objects
+  var request;
+  var response;
+
+  // Request settings
+  var settings = {};
+
+  // Disable header blacklist.
+  // Not part of XHR specs.
+  var disableHeaderCheck = false;
+
+  // Set some default headers
+  var defaultHeaders = {
+    "User-Agent": "node-XMLHttpRequest",
+    "Accept": "*/*"
+  };
+
+  var headers = defaultHeaders;
+
+  // These headers are not user setable.
+  // The following are allowed but banned in the spec:
+  // * user-agent
+  var forbiddenRequestHeaders = [
+    "accept-charset",
+    "accept-encoding",
+    "access-control-request-headers",
+    "access-control-request-method",
+    "connection",
+    "content-length",
+    "content-transfer-encoding",
+    "cookie",
+    "cookie2",
+    "date",
+    "expect",
+    "host",
+    "keep-alive",
+    "origin",
+    "referer",
+    "te",
+    "trailer",
+    "transfer-encoding",
+    "upgrade",
+    "via"
+  ];
+
+  // These request methods are not allowed
+  var forbiddenRequestMethods = [
+    "TRACE",
+    "TRACK",
+    "CONNECT"
+  ];
+
+  // Send flag
+  var sendFlag = false;
+  // Error flag, used when errors occur or abort is called
+  var errorFlag = false;
+
+  // Event listeners
+  var listeners = {};
+
+  /**
+   * Constants
+   */
+
+  this.UNSENT = 0;
+  this.OPENED = 1;
+  this.HEADERS_RECEIVED = 2;
+  this.LOADING = 3;
+  this.DONE = 4;
+
+  /**
+   * Public vars
+   */
+
+  // Current state
+  this.readyState = this.UNSENT;
+
+  // default ready state change handler in case one is not set or is set late
+  this.onreadystatechange = null;
+
+  // Result & response
+  this.responseText = "";
+  this.responseXML = null;
+  this.status = null;
+  this.statusText = null;
+
+  /**
+   * Private methods
+   */
+
+  var isXMLRequest = function() {
+      return /^text\/xml/.test(response.headers['content-type']);
+  };
+
+  /**
+   * Check if the specified header is allowed.
+   *
+   * @param string header Header to validate
+   * @return boolean False if not allowed, otherwise true
+   */
+  var isAllowedHttpHeader = function(header) {
+    return disableHeaderCheck || (header && forbiddenRequestHeaders.indexOf(header.toLowerCase()) === -1);
+  };
+
+  /**
+   * Check if the specified method is allowed.
+   *
+   * @param string method Request method to validate
+   * @return boolean False if not allowed, otherwise true
+   */
+  var isAllowedHttpMethod = function(method) {
+    return (method && forbiddenRequestMethods.indexOf(method) === -1);
+  };
+
+  /**
+   * Public methods
+   */
+
+  /**
+   * Open the connection. Currently supports local server requests.
+   *
+   * @param string method Connection method (eg GET, POST)
+   * @param string url URL for the connection.
+   * @param boolean async Asynchronous connection. Default is true.
+   * @param string user Username for basic authentication (optional)
+   * @param string password Password for basic authentication (optional)
+   */
+  this.open = function(method, url, async, user, password) {
+    this.abort();
+    errorFlag = false;
+
+    // Check for valid request method
+    if (!isAllowedHttpMethod(method)) {
+      throw "SecurityError: Request method not allowed";
+    }
+
+    settings = {
+      "method": method,
+      "url": url.toString(),
+      "async": (typeof async !== "boolean" ? true : async),
+      "user": user || null,
+      "password": password || null
+    };
+
+    setState(this.OPENED);
+  };
+
+  /**
+   * Disables or enables isAllowedHttpHeader() check the request. Enabled by default.
+   * This does not conform to the W3C spec.
+   *
+   * @param boolean state Enable or disable header checking.
+   */
+  this.setDisableHeaderCheck = function(state) {
+    disableHeaderCheck = state;
+  };
+
+  /**
+   * Sets a header for the request.
+   *
+   * @param string header Header name
+   * @param string value Header value
+   */
+  this.setRequestHeader = function(header, value) {
+    if (this.readyState != this.OPENED) {
+      throw "INVALID_STATE_ERR: setRequestHeader can only be called when state is OPEN";
+    }
+    if (!isAllowedHttpHeader(header)) {
+      console.warn('Refused to set unsafe header "' + header + '"');
+      return;
+    }
+    if (sendFlag) {
+      throw "INVALID_STATE_ERR: send flag is true";
+    }
+    headers[header] = value;
+  };
+
+  /**
+   * Gets a header from the server response.
+   *
+   * @param string header Name of header to get.
+   * @return string Text of the header or null if it doesn't exist.
+   */
+  this.getResponseHeader = function(header) {
+    if (typeof header === "string" && this.readyState > this.OPENED && response.headers[header.toLowerCase()] && !errorFlag) {
+      return response.headers[header.toLowerCase()];
+    }
+
+    return null;
+  };
+
+  /**
+   * Gets all the response headers.
+   *
+   * @return string A string with all response headers separated by CR+LF
+   */
+  this.getAllResponseHeaders = function() {
+    if (this.readyState < this.HEADERS_RECEIVED || errorFlag) {
+      return "";
+    }
+    var result = "";
+
+    for (var i in response.headers) {
+      // Cookie headers are excluded
+      if (i !== "set-cookie" && i !== "set-cookie2") {
+        result += i + ": " + response.headers[i] + "\r\n";
+      }
+    }
+    return result.substr(0, result.length - 2);
+  };
+
+  /**
+   * Gets a request header
+   *
+   * @param string name Name of header to get
+   * @return string Returns the request header or empty string if not set
+   */
+  this.getRequestHeader = function(name) {
+    // @TODO Make this case insensitive
+    if (typeof name === "string" && headers[name]) {
+      return headers[name];
+    }
+
+    return "";
+  };
+
+  /**
+   * Sends the request to the server.
+   *
+   * @param string data Optional data to send as request body.
+   */
+  this.send = function(data) {
+    if (this.readyState != this.OPENED) {
+      throw "INVALID_STATE_ERR: connection must be opened before send() is called";
+    }
+
+    if (sendFlag) {
+      throw "INVALID_STATE_ERR: send has already been called";
+    }
+
+    var ssl = false, local = false;
+    var url = Url.parse(settings.url);
+    var host, responseHandler, errorHandler;
+    // Determine the server
+    switch (url.protocol) {
+      case 'https:':
+        ssl = true;
+        host = url.hostname;
+        break;
+
+      case 'http:':
+        host = url.hostname;
+        break;
+
+      case 'file:':
+        local = true;
+        break;
+
+      case undefined:
+      case '':
+        host = "localhost";
+        break;
+
+      default:
+        throw "Protocol not supported.";
+    }
+
+    // Load files off the local filesystem (file://)
+    if (local) {
+      if (settings.method !== "GET") {
+        throw "XMLHttpRequest: Only GET method is supported";
+      }
+
+      if (settings.async) {
+        fs.readFile(url.pathname, 'utf8', function(error, data) {
+          if (error) {
+            self.handleError(error);
+          } else {
+            self.status = 200;
+            self.responseText = data;
+            self.responseXML = isXMLRequest() ? new XmlDOMParser().parseFromString(data) : null;
+            setState(self.DONE);
+          }
+        });
+      } else {
+        try {
+          this.responseText = fs.readFileSync(url.pathname, 'utf8');
+          self.responseXML = isXMLRequest() ? new XmlDOMParser().parseFromString(this.responseText) : null;
+          this.status = 200;
+          setState(self.DONE);
+        } catch(e) {
+          this.handleError(e);
+        }
+      }
+
+      return;
+    }
+
+    // Default to port 80. If accessing localhost on another port be sure
+    // to use http://localhost:port/path
+    var port = url.port || (ssl ? 443 : 80);
+    // Add query string if one is used
+    var uri = url.pathname + (url.search ? url.search : '');
+
+    // Set the Host header or the server may reject the request
+    headers.Host = host;
+    if (!((ssl && port === 443) || port === 80)) {
+      headers.Host += ':' + url.port;
+    }
+
+    // Set Basic Auth if necessary
+    if (settings.user) {
+      if (typeof settings.password == "undefined") {
+        settings.password = "";
+      }
+      var authBuf = new Buffer(settings.user + ":" + settings.password);
+      headers.Authorization = "Basic " + authBuf.toString("base64");
+    }
+
+    // Set content length header
+    if (settings.method === "GET" || settings.method === "HEAD") {
+      data = null;
+    } else if (data) {
+      headers["Content-Length"] = Buffer.isBuffer(data) ? data.length : Buffer.byteLength(data);
+
+      if (!headers["Content-Type"]) {
+        headers["Content-Type"] = "text/plain;charset=UTF-8";
+      }
+    } else if (settings.method === "POST") {
+      // For a post with no data set Content-Length: 0.
+      // This is required by buggy servers that don't meet the specs.
+      headers["Content-Length"] = 0;
+    }
+
+    var options = {
+      host: host,
+      port: port,
+      path: uri,
+      method: settings.method,
+      headers: headers,
+      agent: false
+    };
+
+    // Reset error flag
+    errorFlag = false;
+
+    // Handle async requests
+    if (settings.async) {
+      // Use the proper protocol
+      var doRequest = ssl ? https.request : http.request;
+
+      // Request is being sent, set send flag
+      sendFlag = true;
+
+      // As per spec, this is called here for historical reasons.
+      self.dispatchEvent("readystatechange");
+
+      // Handler for the response
+      responseHandler = function(resp) {
+        // Set response var to the response we got back
+        // This is so it remains accessable outside this scope
+        response = resp;
+        // Check for redirect
+        // @TODO Prevent looped redirects
+        if (response.statusCode === 302 || response.statusCode === 303 || response.statusCode === 307) {
+          // Change URL to the redirect location
+          settings.url = response.headers.location;
+          var url = Url.parse(settings.url);
+          // Set host var in case it's used later
+          host = url.hostname;
+          // Options for the new request
+          var newOptions = {
+            hostname: url.hostname,
+            port: url.port,
+            path: url.path,
+            method: response.statusCode === 303 ? 'GET' : settings.method,
+            headers: headers
+          };
+
+          // Issue the new request
+          request = doRequest(newOptions, responseHandler).on('error', errorHandler);
+          request.end();
+          // @TODO Check if an XHR event needs to be fired here
+          return;
+        }
+
+        response.setEncoding("utf8");
+
+        setState(self.HEADERS_RECEIVED);
+        self.status = response.statusCode;
+
+        response.on('data', function(chunk) {
+          // Make sure there's some data
+          if (chunk) {
+            self.responseText += chunk;
+          }
+          // Don't emit state changes if the connection has been aborted.
+          if (sendFlag) {
+            setState(self.LOADING);
+          }
+        });
+
+        response.on('end', function() {
+          if (sendFlag) {
+            self.responseXML = isXMLRequest() ? new XmlDOMParser().parseFromString(self.responseText) : null;
+            // Discard the 'end' event if the connection has been aborted
+            setState(self.DONE);
+            sendFlag = false;
+          }
+        });
+
+        response.on('error', function(error) {
+          self.handleError(error);
+        });
+      };
+
+      // Error handler for the request
+      errorHandler = function(error) {
+        self.handleError(error);
+      };
+
+      // Create the request
+      request = doRequest(options, responseHandler).on('error', errorHandler);
+
+      // Node 0.4 and later won't accept empty data. Make sure it's needed.
+      if (data) {
+        request.write(data);
+      }
+
+      request.end();
+
+      self.dispatchEvent("loadstart");
+    } else { // Synchronous
+      // Create a temporary file for communication with the other Node process
+      var contentFile = ".node-xmlhttprequest-content-" + process.pid;
+      var syncFile = ".node-xmlhttprequest-sync-" + process.pid;
+      fs.writeFileSync(syncFile, "", "utf8");
+      // The async request the other Node process executes
+      var execString = "var http = require('http'), https = require('https'), fs = require('fs');" +
+        "var doRequest = http" + (ssl ? "s" : "") + ".request;" +
+        "var options = " + JSON.stringify(options) + ";" +
+        "var responseText = '';" +
+        "var req = doRequest(options, function(response) {" +
+        "response.setEncoding('utf8');" +
+        "response.on('data', function(chunk) {" +
+        "  responseText += chunk;" +
+        "});" +
+        "response.on('end', function() {" +
+        "fs.writeFileSync('" + contentFile + "', 'NODE-XMLHTTPREQUEST-STATUS:' + response.statusCode + ',' + responseText, 'utf8');" +
+        "fs.unlinkSync('" + syncFile + "');" +
+        "});" +
+        "response.on('error', function(error) {" +
+        "fs.writeFileSync('" + contentFile + "', 'NODE-XMLHTTPREQUEST-ERROR:' + JSON.stringify(error), 'utf8');" +
+        "fs.unlinkSync('" + syncFile + "');" +
+        "});" +
+        "}).on('error', function(error) {" +
+        "fs.writeFileSync('" + contentFile + "', 'NODE-XMLHTTPREQUEST-ERROR:' + JSON.stringify(error), 'utf8');" +
+        "fs.unlinkSync('" + syncFile + "');" +
+        "});" +
+        (data ? "req.write('" + data.replace(/'/g, "\\'") + "');":"") +
+        "req.end();";
+      // Start the other Node Process, executing this string
+      var syncProc = spawn(process.argv[0], ["-e", execString]);
+/*jshint noempty:true */
+      // Wait while the sync file is empty
+      while (fs.existsSync(syncFile)) {}
+/*jshint noempty:false */
+      self.responseText = fs.readFileSync(contentFile, 'utf8');
+      self.responseXML = isXMLRequest() ? new XmlDOMParser().parseFromString(self.responseText) : null;
+      // Kill the child process once the file has data
+      syncProc.stdin.end();
+      // Remove the temporary file
+      fs.unlinkSync(contentFile);
+      if (self.responseText.match(/^NODE-XMLHTTPREQUEST-ERROR:/)) {
+        // If the file returned an error, handle it
+        var errorObj = self.responseText.replace(/^NODE-XMLHTTPREQUEST-ERROR:/, "");
+        self.handleError(errorObj);
+      } else {
+        // If the file returned okay, parse its data and move to the DONE state
+        self.status = self.responseText.replace(/^NODE-XMLHTTPREQUEST-STATUS:([0-9]*),.*/, "$1");
+        self.responseText = self.responseText.replace(/^NODE-XMLHTTPREQUEST-STATUS:[0-9]*,(.*)/, "$1");
+        setState(self.DONE);
+      }
+    }
+  };
+
+  /**
+   * Called when an error is encountered to deal with it.
+   */
+  this.handleError = function(error) {
+    this.status = 503;
+    this.statusText = error;
+    this.responseText = error.stack;
+    errorFlag = true;
+    setState(this.DONE);
+  };
+
+  /**
+   * Aborts a request.
+   */
+  this.abort = function() {
+    if (request) {
+      request.abort();
+      request = null;
+    }
+
+    headers = defaultHeaders;
+    this.responseText = "";
+    this.responseXML = "";
+
+    errorFlag = true;
+
+    if (this.readyState !== this.UNSENT && (this.readyState !== this.OPENED || sendFlag) && this.readyState !== this.DONE) {
+      sendFlag = false;
+      setState(this.DONE);
+    }
+    this.readyState = this.UNSENT;
+  };
+
+  /**
+   * Adds an event listener. Preferred method of binding to events.
+   */
+  this.addEventListener = function(event, callback) {
+    if (!(event in listeners)) {
+      listeners[event] = [];
+    }
+    // Currently allows duplicate callbacks. Should it?
+    listeners[event].push(callback);
+  };
+
+  /**
+   * Remove an event callback that has already been bound.
+   * Only works on the matching funciton, cannot be a copy.
+   */
+  this.removeEventListener = function(event, callback) {
+    if (event in listeners) {
+      // Filter will return a new array with the callback removed
+      listeners[event] = listeners[event].filter(function(ev) {
+        return ev !== callback;
+      });
+    }
+  };
+
+  /**
+   * Dispatch any events, including both "on" methods and events attached using addEventListener.
+   */
+  this.dispatchEvent = function(event) {
+    if (typeof self["on" + event] === "function") {
+      self["on" + event]();
+    }
+    if (event in listeners) {
+      for (var i = 0, len = listeners[event].length; i < len; i++) {
+        listeners[event][i].call(self);
+      }
+    }
+  };
+
+  /**
+   * Changes readyState and calls onreadystatechange.
+   *
+   * @param int state New state
+   */
+  var setState = function(state) {
+    if ((self.readyState !== state) || (settings.async && (self.readyState===self.LOADING))) {
+      self.readyState = state;
+
+      if (settings.async || self.readyState < self.OPENED || self.readyState === self.DONE) {
+          self.dispatchEvent("readystatechange");
+      }
+
+      if (settings.async && (self.readyState===self.LOADING)) {
+          self.dispatchEvent("progress");
+      }
+
+      if (self.readyState === self.DONE && !errorFlag) {
+          self.dispatchEvent("load");
+          // @TODO figure out InspectorInstrumentation::didLoadXHR(cookie)
+          self.dispatchEvent("loadend");
+      }
+    }
+
+  };
+};
+
+}).call(this,require('_process'),require("buffer").Buffer)
+},{"_process":146,"buffer":135,"child_process":134,"fs":134,"http":139,"https":143,"url":164,"xmldom":128}],75:[function(require,module,exports){
+"use strict";
+
+/**
+ * Emulation of browser `window` and `dom`. Just enough to make ITSA work.
+ *
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ * @module node-win
+ * @class window
+ * @static
+*/
+
+require('js-ext/lib/array.js');
+
+var xmlhttprequest = require('./lib/XMLHttpRequest.js').XMLHttpRequest,
+    xmlDOMParser = require('xmldom').DOMParser,
+	Url = require('url'),
+    used = {},
+    vNodeParser = /(?:(^|#|\.)([^#\.\[\]]+))|(\[.+?\])/g,
+    count, doc, win, getHTML, reset;
+    EventTypes = {
+		MouseEvents: function () {
+			this.initMouseEvent = function (type, bubbles, cancelable, view, detail,
+					screenX, screenY, clientX, clientY,
+					ctrlKey, altKey, shiftKey, metaKey,
+					button, relatedTarget) {
+				count('initMouseEvent');
+				this.ev = {
+					type:type,
+					bubbles:bubbles,
+					cancelable:cancelable,
+					view:view,
+					detail:detail,
+					screenX:screenX,
+					screenY:screenY,
+					clientX:clientX,
+					clientY:clientY,
+					ctrlKey:ctrlKey,
+					altKey:altKey,
+					shiftKey:shiftKey,
+					metaKey:metaKey,
+					button:button,
+					relatedTarget:relatedTarget
+				};
+			};
+		}
+	};
+
+count = function (method) {
+	if (!used[method]) {
+		used[method] = 1;
+	} else {
+		used[method] += 1;
+	}
+};
+
+getHTML = function (node) {
+	var prop, val,
+		style, styles = [],
+		html = '';
+
+	if (!node.nodeName && node.nodeValue) {
+		// For text nodes, I return the uppercase text
+		// so that you can tell the parts generated at the server
+		// from the normal lowercase of the actual app when run on the client
+		return node.nodeValue.toUpperCase();
+	}
+	html += '<' + node.nodeName;
+	for (prop in node) {
+		val = node[prop];
+
+		// Ignore functions, those will be revived on the client side.
+		if (typeof val == 'function') continue;
+		switch (prop) {
+		case 'nodeName':
+		case 'parentNode':
+		case 'childNodes':
+		case 'pathname':
+		case 'search':
+			continue;
+		case 'checked':
+			if (val == 'false') continue;
+			break;
+		case 'href':
+			val = node.pathname;
+			break;
+		case 'className':
+			prop = 'class';
+			break;
+		case 'style':
+			if (val) {
+				for (style in val) {
+					if (val[style]) {
+						styles.push(style + ': ' + val[style]);
+					}
+				}
+				if (!styles.length) {
+					continue;
+				}
+				val = styles.join(';');
+			}
+			break;
+		}
+		html += ' ' + prop + '="' + val.replace('"', '\\"') + '"';
+	}
+
+	if (node.childNodes.length) {
+		html += '>' + node.childNodes.reduce(function (prev, node) {
+			return prev + getHTML(node);
+		}, '') + '</' + node.nodeName + '>';
+	}
+	else {
+		// I don't know why Mithril assigns the content of textareas
+		// to its value attribute instead of the innerHTML property.
+		// Since it doesn't have children, the closing tag has to be forced.
+		if (node.nodeName == 'TEXTAREA') {
+			html += '></TEXTAREA>';
+		} else {
+			html += '/>';
+		}
+	}
+	return html;
+};
+
+
+win = {
+    cancelAnimationFrame: function() {
+
+    },
+
+    console: require('polyfill/lib/window.console.js'),
+
+    CSSStyleDeclaration: {},
+
+	document: doc,
+
+    DOMParser: xmlDOMParser,
+
+    HTMLCollection: Array,
+
+    location: {},
+
+	navigator: {
+		userAgent: 'fake',
+		stats: {
+			clear: function () {
+				used = {};
+			},
+			get: function () {
+				return used;
+			}
+		},
+		reset: reset,
+		getHTML: function () {
+			return getHTML(doc.body);
+		},
+		navigate: function (url) {
+			var u = Url.parse(url, false, true);
+			window.location.search = u.search || '';
+			window.location.pathname = u.pathname || '';
+			window.location.hash = u.hash || '';
+		}
+	},
+
+    NodeList: Array,
+
+	performance: function () {
+		var timestamp = 50;
+		this.$elapse = function(amount) {
+			timestamp += amount;
+		};
+		this.now = function() {
+			return timestamp;
+		};
+	},
+
+	requestAnimationFrame: function(callback) {
+		var instance = this;
+		instance.requestAnimationFrame.$callback = callback;
+		instance.requestAnimationFrame.$resolve = function() {
+			instance.requestAnimationFrame.$callback && instance.requestAnimationFrame.$callback();
+			instance.requestAnimationFrame.$callback = null;
+			instance.performance.$elapse(20);
+		};
+	},
+
+    XMLHttpRequest: xmlhttprequest
+
+};
+
+reset = function () {
+	var body = doc.createElement('body');
+	win.location.search = "?/";
+	win.location.pathname = "/";
+	win.location.hash = "";
+	win.history = {};
+	win.history.pushState = function(data, title, url) {
+		win.location.pathname = win.location.search = win.location.hash = url;
+	},
+	win.history.replaceState = function(data, title, url) {
+		win.location.pathname = win.location.search = win.location.hash = url;
+	};
+	doc.appendChild(body);
+	doc.body = body;
+};
+
+reset();
+
+module.exports = win;
+},{"./lib/XMLHttpRequest.js":74,"js-ext/lib/array.js":76,"polyfill/lib/window.console.js":81,"url":164,"xmldom":128}],76:[function(require,module,exports){
+module.exports=require(15)
+},{"polyfill/polyfill-base.js":79}],77:[function(require,module,exports){
+module.exports=require(9)
+},{}],78:[function(require,module,exports){
+module.exports=require(10)
+},{}],79:[function(require,module,exports){
+module.exports=require(11)
+},{"./lib/matchesselector.js":77,"./lib/window.console.js":78}],80:[function(require,module,exports){
+module.exports=require(9)
+},{}],81:[function(require,module,exports){
+module.exports=require(10)
+},{}],82:[function(require,module,exports){
+module.exports=require(11)
+},{"./lib/matchesselector.js":80,"./lib/window.console.js":81}],83:[function(require,module,exports){
+module.exports=require(24)
+},{"./lib/idgenerator.js":84,"./lib/timers.js":85}],84:[function(require,module,exports){
+module.exports=require(25)
+},{"polyfill/polyfill-base.js":88}],85:[function(require,module,exports){
+module.exports=require(26)
+},{"_process":146,"polyfill/polyfill-base.js":88}],86:[function(require,module,exports){
+module.exports=require(9)
+},{}],87:[function(require,module,exports){
+module.exports=require(10)
+},{}],88:[function(require,module,exports){
+module.exports=require(11)
+},{"./lib/matchesselector.js":86,"./lib/window.console.js":87}],89:[function(require,module,exports){
+module.exports=require(30)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],90:[function(require,module,exports){
+module.exports=require(31)
+},{"../lib/array.js":91,"../lib/function.js":92,"../lib/object.js":93,"polyfill/lib/weakmap.js":97}],91:[function(require,module,exports){
+module.exports=require(15)
+},{"polyfill/polyfill-base.js":99}],92:[function(require,module,exports){
+module.exports=require(7)
+},{"polyfill/polyfill-base.js":99}],93:[function(require,module,exports){
+module.exports=require(8)
+},{"polyfill/polyfill-base.js":99}],94:[function(require,module,exports){
+module.exports=require(35)
+},{"polyfill":99}],95:[function(require,module,exports){
+module.exports=require(17)
+},{}],96:[function(require,module,exports){
+module.exports=require(9)
+},{}],97:[function(require,module,exports){
+module.exports=require(38)
+},{}],98:[function(require,module,exports){
+module.exports=require(10)
+},{}],99:[function(require,module,exports){
+module.exports=require(11)
+},{"./lib/matchesselector.js":96,"./lib/window.console.js":98}],100:[function(require,module,exports){
+module.exports=require(41)
+},{}],101:[function(require,module,exports){
+module.exports=require(42)
+},{}],102:[function(require,module,exports){
+module.exports=require(43)
+},{}],103:[function(require,module,exports){
+module.exports=require(9)
+},{}],104:[function(require,module,exports){
+module.exports=require(10)
+},{}],105:[function(require,module,exports){
+module.exports=require(11)
+},{"./lib/matchesselector.js":103,"./lib/window.console.js":104}],106:[function(require,module,exports){
+module.exports=require(24)
+},{"./lib/idgenerator.js":107,"./lib/timers.js":108}],107:[function(require,module,exports){
+module.exports=require(25)
+},{"polyfill/polyfill-base.js":111}],108:[function(require,module,exports){
+module.exports=require(26)
+},{"_process":146,"polyfill/polyfill-base.js":111}],109:[function(require,module,exports){
+module.exports=require(9)
+},{}],110:[function(require,module,exports){
+module.exports=require(10)
+},{}],111:[function(require,module,exports){
+module.exports=require(11)
+},{"./lib/matchesselector.js":109,"./lib/window.console.js":110}],112:[function(require,module,exports){
+module.exports=require(53)
+},{"./lib/sizes.js":113}],113:[function(require,module,exports){
+module.exports=require(54)
+},{"js-ext/lib/object.js":114}],114:[function(require,module,exports){
+module.exports=require(8)
+},{"polyfill/polyfill-base.js":117}],115:[function(require,module,exports){
+module.exports=require(9)
+},{}],116:[function(require,module,exports){
+module.exports=require(10)
+},{}],117:[function(require,module,exports){
+module.exports=require(11)
+},{"./lib/matchesselector.js":115,"./lib/window.console.js":116}],118:[function(require,module,exports){
+module.exports=require(59)
+},{"js-ext/lib/object.js":93,"js-ext/lib/string.js":95,"polyfill":105,"polyfill/extra/transition.js":100,"polyfill/extra/vendorCSS.js":102}],119:[function(require,module,exports){
+module.exports=require(60)
+},{"js-ext/lib/object.js":93,"polyfill":105}],120:[function(require,module,exports){
+module.exports=require(61)
+},{"js-ext/lib/object.js":93,"js-ext/lib/string.js":95,"polyfill":105}],121:[function(require,module,exports){
+module.exports=require(62)
+},{"./vdom-ns.js":125,"js-ext/lib/object.js":93,"polyfill":105}],122:[function(require,module,exports){
+arguments[4][63][0].apply(exports,arguments)
+},{"../css/element.css":89,"./attribute-extractor.js":118,"./element-array.js":119,"./html-parser.js":123,"./node-parser.js":124,"./vdom-ns.js":125,"./vnode.js":126,"js-ext/lib/object.js":93,"js-ext/lib/promise.js":94,"js-ext/lib/string.js":95,"polyfill":105,"polyfill/extra/transition.js":100,"polyfill/extra/transitionend.js":101,"polyfill/extra/vendorCSS.js":102,"utils":106,"window-ext":112}],123:[function(require,module,exports){
+module.exports=require(64)
+},{"./attribute-extractor.js":118,"./vdom-ns.js":125,"js-ext/lib/object.js":93,"polyfill":105}],124:[function(require,module,exports){
+arguments[4][65][0].apply(exports,arguments)
+},{"./attribute-extractor.js":118,"./vdom-ns.js":125,"./vnode.js":126,"js-ext/lib/object.js":93,"polyfill":105}],125:[function(require,module,exports){
+module.exports=require(66)
+},{"js-ext/lib/object.js":93,"polyfill":105}],126:[function(require,module,exports){
+"use strict";
+
+/**
+ * Delivers the `vnode` prototype object, which is a virtualisation of an `Element` inside the Dom.
+ * These Elements work smoothless with the vdom (see ...).
+ *
+ * vnodes are much quicker to access and walk through than native dom-nodes. However, this is a module you don't need
+ * by itself: `Element`-types use these features under the hood.
+ *
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+ * <br>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ *
+ * @module vdom
+ * @submodule vnode
+ * @class vnode
+ * @since 0.0.1
+*/
+
+require('js-ext/lib/array.js');
+require('js-ext/lib/object.js');
+require('js-ext/lib/string.js');
+require('js-ext/extra/lightmap.js');
+require('polyfill');
+
+module.exports = function (window) {
+
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', {});
+
+    if (window._ITSAmodules.VNode) {
+        return window._ITSAmodules.VNode; // VNODE was already created
+    }
+
+    var NS = require('./vdom-ns.js')(window),
+        extractor = require('./attribute-extractor.js')(window),
+        DOCUMENT = window.document,
+        MUTATION_EVENTS = new window.LightMap(),
+        BATCH_WILL_RUN = false,
+        nodeids = NS.nodeids,
+        htmlToVNodes = require('./html-parser.js')(window),
+        timers = require('utils/lib/timers.js'),
+        async = timers.async,
+        later = timers.later,
+
+        // cleanup memory after 1 minute: removed nodes SHOULD NOT be accessed afterwards
+        // because vnode would be recalculated and might be different from before
+        DESTROY_DELAY = 60000,
+
+        NTH_CHILD_REGEXP = /^(?:(\d*)[n|N])([\+|\-](\d+))?$/, // an+b
+        STRING = 'string',
+        CLASS = 'class',
+        STYLE = 'style',
+        ID = 'id',
+        NODE= 'node',
+        REMOVE = 'remove',
+        INSERT = 'insert',
+        CHANGE = 'change',
+        ATTRIBUTE = 'attribute',
+        EV_REMOVED = NODE+REMOVE,
+        EV_INSERTED = NODE+INSERT,
+        EV_CONTENT_CHANGE = NODE+'content'+CHANGE,
+        EV_ATTRIBUTE_REMOVED = ATTRIBUTE+REMOVE,
+        EV_ATTRIBUTE_CHANGED = ATTRIBUTE+CHANGE,
+        EV_ATTRIBUTE_INSERTED = ATTRIBUTE+INSERT,
+        SPLIT_CHARACTER = {
+            ' ': true,
+            '>': true,
+            '+': true, // only select the element when it is immediately preceded by the former element
+            '~': true  // only the element when it has the former element as a sibling. (just like `+`, but less strict)
+        },
+        STORABLE_SPLIT_CHARACTER = {
+            '>': true,
+            '+': true,
+            '~': true
+        },
+        SIBLING_MATCH_CHARACTER = {
+            '+': true,
+            '~': true
+        },
+        ATTR_DETAIL_SPECIFIERS = {
+            '^': true, // “begins with” selector
+            '$': true, // “ends with” selector
+            '*': true, // “contains” selector (might be a substring)
+            '~': true, // “contains” selector as a separate word, separated by spaces
+            '|': true // “contains” selector as a separate word, separated by `|`
+        },
+        /**
+         * Object to gain quick access to attribute-name end-tokens.
+         *
+         * @property END_ATTRIBUTENAME
+         * @default {
+         *      '=': true,
+         *      ']': true
+         *  }
+         * @type Object
+         * @protected
+         * @since 0.0.1
+         */
+        END_ATTRIBUTENAME = {
+            '=': true,
+            ']': true,
+            '^': true, // “begins with” selector
+            '$': true, // “ends with” selector
+            '*': true, // “contains” selector (might be a substring)
+            '~': true, // “contains” selector as a separate word, separated by spaces
+            '|': true // “contains” selector as a separate word, separated by `|`
+        },
+        /**
+         * Object to gain quick access to different changes of Element nodeType changes.
+         *
+         * @property NODESWITCH
+         * @default {
+         *      1: {
+         *          1: 1,
+         *          3: 2,
+         *          8: 3
+         *      },
+         *      3: {
+         *          1: 4,
+         *          3: 5,
+         *          8: 6
+         *      },
+         *      8: {
+         *          1: 7,
+         *          3: 8,
+         *          8: 9
+         *      }
+         *  }
+         * @type Object
+         * @protected
+         * @since 0.0.1
+         */
+        NODESWITCH = {
+            1: {
+                1: 1, // oldNodeType==Element, newNodeType==Element
+                3: 2, // oldNodeType==Element, newNodeType==TextNode
+                8: 3  // oldNodeType==Element, newNodeType==Comment
+            },
+            3: {
+                1: 4, // oldNodeType==TextNode, newNodeType==Element
+                3: 5, // oldNodeType==TextNode, newNodeType==TextNode
+                8: 6  // oldNodeType==TextNode, newNodeType==Comment
+            },
+            8: {
+                1: 7, // oldNodeType==Comment, newNodeType==Element
+                3: 8, // oldNodeType==Comment, newNodeType==TextNode
+                8: 9  // oldNodeType==Comment, newNodeType==Comment
+            }
+        },
+        /**
+         * Object to gain quick access to selector start-tokens.
+         *
+         * @property SELECTOR_IDENTIFIERS
+         * @default {
+         *      '#': 1,
+         *      '.': 2,
+         *      '[': 3
+         *  }
+         * @type Object
+         * @protected
+         * @since 0.0.1
+         */
+        SELECTOR_IDENTIFIERS = {
+            '#': 1,
+            '.': 2,
+            '[': 3,
+            ':': 4
+        },
+        PSEUDO_FIRST_CHILD = ':first-child',
+        PSEUDO_FIRST_OF_TYPE = ':first-of-type',
+        PSEUDO_LAST_CHILD = ':last-child',
+        PSEUDO_LAST_OF_TYPE = ':last-of-type',
+        PSEUDO_NTH_CHILD = ':nth-child',
+        PSEUDO_NTH_LAST_CHILD = ':nth-last-child',
+        PSEUDO_NTH_LAST_OF_TYPE = ':nth-last-of-type',
+        PSEUDO_NTH_OF_TYPE = ':nth-of-type',
+        PSEUDO_ONLY_OF_TYPE = ':only-of-type',
+        PSEUDO_ONLY_CHILD = ':only-child',
+        /**
+         * Object to gain quick access to the selectors that required children
+         *
+         * @property PSEUDO_REQUIRED_CHILDREN
+         * @default {
+         *     ':first-child': true,
+         *     ':first-of-type': true,
+         *     ':last-child': true,
+         *     ':last-of-type': true,
+         *     ':nth-child': true,
+         *     ':nth-last-child': true,
+         *     ':nth-last-of-type': true,
+         *     ':nth-of-type': true,
+         *     ':only-of-type': true,
+         *     ':only-child': true
+         *  }
+         * @type Object
+         * @protected
+         * @since 0.0.1
+         */
+        PSEUDO_REQUIRED_CHILDREN = {},
+        _matchesSelectorItem, _matchesOneSelector, _findElementSibling, vNodeProto, _markRemoved,
+        _splitSelector, _findNodeSibling, _matchNthChild, _batchEmit, _emitDestroyChildren;
+        PSEUDO_REQUIRED_CHILDREN[PSEUDO_FIRST_CHILD] = true;
+        PSEUDO_REQUIRED_CHILDREN[PSEUDO_FIRST_OF_TYPE] = true;
+        PSEUDO_REQUIRED_CHILDREN[PSEUDO_LAST_CHILD] = true;
+        PSEUDO_REQUIRED_CHILDREN[PSEUDO_LAST_OF_TYPE] = true;
+        PSEUDO_REQUIRED_CHILDREN[PSEUDO_NTH_CHILD] = true;
+        PSEUDO_REQUIRED_CHILDREN[PSEUDO_NTH_LAST_CHILD] = true;
+        PSEUDO_REQUIRED_CHILDREN[PSEUDO_NTH_LAST_OF_TYPE] = true;
+        PSEUDO_REQUIRED_CHILDREN[PSEUDO_NTH_OF_TYPE] = true;
+        PSEUDO_REQUIRED_CHILDREN[PSEUDO_ONLY_OF_TYPE] = true;
+        PSEUDO_REQUIRED_CHILDREN[PSEUDO_ONLY_CHILD] = true;
+
+   /**
+    * Searches for the next -or previous- node-sibling (nodeType of 1, 3 or 8).
+    *
+    * @method _findNodeSibling
+    * @param vnode {Object} the vnode to inspect
+    * @param [next] {Boolean} whether to search for the next, or previous match.
+    * @return {Object|undefined} the vnode that matches the search
+    * @protected
+    * @private
+    * @since 0.0.1
+    */
+    _findNodeSibling = function(vnode, next) {
+        var vParent = vnode.vParent,
+            index;
+        if (!vParent || !vParent.vChildNodes) {
+            return;
+        }
+        index = vParent.vChildNodes.indexOf(vnode) + (next ? 1 : -1);
+        return vParent.vChildNodes[index];
+    };
+
+   /**
+    * Searches for the next -or previous- Element-sibling (nodeType of 1).
+    *
+    * @method _findElementSibling
+    * @param vnode {Object} the vnode to inspect
+    * @param [next] {Boolean} whether to search for the next, or previous match.
+    * @return {Object|undefined} the vnode that matches the search
+    * @protected
+    * @private
+    * @since 0.0.1
+    */
+    _findElementSibling = function(vnode, next) {
+        var vParent = vnode.vParent,
+            index;
+        if (!vParent || !vParent.vChildNodes) {
+            return;
+        }
+        if (vnode.nodeType===1) {
+            index = vParent.vChildren.indexOf(vnode) + (next ? 1 : -1);
+            return vParent.vChildren[index];
+        }
+        else {
+/*jshint noempty:true */
+            while ((vnode=_findNodeSibling(vnode, next)) && (vnode.nodeType!==1)) {}
+/*jshint noempty:false */
+            return vnode;
+        }
+    };
+
+   /**
+    * Check whether the vnode matches a "nth-child" test, which is used for css pseudoselectors like `nth-child`, `nth-of-type` etc.
+    *
+    * @method _matchNthChild
+    * @param pseudoArg {String} the argument for nth-child
+    * @param index {Number} the index of the inspected vnode
+    * @return {Boolean} whether the vnode matches the nthChild test
+    * @protected
+    * @private
+    * @since 0.0.1
+    */
+    _matchNthChild = function(pseudoArg, index) {
+        var match, k, a, b, nodeOk, nthIndex, sign, isNumber;
+        (pseudoArg==='even') && (pseudoArg='2n');
+        (pseudoArg==='odd') && (pseudoArg='2n+1');
+
+        match = pseudoArg.match(NTH_CHILD_REGEXP) || (isNumber=pseudoArg.validateNumber());
+        if (!match) {
+            return false;
+        }
+        // pseudoArg follows the pattern: `an+b`
+        if (!isNumber) {
+            a = match[1];
+            sign = match[2];
+            b = match[3] || 0;
+            (b==='') && (b=0);
+        }
+        else {
+            b = pseudoArg;
+        }
+        sign && (sign=sign[0]);
+        if (!a) {
+            // only fixed index to match
+            return (sign==='-') ? false : (parseInt(b, 10)===index);
+        }
+        else {
+            // we need to iterate
+            nodeOk = false;
+            b = window.Number(b);
+            for (k=0; !nodeOk; k++) {
+                nthIndex = (sign==='-') ? (a*k) - b : (a*k) + b;
+                if (nthIndex===index) {
+                    nodeOk = true;
+                }
+                else if (nthIndex>index) {
+                    // beyond index --> will never become a fix anymore
+                    return false;
+                }
+            }
+            return nodeOk;
+        }
+    };
+
+   /**
+    * Check whether the vnode matches the css-selector. the css-selector should be a single selector,
+    * not multiple, so it shouldn't contain a `comma`.
+    *
+    * @method _matchesOneSelector
+    * @param vnode {vnode} the vnode to inspect
+    * @param selector {String} the selector-item to check the match for
+    * @param [relatedVNode] {vnode} a related vnode where to selectors starting with `>`, `~` or `+` should be compared.
+    *        If not specified, any of these three starting selector-characters will be ignored (leading to matching this first character).
+    * @return {Boolean} whether the vnode matches the css-selector
+    * @protected
+    * @private
+    * @since 0.0.1
+    */
+    _matchesOneSelector = function(vnode, selector, relatedVNode) {
+        var selList = _splitSelector(selector),
+            size = selList.length,
+            originalVNode = vnode,
+            firstSelectorChar = selector[0],
+            i, selectorItem, selMatch, directMatch, vParentvChildren, indexRelated;
+
+        if (size===0) {
+            return false;
+        }
+
+        selectorItem = selList[size-1];
+        selMatch = _matchesSelectorItem(vnode, selectorItem);
+        for (i=size-2; (selMatch && (i>=0)); i--) {
+            selectorItem = selList[i];
+            if (SIBLING_MATCH_CHARACTER[selectorItem]) {
+                // need to search through the same level
+                if (--i>=0) {
+                    directMatch = (selectorItem==='+');
+                    selectorItem = selList[i];
+                    // need to search the previous siblings
+                    vnode = vnode.vPreviousElement;
+                    if (!vnode) {
+                        return false;
+                    }
+                    if (directMatch) {
+                        // should be immediate match
+                        selMatch = _matchesSelectorItem(vnode, selectorItem);
+                    }
+                    else {
+                        while (vnode && !(selMatch=_matchesSelectorItem(vnode, selectorItem))) {
+                            vnode = vnode.vPreviousElement;
+                        }
+                    }
+                }
+            }
+            else {
+                // need to search up the tree
+                vnode = vnode.vParent;
+                if (!vnode || ((vnode===relatedVNode) && (selectorItem!=='>'))) {
+                    return false;
+                }
+                if (selectorItem==='>') {
+                    if (--i>=0) {
+                        selectorItem = selList[i];
+                       // should be immediate match
+                        selMatch = _matchesSelectorItem(vnode, selectorItem);
+                    }
+                }
+                else {
+                    while (!(selMatch=_matchesSelectorItem(vnode, selectorItem))) {
+                        vnode = vnode.vParent;
+                        if (!vnode || (vnode===relatedVNode)) {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        if (selMatch && relatedVNode && STORABLE_SPLIT_CHARACTER[firstSelectorChar]) {
+            // when `selector` starts with `>`, `~` or `+`, then
+            // there should also be a match comparing a related node!
+            switch (firstSelectorChar) {
+                case '>':
+                    selMatch = (relatedVNode.vChildren.indexOf(originalVNode)!==-1);
+                break;
+                case '~':
+                    vParentvChildren = originalVNode.vParent.vChildren;
+                    indexRelated = vParentvChildren.indexOf(relatedVNode);
+                    selMatch = (indexRelated!==-1) && (indexRelated<vParentvChildren.indexOf(originalVNode));
+                break;
+                case '+':
+                    selMatch = (originalVNode.vPreviousElement === relatedVNode);
+            }
+        }
+        return selMatch;
+    };
+
+   /**
+    * Check whether the vnode matches one specific selector-item. Suppose the css-selector: "#mynode li.red .blue"
+    * then there are 3 selector-items: "#mynode",  "li.red" and ".blue"
+    *
+    * This method also can handle the new selectors:
+    * <ul>
+    *     <li>[att^=val] –-> the “begins with” selector</li>
+    *     <li>[att$=val] –-> the “ends with” selector</li>
+    *     <li>[att*=val] –-> the “contains” selector (might be a substring)</li>
+    *     <li>[att~=val] –-> the “contains” selector as a separate word, separated by spaces</li>
+    *     <li>[att|=val] –-> the “contains” selector as a separate word, separated by `|`</li>
+    *     <li>+ --> (same level)</li>
+    *     <li>~ --> (same level)</li>
+    * </ul>
+    *
+    * @method _matchesSelectorItem
+    * @param vnode {Object} the vnode to inspect
+    * @param selectorItem {String} the selector-item to check the match for
+    * @return {Boolean} whether the vnode matches the selector-item
+    * @protected
+    * @private
+    * @since 0.0.1
+    */
+    _matchesSelectorItem = function (vnode, selectorItem) {
+        var i = 0,
+            len = selectorItem.length,
+            character = selectorItem[0],
+            tagName, id, className, attributeName, attributeValue, stringMarker, attributeisString, isBoolean, insideAttributeValue, insideAttribute,
+            vParent, checkBoolean, treatment, k, min, max, value, len2, index, found, pseudo, pseudoArg, arglevel, count, vParentVChildren;
+        if (selectorItem==='*') {
+            return true;
+        }
+        if (!SELECTOR_IDENTIFIERS[character]) {
+            // starts with tagName
+            tagName = '';
+            // reposition i to continue in the right way:
+            i--;
+            while ((++i<len) && (character=selectorItem[i]) && !SELECTOR_IDENTIFIERS[character]) {
+                tagName += character;
+            }
+            if (tagName.toUpperCase()!==vnode.tag) {
+                return false;
+            }
+        }
+        while (i<len) {
+            switch (character) {
+                case '#':
+                    id = '';
+                    while ((++i<len) && (character=selectorItem[i]) && !SELECTOR_IDENTIFIERS[character]) {
+                        id += character;
+                    }
+                    if (id!==vnode.id) {
+                        return false;
+                    }
+                    break;
+                case '.':
+                    className = '';
+                    while ((++i<len) && (character=selectorItem[i]) && !SELECTOR_IDENTIFIERS[character]) {
+                        className += character;
+                    }
+
+                    if (!vnode.hasClass(className)) {
+                        return false;
+                    }
+                    break;
+                case '[':
+                    attributeName = '';
+                    while ((++i<len) && (character=selectorItem[i]) && !END_ATTRIBUTENAME[character]) {
+                        attributeName += character;
+                    }
+                    // if character===']' then we have an attribute without a value-definition
+                    if (!vnode.attrs[attributeName] || ((character===']') && (vnode.attrs[attributeName]!==''))) {
+                        return !!vnode.attrs[attributeName];
+                    }
+                    // now we read the value of the attribute
+                    // however, it could be that the selector has a special `detailed` identifier set (defined by: ATTR_DETAIL_SPECIFIERS)
+                    if (ATTR_DETAIL_SPECIFIERS[character]) {
+                        treatment = character; // store the character to know how the attributedata should be treaded
+                        i++; // character should be a "=" by now
+                    }
+                    else {
+                        treatment = null;
+                    }
+                    attributeValue = '';
+                    stringMarker = selectorItem[i+1];
+                    attributeisString = (stringMarker==='"') || (stringMarker==="'");
+                    attributeisString && (i++);
+
+                    // end of attributaValue = (character===']') && (!attributeisString || (selectorItem[i-1]===stringMarker))
+                    while ((++i<len) && (character=selectorItem[i]) && !((character===']') && (!attributeisString || (selectorItem[i-1]===stringMarker)))) {
+                        attributeValue += character;
+                    }
+
+                    if (attributeisString) {
+                        // if attribute is string, then we need to _remove to last stringmarker
+                        attributeValue = attributeValue.substr(0, attributeValue.length-1);
+                    }
+                    else {
+                        // if attribute is no string, then we need to typecast its value
+                        isBoolean = ((attributeValue.length>3) && (attributeValue.length<6) &&
+                                     (checkBoolean=attributeValue.toUpperCase()) &&
+                                     ((checkBoolean==='FALSE') || (checkBoolean==='TRUE')));
+                        // typecast the value to either Boolean or Number:
+                        attributeValue = isBoolean ? (checkBoolean==='TRUE') : parseFloat(attributeValue);
+                    }
+
+                    // depending upon how the attributedata should be treated:
+                    if (treatment) {
+                        switch (treatment) {
+                            case '^': // “begins with” selector
+                                if (!vnode.attrs[attributeName].startsWith(attributeValue)) {
+                                    return false;
+                                }
+                                break;
+                            case '$': // “ends with” selector
+                                if (!vnode.attrs[attributeName].endsWith(attributeValue)) {
+                                    return false;
+                                }
+                                break;
+                            case '*': // “contains” selector (might be a substring)
+                                if (!vnode.attrs[attributeName].contains(attributeValue)) {
+                                    return false;
+                                }
+                                break;
+                            case '~': // “contains” selector as a separate word, separated by spaces
+                                if (!(' '+vnode.attrs[attributeName]+' ').contains(' '+attributeValue+' ')) {
+                                    return false;
+                                }
+                                break;
+                            case '|': // “contains” selector as a separate word, separated by `|`
+                                if (!('|'+vnode.attrs[attributeName]+'|').contains('|'+attributeValue+'|')) {
+                                    return false;
+                                }
+                                break;
+                        }
+                    }
+                    else if (vnode.attrs[attributeName]!==attributeValue) {
+                        return false;
+                    }
+
+                    // we still need to increase one position:
+                    (++i<len) && (character=selectorItem[i]);
+                    break;
+                case ':':
+                    // we have a pseudo-selector
+                    // first, find out which one
+                    // because '::' is a valid start (though without any selection), we start to back the next character as well:
+                    pseudo = ':'+selectorItem[++i];
+                    pseudoArg = '';
+                    vParent = vnode.vParent;
+                    vParentVChildren = vParent && vParent.vChildren;
+                    // pseudo-selectors might have an argument passed in, like `:nth-child(2n+1)` or `:not([type="checkbox"])` --> we
+                    // store this argument inside `pseudoArg`
+                    // also note that combinations are possible with `:not` --> `:not(:nth-child(2n+1))`
+                    // also note that we cannot "just" look for a closing character when running into the usage of attributes:
+                    // for example --> `:not([data-x="some data :)"])`
+                    // that's why -once we are inside attribute-data- we need to continue until the attribute-data ends
+                    while ((++i<len) && (character=selectorItem[i]) && !SELECTOR_IDENTIFIERS[character]) {
+                        if (character==='(') {
+                            // starting arguments
+                            arglevel = 1;
+                            insideAttribute = false;
+                            insideAttributeValue = false;
+                            while ((++i<len) && (character=selectorItem[i]) && (arglevel>0)) {
+                                if (!insideAttribute) {
+                                    if (character==='(') {
+                                        arglevel++;
+                                    }
+                                    else if (character===')') {
+                                        arglevel--;
+                                    }
+                                    else if (character==='[') {
+                                        insideAttribute = true;
+                                    }
+                                }
+                                else {
+                                    // inside attribute
+                                    if (!insideAttributeValue) {
+                                        if ((character==='"') || (character==="'")) {
+                                            insideAttributeValue = true;
+                                            stringMarker = character;
+                                        }
+                                        else if (character===']') {
+                                            insideAttribute = false;
+                                        }
+                                    }
+                                    else if ((character===stringMarker) && (selectorItem[i+1]===']')) {
+                                        insideAttributeValue = false;
+                                    }
+                                }
+                                (arglevel>0) && (pseudoArg+=character);
+                            }
+                        }
+                        else {
+                            pseudo += character;
+                        }
+                    }
+                    // now, `pseudo` is known as well as its possible pseudoArg
+                    if (!vParentVChildren && PSEUDO_REQUIRED_CHILDREN[pseudo]) {
+                        return false;
+                    }
+                    switch (pseudo) {
+                        case ':checked': // input:checked   Selects every checked <input> element
+                            if (!vnode.attrs.checked) {
+                                return false;
+                            }
+                            break;
+                        case ':disabled': // input:disabled  Selects every disabled <input> element
+                            if (!vnode.attrs.disabled) {
+                                return false;
+                            }
+                            break;
+                        case ':empty': // p:empty Selects every <p> element that has no children (including text nodes)
+                            if (vnode.vChildNodes && (vnode.vChildNodes.length>0)) {
+                                return false;
+                            }
+                            break;
+                        case ':enabled': // input:enabled   Selects every enabled <input> element
+                            if (vnode.attrs.disabled) {
+                                return false;
+                            }
+                            break;
+                        case PSEUDO_FIRST_CHILD: // p:first-child   Selects every <p> element that is the first child of its parent
+                            if (vParentVChildren[0]!==vnode) {
+                                return false;
+                            }
+                            break;
+                        case PSEUDO_FIRST_OF_TYPE: // p:first-of-type Selects every <p> element that is the first <p> element of its parent
+                            for (k=vParentVChildren.indexOf(vnode)-1; k>=0; k--) {
+                                if (vParentVChildren[k].tag===vnode.tag) {
+                                    return false;
+                                }
+                            }
+                            break;
+                        case ':focus': // input:focus Selects the input element which has focus
+                            if (vnode.domNode!==DOCUMENT.activeElement) {
+                                return false;
+                            }
+                            break;
+                        case ':in-range': // input:in-range  Selects input elements with a value within a specified range
+                            if ((vnode.tag!=='INPUT') || ((vnode.attrs.type || '').toLowerCase()!=='number')) {
+                                return false;
+                            }
+                            min = parseInt(vnode.attrs.min, 10);
+                            max = parseInt(vnode.attrs.max, 10);
+                            value = parseInt(vnode.domNode.value, 10);
+                            if (!value || !min || !max || (value<min) || (value>max)) {
+                                return false;
+                            }
+                            break;
+                        case ':lang': // p:lang(it)  Selects every <p> element with a lang attribute equal to "it" (Italian)
+                            if (vnode.attrs.lang!==pseudoArg) {
+                                return false;
+                            }
+                            break;
+                        case PSEUDO_LAST_CHILD: // p:last-child    Selects every <p> element that is the last child of its parent
+                            if (vParentVChildren[vParentVChildren.length-1]!==vnode) {
+                                return false;
+                            }
+                            break;
+                        case PSEUDO_LAST_OF_TYPE: // p:last-of-type  Selects every <p> element that is the last <p> element of its parent
+                            len2 = vParentVChildren.length;
+                            for (k=vParentVChildren.indexOf(vnode)+1; k<len2; k++) {
+                                if (vParentVChildren[k].tag===vnode.tag) {
+                                    return false;
+                                }
+                            }
+                            break;
+                        case ':not': // :not(p) Selects every element that is not a <p> element
+                            if (vnode.matchesSelector(pseudoArg)) {
+                                return false;
+                            }
+                            break;
+                        case PSEUDO_NTH_CHILD: // p:nth-child(2)  Selects every <p> element that is the second child of its parent
+                            // NOTE: css `nth` starts with 1 instead of 0 !!!
+                            index = vParentVChildren.indexOf(vnode)+1;
+                            if (!_matchNthChild(pseudoArg, index)) {
+                                return false;
+                            }
+                            break;
+                        case PSEUDO_NTH_LAST_CHILD: // p:nth-last-child(2) Selects every <p> element that is the second child of its parent, counting from the last child
+                            // NOTE: css `nth` starts with 1 instead of 0 !!!
+                            // Also, nth-last-child counts from bottom up
+                            index = vParentVChildren.length - vParentVChildren.indexOf(vnode);
+                            if (!_matchNthChild(pseudoArg, index)) {
+                                return false;
+                            }
+                            break;
+                        case PSEUDO_NTH_LAST_OF_TYPE: // p:nth-last-of-type(2)   Selects every <p> element that is the second <p> element of its parent, counting from the last child
+                            // NOTE: css `nth` starts with 1 instead of 0 !!!
+                            // Also, nth-last-child counts from bottom up
+                            index = vParentVChildren.length - vParentVChildren.indexOf(vnode);
+                            // NOTE: css `nth` starts with 1 instead of 0 !!!
+                            found = false;
+                            index = 0;
+                            for (k=vParentVChildren.length-1; (k>=0) && !found; k--) {
+                                (vParentVChildren[k].tag===vnode.tag) && index++;
+                                (vParentVChildren[k]===vnode) && (found=true);
+                            }
+                            if (!found || !_matchNthChild(pseudoArg, index)) {
+                                return false;
+                            }
+                            break;
+                        case PSEUDO_NTH_OF_TYPE: // p:nth-of-type(2)    Selects every <p> element that is the second <p> element of its parent
+                            // NOTE: css `nth` starts with 1 instead of 0 !!!
+                            found = false;
+                            len2 = vParentVChildren.length;
+                            index = 0;
+                            for (k=0; (k<len2) && !found; k++) {
+                                (vParentVChildren[k].tag===vnode.tag) && index++;
+                                (vParentVChildren[k]===vnode) && (found=true);
+                            }
+                            if (!found || !_matchNthChild(pseudoArg, index)) {
+                                return false;
+                            }
+                            break;
+                        case PSEUDO_ONLY_OF_TYPE: // p:only-of-type  Selects every <p> element that is the only <p> element of its parent
+                            len2 = vParentVChildren.length;
+                            count = 0;
+                            for (k=0; (k<len2) && (count<=1); k++) {
+                                (vParentVChildren[k].tag===vnode.tag) && count++;
+                            }
+                            if (count!==1) {
+                                return false;
+                            }
+                            break;
+                        case PSEUDO_ONLY_CHILD: // p:only-child    Selects every <p> element that is the only child of its parent
+                            if (vParentVChildren.length!==1) {
+                                return false;
+                            }
+                            break;
+                        case ':optional': // input:optional  Selects input elements with no "required" attribute
+                            if (vnode.attrs.required) {
+                                return false;
+                            }
+                            break;
+                        case ':out-of-range': // input:out-of-range  Selects input elements with a value outside a specified range
+                            if ((vnode.tag!=='INPUT') || ((vnode.attrs.type || '').toLowerCase()!=='number')) {
+                                return false;
+                            }
+                            min = parseInt(vnode.attrs.min, 10);
+                            max = parseInt(vnode.attrs.max, 10);
+                            value = parseInt(vnode.domNode.value, 10);
+                            if (!value || !min || !max || ((value>=min) && (value<=max))) {
+                                return false;
+                            }
+                            break;
+                        case ':read-only': // input:read-only Selects input elements with the "readonly" attribute specified
+                            if (!vnode.attrs.readonly) {
+                                return false;
+                            }
+                            break;
+                        case ':read-write': // input:read-write    Selects input elements with the "readonly" attribute NOT specified
+                            if (vnode.attrs.readonly) {
+                                return false;
+                            }
+                            break;
+                        case ':required': // input:required  Selects input elements with the "required" attribute specified
+                            if (!vnode.attrs.required) {
+                                return false;
+                            }
+                            break;
+                        case ':root': // Selects the document's root element
+                            if (vnode.domNode!==DOCUMENT.documentElement) {
+                                return false;
+                            }
+                            break;
+                    }
+            }
+        }
+        return true;
+    };
+
+    /**
+     * Splits the selector into separate subselector-items that should match different elements through the tree.
+     * Special characters '>' and '+' are added as separate items in the hash.
+     *
+     * @method _splitSelector
+     * @param selector {String} the selector-item to check the match for
+     * @return {Array} splitted selectors
+     * @protected
+     * @private
+     * @since 0.0.1
+     */
+    _splitSelector = function(selector) {
+        var list = [],
+            len = selector.length,
+            sel = '',
+            i, character, insideDataAttr;
+
+        for (i=0; i<len; i++) {
+            character = selector[i];
+            if (character==='[') {
+                sel += character;
+                insideDataAttr = true;
+            }
+            else if (character===']') {
+                sel += character;
+                insideDataAttr = false;
+            }
+            else if (insideDataAttr || !SPLIT_CHARACTER[character]) {
+                sel += character;
+            }
+            else {
+                // unique selectoritem is found, add it to the list
+                if (sel.length>0) {
+                    list[list.length] = sel;
+                    sel = '';
+                }
+                // in case the last character was '>', '+' or '~', we need to add it as a separate item
+                STORABLE_SPLIT_CHARACTER[character] && (list[list.length]=character);
+            }
+        }
+        // add the last item
+        if (sel.length>0) {
+            list[list.length] = sel;
+            sel = '';
+        }
+        return list;
+    };
+
+    _batchEmit = function() {
+        MUTATION_EVENTS.each(function (mutationEvents, vnode) {
+            var domNode = vnode.domNode;
+            if (mutationEvents[EV_REMOVED]) {
+                domNode.emit(EV_REMOVED);
+            }
+            else if (mutationEvents[EV_INSERTED]) {
+                domNode.emit(EV_INSERTED);
+            }
+            else {
+                // contentchange and attributechanges can go hand in hand
+                mutationEvents.each(function(value, evt) {
+                    domNode.emit(evt, (evt===EV_CONTENT_CHANGE) ? null : {changed: value});
+                });
+            }
+        });
+        MUTATION_EVENTS.clear();
+        BATCH_WILL_RUN = false;
+    };
+
+    _emitDestroyChildren = function(vnode) {
+        var children = vnode.vChildren,
+            len = children.length,
+            i, vChild;
+        for (i=0; i<len; i++) {
+            vChild = children[i];
+            vChild._emit(EV_REMOVED);
+            _emitDestroyChildren(vChild);
+        }
+    };
+
+    _markRemoved = function(vnode) {
+        var vChildNodes = vnode.vChildNodes,
+            len, i, vChildNode;
+        if (vnode.nodeType===1) {
+            Object.protectedProp(vnode, 'removedFromDOM', true);
+            if (vChildNodes) {
+                len = vChildNodes.length;
+                for (i=0; i < len; i++) {
+                    vChildNode = vChildNodes[i];
+                    vChildNode && _markRemoved(vChildNode);
+                }
+            }
+        }
+    };
+
+    vNodeProto = window._ITSAmodules.VNode = {
+       /**
+        * Check whether the vnode's domNode is equal, or contains the specified Element.
+        *
+        * @method contains
+        * @return {Boolean} whether the vnode's domNode is equal, or contains the specified Element.
+        * @since 0.0.1
+        */
+        contains: function(otherVNode) {
+            if (otherVNode.destroyed) {
+                return false;
+            }
+            while (otherVNode && (otherVNode!==this)) {
+                otherVNode = otherVNode.vParent;
+            }
+            return (otherVNode===this);
+        },
+
+        empty: function() {
+            this._setChildNodes([]);
+        },
+
+       /**
+        * Returns the first child-vnode (if any). The child represents an Element (nodeType===1).
+        *
+        * @method firstOfVChildren
+        * @param cssSelector {String} one or more css-selectors
+        * @return {Object|null} the first child-vnode or null when not present
+        * @since 0.0.1
+        */
+        firstOfVChildren: function(cssSelector) {
+            var instance = this,
+                found, i, len, vChildren, element;
+            if (!cssSelector) {
+                return instance.vFirstElementChild;
+            }
+            vChildren = instance.vChildren;
+            len = vChildren.length;
+            for (i=0; !found && (i<len); i++) {
+                element = vChildren[i];
+                element.matchesSelector(cssSelector) && (found=element);
+            }
+            return found;
+        },
+
+       /**
+        * Checks whether the vnode has any vChildNodes (nodeType of 1, 3 or 8).
+        *
+        * @method hasVChildNodes
+        * @return {Boolean} whether the vnode has any vChildNodes.
+        * @since 0.0.1
+        */
+        hasVChildNodes: function() {
+            return this.vChildNodes ? (this.vChildNodes.length>0) : false;
+        },
+
+       /**
+        * Checks whether the vnode has any vChildren (vChildNodes with nodeType of 1).
+        *
+        * @method hasVChildren
+        * @return {Boolean} whether the vnode has any vChildren.
+        * @since 0.0.1
+        */
+        hasVChildren: function() {
+            return this.vChildNodes ? (this.vChildren.length>0) : false;
+        },
+
+       /**
+        * Checks whether the className is present on the vnode.
+        *
+        * @method hasClass
+        * @param className {String|Array} the className to check for. May be an Array of classNames, which all needs to be present.
+        * @return {Boolean} whether the className (or classNames) is present on the vnode
+        * @since 0.0.1
+        */
+        hasClass: function(className) {
+            var instance = this,
+                check = function(cl) {
+                    return !!instance.classNames[cl];
+                };
+            if (!instance.classNames) {
+                return false;
+            }
+            if (typeof className === STRING) {
+                return check(className);
+            }
+            else if (Array.isArray(className)) {
+                return className.every(check);
+            }
+            return false;
+        },
+
+       /**
+        * Returns the last child-vnode (if any). The child represents an Element (nodeType===1).
+        *
+        * @method lastOfVChildren
+        * @param cssSelector {String} one or more css-selectors
+        * @return {Object|null} the last child-vnode or null when not present
+        * @since 0.0.1
+        */
+        lastOfVChildren: function(cssSelector) {
+            var vChildren = this.vChildren,
+                found, i, element;
+            if (vChildren) {
+                if (!cssSelector) {
+                    return this.vLastElementChild;
+                }
+                for (i=vChildren.length-1; !found && (i>=0); i--) {
+                    element = vChildren[i];
+                    element.matchesSelector(cssSelector) && (found=element);
+                }
+            }
+            return found;
+        },
+
+       /**
+        * Checks whether the vnode matches one of the specified selectors. `selectors` can be one, or multiple css-selectors,
+        * separated by a `comma`. For example: "#myid li.red blue" is one selector, "div.red, div.blue, div.green" are three selectors.
+        *
+        * @method matchesSelector
+        * @param selectors {String} one or more css-selectors
+        * @param [relatedVNode] {vnode} a related vnode where to selectors starting with `>`, `~` or `+` should be compared.
+        *        If not specified, any of these three starting selector-characters will be ignored (leading to matching this first character).
+        * @return {Boolean} whether the vnode matches one of the selectors
+        * @since 0.0.1
+        */
+        matchesSelector: function(selectors, relatedVNode) {
+            var instance = this;
+            if (instance.nodeType!==1) {
+                return false;
+            }
+            selectors = selectors.split(',');
+            // we can use Array.some, because there won't be many separated selectoritems,
+            // so the final invocation won't be delayed much compared to looping
+            return selectors.some(function(selector) {
+                return _matchesOneSelector(instance, selector, relatedVNode);
+            });
+        },
+
+       /**
+        * Reloads the DOM-attribute into the vnode.
+        *
+        * @method matchesSelector
+        * @param attributeName {String} the name of the attribute to be reloaded.
+        * @return {Node} the domNode that was reloaded.
+        * @since 0.0.1
+        */
+        reloadAttr: function(attributeName) {
+            var instance = this,
+                domNode = instance.domNode,
+                attributeValue = domNode._getAttribute(attributeName),
+                attrs = instance.attrs,
+                extractStyle, extractClass;
+            if (instance.nodeType===1) {
+                attributeValue || (attributeValue='');
+                if (attributeValue==='') {
+                    delete attrs[attributeName];
+                    // in case of STYLE attributeName --> special treatment
+                    (attributeName===STYLE) && (instance.styles={});
+                    // in case of CLASS attributeName --> special treatment
+                    (attributeName===CLASS) && (instance.classNames={});
+                    // in case of ID attributeName --> special treatment
+                    if ((attributeName===ID) && (instance.id)) {
+                        delete nodeids[instance.id];
+                        delete instance.id;
+                    }
+                }
+                else {
+                    attrs[attributeName] = attributeValue;
+                    // in case of STYLE attributeName --> special treatment
+                    if (attributeName===STYLE) {
+                        extractStyle = extractor.extractStyle(attributeValue);
+                        attributeValue = extractStyle.attrStyle;
+                        if (attributeValue) {
+                            attrs.style = attributeValue;
+                        }
+                        else {
+                            delete attrs.style;
+                        }
+                        instance.styles = extractStyle.styles;
+                    }
+                    else if (attributeName===CLASS) {
+                        // in case of CLASS attributeName --> special treatment
+                        extractClass = extractor.extractClass(attributeValue);
+                        attributeValue = extractClass.attrClass;
+                        if (attributeValue) {
+                            attrs[CLASS] = attributeValue;
+                        }
+                        else {
+                            delete attrs[CLASS];
+                        }
+                        instance.classNames = extractClass.classNames;
+                    }
+                    else if (attributeName===ID) {
+                        instance.id && (instance.id!==attributeValue) && (delete nodeids[instance.id]);
+                        instance.id = attributeValue;
+                        nodeids[attributeValue] = domNode;
+                    }
+                }
+            }
+            return domNode;
+        },
+
+        serializeStyles: function() {
+            return extractor.serializeStyles(this.styles);
+        },
+
+       /**
+        * Syncs the vnode's nodeid (if available) inside `NS-vdom.nodeids`.
+        *
+        * Does NOT sync with the dom. Can be invoked multiple times without issues.
+        *
+        * @method storeId
+        * @chainable
+        * @since 0.0.1
+        */
+        storeId: function() {
+            // store node/vnode inside WeakMap:
+            var instance = this;
+            instance.id ? (nodeids[instance.id]=instance.domNode) : (delete nodeids[instance.id]);
+            return instance;
+        },
+
+        //---- private ------------------------------------------------------------------
+
+        /**
+         * Adds a vnode to the end of the list of vChildNodes.
+         *
+         * Syncs with the DOM.
+         *
+         * @method _appendChild
+         * @param VNode {vnode} vnode to append
+         * @private
+         * @return {Node} the Node that was appended
+         * @since 0.0.1
+         */
+        _appendChild: function(VNode) {
+            var instance = this,
+                domNode = VNode.domNode,
+                size;
+            VNode._moveToParent(instance);
+            instance.domNode._appendChild(domNode);
+            if (VNode.nodeType===3) {
+                size = instance.vChildNodes.length;
+                instance._normalize();
+                // if the size changed, then the domNode was merged
+                (size===instance.vChildNodes.length) || (domNode=instance.vChildNodes[instance.vChildNodes.length-1].domNode);
+            }
+            VNode._emit(EV_INSERTED);
+            return domNode;
+        },
+
+       /**
+        * Removes the vnode from its parent vChildNodes- and vChildren-list.
+        *
+        * Does NOT sync with the dom.
+        *
+        * @method _deleteFromParent
+        * @private
+        * @chainable
+        * @since 0.0.1
+        */
+        _deleteFromParent: function() {
+            var instance = this,
+                vParent = instance.vParent;
+            if (vParent && vParent.vChildNodes) {
+                vParent.vChildNodes.remove(instance);
+                // force to recalculate the vChildren on a next call:
+                (instance.nodeType===1) && (vParent._vChildren=null);
+            }
+            return instance;
+        },
+
+        _cleanData: function() {
+            var instance = this,
+                data = instance._data;
+            data && data.each(
+                function(value, key) {
+                    delete data[key];
+                }
+            );
+            return instance;
+        },
+
+       /**
+        * Destroys the vnode and all its vnode-vChildNodes.
+        * Removes it from its vParent.vChildNodes list,
+        * also removes its definitions inside `NS-vdom.nodeids`.
+        *
+        * Does NOT sync with the dom.
+        *
+        * @method _destroy
+        * @private
+        * @chainable
+        * @since 0.0.1
+        */
+        _destroy: function(silent) {
+            var instance = this,
+                vChildNodes = instance.vChildNodes,
+                len, i, vChildNode, vParent, treeNodes;
+            if (!instance.destroyed) {
+                silent || instance._emit(EV_REMOVED);
+                Object.protectedProp(instance, 'destroyed', true);
+
+                // first: determine the dom-tree, which module `event-dom` needs to determine where the node was before it was destroyed:
+                treeNodes = [instance];
+                vParent = instance.vParent;
+                while (vParent) {
+                    treeNodes[treeNodes.length] = vParent;
+                    vParent = vParent.vParent;
+                }
+
+                // mark all its vChildNodes so we can see if the node is in the DOM
+                _markRemoved(instance);
+
+                // The definite cleanup needs to be done after a timeout:
+                // someone might need to handle the Element when removed (fe to cleanup specific things)
+                later(function() {
+                    instance._cleanData();
+                    // _destroy all its vChildNodes
+                    if ((instance.nodeType===1) && vChildNodes) {
+                        len = vChildNodes.length;
+                        for (i=0; i < len; i++) {
+                            vChildNode = vChildNodes[i];
+                            vChildNode && vChildNode._destroy(true);
+                        }
+                    }
+                    instance._vChildren = null;
+                    // explicitely set instance.domNode._vnode and instance.domNode to null in order to prevent problems with the GC (we break the circular reference)
+                    delete instance.domNode._vnode;
+                    // if valid id, then _remove the DOMnodeRef from internal hash
+                    instance.id && delete nodeids[instance.id];
+                }, silent ? 0 : DESTROY_DELAY);
+
+                instance._deleteFromParent();
+                // Do not make domNode `null` --> it could be used even when not in the dom
+            }
+            return instance;
+        },
+
+        _emit: function(evt, attribute, newValue, prevValue) {
+           /**
+            * Emitted by every Element that gets inserted.
+            *
+            * @event nodeinsert
+            * @param e {Object} eventobject including:
+            * @param e.target {HtmlElement} the HtmlElement that is being dragged
+            * @param e.currentTarget {HtmlElement} the HtmlElement that is delegating
+            * @since 0.1
+            */
+
+           /**
+            * Emitted by every Element that gets removed.
+            *
+            * @event noderemove
+            * @param e {Object} eventobject including:
+            * @param e.target {HtmlElement} the HtmlElement that is being dragged
+            * @param e.currentTarget {HtmlElement} the HtmlElement that is delegating
+            * @since 0.1
+            */
+
+           /**
+            * Emitted by every Element that gets its content changed (innerHTML/innerText).
+            *
+            * @event nodecontentchange
+            * @param e {Object} eventobject including:
+            * @param e.target {HtmlElement} the HtmlElement that is being dragged
+            * @param e.currentTarget {HtmlElement} the HtmlElement that is delegating
+            * @since 0.1
+            */
+
+           /**
+            * Emitted by every Element that gets an attribute inserted.
+            *
+            * @event attributeinsert
+            * @param e {Object} eventobject including:
+            * @param e.target {HtmlElement} the HtmlElement that is being dragged
+            * @param e.currentTarget {HtmlElement} the HtmlElement that is delegating
+            * @param e.changed {Array} Array with Objects having three properties:
+            * <ul>
+            *     <li>attribute</li>
+            *     <li>newValue</li>
+            * </ul>
+            * @since 0.1
+            */
+
+           /**
+            * Emitted by every Element that gets an attribute removed.
+            *
+            * @event attributeremove
+            * @param e {Object} eventobject including:
+            * @param e.target {HtmlElement} the HtmlElement that is being dragged
+            * @param e.currentTarget {HtmlElement} the HtmlElement that is delegating
+            * @param e.changed {Array} Array with Strings of the attributeNames that are removed
+            * @since 0.1
+            */
+
+           /**
+            * Emitted by every Element that gets an attribute changed.
+            *
+            * @event attributechange
+            * @param e {Object} eventobject including:
+            * @param e.target {HtmlElement} the HtmlElement that is being dragged
+            * @param e.currentTarget {HtmlElement} the HtmlElement that is delegating
+            * @param e.changed {Array} Array with Objects having three properties:
+            * <ul>
+            *     <li>attribute</li>
+            *     <li>newValue</li>
+            *     <li>prevValue</li>
+            * </ul>
+            * @since 0.1
+            */
+
+            var instance = this,
+                silent, attrMutations, mutationEvents, mutation, vParent;
+            if (!DOCUMENT.hasMutationSubs || (instance.nodeType!==1)) {
+                return;
+            }
+            silent = !!DOCUMENT._suppressMutationEvents;
+            if (!silent && !instance.destroyed) {
+                mutationEvents = MUTATION_EVENTS.get(instance) || {};
+                if (attribute) {
+                    attrMutations = mutationEvents[evt] || [];
+                    if (evt===EV_ATTRIBUTE_REMOVED) {
+                        mutation = attribute;
+                    }
+                    else {
+                        mutation = {
+                            attribute: attribute
+                        };
+                        if ((evt===EV_ATTRIBUTE_INSERTED) || (evt===EV_ATTRIBUTE_CHANGED)) {
+                            mutation.newValue = newValue;
+                        }
+                        if ((evt===EV_ATTRIBUTE_CHANGED) && prevValue) {
+                            mutation.prevValue = prevValue;
+                        }
+                    }
+                    attrMutations.push(mutation);
+                    mutationEvents[evt] = attrMutations;
+                }
+                else {
+                    mutationEvents[evt] = true;
+                }
+                MUTATION_EVENTS.set(instance, mutationEvents);
+                // now set all parent to have a nodecontentchange:
+                vParent = instance;
+/*jshint boss:true */
+                while (vParent=vParent.vParent) {
+/*jshint boss:false */
+                    vParent._emit(EV_CONTENT_CHANGE);
+                }
+
+                // in case of removal we need to emit EV_REMOVED for all children right now
+                // for they will be actually removed silently after a delay of 1 minute
+                (evt===EV_REMOVED) && _emitDestroyChildren(instance);
+
+                if (!BATCH_WILL_RUN) {
+                    BATCH_WILL_RUN = true;
+                    async(function() {
+                        _batchEmit();
+                    });
+                }
+            }
+            return instance;
+        },
+
+        /**
+         * Inserts `newVNode` before `refVNode`.
+         *
+         * Syncs with the DOM.
+         *
+         * @method _insertBefore
+         * @param newVNode {vnode} vnode to insert
+         * @param refVNode {vnode} The vnode before which newVNode should be inserted.
+         * @private
+         * @return {Node} the Node being inserted (equals domNode)
+         * @since 0.0.1
+         */
+        _insertBefore: function(newVNode, refVNode) {
+            var instance = this,
+                domNode = newVNode.domNode,
+                index = instance.vChildNodes.indexOf(refVNode);
+            if (index!==-1) {
+                newVNode._moveToParent(instance, index);
+                instance.domNode._insertBefore(domNode, refVNode.domNode);
+                (newVNode.nodeType===3) && instance._normalize();
+                newVNode._emit(EV_INSERTED);
+            }
+            return domNode;
+        },
+
+       /**
+        * Moves the vnode from its current parent.vChildNodes list towards a new parent vnode at the specified position.
+        *
+        * Does NOT sync with the dom.
+        *
+        * @method _moveToParent
+        * @param parentVNode {vnode} the parent-vnode
+        * @param [index] {Number} the position of the child. When not specified, it will be appended.
+        * @private
+        * @chainable
+        * @since 0.0.1
+        */
+        _moveToParent: function(parentVNode, index) {
+            var instance = this,
+                vParent = instance.vParent;
+            instance._deleteFromParent();
+            instance.vParent = parentVNode;
+            parentVNode.vChildNodes || (parentVNode.vChildNodes=[]);
+            (typeof index==='number') ? parentVNode.vChildNodes.insertAt(instance, index) : (parentVNode.vChildNodes[parentVNode.vChildNodes.length]=instance);
+            // force to recalculate the vChildren on a next call:
+            vParent && (instance.nodeType===1) && (vParent._vChildren = null);
+            // force to recalculate the vChildren on a next call:
+            parentVNode && (instance.nodeType===1) && (parentVNode._vChildren=null);
+            return instance;
+        },
+
+       /**
+        * Removes empty TextNodes and merges following TextNodes inside the vnode.
+        *
+        * Syncs with the dom.
+        *
+        * @method _normalize
+        * @private
+        * @chainable
+        * @since 0.0.1
+        */
+        _normalize: function() {
+            var instance = this,
+                domNode = instance.domNode,
+                vChildNodes = instance.vChildNodes,
+                changed = false,
+                i, preChildNode, vChildNode;
+            if (!instance._unNormalizable && vChildNodes) {
+                for (i=vChildNodes.length-1; i>=0; i--) {
+                    vChildNode = vChildNodes[i];
+                    preChildNode = vChildNodes[i-1]; // i will get the value `-1` eventually, which leads into undefined preChildNode
+                    if (vChildNode.nodeType===3) {
+                        if (vChildNode.text==='') {
+                            domNode._removeChild(vChildNode.domNode);
+                            vChildNode._destroy();
+                            changed = true;
+                        }
+                        else if (preChildNode && preChildNode.nodeType===3) {
+                            preChildNode.text += vChildNode.text;
+                            preChildNode.domNode.nodeValue = preChildNode.text;
+                            domNode._removeChild(vChildNode.domNode);
+                            vChildNode._destroy();
+                            changed = true;
+                        }
+                    }
+                }
+            }
+            changed && instance._emit(EV_CONTENT_CHANGE);
+            return instance;
+        },
+
+       /**
+        * Makes the vnode `normalizable`. Could be set to `false` when batch-inserting nodes, while `normalizaing` manually at the end.
+        * Afterwards, you should always reset `normalizable` to true.
+        *
+        * @method _normalizable
+        * @param value {Boolean} whether the vnode should be normalisable.
+        * @private
+        * @chainable
+        * @since 0.0.1
+        */
+        _normalizable: function(value) {
+            var instance = this;
+            value ? (delete instance._unNormalizable) : (instance._unNormalizable=true);
+            return instance;
+        },
+
+       /**
+        * Prevents MutationObserver from making the dom sync with the vnode.
+        * Should be used when manipulating the dom from within the vnode itself (to preventing looping)
+        *
+        * @method _noSync
+        * @chainable
+        * @private
+        * @since 0.0.1
+        */
+        _noSync: function() {
+            var instance = this;
+            if (!instance._nosync) {
+                instance._nosync = true;
+                async(function() {
+                    instance._nosync = false;
+                });
+            }
+            return instance;
+        },
+
+       /**
+        * Removes the attribute of both the vnode as well as its related dom-node.
+        *
+        * Syncs with the dom.
+        *
+        * @method _removeAttr
+        * @param attributeName {String}
+        * @private
+        * @chainable
+        * @since 0.0.1
+        */
+        _removeAttr: function(attributeName) {
+            var instance = this;
+            if (instance.attrs[attributeName]!==undefined) {
+                delete instance.attrs[attributeName];
+                // in case of STYLE attribute --> special treatment
+                (attributeName===STYLE) && (instance.styles={});
+                // in case of CLASS attribute --> special treatment
+                (attributeName===CLASS) && (instance.classNames={});
+                if (attributeName===ID) {
+                    delete nodeids[instance.id];
+                    delete instance.id;
+                }
+                instance.domNode._removeAttribute(attributeName);
+                instance._emit(EV_ATTRIBUTE_REMOVED, attributeName);
+            }
+            return instance;
+        },
+
+        /**
+        * Removes the vnode's child-vnode from its vChildren and the DOM.
+        *
+         * Syncs with the DOM.
+         *
+        * @method removeChild
+        * @param VNode {vnode} the child-vnode to remove
+        * @private
+        * @since 0.0.1
+        */
+        _removeChild: function(VNode) {
+            var instance = this,
+                domNode = VNode.domNode,
+                hadFocus = domNode.hasFocus() && (VNode.attrs['fm-lastitem']==='true'),
+                parentVNode = VNode.vParent;
+            VNode._destroy();
+            instance.domNode._removeChild(VNode.domNode);
+            instance._normalize();
+            // now, reset the focus on focusmanager when needed:
+            if (hadFocus) {
+                while (parentVNode && !parentVNode.attrs['fm-manage']) {
+                    parentVNode = parentVNode.vParent;
+                }
+                parentVNode && parentVNode.domNode.focus();
+            }
+        },
+
+       /**
+        * Replaces the current vnode at the parent.vChildNode list by `newVNode`
+        *
+        * Does NOT sync with the dom.
+        *
+        * @method _replaceAtParent
+        * @param newVNode {Object} the new vnode which should take over the place of the current vnode
+        * @private
+        * @chainable
+        * @since 0.0.1
+        */
+        _replaceAtParent: function(newVNode) {
+            var instance = this,
+                vParent = instance.vParent,
+                vChildNodes, index;
+            if (vParent && (vChildNodes=vParent.vChildNodes)) {
+                index = vChildNodes.indexOf(instance);
+                // force to recalculate the vChildren on a next call:
+                ((instance.nodeType===1) || (newVNode.nodeType===1)) && (instance.vParent._vChildren=null);
+                vChildNodes[index] = newVNode;
+            }
+            return instance._destroy();
+        },
+
+       /**
+        * Sets the attribute of both the vnode as well as its related dom-node.
+        *
+        * Syncs with the dom.
+        *
+        * @method _setAttr
+        * @param attributeName {String}
+        * @param value {String} the value for the attributeName
+        * @private
+        * @chainable
+        * @since 0.0.1
+        */
+        _setAttr: function(attributeName, value) {
+            var instance = this,
+                extractStyle, extractClass,
+                attrs = instance.attrs,
+                prevVal = attrs[attributeName];
+            // don't check by !== --> value isn't parsed into a String yet
+
+            if (prevVal!=value) {
+                if ((value===undefined) || (value===null)) {
+                    instance._removeAttr(attributeName);
+                    return instance;
+                }
+                // attribute-values are always Strings:
+                value = String(value);
+                attrs[attributeName] = value;
+                // in case of STYLE attribute --> special treatment
+                if (attributeName===STYLE) {
+                    extractStyle = extractor.extractStyle(value);
+                    value = extractStyle.attrStyle;
+                    if (value) {
+                        attrs.style = value;
+                    }
+                    else {
+                        delete attrs.style;
+                    }
+                    instance.styles = extractStyle.styles;
+                }
+                else if (attributeName===CLASS) {
+                    // in case of CLASS attribute --> special treatment
+                    extractClass = extractor.extractClass(value);
+                    value = extractClass.attrClass;
+                    if (value) {
+                        attrs[CLASS] = value;
+                    }
+                    else {
+                        delete attrs[CLASS];
+                    }
+                    instance.classNames = extractClass.classNames;
+                }
+                else if (attributeName===ID) {
+                    instance.id && (delete nodeids[instance.id]);
+                    instance.id = value;
+                    nodeids[value] = instance.domNode;
+                }
+                instance.domNode._setAttribute(attributeName, value);
+                instance._emit(prevVal ? EV_ATTRIBUTE_CHANGED : EV_ATTRIBUTE_INSERTED, attributeName, value, prevVal);
+            }
+            return instance;
+        },
+
+       /**
+        * Redefines the attributes of both the vnode as well as its related dom-node. The new
+        * definition replaces any previous attributes (without touching unmodified attributes).
+        *
+        * Syncs the new vnode's attributes with the dom.
+        *
+        * @method _setAttrs
+        * @param newAttrs {Object|Array} the new attributes to be set
+        * @private
+        * @chainable
+        * @since 0.0.1
+        */
+        _setAttrs: function(newAttrs) {
+            // does sync the DOM
+            var instance = this,
+                attrsObj, attr, attrs, i, key, keys, len, value;
+            if (instance.nodeType!==1) {
+                return;
+            }
+            instance._noSync();
+            attrs = instance.attrs;
+            attrs.id && (delete nodeids[attrs.id]);
+
+            if (Object.isObject(newAttrs)) {
+                attrsObj = newAttrs;
+            }
+            else {
+                attrsObj = {};
+                len = newAttrs.length;
+                for (i=0; i<len; i++) {
+                    attr = newAttrs[i];
+                    attrsObj[attr.name] = attr.value;
+                }
+            }
+
+            // first _remove the attributes that are no longer needed.
+            // quickest way for object iteration: http://jsperf.com/object-keys-iteration/20
+            keys = Object.keys(attrs);
+            len = keys.length;
+            for (i = 0; i < len; i++) {
+                key = keys[i];
+                attrsObj[key] || instance._removeAttr(key);
+            }
+
+            // next: every attribute that differs: redefine
+            keys = Object.keys(attrsObj);
+            len = keys.length;
+            for (i = 0; i < len; i++) {
+                key = keys[i];
+                value = attrsObj[key];
+                (attrs[key]===value) || instance._setAttr(key, value);
+            }
+
+            return instance;
+        },
+
+       /**
+        * Redefines the childNodes of both the vnode as well as its related dom-node. The new
+        * definition replaces any previous nodes. (without touching unmodified nodes).
+        *
+        * Syncs the new vnode's childNodes with the dom.
+        *
+        * @method _setChildNodes
+        * @param newVChildNodes {Array} array with vnodes which represent the new childNodes
+        * @private
+        * @chainable
+        * @since 0.0.1
+        */
+        _setChildNodes: function(newVChildNodes) {
+            // does sync the DOM
+            var instance = this,
+                vChildNodes = instance.vChildNodes || [],
+                domNode = instance.domNode,
+                forRemoval = [],
+                i, oldChild, newChild, newLength, len, len2, childDomNode, nodeswitch, bkpAttrs, bkpChildNodes, needNormalize;
+
+            instance._noSync();
+            // first: reset ._vChildren --> by making it empty, its getter will refresh its list on a next call
+            instance._vChildren = null;
+            // if newVChildNodes is undefined, then we assume it to be empty --> an empty array
+            newVChildNodes || (newVChildNodes=[]);
+            // quickest way to loop through array is by using for loops: http://jsperf.com/array-foreach-vs-for-loop/5
+            len = vChildNodes.length;
+            newLength = newVChildNodes.length;
+            for (i=0; i<len; i++) {
+                oldChild = vChildNodes[i];
+                childDomNode = oldChild.domNode;
+                if (i < newLength) {
+                    newChild = newVChildNodes[i];
+/*jshint boss:true */
+                    switch (nodeswitch=NODESWITCH[oldChild.nodeType][newChild.nodeType]) {
+/*jshint boss:false */
+                        case 1: // oldNodeType==Element, newNodeType==Element
+                            if ((oldChild.tag!==newChild.tag) || ((oldChild.tag==='SCRIPT') && (oldChild.text!==newChild.text))) {
+                                // new tag --> completely replace
+                                bkpAttrs = newChild.attrs;
+                                bkpChildNodes = newChild.vChildNodes;
+                                oldChild.attrs.id && (delete nodeids[oldChild.attrs.id]);
+                                newChild.attrs = {}; // reset to force defined by `_setAttrs`
+                                newChild.vChildNodes = []; // reset , to force defined by `_setAttrs`
+                                domNode._replaceChild(newChild.domNode, childDomNode);
+                                newChild.vParent = instance;
+                                newChild._setAttrs(bkpAttrs);
+                                newChild._setChildNodes(bkpChildNodes);
+                                newChild.id && (nodeids[newChild.id]=newChild.domNode);
+                                oldChild._replaceAtParent(newChild);
+                                newChild._emit(EV_INSERTED);
+                            }
+                            else {
+                                // same tag --> only update what is needed
+                                oldChild.attrs = newChild.attrs;
+                                oldChild._setAttrs(newChild.attrs);
+                                // next: sync the vChildNodes:
+                                oldChild._setChildNodes(newChild.vChildNodes);
+                                // reset ref. to the domNode, for it might heva been changed by newChild:
+                                oldChild.id && (nodeids[oldChild.id]=childDomNode);
+                                newVChildNodes[i] = oldChild;
+                            }
+                            break;
+                        case 2: // oldNodeType==Element, newNodeType==TextNode
+                                // case2 and case3 should be treated the same
+                        case 3: // oldNodeType==Element, newNodeType==Comment
+                            oldChild.attrs.id && (delete nodeids[oldChild.attrs.id]);
+                            newChild.domNode.nodeValue = newChild.text;
+                            domNode._replaceChild(newChild.domNode, childDomNode);
+                            newChild.vParent = instance;
+                            oldChild._replaceAtParent(newChild);
+                            instance._emit(EV_CONTENT_CHANGE);
+                            break;
+                        case 4: // oldNodeType==TextNode, newNodeType==Element
+                                // case4 and case7 should be treated the same
+                        case 7: // oldNodeType==Comment, newNodeType==Element
+                            bkpAttrs = newChild.attrs;
+                            bkpChildNodes = newChild.vChildNodes;
+                            newChild.attrs = {}; // reset, to force defined by `_setAttrs`
+                            newChild.vChildNodes = []; // reset to current state, to force defined by `_setAttrs`
+console.warn('CHECK');
+console.warn(newChild.domNode.__proto__ == window.HTMLUnknownElement.prototype);
+console.warn(newChild.domNode.__proto__ == window.HTMLElement.prototype);
+console.warn(newChild.domNode.__proto__ == window.Element.prototype);
+console.warn(newChild.domNode.__proto__ == window.Node.prototype);
+console.warn(newChild.domNode.__proto__ == Object.prototype);
+console.warn(newChild.domNode.__proto__ == Function.prototype);
+console.warn(newChild.domNode.__proto__);
+                            domNode._replaceChild(newChild.domNode, childDomNode);
+                            newChild._setAttrs(bkpAttrs);
+                            newChild._setChildNodes(bkpChildNodes);
+                            newChild.id && (nodeids[newChild.id]=newChild.domNode);
+                            oldChild.isVoid = newChild.isVoid;
+                            delete oldChild.text;
+                            instance._emit(EV_CONTENT_CHANGE);
+                            newChild._emit(EV_INSERTED);
+                            break;
+                        case 5: // oldNodeType==TextNode, newNodeType==TextNode
+                                // case5 and case9 should be treated the same
+                        case 9: // oldNodeType==Comment, newNodeType==Comment
+                            if (oldChild.text!==newChild.text) {
+                                oldChild.domNode.nodeValue = oldChild.text = newChild.text;
+                                instance._emit(EV_CONTENT_CHANGE);
+                            }
+                            newVChildNodes[i] = oldChild;
+                            break;
+                        case 6: // oldNodeType==TextNode, newNodeType==Comment
+                                // case6 and case8 should be treated the same
+                        case 8: // oldNodeType==Comment, newNodeType==TextNode
+                            newChild.domNode.nodeValue = newChild.text;
+                            domNode._replaceChild(newChild.domNode, childDomNode);
+                            newChild.vParent = oldChild.vParent;
+                            instance._emit(EV_CONTENT_CHANGE);
+                    }
+                    if ((nodeswitch===2) || (nodeswitch===5) || (nodeswitch===8)) {
+                        needNormalize = true;
+                    }
+                }
+                else {
+                    // _remove previous definition
+                    domNode._removeChild(oldChild.domNode);
+                    // the oldChild needs to be removed, however, this cannot be done right now, for it would effect the loop
+                    // so we store it inside a hash to remove it later
+                    forRemoval[forRemoval.length] = oldChild;
+                }
+            }
+            // now definitely remove marked childNodes:
+            len2 = forRemoval.length;
+            for (i=0; i<len2; i++) {
+                forRemoval[i]._destroy();
+            }
+            // now we add all new vChildNodes that go beyond `len`:
+            for (i = len; i < newLength; i++) {
+                newChild = newVChildNodes[i];
+                newChild.vParent = instance;
+                switch (newChild.nodeType) {
+                    case 1: // Element
+                        bkpAttrs = newChild.attrs;
+                        bkpChildNodes = newChild.vChildNodes;
+                        newChild.attrs = {}; // reset, to force defined by `_setAttrs`
+                        newChild.vChildNodes = []; // reset to current state, to force defined by `_setAttrs`
+                        domNode._appendChild(newChild.domNode);
+                        newChild._setAttrs(bkpAttrs);
+                        newChild._setChildNodes(bkpChildNodes);
+                        newChild._emit(EV_INSERTED);
+                        break;
+                    case 3: // TextNode
+                        needNormalize = true;
+                        // we need to break through --> no `break`
+                        /* falls through */
+                    default: // TextNode or CommentNode
+                        newChild.domNode.nodeValue = newChild.text;
+                        domNode._appendChild(newChild.domNode);
+                        instance._emit(EV_CONTENT_CHANGE);
+                }
+                newChild.storeId();
+            }
+            instance.vChildNodes = newVChildNodes;
+            needNormalize && instance._normalize();
+            return instance;
+        }
+
+    };
+
+
+    //---- properties ------------------------------------------------------------------
+
+    /**
+     * A hash of all the `attributes` of the vnode's representing dom-node.
+     *
+     * @property attrs
+     * @type Object
+     * @since 0.0.1
+     */
+
+    /**
+     * Hash with all the classes of the vnode. Every class represents a key, all values are set `true`.
+     *
+     * @property classNames
+     * @type Object
+     * @since 0.0.1
+     */
+
+    /**
+     * The `id` of the vnode's representing dom-node (if any).
+     *
+     * @property id
+     * @type String
+     * @since 0.0.1
+     */
+
+    /**
+     * Tells whether tag is a void Element. Examples are: `br`, `img` and `input`. Non-void Elements are f.e. `div` and `table`.
+     * For TextNodes and CommentNodes, this property is `undefined`.
+     *
+     * @property isVoid
+     * @type Boolean
+     * @since 0.0.1
+     */
+
+    /**
+     * The `nodeType` of the vnode's representing dom-node (1===ElementNode, 3===TextNode, 8===CommentNode).
+     *
+     * @property nodeType
+     * @type Number
+     * @since 0.0.1
+     */
+
+    /**
+     * The `tag` of the vnode's representing dom-node (allways uppercase).
+     *
+     * @property tag
+     * @type String
+     * @since 0.0.1
+     */
+
+    /**
+     * The `content` of the vnode's representing dom-node, in case it is a TextNode or CommentNode.
+     * Equals dom-node.nodeValue.
+     *
+     * Is `undefined` for ElementNodes.
+     *
+     * @property text
+     * @type String
+     * @since 0.0.1
+     */
+
+    /**
+     * Hash with all the childNodes (vnodes). vChildNodes are any kind of vnodes (nodeType===1, 3 or 8)
+     *
+     * @property vChildNodes
+     * @type Array
+     * @since 0.0.1
+     */
+
+    /**
+     * The underlying `dom-node` that the vnode represents.
+     *
+     * @property domNode
+     * @type domNode
+     * @since 0.0.1
+     */
+
+    /**
+     * vnode's parentNode (defined as a vnode itself).
+     *
+     * @property vParent
+     * @type vnode
+     * @since 0.0.1
+     */
+
+    Object.defineProperties(vNodeProto, {
+        /**
+         * Gets or sets the innerHTML of both the vnode as well as the representing dom-node.
+         *
+         * The setter syncs with the DOM.
+         *
+         * @property innerHTML
+         * @type String
+         * @since 0.0.1
+         */
+        innerHTML: {
+            get: function() {
+                var instance = this,
+                    html, vChildNodes, len, i, vChildNode;
+                if (instance.nodeType===1) {
+                    html = '';
+                    vChildNodes = instance.vChildNodes;
+                    len = vChildNodes ? vChildNodes.length : 0;
+                    for (i=0; i<len; i++) {
+                        vChildNode = vChildNodes[i];
+                        switch (vChildNode.nodeType) {
+                            case 1:
+                                html += vChildNode.outerHTML;
+                                break;
+                            case 3:
+                                html += vChildNode.text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                                break;
+                            case 8:
+                                html += '<!--' + vChildNode.text.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '-->';
+                        }
+                    }
+                }
+                return html;
+            },
+            set: function(v) {
+                this._setChildNodes(htmlToVNodes(v, vNodeProto));
+            }
+        },
+
+        /**
+         * Gets or sets the innerHTML of both the vnode as well as the representing dom-node.
+         *
+         * The setter syncs with the DOM.
+         *
+         * @property nodeValue
+         * @type String
+         * @since 0.0.1
+         */
+        nodeValue: {
+            get: function() {
+                var instance = this;
+                return ((instance.nodeType===3) || (instance.nodeType===8)) ? instance.text : null;
+            },
+            set: function(v) {
+                var instance = this,
+                    newTextContent, prevTextContent;
+                if ((instance.nodeType===3) || (instance.nodeType===8)) {
+                    prevTextContent = instance.domNode.textContent;
+                    instance.domNode.textContent = v;
+                    // set .text AFTER the dom-node is updated --> the content might be escaped!
+                    newTextContent = instance.text = instance.domNode.textContent;
+                    (newTextContent!==prevTextContent) && instance._emit(EV_CONTENT_CHANGE);
+                }
+            }
+        },
+
+        /**
+         * Gets or sets the outerHTML of both the vnode as well as the representing dom-node.
+         *
+         * The setter syncs with the DOM.
+         *
+         * @property outerHTML
+         * @type String
+         * @since 0.0.1
+         */
+        outerHTML: {
+            get: function() {
+                var instance = this,
+                    html,
+                    attrs = instance.attrs;
+                if (instance.nodeType===1) {
+                    if (instance.nodeType!==1) {
+                        return instance.textContent;
+                    }
+                    html = '<' + instance.tag.toLowerCase();
+                    attrs.each(function(value, key) {
+                        html += ' '+key+'="'+value+'"';
+                    });
+                    html += '>';
+                    if (!instance.isVoid) {
+                        html += instance.innerHTML + '</' + instance.tag.toLowerCase() + '>';
+                    }
+                }
+                return html;
+            },
+            set: function(v) {
+                var instance = this,
+                    vParent = instance.vParent,
+                    id = instance.attrs.id,
+                    vnode, vnodes, bkpAttrs, bkpChildNodes, i, len, vChildNodes, isLastChildNode, index, refDomNode;
+                if ((instance.nodeType!==1) || !vParent) {
+                    return;
+                }
+                instance._noSync();
+                vChildNodes = vParent.vChildNodes;
+                index = vChildNodes.indexOf(instance);
+                isLastChildNode = (index===(vChildNodes.length-1));
+                isLastChildNode || (refDomNode=vChildNodes[index+1].domNode);
+                vnodes = htmlToVNodes(v, vNodeProto, vParent);
+                len = vnodes.length;
+                if (len>0) {
+                    // the first vnode will replace the current instance:
+                    vnode = vnodes[0];
+                    if (vnode.nodeType===1) {
+                        if (vnode.tag!==instance.tag) {
+                            // new tag --> completely replace
+                            bkpAttrs = vnode.attrs;
+                            bkpChildNodes = vnode.vChildNodes;
+                            id && (delete nodeids[id]);
+                            vnode.attrs = {}; // reset to force defined by `_setAttrs`
+                            vnode.vChildNodes = []; // reset , to force defined by `_setAttrs`
+                            vParent.domNode._replaceChild(vnode.domNode, instance.domNode);
+                            vnode._setAttrs(bkpAttrs);
+                            vnode._setChildNodes(bkpChildNodes);
+                            // vnode.attrs = bkpAttrs;
+                            // vnode.vChildNodes = bkpChildNodes;
+                            vnode.id && (nodeids[vnode.id]=vnode.domNode);
+                            instance._replaceAtParent(vnode);
+                            vnode._emit(EV_INSERTED);
+                        }
+                        else {
+                            instance._setAttrs(vnode.attrs);
+                            instance._setChildNodes(vnode.vChildNodes);
+                        }
+                    }
+                    else {
+                        id && (delete nodeids[id]);
+                        vnode.domNode.nodeValue = vnode.text;
+                        vParent.domNode._replaceChild(vnode.domNode, instance.domNode);
+                        instance._replaceAtParent(vnode);
+                        vnode._emit(EV_INSERTED);
+                    }
+                }
+                for (i=1; i<len; i++) {
+                    vnode = vnodes[i];
+                    switch (vnode.nodeType) {
+                        case 1: // Element
+                            bkpAttrs = vnode.attrs;
+                            bkpChildNodes = vnode.vChildNodes;
+                            vnode.attrs = {}; // reset, to force defined by `_setAttrs`
+                            vnode.vChildNodes = []; // reset to current state, to force defined by `_setAttrs`
+                            isLastChildNode ? vParent.domNode._appendChild(vnode.domNode) : vParent.domNode._insertBefore(vnode.domNode, refDomNode);
+                            vnode._emit(EV_INSERTED);
+                            vnode._setAttrs(bkpAttrs);
+                            vnode._setChildNodes(bkpChildNodes);
+                            break;
+                        default: // TextNode or CommentNode
+                            vnode.domNode.nodeValue = vnode.text;
+                            isLastChildNode ? vParent.domNode._appendChild(vnode.domNode) : vParent.domNode._appendChild(vnode.domNode, refDomNode);
+                    }
+                    vnode.storeId();
+                    vnode._moveToParent(vParent, index+i);
+                }
+            }
+        },
+
+        /**
+         * Gets or sets the innerContent of the Node as plain text.
+         *
+         * The setter syncs with the DOM.
+         *
+         * @property textContent
+         * @type String
+         * @since 0.0.1
+         */
+        textContent: {
+            get: function() {
+                var instance = this,
+                    text = '',
+                    vChildNodes = instance.vChildNodes,
+                    len, i, vChildNode;
+                if (instance.nodeType===1) {
+                    vChildNodes = instance.vChildNodes;
+                    len = vChildNodes ? vChildNodes.length : 0;
+                    for (i=0; i<len; i++) {
+                        vChildNode = vChildNodes[i];
+                        text += (vChildNode.nodeType===3) ? vChildNode.text : ((vChildNode.nodeType===1) ? vChildNode.textContent : '');
+                    }
+                }
+                else {
+                    text = instance.text;
+                }
+                return text;
+            },
+            set: function(v) {
+                var vnode = Object.create(vNodeProto);
+                vnode.domNode = DOCUMENT.createTextNode(v);
+                // create circular reference:
+                vnode.domNode._vnode = vnode;
+                vnode.nodeType = 3;
+                vnode.text = vnode.domNode.textContent;
+                this._setChildNodes([vnode]);
+            }
+        },
+
+        /**
+         * Hash with all the children (vnodes). vChildren are vnodes that have a representing dom-node that is an HtmlElement (nodeType===1)
+         *
+         * @property vChildren
+         * @type Array
+         * @since 0.0.1
+         */
+        vChildren: {
+            get: function() {
+                var instance = this,
+                    children = instance._vChildren,
+                    vChildNode, vChildNodes, i, len;
+                vChildNodes = instance.vChildNodes;
+                if (vChildNodes && !children) {
+                    children = instance._vChildren = [];
+                    len = vChildNodes.length;
+                    for (i=0; i<len; i++) {
+                        vChildNode = vChildNodes[i];
+                        (vChildNode.nodeType===1) && (children[children.length]=vChildNode);
+                    }
+                }
+                children || (children = instance._vChildren = []);
+                return children;
+            }
+        },
+
+        /**
+         * Reference to the first of sibbling vNode's, where the related dom-node is either an Element, TextNode or CommentNode (nodeType===1, 3 or 8).
+         *
+         * @property vFirst
+         * @type vnode
+         * @since 0.0.1
+         */
+        vFirst: {
+            get: function() {
+                var vParent = this.vParent;
+                if (!vParent) {
+                    return null;
+                }
+                return vParent.vFirstChild;
+            }
+        },
+
+        /**
+         * Reference to the first vChildNode, where the related dom-node is either an Element, TextNode or CommentNode (nodeType===1, 3 or 8).
+         *
+         * @property vFirstChild
+         * @type vnode
+         * @since 0.0.1
+         */
+        vFirstChild: {
+            get: function() {
+                return (this.vChildNodes && this.vChildNodes[0]) || null;
+            }
+        },
+
+        /**
+         * Reference to the first of sibbling vNode's, where the related dom-node is an Element(nodeType===1).
+         *
+         * @property vFirstElement
+         * @type vnode
+         * @since 0.0.1
+         */
+        vFirstElement: {
+            get: function() {
+                var vParent = this.vParent;
+                if (!vParent) {
+                    return null;
+                }
+                return vParent.vFirstElementChild;
+            }
+        },
+
+        /**
+         * Reference to the first vChild, where the related dom-node an Element (nodeType===1).
+         *
+         * @property vFirstElementChild
+         * @type vnode
+         * @since 0.0.1
+         */
+        vFirstElementChild: {
+            get: function() {
+                return this.vChildren[0] || null;
+            }
+        },
+
+        /**
+         * Reference to the last of sibbling vNode's, where the related dom-node is either an Element, TextNode or CommentNode (nodeType===1, 3 or 8).
+         *
+         * @property vLast
+         * @type vnode
+         * @since 0.0.1
+         */
+        vLast: {
+            get: function() {
+                var vParent = this.vParent;
+                if (!vParent) {
+                    return null;
+                }
+                return vParent.vLastChild;
+            }
+        },
+
+        /**
+         * Reference to the last vChildNode, where the related dom-node is either an Element, TextNode or CommentNode (nodeType===1, 3 or 8).
+         *
+         * @property vLastChild
+         * @type vnode
+         * @since 0.0.1
+         */
+        vLastChild: {
+            get: function() {
+                var vChildNodes = this.vChildNodes;
+                return (vChildNodes && vChildNodes[vChildNodes.length-1]) || null;
+            }
+        },
+
+        /**
+         * Reference to the last of sibbling vNode's, where the related dom-node is an Element(nodeType===1).
+         *
+         * @property vLastElement
+         * @type vnode
+         * @since 0.0.1
+         */
+        vLastElement: {
+            get: function() {
+                var vParent = this.vParent;
+                if (!vParent) {
+                    return null;
+                }
+                return vParent.vLastElementChild;
+            }
+        },
+
+        /**
+         * Reference to the last vChild, where the related dom-node an Element (nodeType===1).
+         *
+         * @property vLastElementChild
+         * @type vnode
+         * @since 0.0.1
+         */
+        vLastElementChild: {
+            get: function() {
+                var vChildren = this.vChildren;
+                return vChildren[vChildren.length-1] || null;
+            }
+        },
+
+        /**
+         * the Parent vnode
+         *
+         * @property vParent
+         * @type vnode
+         * @since 0.0.1
+         */
+
+        /**
+         * Reference to the next of sibbling vNode's, where the related dom-node is either an Element, TextNode or CommentNode (nodeType===1, 3 or 8).
+         *
+         * @property vNext
+         * @type vnode
+         * @since 0.0.1
+         */
+        vNext: {
+            get: function() {
+                return _findNodeSibling(this, true);
+            }
+        },
+
+        /**
+         * Reference to the next of sibbling vNode's, where the related dom-node is an Element(nodeType===1).
+         *
+         * @property vNextElement
+         * @type vnode
+         * @since 0.0.1
+         */
+        vNextElement: {
+            get: function() {
+                return _findElementSibling(this, true);
+            }
+        },
+
+        /**
+         * Reference to the previous of sibbling vNode's, where the related dom-node is either an Element, TextNode or CommentNode (nodeType===1, 3 or 8).
+         *
+         * @property vPrevious
+         * @type vnode
+         * @since 0.0.1
+         */
+        vPrevious: {
+            get: function() {
+                return _findNodeSibling(this);
+            }
+        },
+
+        /**
+         * Reference to the previous of sibbling vNode's, where the related dom-node is an Element(nodeType===1).
+         *
+         * @property vPreviousElement
+         * @type vnode
+         * @since 0.0.1
+         */
+        vPreviousElement: {
+            get: function() {
+                return _findElementSibling(this);
+            }
+        }
+    });
+
+    return vNodeProto;
+
+};
+},{"./attribute-extractor.js":118,"./html-parser.js":123,"./vdom-ns.js":125,"js-ext/extra/lightmap.js":90,"js-ext/lib/array.js":91,"js-ext/lib/object.js":93,"js-ext/lib/string.js":95,"polyfill":105,"utils/lib/timers.js":108}],127:[function(require,module,exports){
+arguments[4][68][0].apply(exports,arguments)
+},{"./partials/element-plugin.js":120,"./partials/extend-document.js":121,"./partials/extend-element.js":122,"./partials/node-parser.js":124,"js-ext/lib/object.js":93}],128:[function(require,module,exports){
 function DOMParser(options){
 	this.options = options ||{locator:{}};
 	
@@ -11273,7 +16838,7 @@ if(typeof require == 'function'){
 	exports.DOMParser = DOMParser;
 }
 
-},{"./dom":42,"./sax":43}],42:[function(require,module,exports){
+},{"./dom":129,"./sax":130}],129:[function(require,module,exports){
 /*
  * DOM Level 2
  * Object DOMException
@@ -12413,7 +17978,7 @@ if(typeof require == 'function'){
 	exports.XMLSerializer = XMLSerializer;
 }
 
-},{}],43:[function(require,module,exports){
+},{}],130:[function(require,module,exports){
 //[4]   	NameStartChar	   ::=   	":" | [A-Z] | "_" | [a-z] | [#xC0-#xD6] | [#xD8-#xF6] | [#xF8-#x2FF] | [#x370-#x37D] | [#x37F-#x1FFF] | [#x200C-#x200D] | [#x2070-#x218F] | [#x2C00-#x2FEF] | [#x3001-#xD7FF] | [#xF900-#xFDCF] | [#xFDF0-#xFFFD] | [#x10000-#xEFFFF]
 //[4a]   	NameChar	   ::=   	NameStartChar | "-" | "." | [0-9] | #xB7 | [#x0300-#x036F] | [#x203F-#x2040]
 //[5]   	Name	   ::=   	NameStartChar (NameChar)*
@@ -12999,1002 +18564,294 @@ if(typeof require == 'function'){
 }
 
 
-},{}],44:[function(require,module,exports){
+},{}],131:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 };
-},{}],45:[function(require,module,exports){
+},{}],132:[function(require,module,exports){
 // See for all prototypes: https://developer.mozilla.org/en-US/docs/Web/API
 module.exports = function (window) {
+
     "use strict";
-    var itagsCore = require('itags.core')(window),
-        iSelectProto = itagsCore.defineCE('i-select', function () {
-            this.setHTML('<div>I am inner</div>');
-        }, window.HTMLButtonElement.prototype);
+    var ItagBase = require('itags.core')(window),
+        ISelectClass;
+
+    ISelectClass = ItagBase.subClass('i-select', function() {
+        // ISelectClass.$super.constructor.call(this);
+        this.setHTML('I am rendered '+this.dummy);
+    }, {
+        dummy: 10
+    });
+
+    return ISelectClass;
 
 };
-},{"itags.core":46}],46:[function(require,module,exports){
-/**
- * @license
- * Copyright (c) 2014 The Polymer Project Authors. All rights reserved.
- * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
- * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
- * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
- * Code distributed by Google as part of the polymer project is also
- * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
- */
-// @version 0.5.1
+},{"itags.core":133}],133:[function(require,module,exports){
+
+"use strict";
+
+require('js-ext/lib/object.js');
+require('js-ext/lib/function.js');
+require('polyfill/polyfill-base.js');
+
+var async = require('utils').async,
+    NODE = 'node',
+    REMOVE = 'remove',
+    INSERT = 'insert',
+    CHANGE = 'change',
+    ATTRIBUTE = 'attribute',
+    NODE_REMOVED = NODE+REMOVE,
+    NODE_INSERTED = NODE+INSERT,
+    NODE_CONTENT_CHANGE = NODE+'content'+CHANGE,
+    ATTRIBUTE_REMOVED = ATTRIBUTE+REMOVE,
+    ATTRIBUTE_CHANGED = ATTRIBUTE+CHANGE,
+    ATTRIBUTE_INSERTED = ATTRIBUTE+INSERT,
+    NOOP = function() {};
+
 module.exports = function (window) {
 
-    "use strict";
+    var DOCUMENT = window.document,
+        ItagBase, MUTATION_EVENTS, itagFilter, Event, renderDomElements,
+        defineProperty, defineProperties, fullMerge;
 
     require('vdom')(window);
+    Event = require('event-dom')(window);
 
-    if (typeof window.WeakMap === "undefined") {
-      (function() {
-        var defineProperty = Object.defineProperty;
-        var counter = Date.now() % 1e9;
-        var WeakMap = function() {
-          this.name = "__st" + (Math.random() * 1e9 >>> 0) + (counter++ + "__");
-        };
-        WeakMap.prototype = {
-          set: function(key, value) {
-            var entry = key[this.name];
-            if (entry && entry[0] === key) entry[1] = value; else defineProperty(key, this.name, {
-              value: [ key, value ],
-              writable: true
-            });
-            return this;
-          },
-          get: function(key) {
-            var entry;
-            return (entry = key[this.name]) && entry[0] === key ? entry[1] : undefined;
-          },
-          "delete": function(key) {
-            var entry = key[this.name];
-            if (!entry || entry[0] !== key) return false;
-            entry[0] = entry[1] = undefined;
-            return true;
-          },
-          has: function(key) {
-            var entry = key[this.name];
-            if (!entry) return false;
-            return entry[0] === key;
-          }
-        };
-        window.WeakMap = WeakMap;
-      })();
+    window.ITAGS || Object.protectedProp(window, 'ITAGS', {});
+
+/*jshint boss:true */
+    if (ItagBase=window.ITAGS.ItagBase) {
+/*jshint boss:false */
+        return ItagBase; // ItagBase was already defined
     }
 
-    (function(global) {
-      var registrationsTable = new window.WeakMap();
-      var setImmediate;
-      if (/Trident/.test(window.navigator.userAgent)) {
-        setImmediate = setTimeout;
-      } else if (window.setImmediate) {
-        setImmediate = window.setImmediate;
-      } else {
-        var setImmediateQueue = [];
-        var sentinel = String(Math.random());
-        window.addEventListener("message", function(e) {
-          if (e.data === sentinel) {
-            var queue = setImmediateQueue;
-            setImmediateQueue = [];
-            queue.forEach(function(func) {
-              func();
-            });
-          }
-        });
-        setImmediate = function(func) {
-          setImmediateQueue.push(func);
-          window.postMessage(sentinel, "*");
-        };
-      }
-      var isScheduled = false;
-      var scheduledObservers = [];
-      function scheduleCallback(observer) {
-        scheduledObservers.push(observer);
-        if (!isScheduled) {
-          isScheduled = true;
-          setImmediate(dispatchCallbacks);
-        }
-      }
-      function wrapIfNeeded(node) {
-        return window.ShadowDOMPolyfill && window.ShadowDOMPolyfill.wrapIfNeeded(node) || node;
-      }
-      function dispatchCallbacks() {
-        isScheduled = false;
-        var observers = scheduledObservers;
-        scheduledObservers = [];
-        observers.sort(function(o1, o2) {
-          return o1.uid_ - o2.uid_;
-        });
-        var anyNonEmpty = false;
-        observers.forEach(function(observer) {
-          var queue = observer.takeRecords();
-          removeTransientObserversFor(observer);
-          if (queue.length) {
-            observer.callback_(queue, observer);
-            anyNonEmpty = true;
-          }
-        });
-        if (anyNonEmpty) dispatchCallbacks();
-      }
-      function removeTransientObserversFor(observer) {
-        observer.nodes_.forEach(function(node) {
-          var registrations = registrationsTable.get(node);
-          if (!registrations) return;
-          registrations.forEach(function(registration) {
-            if (registration.observer === observer) registration.removeTransientObservers();
-          });
-        });
-      }
-      function forEachAncestorAndObserverEnqueueRecord(target, callback) {
-        for (var node = target; node; node = node.parentNode) {
-          var registrations = registrationsTable.get(node);
-          if (registrations) {
-            for (var j = 0; j < registrations.length; j++) {
-              var registration = registrations[j];
-              var options = registration.options;
-              if (node !== target && !options.subtree) continue;
-              var record = callback(options);
-              if (record) registration.enqueue(record);
-            }
-          }
-        }
-      }
-      var uidCounter = 0;
-      function JsMutationObserver(callback) {
-        this.callback_ = callback;
-        this.nodes_ = [];
-        this.records_ = [];
-        this.uid_ = ++uidCounter;
-      }
-      JsMutationObserver.prototype = {
-        observe: function(target, options) {
-          target = wrapIfNeeded(target);
-          if (!options.childList && !options.attributes && !options.characterData || options.attributeOldValue && !options.attributes || options.attributeFilter && options.attributeFilter.length && !options.attributes || options.characterDataOldValue && !options.characterData) {
-            throw new SyntaxError();
-          }
-          var registrations = registrationsTable.get(target);
-          if (!registrations) registrationsTable.set(target, registrations = []);
-          var registration;
-          for (var i = 0; i < registrations.length; i++) {
-            if (registrations[i].observer === this) {
-              registration = registrations[i];
-              registration.removeListeners();
-              registration.options = options;
-              break;
-            }
-          }
-          if (!registration) {
-            registration = new Registration(this, target, options);
-            registrations.push(registration);
-            this.nodes_.push(target);
-          }
-          registration.addListeners();
-        },
-        disconnect: function() {
-          this.nodes_.forEach(function(node) {
-            var registrations = registrationsTable.get(node);
-            for (var i = 0; i < registrations.length; i++) {
-              var registration = registrations[i];
-              if (registration.observer === this) {
-                registration.removeListeners();
-                registrations.splice(i, 1);
-                break;
-              }
-            }
-          }, this);
-          this.records_ = [];
-        },
-        takeRecords: function() {
-          var copyOfRecords = this.records_;
-          this.records_ = [];
-          return copyOfRecords;
-        }
-      };
-      function MutationRecord(type, target) {
-        this.type = type;
-        this.target = target;
-        this.addedNodes = [];
-        this.removedNodes = [];
-        this.previousSibling = null;
-        this.nextSibling = null;
-        this.attributeName = null;
-        this.attributeNamespace = null;
-        this.oldValue = null;
-      }
-      function copyMutationRecord(original) {
-        var record = new MutationRecord(original.type, original.target);
-        record.addedNodes = original.addedNodes.slice();
-        record.removedNodes = original.removedNodes.slice();
-        record.previousSibling = original.previousSibling;
-        record.nextSibling = original.nextSibling;
-        record.attributeName = original.attributeName;
-        record.attributeNamespace = original.attributeNamespace;
-        record.oldValue = original.oldValue;
-        return record;
-      }
-      var currentRecord, recordWithOldValue;
-      function getRecord(type, target) {
-        currentRecord = new MutationRecord(type, target);
-        return currentRecord;
-      }
-      function getRecordWithOldValue(oldValue) {
-        if (recordWithOldValue) return recordWithOldValue;
-        recordWithOldValue = copyMutationRecord(currentRecord);
-        recordWithOldValue.oldValue = oldValue;
-        return recordWithOldValue;
-      }
-      function clearRecords() {
-        currentRecord = recordWithOldValue = undefined;
-      }
-      function recordRepresentsCurrentMutation(record) {
-        return record === recordWithOldValue || record === currentRecord;
-      }
-      function selectRecord(lastRecord, newRecord) {
-        if (lastRecord === newRecord) return lastRecord;
-        if (recordWithOldValue && recordRepresentsCurrentMutation(lastRecord)) return recordWithOldValue;
-        return null;
-      }
-      function Registration(observer, target, options) {
-        this.observer = observer;
-        this.target = target;
-        this.options = options;
-        this.transientObservedNodes = [];
-      }
-      Registration.prototype = {
-        enqueue: function(record) {
-          var records = this.observer.records_;
-          var length = records.length;
-          if (records.length > 0) {
-            var lastRecord = records[length - 1];
-            var recordToReplaceLast = selectRecord(lastRecord, record);
-            if (recordToReplaceLast) {
-              records[length - 1] = recordToReplaceLast;
-              return;
-            }
-          } else {
-            scheduleCallback(this.observer);
-          }
-          records[length] = record;
-        },
-        addListeners: function() {
-          this.addListeners_(this.target);
-        },
-        addListeners_: function(node) {
-          var options = this.options;
-          if (options.attributes) node.addEventListener("DOMAttrModified", this, true);
-          if (options.characterData) node.addEventListener("DOMCharacterDataModified", this, true);
-          if (options.childList) node.addEventListener("DOMNodeInserted", this, true);
-          if (options.childList || options.subtree) node.addEventListener("DOMNodeRemoved", this, true);
-        },
-        removeListeners: function() {
-          this.removeListeners_(this.target);
-        },
-        removeListeners_: function(node) {
-          var options = this.options;
-          if (options.attributes) node.removeEventListener("DOMAttrModified", this, true);
-          if (options.characterData) node.removeEventListener("DOMCharacterDataModified", this, true);
-          if (options.childList) node.removeEventListener("DOMNodeInserted", this, true);
-          if (options.childList || options.subtree) node.removeEventListener("DOMNodeRemoved", this, true);
-        },
-        addTransientObserver: function(node) {
-          if (node === this.target) return;
-          this.addListeners_(node);
-          this.transientObservedNodes.push(node);
-          var registrations = registrationsTable.get(node);
-          if (!registrations) registrationsTable.set(node, registrations = []);
-          registrations.push(this);
-        },
-        removeTransientObservers: function() {
-          var transientObservedNodes = this.transientObservedNodes;
-          this.transientObservedNodes = [];
-          transientObservedNodes.forEach(function(node) {
-            this.removeListeners_(node);
-            var registrations = registrationsTable.get(node);
-            for (var i = 0; i < registrations.length; i++) {
-              if (registrations[i] === this) {
-                registrations.splice(i, 1);
-                break;
-              }
-            }
-          }, this);
-        },
-        handleEvent: function(e) {
-          var record, target, oldValue;
-          e.stopImmediatePropagation();
-          switch (e.type) {
-           case "DOMAttrModified":
-            var name = e.attrName;
-            var namespace = e.relatedNode.namespaceURI;
-            target = e.target;
-            record = new getRecord("attributes", target);
-            record.attributeName = name;
-            record.attributeNamespace = namespace;
-            oldValue = e.attrChange === window.MutationEvent.ADDITION ? null : e.prevValue;
-            forEachAncestorAndObserverEnqueueRecord(target, function(options) {
-              if (!options.attributes) return;
-              if (options.attributeFilter && options.attributeFilter.length && options.attributeFilter.indexOf(name) === -1 && options.attributeFilter.indexOf(namespace) === -1) {
-                return;
-              }
-              if (options.attributeOldValue) return getRecordWithOldValue(oldValue);
-              return record;
-            });
-            break;
+    MUTATION_EVENTS = [NODE_REMOVED, NODE_INSERTED, NODE_CONTENT_CHANGE, ATTRIBUTE_REMOVED, ATTRIBUTE_CHANGED, ATTRIBUTE_INSERTED];
 
-           case "DOMCharacterDataModified":
-            target = e.target;
-            record = getRecord("characterData", target);
-            oldValue = e.prevValue;
-            forEachAncestorAndObserverEnqueueRecord(target, function(options) {
-              if (!options.characterData) return;
-              if (options.characterDataOldValue) return getRecordWithOldValue(oldValue);
-              return record;
-            });
-            break;
-
-           case "DOMNodeRemoved":
-            this.addTransientObserver(e.target);
-
-           case "DOMNodeInserted":
-            target = e.relatedNode;
-            var changedNode = e.target;
-            var addedNodes, removedNodes;
-            if (e.type === "DOMNodeInserted") {
-              addedNodes = [ changedNode ];
-              removedNodes = [];
-            } else {
-              addedNodes = [];
-              removedNodes = [ changedNode ];
-            }
-            var previousSibling = changedNode.previousSibling;
-            var nextSibling = changedNode.nextSibling;
-            record = getRecord("childList", target);
-            record.addedNodes = addedNodes;
-            record.removedNodes = removedNodes;
-            record.previousSibling = previousSibling;
-            record.nextSibling = nextSibling;
-            forEachAncestorAndObserverEnqueueRecord(target, function(options) {
-              if (!options.childList) return;
-              return record;
-            });
-          }
-          clearRecords();
-        }
-      };
-      global.JsMutationObserver = JsMutationObserver;
-      if (!global.MutationObserver) global.MutationObserver = JsMutationObserver;
-    })(window);
-
-    window.CustomElements = window.CustomElements || {
-      flags: {}
+    itagFilter = function(e) {
+        return !!e.target.renderCE;
     };
 
-    (function(scope) {
-      var flags = scope.flags;
-      var modules = [];
-      var addModule = function(module) {
-        modules.push(module);
-      };
-      var initializeModules = function() {
-        modules.forEach(function(module) {
-          module(scope);
-        });
-      };
-      scope.addModule = addModule;
-      scope.initializeModules = initializeModules;
-      scope.hasNative = Boolean(window.document.registerElement);
-      scope.useNative = !flags.register && scope.hasNative && !window.ShadowDOMPolyfill && (!window.HTMLImports || window.HTMLImports.useNative);
-    })(window.CustomElements);
+    Event.after(
+        [NODE_INSERTED, ATTRIBUTE_CHANGED, ATTRIBUTE_INSERTED, ATTRIBUTE_REMOVED],
+        function(e) {
+            e.target.renderCE();
+        },
+        itagFilter
+    );
 
-    window.CustomElements.addModule(function(scope) {
-      var IMPORT_LINK_TYPE = window.HTMLImports ? window.HTMLImports.IMPORT_LINK_TYPE : "none";
-      function forSubtree(node, cb) {
-        findAllElements(node, function(e) {
-          if (cb(e)) {
-            return true;
-          }
-          forRoots(e, cb);
-        });
-        forRoots(node, cb);
-      }
-      function findAllElements(node, find, data) {
-        var e = node.firstElementChild;
-        if (!e) {
-          e = node.firstChild;
-          while (e && e.nodeType !== window.Node.ELEMENT_NODE) {
-            e = e.nextSibling;
-          }
-        }
-        while (e) {
-          if (find(e, data) !== true) {
-            findAllElements(e, find, data);
-          }
-          e = e.nextElementSibling;
-        }
-        return null;
-      }
-      function forRoots(node, cb) {
-        var root = node.shadowRoot;
-        while (root) {
-          forSubtree(root, cb);
-          root = root.olderShadowRoot;
-        }
-      }
-      var processingDocuments;
-      function forDocumentTree(doc, cb) {
-        processingDocuments = [];
-        _forDocumentTree(doc, cb);
-        processingDocuments = null;
-      }
-      function _forDocumentTree(doc, cb) {
-        doc = window.wrap(doc);
-        if (processingDocuments.indexOf(doc) >= 0) {
-          return;
-        }
-        processingDocuments.push(doc);
-        var imports = doc.querySelectorAll("link[rel=" + IMPORT_LINK_TYPE + "]");
-        for (var i = 0, l = imports.length, n; i < l && (n = imports[i]); i++) {
-          if (n.import) {
-            _forDocumentTree(n.import, cb);
-          }
-        }
-        cb(doc);
-      }
-      scope.forDocumentTree = forDocumentTree;
-      scope.forSubtree = forSubtree;
-    });
-
-    window.CustomElements.addModule(function(scope) {
-      var flags = scope.flags;
-      var forSubtree = scope.forSubtree;
-      var forDocumentTree = scope.forDocumentTree;
-      function addedNode(node) {
-        return added(node) || addedSubtree(node);
-      }
-      function added(node) {
-        if (scope.upgrade(node)) {
-          return true;
-        }
-        attached(node);
-      }
-      function addedSubtree(node) {
-        forSubtree(node, function(e) {
-          if (added(e)) {
-            return true;
-          }
-        });
-      }
-      function attachedNode(node) {
-        attached(node);
-        if (inDocument(node)) {
-          forSubtree(node, function(e) {
-            attached(e);
-          });
-        }
-      }
-      var hasPolyfillMutations = !window.MutationObserver || window.MutationObserver === window.JsMutationObserver;
-      scope.hasPolyfillMutations = hasPolyfillMutations;
-      var isPendingMutations = false;
-      var pendingMutations = [];
-      function deferMutation(fn) {
-        pendingMutations.push(fn);
-        if (!isPendingMutations) {
-          isPendingMutations = true;
-          setTimeout(takeMutations);
-        }
-      }
-      function takeMutations() {
-        isPendingMutations = false;
-        var $p = pendingMutations;
-        for (var i = 0, l = $p.length, p; i < l && (p = $p[i]); i++) {
-          p();
-        }
-        pendingMutations = [];
-      }
-      function attached(element) {
-        if (hasPolyfillMutations) {
-          deferMutation(function() {
-            _attached(element);
-          });
-        } else {
-          _attached(element);
-        }
-      }
-      function _attached(element) {
-        if (element.__upgraded__ && (element.attachedCallback || element.detachedCallback)) {
-          if (!element.__attached && inDocument(element)) {
-            element.__attached = true;
-            if (element.attachedCallback) {
-              element.attachedCallback();
-            }
-          }
-        }
-      }
-      function detachedNode(node) {
-        detached(node);
-        forSubtree(node, function(e) {
-          detached(e);
-        });
-      }
-      function detached(element) {
-        if (hasPolyfillMutations) {
-          deferMutation(function() {
-            _detached(element);
-          });
-        } else {
-          _detached(element);
-        }
-      }
-      function _detached(element) {
-        if (element.__upgraded__ && (element.attachedCallback || element.detachedCallback)) {
-          if (element.__attached && !inDocument(element)) {
-            element.__attached = false;
-            if (element.detachedCallback) {
-              element.detachedCallback();
-            }
-          }
-        }
-      }
-      function inDocument(element) {
-        var p = element;
-        var doc = window.wrap(window.document);
-        while (p) {
-          if (p == doc) {
-            return true;
-          }
-          p = p.parentNode || p.host;
-        }
-      }
-      function watchShadow(node) {
-        if (node.shadowRoot && !node.shadowRoot.__watched) {
-          flags.dom && console.log("watching shadow-root for: ", node.localName);
-          var root = node.shadowRoot;
-          while (root) {
-            observe(root);
-            root = root.olderShadowRoot;
-          }
-        }
-      }
-      function handler(mutations) {
-        var u;
-        if (flags.dom) {
-          var mx = mutations[0];
-          if (mx && mx.type === "childList" && mx.addedNodes) {
-            if (mx.addedNodes) {
-              var d = mx.addedNodes[0];
-              while (d && d !== window.document && !d.host) {
-                d = d.parentNode;
-              }
-              u = d && (d.URL || d._URL || d.host && d.host.localName) || "";
-              u = u.split("/?").shift().split("/").pop();
-            }
-          }
-          console.group("mutations (%d) [%s]", mutations.length, u || "");
-        }
-        mutations.forEach(function(mx) {
-          if (mx.type === "childList") {
-            forEach(mx.addedNodes, function(n) {
-              if (!n.localName) {
-                return;
-              }
-              addedNode(n);
-            });
-            forEach(mx.removedNodes, function(n) {
-              if (!n.localName) {
-                return;
-              }
-              detachedNode(n);
-            });
-          }
-        });
-        flags.dom && console.groupEnd();
-      }
-      function takeRecords(node) {
-        node = window.wrap(node);
-        if (!node) {
-          node = window.wrap(window.document);
-        }
-        while (node.parentNode) {
-          node = node.parentNode;
-        }
-        var observer = node.__observer;
-        if (observer) {
-          handler(observer.takeRecords());
-          takeMutations();
-        }
-      }
-      var forEach = Array.prototype.forEach.call.bind(Array.prototype.forEach);
-      function observe(inRoot) {
-        if (inRoot.__observer) {
-          return;
-        }
-        var observer = new window.MutationObserver(handler);
-        observer.observe(inRoot, {
-          childList: true,
-          subtree: true
-        });
-        inRoot.__observer = observer;
-      }
-      function upgradeDocument(doc) {
-        doc = window.wrap(doc);
-        flags.dom && console.group("upgradeDocument: ", doc.baseURI.split("/").pop());
-        addedNode(doc);
-        observe(doc);
-        flags.dom && console.groupEnd();
-      }
-      function upgradeDocumentTree(doc) {
-        forDocumentTree(doc, upgradeDocument);
-      }
-      var originalCreateShadowRoot = window.Element.prototype.createShadowRoot;
-      window.Element.prototype.createShadowRoot = function() {
-        var root = originalCreateShadowRoot.call(this);
-        window.CustomElements.watchShadow(this);
-        return root;
-      };
-      scope.watchShadow = watchShadow;
-      scope.upgradeDocumentTree = upgradeDocumentTree;
-      scope.upgradeSubtree = addedSubtree;
-      scope.upgradeAll = addedNode;
-      scope.attachedNode = attachedNode;
-      scope.takeRecords = takeRecords;
-    });
-
-    window.CustomElements.addModule(function(scope) {
-      var flags = scope.flags;
-      function upgrade(node) {
-        if (!node.__upgraded__ && node.nodeType === window.Node.ELEMENT_NODE) {
-          var is = node.getAttribute("is");
-          var definition = scope.getRegisteredDefinition(is || node.localName);
-          if (definition) {
-            if (is && definition.tag == node.localName) {
-              return upgradeWithDefinition(node, definition);
-            } else if (!is && !definition.extends) {
-              return upgradeWithDefinition(node, definition);
-            }
-          }
-        }
-      }
-      function upgradeWithDefinition(element, definition) {
-        flags.upgrade && console.group("upgrade:", element.localName);
-        if (definition.is) {
-          element.setAttribute("is", definition.is);
-        }
-        implementPrototype(element, definition);
-        element.__upgraded__ = true;
-        created(element);
-        scope.attachedNode(element);
-        scope.upgradeSubtree(element);
-        flags.upgrade && console.groupEnd();
-        return element;
-      }
-      function implementPrototype(element, definition) {
-        if (Object.__proto__) {
-          element.__proto__ = definition.prototype;
-        } else {
-          customMixin(element, definition.prototype, definition.native);
-          element.__proto__ = definition.prototype;
-        }
-      }
-      function customMixin(inTarget, inSrc, inNative) {
-        var used = {};
-        var p = inSrc;
-        while (p !== inNative && p !== window.HTMLElement.prototype) {
-          var keys = Object.getOwnPropertyNames(p);
-          for (var i = 0, k; k = keys[i]; i++) {
-            if (!used[k]) {
-              Object.defineProperty(inTarget, k, Object.getOwnPropertyDescriptor(p, k));
-              used[k] = 1;
-            }
-          }
-          p = Object.getPrototypeOf(p);
-        }
-      }
-      function created(element) {
-        if (element.createdCallback) {
-          element.createdCallback();
-        }
-      }
-      scope.upgrade = upgrade;
-      scope.upgradeWithDefinition = upgradeWithDefinition;
-      scope.implementPrototype = implementPrototype;
-    });
-
-    window.CustomElements.addModule(function(scope) {
-      var upgradeDocumentTree = scope.upgradeDocumentTree;
-      var upgrade = scope.upgrade;
-      var upgradeWithDefinition = scope.upgradeWithDefinition;
-      var implementPrototype = scope.implementPrototype;
-      var useNative = scope.useNative;
-      function register(name, options) {
-        var definition = options || {};
-        if (!name) {
-          throw new Error("window.document.registerElement: first argument `name` must not be empty");
-        }
-        if (name.indexOf("-") < 0) {
-          throw new Error("window.document.registerElement: first argument ('name') must contain a dash ('-'). Argument provided was '" + String(name) + "'.");
-        }
-        if (isReservedTag(name)) {
-          throw new Error("Failed to execute 'registerElement' on 'Document': Registration failed for type '" + String(name) + "'. The type name is invalid.");
-        }
-        if (getRegisteredDefinition(name)) {
-          throw new Error("DuplicateDefinitionError: a type with name '" + String(name) + "' is already registered");
-        }
-        if (!definition.prototype) {
-          definition.prototype = Object.create(window.HTMLElement.prototype);
-        }
-        definition.__name = name.toLowerCase();
-        definition.lifecycle = definition.lifecycle || {};
-        definition.ancestry = ancestry(definition.extends);
-        resolveTagName(definition);
-        resolvePrototypeChain(definition);
-        overrideAttributeApi(definition.prototype);
-        registerDefinition(definition.__name, definition);
-        definition.ctor = generateConstructor(definition);
-        definition.ctor.prototype = definition.prototype;
-        definition.prototype.constructor = definition.ctor;
-        if (scope.ready) {
-          upgradeDocumentTree(window.document);
-        }
-        return definition.ctor;
-      }
-      function overrideAttributeApi(prototype) {
-        if (prototype.setAttribute._polyfilled) {
-          return;
-        }
-        var setAttribute = prototype.setAttribute;
-        prototype.setAttribute = function(name, value) {
-          changeAttribute.call(this, name, value, setAttribute);
-        };
-        var removeAttribute = prototype.removeAttribute;
-        prototype.removeAttribute = function(name) {
-          changeAttribute.call(this, name, null, removeAttribute);
-        };
-        prototype.setAttribute._polyfilled = true;
-      }
-      function changeAttribute(name, value, operation) {
-        name = name.toLowerCase();
-        var oldValue = this.getAttribute(name);
-        operation.apply(this, arguments);
-        var newValue = this.getAttribute(name);
-        if (this.attributeChangedCallback && newValue !== oldValue) {
-          this.attributeChangedCallback(name, oldValue, newValue);
-        }
-      }
-      function isReservedTag(name) {
-        for (var i = 0; i < reservedTagList.length; i++) {
-          if (name === reservedTagList[i]) {
-            return true;
-          }
-        }
-      }
-      var reservedTagList = [ "annotation-xml", "color-profile", "font-face", "font-face-src", "font-face-uri", "font-face-format", "font-face-name", "missing-glyph" ];
-      function ancestry(extnds) {
-        var extendee = getRegisteredDefinition(extnds);
-        if (extendee) {
-          return ancestry(extendee.extends).concat([ extendee ]);
-        }
-        return [];
-      }
-      function resolveTagName(definition) {
-        var baseTag = definition.extends;
-        for (var i = 0, a; a = definition.ancestry[i]; i++) {
-          baseTag = a.is && a.tag;
-        }
-        definition.tag = baseTag || definition.__name;
-        if (baseTag) {
-          definition.is = definition.__name;
-        }
-      }
-      function resolvePrototypeChain(definition) {
-        if (!Object.__proto__) {
-          var nativePrototype = window.HTMLElement.prototype;
-          if (definition.is) {
-            var inst = window.document.createElement(definition.tag);
-            var expectedPrototype = Object.getPrototypeOf(inst);
-            if (expectedPrototype === definition.prototype) {
-              nativePrototype = expectedPrototype;
-            }
-          }
-          var proto = definition.prototype, ancestor;
-          while (proto && proto !== nativePrototype) {
-            ancestor = Object.getPrototypeOf(proto);
-            proto.__proto__ = ancestor;
-            proto = ancestor;
-          }
-          definition.native = nativePrototype;
-        }
-      }
-      function instantiate(definition) {
-        return upgradeWithDefinition(domCreateElement(definition.tag), definition);
-      }
-      var registry = {};
-      function getRegisteredDefinition(name) {
-        if (name) {
-          return registry[name.toLowerCase()];
-        }
-      }
-      function registerDefinition(name, definition) {
-        registry[name] = definition;
-      }
-      function generateConstructor(definition) {
-        return function() {
-          return instantiate(definition);
-        };
-      }
-      var HTML_NAMESPACE = "http://www.w3.org/1999/xhtml";
-      function createElementNS(namespace, tag, typeExtension) {
-        if (namespace === HTML_NAMESPACE) {
-          return createElement(tag, typeExtension);
-        } else {
-          return domCreateElementNS(namespace, tag);
-        }
-      }
-      function createElement(tag, typeExtension) {
-        var definition = getRegisteredDefinition(typeExtension || tag);
-        if (definition) {
-          if (tag == definition.tag && typeExtension == definition.is) {
-            return new definition.ctor();
-          }
-          if (!typeExtension && !definition.is) {
-            return new definition.ctor();
-          }
-        }
-        var element;
-        if (typeExtension) {
-          element = createElement(tag);
-          element.setAttribute("is", typeExtension);
-          return element;
-        }
-        element = domCreateElement(tag);
-        if (tag.indexOf("-") >= 0) {
-          implementPrototype(element, window.HTMLElement);
-        }
-        return element;
-      }
-      function cloneNode(deep) {
-        var n = domCloneNode.call(this, deep);
-        upgrade(n);
-        return n;
-      }
-      var domCreateElement = window.document.createElement.bind(window.document);
-      var domCreateElementNS = window.document.createElementNS.bind(window.document);
-      var domCloneNode = window.Node.prototype.cloneNode;
-      var isInstance;
-      if (!Object.__proto__ && !useNative) {
-        isInstance = function(obj, ctor) {
-          var p = obj;
-          while (p) {
-            if (p === ctor.prototype) {
-              return true;
-            }
-            p = p.__proto__;
-          }
-          return false;
-        };
-      } else {
-        isInstance = function(obj, base) {
-          return obj instanceof base;
-        };
-      }
-      window.document.registerElement = register;
-      window.document.createElement = createElement;
-      window.document.createElementNS = createElementNS;
-      window.Node.prototype.cloneNode = cloneNode;
-      scope.registry = registry;
-      scope.instanceof = isInstance;
-      scope.reservedTagList = reservedTagList;
-      scope.getRegisteredDefinition = getRegisteredDefinition;
-      window.document.register = window.document.registerElement;
-    });
-
-    (function(scope) {
-      var useNative = scope.useNative;
-      var initializeModules = scope.initializeModules;
-      if (useNative) {
-        var nop = function() {};
-        scope.watchShadow = nop;
-        scope.upgrade = nop;
-        scope.upgradeAll = nop;
-        scope.upgradeDocumentTree = nop;
-        scope.upgradeSubtree = nop;
-        scope.takeRecords = nop;
-        scope.instanceof = function(obj, base) {
-          return obj instanceof base;
-        };
-      } else {
-        initializeModules();
-      }
-      var upgradeDocumentTree = scope.upgradeDocumentTree;
-      if (!window.wrap) {
-        if (window.ShadowDOMPolyfill) {
-          window.wrap = window.ShadowDOMPolyfill.wrapIfNeeded;
-          window.unwrap = window.ShadowDOMPolyfill.unwrapIfNeeded;
-        } else {
-          window.wrap = window.unwrap = function(node) {
-            return node;
-          };
-        }
-      }
-      function bootstrap() {
-        upgradeDocumentTree(window.wrap(window.document));
-        if (window.HTMLImports) {
-          window.HTMLImports.__importsParsingHook = function(elt) {
-            upgradeDocumentTree(window.wrap(elt.import));
-          };
-        }
-        window.CustomElements.ready = true;
-        setTimeout(function() {
-          window.CustomElements.readyTime = Date.now();
-          if (window.HTMLImports) {
-            window.CustomElements.elapsed = window.CustomElements.readyTime - window.HTMLImports.readyTime;
-          }
-          window.document.dispatchEvent(new window.CustomEvent("WebComponentsReady", {
-            bubbles: true
-          }));
-        });
-      }
-      if (typeof window.CustomEvent !== "function") {
-        window.CustomEvent = function(inType, params) {
-          params = params || {};
-          var e = window.document.createEvent("CustomEvent");
-          e.initCustomEvent(inType, Boolean(params.bubbles), Boolean(params.cancelable), params.detail);
-          return e;
-        };
-        window.CustomEvent.prototype = window.Event.prototype;
-      }
-      if (window.document.readyState === "complete" || scope.flags.eager) {
-        bootstrap();
-      } else if (window.document.readyState === "interactive" && !window.attachEvent && (!window.HTMLImports || window.HTMLImports.ready)) {
-        bootstrap();
-      } else {
-        var loadEvent = window.HTMLImports && !window.HTMLImports.ready ? "HTMLImportsLoaded" : "DOMContentLoaded";
-        window.addEventListener(loadEvent, bootstrap);
-      }
-    })(window.CustomElements);
-
-    var createdCallback = function() {
-console.warn('fase A1');
-        var instance = this;
-        if (instance._renderCE && !instance.getAttr('itag-rendered')) {
-console.warn('fase A2');
-setTimeout(function() {
-              instance._renderCE();
-              instance.setAttr('itag-rendered', 'true');
-
-}, 1000);
+    renderDomElements = function(tagName) {
+console.warn('renderDomElements '+tagName);
+        var itagElements = DOCUMENT.getAll(tagName),
+            len = itagElements.length,
+            i, itagElement;
+console.warn('found: '+len);
+        for (i=0; i<len; i++) {
+            itagElement = itagElements[i];
+console.warn(itagElement.getOuterHTML());
+console.warn(itagElement.renderCE);
+            itagElement.renderCE && itagElement.renderCE();
         }
     };
 
-    (function(HTMLElementPrototype) {
 
-        HTMLElementPrototype.createdCallback = createdCallback;
+// Define configurable, writable and non-enumerable props
+// if they don't exist.
+defineProperty = function (object, name, method, force) {
+  if (!force && (name in object)) {
+    return;
+  }
+  Object.defineProperty(object, name, {
+    configurable: true,
+    enumerable: false,
+    writable: true,
+    value: method
+  });
+};
 
-    }(window.HTMLElement.prototype));
+defineProperties = function (object, map, force) {
+  var names = Object.keys(map),
+    l = names.length,
+    i = -1,
+    name;
+  while (++i < l) {
+    name = names[i];
+    defineProperty(object, name, map[name], force);
+  }
+};
 
-    return {
-        defineCE: function(customElement, renderFn, prototype) {
-            var newProto = Object.create(prototype || window.HTMLElement.prototype);
-
-            (customElement.indexOf('-')!==-1) || (customElement='i-'+customElement);
-            if (!newProto.createdCallback) {
-                newProto.createdCallback = createdCallback;
-            }
-            newProto._renderCE = renderFn;
-
-  console.warn('registering '+customElement);
-            // Register CE-definition:
-            window.document.registerElement(customElement, {prototype: newProto});
-            return newProto;
+fullMerge = function (sourceObj, targetObj) {
+console.info('merging...');
+    var name;
+    for (name in sourceObj) {
+console.info(name);
+        if (!(name in targetObj)) {
+console.info(name+' will be set');
+            targetObj[name] = sourceObj[name];
         }
+    }
+};
+
+/**
+ * Pollyfils for often used functionality for Function
+ * @class Function
+*/
+ItagBase = {};
+
+defineProperties(ItagBase, {
+
+  /**
+   * Merges the given map of properties into the `prototype` of the Class.
+   * **Not** to be used on instances.
+   *
+   * The members in the hash map will become members with
+   * instances of the merged class.
+   *
+   * By default, this method will not override existing prototype members,
+   * unless the second argument `force` is true.
+   *
+   * @method mergePrototypes
+   * @param map {Object} Hash map of properties to add to the prototype of this object
+   * @param force {Boolean}  If true, existing members will be overwritten
+   * @chainable
+   */
+  mergePrototypes: function (map, force) {
+console.warn('START');
+    var instance = this,
+        proto = instance.prototype,
+        names = Object.keys(map || {}),
+      l = names.length,
+      i = -1,
+      name, nameInProto;
+    while (++i < l) {
+      name = names[i];
+console.warn('TRY '+name);
+      nameInProto = (name in proto);
+      if (!nameInProto || force) {
+console.warn('HANDLING '+name);
+        // if nameInProto: set the property, but also backup for chaining using $orig
+        if (typeof map[name] === 'function') {
+          proto[name] = (function (original, methodName) {
+            return function () {
+              instance.$orig[methodName] = original;
+              return map[methodName].apply(this, arguments);
+            };
+          })(proto[name] || NOOP, name);
+        }
+        else {
+console.warn('setting '+name+' --> '+map[name]);
+            proto[name] = map[name];
+        }
+      }
+    }
+    return instance;
+  },
+
+  /**
+   * Returns a newly created class inheriting from this class
+   * using the given `constructor` with the
+   * prototypes listed in `prototypes` merged in.
+   *
+   *
+   * The newly created class has the `$super` static property
+   * available to access all of is ancestor's instance methods.
+   *
+   * Further methods can be added via the [mergePrototypes](#method_mergePrototypes).
+   *
+   * @example
+   *
+   *  var Circle = Shape.subClass(
+   *    function (x, y, r) {
+   *      this.r = r;
+   *      Circle.$super.constructor.call(this, x, y);
+   *    },
+   *    {
+   *      area: function () {
+   *        return this.r * this.r * Math.PI;
+   *      }
+   *    }
+   *  );
+   *
+   * @method subClass
+   * @param [constructor] {Function} The function that will serve as constructor for the new class.
+   *        If `undefined` defaults to `Object.constructor`
+   * @param [prototypes] {Object} Hash map of properties to be added to the prototype of the new class.
+   * @return the new class.
+   */
+    subClass: function (itagName, constructor, prototypes) {
+  console.warn('subclassing htmlelement');
+        var instance = this,
+            baseProt = instance.prototype || {},
+            previousDefinition = window.ITAGS[itagName],
+            rp, customElement;
+
+        if (previousDefinition) {
+            console.warn(itagName+' already exists and cannot be redefined');
+            return previousDefinition;
+        }
+
+        if ((arguments.length === 2) && (typeof constructor !== 'function')) {
+            prototypes = constructor;
+            constructor = null;
+        }
+
+        constructor = constructor || function (ancestor) {
+            return function () {
+              ancestor.apply(this, arguments);
+            };
+        }(instance);
+
+        rp = Object.create(baseProt);
+
+        constructor.prototype = rp;
+
+        rp.constructor = constructor;
+        constructor.$super = baseProt;
+        constructor.$orig = {};
+
+        Object.protectedProp(constructor, 'itagName', itagName);
+
+        constructor.mergePrototypes(prototypes, true);
+
+        customElement = function() {
+            var element = DOCUMENT._createElement(itagName);
+            // merge all properties of the constructor:
+            // fullMerge(constructor, element);
+            // render, but do this after the element is created:
+            // in the next eventcycle:
+            async(function() {
+                constructor.call(element);
+            });
+            return element;
+        };
+        window.ITAGS[itagName.toUpperCase()] = customElement;
+        renderDomElements(itagName);
+        return constructor;
+    }
+
+});
+
+
+
+    DOCUMENT._createElement = DOCUMENT.createElement;
+    DOCUMENT.createElement = function(tag) {
+console.warn('createElement '+tag);
+        var ItagClass = window.ITAGS[tag];
+        if (ItagClass) {
+console.warn('create itag!');
+            return new ItagClass();
+        }
+console.warn('create native');
+        return this._createElement(tag);
     };
+
+    window.ITAGS.ItagBase = ItagBase;
+
+    return ItagBase;
 
 };
-},{"vdom":40}],47:[function(require,module,exports){
+},{"event-dom":2,"js-ext/lib/function.js":69,"js-ext/lib/object.js":70,"polyfill/polyfill-base.js":82,"utils":83,"vdom":127}],134:[function(require,module,exports){
 
-},{}],48:[function(require,module,exports){
+},{}],135:[function(require,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -15165,7 +20022,7 @@ function assert (test, message) {
   if (!test) throw new Error(message || 'Failed assertion')
 }
 
-},{"base64-js":49,"ieee754":50}],49:[function(require,module,exports){
+},{"base64-js":136,"ieee754":137}],136:[function(require,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
@@ -15287,7 +20144,7 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	exports.fromByteArray = uint8ToBase64
 }(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
 
-},{}],50:[function(require,module,exports){
+},{}],137:[function(require,module,exports){
 exports.read = function(buffer, offset, isLE, mLen, nBytes) {
   var e, m,
       eLen = nBytes * 8 - mLen - 1,
@@ -15373,7 +20230,7 @@ exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128;
 };
 
-},{}],51:[function(require,module,exports){
+},{}],138:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -15678,7 +20535,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],52:[function(require,module,exports){
+},{}],139:[function(require,module,exports){
 var http = module.exports;
 var EventEmitter = require('events').EventEmitter;
 var Request = require('./lib/request');
@@ -15817,7 +20674,7 @@ http.STATUS_CODES = {
     510 : 'Not Extended',               // RFC 2774
     511 : 'Network Authentication Required' // RFC 6585
 };
-},{"./lib/request":53,"events":51,"url":77}],53:[function(require,module,exports){
+},{"./lib/request":140,"events":138,"url":164}],140:[function(require,module,exports){
 var Stream = require('stream');
 var Response = require('./response');
 var Base64 = require('Base64');
@@ -16011,7 +20868,7 @@ var indexOf = function (xs, x) {
     return -1;
 };
 
-},{"./response":54,"Base64":55,"inherits":57,"stream":76}],54:[function(require,module,exports){
+},{"./response":141,"Base64":142,"inherits":144,"stream":163}],141:[function(require,module,exports){
 var Stream = require('stream');
 var util = require('util');
 
@@ -16133,7 +20990,7 @@ var isArray = Array.isArray || function (xs) {
     return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{"stream":76,"util":79}],55:[function(require,module,exports){
+},{"stream":163,"util":166}],142:[function(require,module,exports){
 ;(function () {
 
   var object = typeof exports != 'undefined' ? exports : this; // #8: web workers
@@ -16195,7 +21052,7 @@ var isArray = Array.isArray || function (xs) {
 
 }());
 
-},{}],56:[function(require,module,exports){
+},{}],143:[function(require,module,exports){
 var http = require('http');
 
 var https = module.exports;
@@ -16210,7 +21067,7 @@ https.request = function (params, cb) {
     return http.request.call(this, params, cb);
 }
 
-},{"http":52}],57:[function(require,module,exports){
+},{"http":139}],144:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -16235,12 +21092,12 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],58:[function(require,module,exports){
+},{}],145:[function(require,module,exports){
 module.exports = Array.isArray || function (arr) {
   return Object.prototype.toString.call(arr) == '[object Array]';
 };
 
-},{}],59:[function(require,module,exports){
+},{}],146:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -16305,7 +21162,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],60:[function(require,module,exports){
+},{}],147:[function(require,module,exports){
 (function (global){
 /*! http://mths.be/punycode v1.2.4 by @mathias */
 ;(function(root) {
@@ -16816,7 +21673,7 @@ process.chdir = function (dir) {
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],61:[function(require,module,exports){
+},{}],148:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -16902,7 +21759,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],62:[function(require,module,exports){
+},{}],149:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -16989,16 +21846,16 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],63:[function(require,module,exports){
+},{}],150:[function(require,module,exports){
 'use strict';
 
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
-},{"./decode":61,"./encode":62}],64:[function(require,module,exports){
+},{"./decode":148,"./encode":149}],151:[function(require,module,exports){
 module.exports = require("./lib/_stream_duplex.js")
 
-},{"./lib/_stream_duplex.js":65}],65:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":152}],152:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -17091,7 +21948,7 @@ function forEach (xs, f) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_readable":67,"./_stream_writable":69,"_process":59,"core-util-is":70,"inherits":57}],66:[function(require,module,exports){
+},{"./_stream_readable":154,"./_stream_writable":156,"_process":146,"core-util-is":157,"inherits":144}],153:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -17139,7 +21996,7 @@ PassThrough.prototype._transform = function(chunk, encoding, cb) {
   cb(null, chunk);
 };
 
-},{"./_stream_transform":68,"core-util-is":70,"inherits":57}],67:[function(require,module,exports){
+},{"./_stream_transform":155,"core-util-is":157,"inherits":144}],154:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -18102,7 +22959,7 @@ function indexOf (xs, x) {
 }
 
 }).call(this,require('_process'))
-},{"_process":59,"buffer":48,"core-util-is":70,"events":51,"inherits":57,"isarray":58,"stream":76,"string_decoder/":71}],68:[function(require,module,exports){
+},{"_process":146,"buffer":135,"core-util-is":157,"events":138,"inherits":144,"isarray":145,"stream":163,"string_decoder/":158}],155:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -18314,7 +23171,7 @@ function done(stream, er) {
   return stream.push(null);
 }
 
-},{"./_stream_duplex":65,"core-util-is":70,"inherits":57}],69:[function(require,module,exports){
+},{"./_stream_duplex":152,"core-util-is":157,"inherits":144}],156:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -18705,7 +23562,7 @@ function endWritable(stream, state, cb) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_duplex":65,"_process":59,"buffer":48,"core-util-is":70,"inherits":57,"stream":76}],70:[function(require,module,exports){
+},{"./_stream_duplex":152,"_process":146,"buffer":135,"core-util-is":157,"inherits":144,"stream":163}],157:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -18815,7 +23672,7 @@ function objectToString(o) {
   return Object.prototype.toString.call(o);
 }
 }).call(this,require("buffer").Buffer)
-},{"buffer":48}],71:[function(require,module,exports){
+},{"buffer":135}],158:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -19017,10 +23874,10 @@ function base64DetectIncompleteChar(buffer) {
   return incomplete;
 }
 
-},{"buffer":48}],72:[function(require,module,exports){
+},{"buffer":135}],159:[function(require,module,exports){
 module.exports = require("./lib/_stream_passthrough.js")
 
-},{"./lib/_stream_passthrough.js":66}],73:[function(require,module,exports){
+},{"./lib/_stream_passthrough.js":153}],160:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Readable = exports;
 exports.Writable = require('./lib/_stream_writable.js');
@@ -19028,13 +23885,13 @@ exports.Duplex = require('./lib/_stream_duplex.js');
 exports.Transform = require('./lib/_stream_transform.js');
 exports.PassThrough = require('./lib/_stream_passthrough.js');
 
-},{"./lib/_stream_duplex.js":65,"./lib/_stream_passthrough.js":66,"./lib/_stream_readable.js":67,"./lib/_stream_transform.js":68,"./lib/_stream_writable.js":69}],74:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":152,"./lib/_stream_passthrough.js":153,"./lib/_stream_readable.js":154,"./lib/_stream_transform.js":155,"./lib/_stream_writable.js":156}],161:[function(require,module,exports){
 module.exports = require("./lib/_stream_transform.js")
 
-},{"./lib/_stream_transform.js":68}],75:[function(require,module,exports){
+},{"./lib/_stream_transform.js":155}],162:[function(require,module,exports){
 module.exports = require("./lib/_stream_writable.js")
 
-},{"./lib/_stream_writable.js":69}],76:[function(require,module,exports){
+},{"./lib/_stream_writable.js":156}],163:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -19163,7 +24020,7 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"events":51,"inherits":57,"readable-stream/duplex.js":64,"readable-stream/passthrough.js":72,"readable-stream/readable.js":73,"readable-stream/transform.js":74,"readable-stream/writable.js":75}],77:[function(require,module,exports){
+},{"events":138,"inherits":144,"readable-stream/duplex.js":151,"readable-stream/passthrough.js":159,"readable-stream/readable.js":160,"readable-stream/transform.js":161,"readable-stream/writable.js":162}],164:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -19872,14 +24729,14 @@ function isNullOrUndefined(arg) {
   return  arg == null;
 }
 
-},{"punycode":60,"querystring":63}],78:[function(require,module,exports){
+},{"punycode":147,"querystring":150}],165:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],79:[function(require,module,exports){
+},{}],166:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -20469,7 +25326,7 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":78,"_process":59,"inherits":57}],"itags":[function(require,module,exports){
+},{"./support/isBuffer":165,"_process":146,"inherits":144}],"itags":[function(require,module,exports){
 (function (global){
 /**
  * The ITSA module is an aggregator for all the individual modules that the library uses.
@@ -20495,4 +25352,4 @@ function hasOwnProperty(obj, prop) {
 
 })(global.window || require('node-win'));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"i-parcel":44,"i-select":45,"itags.core":46,"node-win":3}]},{},[]);
+},{"i-parcel":131,"i-select":132,"itags.core":133,"node-win":75}]},{},[]);
