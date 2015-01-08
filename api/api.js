@@ -7,6 +7,7 @@ YUI.add("yuidoc-meta", function(Y) {
         "Event",
         "Event.Emitter",
         "Event.Listener",
+        "FocusManager",
         "Function",
         "ITSA",
         "NS-vdom",
@@ -30,6 +31,7 @@ YUI.add("yuidoc-meta", function(Y) {
         "event-listener",
         "extend-document",
         "extend-element",
+        "focusmanager",
         "html-parser",
         "itsa.build",
         "js-ext",
@@ -91,6 +93,11 @@ YUI.add("yuidoc-meta", function(Y) {
             "displayName": "extend-element",
             "name": "extend-element",
             "description": "Provides several methods that override native Element-methods to work with the vdom.\n\n\n<i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>\n<br>\nNew BSD License - http://choosealicense.com/licenses/bsd-3-clause/"
+        },
+        {
+            "displayName": "focusmanager",
+            "name": "focusmanager",
+            "description": "<i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>\n New BSD License - http://choosealicense.com/licenses/bsd-3-clause/"
         },
         {
             "displayName": "html-parser",

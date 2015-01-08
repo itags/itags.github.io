@@ -26,8 +26,9 @@ intro: "This example shows how to setup a focusmanager that navigates with diffe
     }
 </style>
 <div id="test">before</div>
-<i-select>one</i-select>
-<i-select>two</i-select>
+
+<iselect value="one">one</iselect>
+<iselect value="two">two</iselect>
 
 <div id="test2">before</div>
 
@@ -75,14 +76,36 @@ intro: "This example shows how to setup a focusmanager that navigates with diffe
 
 <script src="../../dist/itagsbuild.js"></script>
 <script>
+var modeldata = {a: 10, b:20};
     require('itags');
+
     //document.getElement('.container').focus();
-    document.getElement('#test').setHTML('<i-select>zero</i-select>');
+    document.getElement('#test').setHTML('<i-parcel-userdata></i-parcel-userdata>');
     // document.getElement('#test').setHTML('<div>I am inner</div>');
 
-var iSelectNode = new ITAGS['I-SELECT']();
+var iSelectNode = new ITAGS['i-select']();
+document.getElement('#test2').append(iSelectNode);
+iSelectNode = new ITAGS['i-parcel-userdata']();
 document.getElement('#test2').append(iSelectNode);
 
-console.info('dummyFn: '+document.getElement('i-select').dummyFn);
+
+console.info('dummy: '+document.getElement('i-select').dummy);
+
+setTimeout(function() {
+    console.info('setdata');
+    iSelectNode.setData('modeldata', modeldata);
+}, 5000);
+
+setTimeout(function() {
+    console.info('changedata');
+    modeldata.b = 500;;
+}, 7000);
+
+setTimeout(function() {
+document.getElement('#test2').remove();
+}, 10000);
+
+
+
 
 </script>

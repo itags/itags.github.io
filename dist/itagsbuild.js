@@ -1,4 +1,14 @@
 require=(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+var css = "*:focus {\n    outline: 0;\n}\n\na[target=\"_blank\"]:focus {\n    outline: 1px solid #129fea;\n}\n\n/* because we think the padding and margin should always be part of the size,\n   we define \"box-sizing: border-box\" for all elements */\n\n* {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],2:[function(require,module,exports){
+var css = ".pure-menu.pure-menu-open {\n    z-index: 3; /* prevent graph from crossing the menuarea */\n}\n\n.pure-button.pure-button-bordered,\n.pure-button.pure-button-bordered[disabled] {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n}\n\n.pure-button.pure-button-bordered:focus,\n.pure-button.pure-button-bordered[disabled]:focus,\n.pure-button.pure-button-bordered:focus,\n.pure-button.pure-button-bordered[disabled]:focus,\n.pure-button.pure-button-bordered.focussed,\n.pure-button.pure-button-bordered[disabled].focussed,\n.pure-button.pure-button-bordered.focussed,\n.pure-button.pure-button-bordered[disabled].focussed {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.4) inset;\n}\n\n/* restore pure-button:active */\n.pure-button.pure-button-bordered:active,\n.pure-button.pure-button-bordered.pure-button-active,\n.pure-button:active:focus,\n.pure-button.pure-button-active:focus {\n    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.4) inset, 0 0 10px rgba(0, 0, 0, 0.3) inset;\n}\n\n.pure-button.pure-button-rounded {\n    border-radius: 0.3em;\n}\n\n.pure-button.pure-button-heavyrounded {\n    border-radius: 0.5em;\n}\n\n.pure-button.pure-button-oval {\n    border-radius: 50%;\n}\n\n.pure-button.pure-button-halfoval {\n    border-radius: 25%;\n}\n"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],3:[function(require,module,exports){
+var css = "/*!\nPure v0.5.0\nCopyright 2014 Yahoo! Inc. All rights reserved.\nLicensed under the BSD License.\nhttps://github.com/yahoo/pure/blob/master/LICENSE.md\n*/\n/*!\nnormalize.css v^3.0 | MIT License | git.io/normalize\nCopyright (c) Nicolas Gallagher and Jonathan Neal\n*/\n/*! normalize.css v3.0.2 | MIT License | git.io/normalize */\n\n/**\n * 1. Set default font family to sans-serif.\n * 2. Prevent iOS text size adjust after orientation change, without disabling\n *    user zoom.\n */\n\nhtml {\n  font-family: sans-serif; /* 1 */\n  -ms-text-size-adjust: 100%; /* 2 */\n  -webkit-text-size-adjust: 100%; /* 2 */\n}\n\n/**\n * Remove default margin.\n */\n\nbody {\n  margin: 0;\n}\n\n/* HTML5 display definitions\n   ========================================================================== */\n\n/**\n * Correct `block` display not defined for any HTML5 element in IE 8/9.\n * Correct `block` display not defined for `details` or `summary` in IE 10/11\n * and Firefox.\n * Correct `block` display not defined for `main` in IE 11.\n */\n\narticle,\naside,\ndetails,\nfigcaption,\nfigure,\nfooter,\nheader,\nhgroup,\nmain,\nmenu,\nnav,\nsection,\nsummary {\n  display: block;\n}\n\n/**\n * 1. Correct `inline-block` display not defined in IE 8/9.\n * 2. Normalize vertical alignment of `progress` in Chrome, Firefox, and Opera.\n */\n\naudio,\ncanvas,\nprogress,\nvideo {\n  display: inline-block; /* 1 */\n  vertical-align: baseline; /* 2 */\n}\n\n/**\n * Prevent modern browsers from displaying `audio` without controls.\n * Remove excess height in iOS 5 devices.\n */\n\naudio:not([controls]) {\n  display: none;\n  height: 0;\n}\n\n/**\n * Address `[hidden]` styling not present in IE 8/9/10.\n * Hide the `template` element in IE 8/9/11, Safari, and Firefox < 22.\n */\n\n[hidden],\ntemplate {\n  display: none;\n}\n\n/* Links\n   ========================================================================== */\n\n/**\n * Remove the gray background color from active links in IE 10.\n */\n\na {\n  background-color: transparent;\n}\n\n/**\n * Improve readability when focused and also mouse hovered in all browsers.\n */\n\na:active,\na:hover {\n  outline: 0;\n}\n\n/* Text-level semantics\n   ========================================================================== */\n\n/**\n * Address styling not present in IE 8/9/10/11, Safari, and Chrome.\n */\n\nabbr[title] {\n  border-bottom: 1px dotted;\n}\n\n/**\n * Address style set to `bolder` in Firefox 4+, Safari, and Chrome.\n */\n\nb,\nstrong {\n  font-weight: bold;\n}\n\n/**\n * Address styling not present in Safari and Chrome.\n */\n\ndfn {\n  font-style: italic;\n}\n\n/**\n * Address variable `h1` font-size and margin within `section` and `article`\n * contexts in Firefox 4+, Safari, and Chrome.\n */\n\nh1 {\n  font-size: 2em;\n  margin: 0.67em 0;\n}\n\n/**\n * Address styling not present in IE 8/9.\n */\n\nmark {\n  background: #ff0;\n  color: #000;\n}\n\n/**\n * Address inconsistent and variable font size in all browsers.\n */\n\nsmall {\n  font-size: 80%;\n}\n\n/**\n * Prevent `sub` and `sup` affecting `line-height` in all browsers.\n */\n\nsub,\nsup {\n  font-size: 75%;\n  line-height: 0;\n  position: relative;\n  vertical-align: baseline;\n}\n\nsup {\n  top: -0.5em;\n}\n\nsub {\n  bottom: -0.25em;\n}\n\n/* Embedded content\n   ========================================================================== */\n\n/**\n * Remove border when inside `a` element in IE 8/9/10.\n */\n\nimg {\n  border: 0;\n}\n\n/**\n * Correct overflow not hidden in IE 9/10/11.\n */\n\nsvg:not(:root) {\n  overflow: hidden;\n}\n\n/* Grouping content\n   ========================================================================== */\n\n/**\n * Address margin not present in IE 8/9 and Safari.\n */\n\nfigure {\n  margin: 1em 40px;\n}\n\n/**\n * Address differences between Firefox and other browsers.\n */\n\nhr {\n  -moz-box-sizing: content-box;\n  box-sizing: content-box;\n  height: 0;\n}\n\n/**\n * Contain overflow in all browsers.\n */\n\npre {\n  overflow: auto;\n}\n\n/**\n * Address odd `em`-unit font size rendering in all browsers.\n */\n\ncode,\nkbd,\npre,\nsamp {\n  font-family: monospace, monospace;\n  font-size: 1em;\n}\n\n/* Forms\n   ========================================================================== */\n\n/**\n * Known limitation: by default, Chrome and Safari on OS X allow very limited\n * styling of `select`, unless a `border` property is set.\n */\n\n/**\n * 1. Correct color not being inherited.\n *    Known issue: affects color of disabled elements.\n * 2. Correct font properties not being inherited.\n * 3. Address margins set differently in Firefox 4+, Safari, and Chrome.\n */\n\nbutton,\ninput,\noptgroup,\nselect,\ntextarea {\n  color: inherit; /* 1 */\n  font: inherit; /* 2 */\n  margin: 0; /* 3 */\n}\n\n/**\n * Address `overflow` set to `hidden` in IE 8/9/10/11.\n */\n\nbutton {\n  overflow: visible;\n}\n\n/**\n * Address inconsistent `text-transform` inheritance for `button` and `select`.\n * All other form control elements do not inherit `text-transform` values.\n * Correct `button` style inheritance in Firefox, IE 8/9/10/11, and Opera.\n * Correct `select` style inheritance in Firefox.\n */\n\nbutton,\nselect {\n  text-transform: none;\n}\n\n/**\n * 1. Avoid the WebKit bug in Android 4.0.* where (2) destroys native `audio`\n *    and `video` controls.\n * 2. Correct inability to style clickable `input` types in iOS.\n * 3. Improve usability and consistency of cursor style between image-type\n *    `input` and others.\n */\n\nbutton,\nhtml input[type=\"button\"], /* 1 */\ninput[type=\"reset\"],\ninput[type=\"submit\"] {\n  -webkit-appearance: button; /* 2 */\n  cursor: pointer; /* 3 */\n}\n\n/**\n * Re-set default cursor for disabled elements.\n */\n\nbutton[disabled],\nhtml input[disabled] {\n  cursor: default;\n}\n\n/**\n * Remove inner padding and border in Firefox 4+.\n */\n\nbutton::-moz-focus-inner,\ninput::-moz-focus-inner {\n  border: 0;\n  padding: 0;\n}\n\n/**\n * Address Firefox 4+ setting `line-height` on `input` using `!important` in\n * the UA stylesheet.\n */\n\ninput {\n  line-height: normal;\n}\n\n/**\n * It's recommended that you don't attempt to style these elements.\n * Firefox's implementation doesn't respect box-sizing, padding, or width.\n *\n * 1. Address box sizing set to `content-box` in IE 8/9/10.\n * 2. Remove excess padding in IE 8/9/10.\n */\n\ninput[type=\"checkbox\"],\ninput[type=\"radio\"] {\n  box-sizing: border-box; /* 1 */\n  padding: 0; /* 2 */\n}\n\n/**\n * Fix the cursor style for Chrome's increment/decrement buttons. For certain\n * `font-size` values of the `input`, it causes the cursor style of the\n * decrement button to change from `default` to `text`.\n */\n\ninput[type=\"number\"]::-webkit-inner-spin-button,\ninput[type=\"number\"]::-webkit-outer-spin-button {\n  height: auto;\n}\n\n/**\n * 1. Address `appearance` set to `searchfield` in Safari and Chrome.\n * 2. Address `box-sizing` set to `border-box` in Safari and Chrome\n *    (include `-moz` to future-proof).\n */\n\ninput[type=\"search\"] {\n  -webkit-appearance: textfield; /* 1 */\n  -moz-box-sizing: content-box;\n  -webkit-box-sizing: content-box; /* 2 */\n  box-sizing: content-box;\n}\n\n/**\n * Remove inner padding and search cancel button in Safari and Chrome on OS X.\n * Safari (but not Chrome) clips the cancel button when the search input has\n * padding (and `textfield` appearance).\n */\n\ninput[type=\"search\"]::-webkit-search-cancel-button,\ninput[type=\"search\"]::-webkit-search-decoration {\n  -webkit-appearance: none;\n}\n\n/**\n * Define consistent border, margin, and padding.\n */\n\nfieldset {\n  border: 1px solid #c0c0c0;\n  margin: 0 2px;\n  padding: 0.35em 0.625em 0.75em;\n}\n\n/**\n * 1. Correct `color` not being inherited in IE 8/9/10/11.\n * 2. Remove padding so people aren't caught out if they zero out fieldsets.\n */\n\nlegend {\n  border: 0; /* 1 */\n  padding: 0; /* 2 */\n}\n\n/**\n * Remove default vertical scrollbar in IE 8/9/10/11.\n */\n\ntextarea {\n  overflow: auto;\n}\n\n/**\n * Don't inherit the `font-weight` (applied by a rule above).\n * NOTE: the default cannot safely be changed in Chrome and Safari on OS X.\n */\n\noptgroup {\n  font-weight: bold;\n}\n\n/* Tables\n   ========================================================================== */\n\n/**\n * Remove most spacing between table cells.\n */\n\ntable {\n  border-collapse: collapse;\n  border-spacing: 0;\n}\n\ntd,\nth {\n  padding: 0;\n}\n\n/*csslint important:false*/\n\n/* ==========================================================================\n   Pure Base Extras\n   ========================================================================== */\n\n/**\n * Extra rules that Pure adds on top of Normalize.css\n */\n\n/**\n * Always hide an element when it has the `hidden` HTML attribute.\n */\n\n[hidden] {\n    display: none !important;\n}\n\n/**\n * Add this class to an image to make it fit within it's fluid parent wrapper while maintaining\n * aspect ratio.\n */\n.pure-img {\n    max-width: 100%;\n    height: auto;\n    display: block;\n}\n\n/*csslint regex-selectors:false, known-properties:false, duplicate-properties:false*/\n\n.pure-g {\n    letter-spacing: -0.31em; /* Webkit: collapse white-space between units */\n    *letter-spacing: normal; /* reset IE < 8 */\n    *word-spacing: -0.43em; /* IE < 8: collapse white-space between units */\n    text-rendering: optimizespeed; /* Webkit: fixes text-rendering: optimizeLegibility */\n\n    /*\n    Sets the font stack to fonts known to work properly with the above letter\n    and word spacings. See: https://github.com/yahoo/pure/issues/41/\n\n    The following font stack makes Pure Grids work on all known environments.\n\n    * FreeSans: Ships with many Linux distros, including Ubuntu\n\n    * Arimo: Ships with Chrome OS. Arimo has to be defined before Helvetica and\n      Arial to get picked up by the browser, even though neither is available\n      in Chrome OS.\n\n    * Droid Sans: Ships with all versions of Android.\n\n    * Helvetica, Arial, sans-serif: Common font stack on OS X and Windows.\n    */\n    font-family: FreeSans, Arimo, \"Droid Sans\", Helvetica, Arial, sans-serif;\n\n    /*\n    Use flexbox when possible to avoid `letter-spacing` side-effects.\n\n    NOTE: Firefox (as of 25) does not currently support flex-wrap, so the\n    `-moz-` prefix version is omitted.\n    */\n\n    display: -webkit-flex;\n    -webkit-flex-flow: row wrap;\n\n    /* IE10 uses display: flexbox */\n    display: -ms-flexbox;\n    -ms-flex-flow: row wrap;\n}\n\n/* Opera as of 12 on Windows needs word-spacing.\n   The \".opera-only\" selector is used to prevent actual prefocus styling\n   and is not required in markup.\n*/\n.opera-only :-o-prefocus,\n.pure-g {\n    word-spacing: -0.43em;\n}\n\n.pure-u {\n    display: inline-block;\n    *display: inline; /* IE < 8: fake inline-block */\n    zoom: 1;\n    letter-spacing: normal;\n    word-spacing: normal;\n    vertical-align: top;\n    text-rendering: auto;\n}\n\n/*\nResets the font family back to the OS/browser's default sans-serif font,\nthis the same font stack that Normalize.css sets for the `body`.\n*/\n.pure-g [class *= \"pure-u\"] {\n    font-family: sans-serif;\n}\n\n.pure-u-1,\n.pure-u-1-1,\n.pure-u-1-2,\n.pure-u-1-3,\n.pure-u-2-3,\n.pure-u-1-4,\n.pure-u-3-4,\n.pure-u-1-5,\n.pure-u-2-5,\n.pure-u-3-5,\n.pure-u-4-5,\n.pure-u-5-5,\n.pure-u-1-6,\n.pure-u-5-6,\n.pure-u-1-8,\n.pure-u-3-8,\n.pure-u-5-8,\n.pure-u-7-8,\n.pure-u-1-12,\n.pure-u-5-12,\n.pure-u-7-12,\n.pure-u-11-12,\n.pure-u-1-24,\n.pure-u-2-24,\n.pure-u-3-24,\n.pure-u-4-24,\n.pure-u-5-24,\n.pure-u-6-24,\n.pure-u-7-24,\n.pure-u-8-24,\n.pure-u-9-24,\n.pure-u-10-24,\n.pure-u-11-24,\n.pure-u-12-24,\n.pure-u-13-24,\n.pure-u-14-24,\n.pure-u-15-24,\n.pure-u-16-24,\n.pure-u-17-24,\n.pure-u-18-24,\n.pure-u-19-24,\n.pure-u-20-24,\n.pure-u-21-24,\n.pure-u-22-24,\n.pure-u-23-24,\n.pure-u-24-24 {\n    display: inline-block;\n    *display: inline;\n    zoom: 1;\n    letter-spacing: normal;\n    word-spacing: normal;\n    vertical-align: top;\n    text-rendering: auto;\n}\n\n.pure-u-1-24 {\n    width: 4.1667%;\n    *width: 4.1357%;\n}\n\n.pure-u-1-12,\n.pure-u-2-24 {\n    width: 8.3333%;\n    *width: 8.3023%;\n}\n\n.pure-u-1-8,\n.pure-u-3-24 {\n    width: 12.5000%;\n    *width: 12.4690%;\n}\n\n.pure-u-1-6,\n.pure-u-4-24 {\n    width: 16.6667%;\n    *width: 16.6357%;\n}\n\n.pure-u-1-5 {\n    width: 20%;\n    *width: 19.9690%;\n}\n\n.pure-u-5-24 {\n    width: 20.8333%;\n    *width: 20.8023%;\n}\n\n.pure-u-1-4,\n.pure-u-6-24 {\n    width: 25%;\n    *width: 24.9690%;\n}\n\n.pure-u-7-24 {\n    width: 29.1667%;\n    *width: 29.1357%;\n}\n\n.pure-u-1-3,\n.pure-u-8-24 {\n    width: 33.3333%;\n    *width: 33.3023%;\n}\n\n.pure-u-3-8,\n.pure-u-9-24 {\n    width: 37.5000%;\n    *width: 37.4690%;\n}\n\n.pure-u-2-5 {\n    width: 40%;\n    *width: 39.9690%;\n}\n\n.pure-u-5-12,\n.pure-u-10-24 {\n    width: 41.6667%;\n    *width: 41.6357%;\n}\n\n.pure-u-11-24 {\n    width: 45.8333%;\n    *width: 45.8023%;\n}\n\n.pure-u-1-2,\n.pure-u-12-24 {\n    width: 50%;\n    *width: 49.9690%;\n}\n\n.pure-u-13-24 {\n    width: 54.1667%;\n    *width: 54.1357%;\n}\n\n.pure-u-7-12,\n.pure-u-14-24 {\n    width: 58.3333%;\n    *width: 58.3023%;\n}\n\n.pure-u-3-5 {\n    width: 60%;\n    *width: 59.9690%;\n}\n\n.pure-u-5-8,\n.pure-u-15-24 {\n    width: 62.5000%;\n    *width: 62.4690%;\n}\n\n.pure-u-2-3,\n.pure-u-16-24 {\n    width: 66.6667%;\n    *width: 66.6357%;\n}\n\n.pure-u-17-24 {\n    width: 70.8333%;\n    *width: 70.8023%;\n}\n\n.pure-u-3-4,\n.pure-u-18-24 {\n    width: 75%;\n    *width: 74.9690%;\n}\n\n.pure-u-19-24 {\n    width: 79.1667%;\n    *width: 79.1357%;\n}\n\n.pure-u-4-5 {\n    width: 80%;\n    *width: 79.9690%;\n}\n\n.pure-u-5-6,\n.pure-u-20-24 {\n    width: 83.3333%;\n    *width: 83.3023%;\n}\n\n.pure-u-7-8,\n.pure-u-21-24 {\n    width: 87.5000%;\n    *width: 87.4690%;\n}\n\n.pure-u-11-12,\n.pure-u-22-24 {\n    width: 91.6667%;\n    *width: 91.6357%;\n}\n\n.pure-u-23-24 {\n    width: 95.8333%;\n    *width: 95.8023%;\n}\n\n.pure-u-1,\n.pure-u-1-1,\n.pure-u-5-5,\n.pure-u-24-24 {\n    width: 100%;\n}\n.pure-button {\n    /* Structure */\n    display: inline-block;\n    *display: inline; /*IE 6/7*/\n    zoom: 1;\n    line-height: normal;\n    white-space: nowrap;\n    vertical-align: baseline;\n    text-align: center;\n    cursor: pointer;\n    -webkit-user-drag: none;\n    -webkit-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n}\n\n/* Firefox: Get rid of the inner focus border */\n.pure-button::-moz-focus-inner {\n    padding: 0;\n    border: 0;\n}\n\n/*csslint outline-none:false*/\n\n.pure-button {\n    font-family: inherit;\n    font-size: 100%;\n    *font-size: 90%; /*IE 6/7 - To reduce IE's oversized button text*/\n    *overflow: visible; /*IE 6/7 - Because of IE's overly large left/right padding on buttons */\n    padding: 0.5em 1em;\n    color: #444; /* rgba not supported (IE 8) */\n    color: rgba(0, 0, 0, 0.80); /* rgba supported */\n    *color: #444; /* IE 6 & 7 */\n    border: 1px solid #999;  /*IE 6/7/8*/\n    border: none rgba(0, 0, 0, 0);  /*IE9 + everything else*/\n    background-color: #E6E6E6;\n    text-decoration: none;\n    border-radius: 2px;\n}\n\n.pure-button-hover,\n.pure-button:hover,\n.pure-button:focus {\n    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#00000000', endColorstr='#1a000000',GradientType=0);\n    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(transparent), color-stop(40%, rgba(0,0,0, 0.05)), to(rgba(0,0,0, 0.10)));\n    background-image: -webkit-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: -moz-linear-gradient(top, rgba(0,0,0, 0.05) 0%, rgba(0,0,0, 0.10));\n    background-image: -o-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n}\n.pure-button:focus {\n    outline: 0;\n}\n.pure-button-active,\n.pure-button:active {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset, 0 0 6px rgba(0,0,0, 0.20) inset;\n}\n\n.pure-button[disabled],\n.pure-button-disabled,\n.pure-button-disabled:hover,\n.pure-button-disabled:focus,\n.pure-button-disabled:active {\n    border: none;\n    background-image: none;\n    filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);\n    filter: alpha(opacity=40);\n    -khtml-opacity: 0.40;\n    -moz-opacity: 0.40;\n    opacity: 0.40;\n    cursor: not-allowed;\n    box-shadow: none;\n}\n\n.pure-button-hidden {\n    display: none;\n}\n\n/* Firefox: Get rid of the inner focus border */\n.pure-button::-moz-focus-inner{\n    padding: 0;\n    border: 0;\n}\n\n.pure-button-primary,\n.pure-button-selected,\na.pure-button-primary,\na.pure-button-selected {\n    background-color: rgb(0, 120, 231);\n    color: #fff;\n}\n\n.pure-form input[type=\"text\"],\n.pure-form input[type=\"password\"],\n.pure-form input[type=\"email\"],\n.pure-form input[type=\"url\"],\n.pure-form input[type=\"date\"],\n.pure-form input[type=\"month\"],\n.pure-form input[type=\"time\"],\n.pure-form input[type=\"datetime\"],\n.pure-form input[type=\"datetime-local\"],\n.pure-form input[type=\"week\"],\n.pure-form input[type=\"number\"],\n.pure-form input[type=\"search\"],\n.pure-form input[type=\"tel\"],\n.pure-form input[type=\"color\"],\n.pure-form select,\n.pure-form textarea {\n    padding: 0.5em 0.6em;\n    display: inline-block;\n    border: 1px solid #ccc;\n    box-shadow: inset 0 1px 3px #ddd;\n    border-radius: 4px;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\n/*\nNeed to separate out the :not() selector from the rest of the CSS 2.1 selectors\nsince IE8 won't execute CSS that contains a CSS3 selector.\n*/\n.pure-form input:not([type]) {\n    padding: 0.5em 0.6em;\n    display: inline-block;\n    border: 1px solid #ccc;\n    box-shadow: inset 0 1px 3px #ddd;\n    border-radius: 4px;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\n\n/* Chrome (as of v.32/34 on OS X) needs additional room for color to display. */\n/* May be able to remove this tweak as color inputs become more standardized across browsers. */\n.pure-form input[type=\"color\"] {\n    padding: 0.2em 0.5em;\n}\n\n\n.pure-form input[type=\"text\"]:focus,\n.pure-form input[type=\"password\"]:focus,\n.pure-form input[type=\"email\"]:focus,\n.pure-form input[type=\"url\"]:focus,\n.pure-form input[type=\"date\"]:focus,\n.pure-form input[type=\"month\"]:focus,\n.pure-form input[type=\"time\"]:focus,\n.pure-form input[type=\"datetime\"]:focus,\n.pure-form input[type=\"datetime-local\"]:focus,\n.pure-form input[type=\"week\"]:focus,\n.pure-form input[type=\"number\"]:focus,\n.pure-form input[type=\"search\"]:focus,\n.pure-form input[type=\"tel\"]:focus,\n.pure-form input[type=\"color\"]:focus,\n.pure-form select:focus,\n.pure-form textarea:focus {\n    outline: 0;\n    outline: thin dotted \\9; /* IE6-9 */\n    border-color: #129FEA;\n}\n\n/*\nNeed to separate out the :not() selector from the rest of the CSS 2.1 selectors\nsince IE8 won't execute CSS that contains a CSS3 selector.\n*/\n.pure-form input:not([type]):focus {\n    outline: 0;\n    outline: thin dotted \\9; /* IE6-9 */\n    border-color: #129FEA;\n}\n\n.pure-form input[type=\"file\"]:focus,\n.pure-form input[type=\"radio\"]:focus,\n.pure-form input[type=\"checkbox\"]:focus {\n    outline: thin dotted #333;\n    outline: 1px auto #129FEA;\n}\n.pure-form .pure-checkbox,\n.pure-form .pure-radio {\n    margin: 0.5em 0;\n    display: block;\n}\n\n.pure-form input[type=\"text\"][disabled],\n.pure-form input[type=\"password\"][disabled],\n.pure-form input[type=\"email\"][disabled],\n.pure-form input[type=\"url\"][disabled],\n.pure-form input[type=\"date\"][disabled],\n.pure-form input[type=\"month\"][disabled],\n.pure-form input[type=\"time\"][disabled],\n.pure-form input[type=\"datetime\"][disabled],\n.pure-form input[type=\"datetime-local\"][disabled],\n.pure-form input[type=\"week\"][disabled],\n.pure-form input[type=\"number\"][disabled],\n.pure-form input[type=\"search\"][disabled],\n.pure-form input[type=\"tel\"][disabled],\n.pure-form input[type=\"color\"][disabled],\n.pure-form select[disabled],\n.pure-form textarea[disabled] {\n    cursor: not-allowed;\n    background-color: #eaeded;\n    color: #cad2d3;\n}\n\n/*\nNeed to separate out the :not() selector from the rest of the CSS 2.1 selectors\nsince IE8 won't execute CSS that contains a CSS3 selector.\n*/\n.pure-form input:not([type])[disabled] {\n    cursor: not-allowed;\n    background-color: #eaeded;\n    color: #cad2d3;\n}\n.pure-form input[readonly],\n.pure-form select[readonly],\n.pure-form textarea[readonly] {\n    background: #eee; /* menu hover bg color */\n    color: #777; /* menu text color */\n    border-color: #ccc;\n}\n\n.pure-form input:focus:invalid,\n.pure-form textarea:focus:invalid,\n.pure-form select:focus:invalid {\n    color: #b94a48;\n    border-color: #ee5f5b;\n}\n.pure-form input:focus:invalid:focus,\n.pure-form textarea:focus:invalid:focus,\n.pure-form select:focus:invalid:focus {\n    border-color: #e9322d;\n}\n.pure-form input[type=\"file\"]:focus:invalid:focus,\n.pure-form input[type=\"radio\"]:focus:invalid:focus,\n.pure-form input[type=\"checkbox\"]:focus:invalid:focus {\n    outline-color: #e9322d;\n}\n.pure-form select {\n    border: 1px solid #ccc;\n    background-color: white;\n}\n.pure-form select[multiple] {\n    height: auto;\n}\n.pure-form label {\n    margin: 0.5em 0 0.2em;\n}\n.pure-form fieldset {\n    margin: 0;\n    padding: 0.35em 0 0.75em;\n    border: 0;\n}\n.pure-form legend {\n    display: block;\n    width: 100%;\n    padding: 0.3em 0;\n    margin-bottom: 0.3em;\n    color: #333;\n    border-bottom: 1px solid #e5e5e5;\n}\n\n.pure-form-stacked input[type=\"text\"],\n.pure-form-stacked input[type=\"password\"],\n.pure-form-stacked input[type=\"email\"],\n.pure-form-stacked input[type=\"url\"],\n.pure-form-stacked input[type=\"date\"],\n.pure-form-stacked input[type=\"month\"],\n.pure-form-stacked input[type=\"time\"],\n.pure-form-stacked input[type=\"datetime\"],\n.pure-form-stacked input[type=\"datetime-local\"],\n.pure-form-stacked input[type=\"week\"],\n.pure-form-stacked input[type=\"number\"],\n.pure-form-stacked input[type=\"search\"],\n.pure-form-stacked input[type=\"tel\"],\n.pure-form-stacked input[type=\"color\"],\n.pure-form-stacked select,\n.pure-form-stacked label,\n.pure-form-stacked textarea {\n    display: block;\n    margin: 0.25em 0;\n}\n\n/*\nNeed to separate out the :not() selector from the rest of the CSS 2.1 selectors\nsince IE8 won't execute CSS that contains a CSS3 selector.\n*/\n.pure-form-stacked input:not([type]) {\n    display: block;\n    margin: 0.25em 0;\n}\n.pure-form-aligned input,\n.pure-form-aligned textarea,\n.pure-form-aligned select,\n/* NOTE: pure-help-inline is deprecated. Use .pure-form-message-inline instead. */\n.pure-form-aligned .pure-help-inline,\n.pure-form-message-inline {\n    display: inline-block;\n    *display: inline;\n    *zoom: 1;\n    vertical-align: middle;\n}\n.pure-form-aligned textarea {\n    vertical-align: top;\n}\n\n/* Aligned Forms */\n.pure-form-aligned .pure-control-group {\n    margin-bottom: 0.5em;\n}\n.pure-form-aligned .pure-control-group label {\n    text-align: right;\n    display: inline-block;\n    vertical-align: middle;\n    width: 10em;\n    margin: 0 1em 0 0;\n}\n.pure-form-aligned .pure-controls {\n    margin: 1.5em 0 0 10em;\n}\n\n/* Rounded Inputs */\n.pure-form input.pure-input-rounded,\n.pure-form .pure-input-rounded {\n    border-radius: 2em;\n    padding: 0.5em 1em;\n}\n\n/* Grouped Inputs */\n.pure-form .pure-group fieldset {\n    margin-bottom: 10px;\n}\n.pure-form .pure-group input {\n    display: block;\n    padding: 10px;\n    margin: 0;\n    border-radius: 0;\n    position: relative;\n    top: -1px;\n}\n.pure-form .pure-group input:focus {\n    z-index: 2;\n}\n.pure-form .pure-group input:first-child {\n    top: 1px;\n    border-radius: 4px 4px 0 0;\n}\n.pure-form .pure-group input:last-child {\n    top: -2px;\n    border-radius: 0 0 4px 4px;\n}\n.pure-form .pure-group button {\n    margin: 0.35em 0;\n}\n\n.pure-form .pure-input-1 {\n    width: 100%;\n}\n.pure-form .pure-input-2-3 {\n    width: 66%;\n}\n.pure-form .pure-input-1-2 {\n    width: 50%;\n}\n.pure-form .pure-input-1-3 {\n    width: 33%;\n}\n.pure-form .pure-input-1-4 {\n    width: 25%;\n}\n\n/* Inline help for forms */\n/* NOTE: pure-help-inline is deprecated. Use .pure-form-message-inline instead. */\n.pure-form .pure-help-inline,\n.pure-form-message-inline {\n    display: inline-block;\n    padding-left: 0.3em;\n    color: #666;\n    vertical-align: middle;\n    font-size: 0.875em;\n}\n\n/* Block help for forms */\n.pure-form-message {\n    display: block;\n    color: #666;\n    font-size: 0.875em;\n}\n\n@media only screen and (max-width : 480px) {\n    .pure-form button[type=\"submit\"] {\n        margin: 0.7em 0 0;\n    }\n\n    .pure-form input:not([type]),\n    .pure-form input[type=\"text\"],\n    .pure-form input[type=\"password\"],\n    .pure-form input[type=\"email\"],\n    .pure-form input[type=\"url\"],\n    .pure-form input[type=\"date\"],\n    .pure-form input[type=\"month\"],\n    .pure-form input[type=\"time\"],\n    .pure-form input[type=\"datetime\"],\n    .pure-form input[type=\"datetime-local\"],\n    .pure-form input[type=\"week\"],\n    .pure-form input[type=\"number\"],\n    .pure-form input[type=\"search\"],\n    .pure-form input[type=\"tel\"],\n    .pure-form input[type=\"color\"],\n    .pure-form label {\n        margin-bottom: 0.3em;\n        display: block;\n    }\n\n    .pure-group input:not([type]),\n    .pure-group input[type=\"text\"],\n    .pure-group input[type=\"password\"],\n    .pure-group input[type=\"email\"],\n    .pure-group input[type=\"url\"],\n    .pure-group input[type=\"date\"],\n    .pure-group input[type=\"month\"],\n    .pure-group input[type=\"time\"],\n    .pure-group input[type=\"datetime\"],\n    .pure-group input[type=\"datetime-local\"],\n    .pure-group input[type=\"week\"],\n    .pure-group input[type=\"number\"],\n    .pure-group input[type=\"search\"],\n    .pure-group input[type=\"tel\"],\n    .pure-group input[type=\"color\"] {\n        margin-bottom: 0;\n    }\n\n    .pure-form-aligned .pure-control-group label {\n        margin-bottom: 0.3em;\n        text-align: left;\n        display: block;\n        width: 100%;\n    }\n\n    .pure-form-aligned .pure-controls {\n        margin: 1.5em 0 0 0;\n    }\n\n    /* NOTE: pure-help-inline is deprecated. Use .pure-form-message-inline instead. */\n    .pure-form .pure-help-inline,\n    .pure-form-message-inline,\n    .pure-form-message {\n        display: block;\n        font-size: 0.75em;\n        /* Increased bottom padding to make it group with its related input element. */\n        padding: 0.2em 0 0.8em;\n    }\n}\n\n/*csslint adjoining-classes:false, outline-none:false*/\n/*TODO: Remove this lint rule override after a refactor of this code.*/\n\n.pure-menu ul {\n    position: absolute;\n    visibility: hidden;\n}\n\n.pure-menu.pure-menu-open {\n    visibility: visible;\n    z-index: 2;\n    width: 100%;\n}\n\n.pure-menu ul {\n    left: -10000px;\n    list-style: none;\n    margin: 0;\n    padding: 0;\n    top: -10000px;\n    z-index: 1;\n}\n\n.pure-menu > ul { position: relative; }\n\n.pure-menu-open > ul {\n    left: 0;\n    top: 0;\n    visibility: visible;\n}\n\n.pure-menu-open > ul:focus {\n    outline: 0;\n}\n\n.pure-menu li { position: relative; }\n\n.pure-menu a,\n.pure-menu .pure-menu-heading {\n    display: block;\n    color: inherit;\n    line-height: 1.5em;\n    padding: 5px 20px;\n    text-decoration: none;\n    white-space: nowrap;\n}\n\n.pure-menu.pure-menu-horizontal > .pure-menu-heading {\n    display: inline-block;\n    *display: inline;\n    zoom: 1;\n    margin: 0;\n    vertical-align: middle;\n}\n.pure-menu.pure-menu-horizontal > ul {\n    display: inline-block;\n    *display: inline;\n    zoom: 1;\n    vertical-align: middle;\n}\n\n.pure-menu li a { padding: 5px 20px; }\n\n.pure-menu-can-have-children > .pure-menu-label:after {\n    content: '\\25B8';\n    float: right;\n    /* These specific fonts have the Unicode char we need. */\n    font-family: 'Lucida Grande', 'Lucida Sans Unicode', 'DejaVu Sans', sans-serif;\n    margin-right: -20px;\n    margin-top: -1px;\n}\n\n.pure-menu-can-have-children > .pure-menu-label {\n    padding-right: 30px;\n}\n\n.pure-menu-separator {\n    background-color: #dfdfdf;\n    display: block;\n    height: 1px;\n    font-size: 0;\n    margin: 7px 2px;\n    overflow: hidden;\n}\n\n.pure-menu-hidden {\n    display: none;\n}\n\n/* FIXED MENU */\n.pure-menu-fixed {\n    position: fixed;\n    top: 0;\n    left: 0;\n    width: 100%;\n}\n\n\n/* HORIZONTAL MENU CODE */\n\n/* Initial menus should be inline-block so that they are horizontal */\n.pure-menu-horizontal li {\n    display: inline-block;\n    *display: inline;\n    zoom: 1;\n    vertical-align: middle;\n}\n\n/* Submenus should still be display: block; */\n.pure-menu-horizontal li li {\n    display: block;\n}\n\n/* Content after should be down arrow */\n.pure-menu-horizontal > .pure-menu-children > .pure-menu-can-have-children > .pure-menu-label:after {\n    content: \"\\25BE\";\n}\n/*Add extra padding to elements that have the arrow so that the hover looks nice */\n.pure-menu-horizontal > .pure-menu-children > .pure-menu-can-have-children > .pure-menu-label {\n    padding-right: 30px;\n}\n\n/* Adjusting separator for vertical menus */\n.pure-menu-horizontal li.pure-menu-separator {\n    height: 50%;\n    width: 1px;\n    margin: 0 7px;\n}\n\n/* Submenus should be horizontal separator again */\n.pure-menu-horizontal li li.pure-menu-separator {\n    height: 1px;\n    width: auto;\n    margin: 7px 2px;\n}\n\n\n/*csslint adjoining-classes:false*/\n/*TODO: Remove this lint rule override after a refactor of this code.*/\n\n/* MAIN MENU STYLING */\n\n.pure-menu.pure-menu-open,\n.pure-menu.pure-menu-horizontal li .pure-menu-children {\n    background: #fff; /* Old browsers */\n    border: 1px solid #b7b7b7;\n}\n\n/* remove borders for horizontal menus */\n.pure-menu.pure-menu-horizontal,\n.pure-menu.pure-menu-horizontal .pure-menu-heading {\n    border: none;\n}\n\n\n/* LINK STYLES */\n\n.pure-menu a {\n    border: 1px solid transparent;\n    border-left: none;\n    border-right: none;\n\n}\n\n.pure-menu a,\n.pure-menu .pure-menu-can-have-children > li:after {\n    color: #777;\n}\n\n.pure-menu .pure-menu-can-have-children > li:hover:after {\n    color: #fff;\n}\n\n/* Focus style for a dropdown menu-item when the parent has been opened */\n.pure-menu .pure-menu-open {\n    background: #dedede;\n}\n\n\n.pure-menu li a:hover,\n.pure-menu li a:focus {\n    background: #eee;\n}\n\n/* DISABLED STATES */\n.pure-menu li.pure-menu-disabled a:hover,\n.pure-menu li.pure-menu-disabled a:focus {\n    background: #fff;\n    color: #bfbfbf;\n}\n\n.pure-menu .pure-menu-disabled > a {\n    background-image: none;\n    border-color: transparent;\n    cursor: default;\n}\n\n.pure-menu .pure-menu-disabled > a,\n.pure-menu .pure-menu-can-have-children.pure-menu-disabled > a:after {\n    color: #bfbfbf;\n}\n\n/* HEADINGS */\n.pure-menu .pure-menu-heading {\n    color: #565d64;\n    text-transform: uppercase;\n    font-size: 90%;\n    margin-top: 0.5em;\n    border-bottom-width: 1px;\n    border-bottom-style: solid;\n    border-bottom-color: #dfdfdf;\n}\n\n/* ACTIVE MENU ITEM */\n.pure-menu .pure-menu-selected a {\n    color: #000;\n}\n\n/* FIXED MENU */\n.pure-menu.pure-menu-open.pure-menu-fixed {\n    border: none;\n    border-bottom: 1px solid #b7b7b7;\n}\n\n/*csslint box-model:false*/\n/*TODO: Remove this lint rule override after a refactor of this code.*/\n\n\n.pure-paginator {\n\n    /* `pure-g` Grid styles */\n    letter-spacing: -0.31em; /* Webkit: collapse white-space between units */\n    *letter-spacing: normal; /* reset IE < 8 */\n    *word-spacing: -0.43em; /* IE < 8: collapse white-space between units */\n    text-rendering: optimizespeed; /* Webkit: fixes text-rendering: optimizeLegibility */\n\n    /* `pure-paginator` Specific styles */\n    list-style: none;\n    margin: 0;\n    padding: 0;\n}\n.opera-only :-o-prefocus,\n.pure-paginator {\n    word-spacing: -0.43em;\n}\n\n/* `pure-u` Grid styles */\n.pure-paginator li {\n    display: inline-block;\n    *display: inline; /* IE < 8: fake inline-block */\n    zoom: 1;\n    letter-spacing: normal;\n    word-spacing: normal;\n    vertical-align: top;\n    text-rendering: auto;\n}\n\n\n.pure-paginator .pure-button {\n    border-radius: 0;\n    padding: 0.8em 1.4em;\n    vertical-align: top;\n    height: 1.1em;\n}\n.pure-paginator .pure-button:focus,\n.pure-paginator .pure-button:active {\n    outline-style: none;\n}\n.pure-paginator .prev,\n.pure-paginator .next {\n    color: #C0C1C3;\n    text-shadow: 0 -1px 0 rgba(0,0,0, 0.45);\n}\n.pure-paginator .prev {\n    border-radius: 2px 0 0 2px;\n}\n.pure-paginator .next {\n    border-radius: 0 2px 2px 0;\n}\n\n@media (max-width: 480px) {\n    .pure-menu-horizontal {\n        width: 100%;\n    }\n\n    .pure-menu-children li {\n        display: block;\n        border-bottom: 1px solid black;\n    }\n}\n\n.pure-table {\n    /* Remove spacing between table cells (from Normalize.css) */\n    border-collapse: collapse;\n    border-spacing: 0;\n    empty-cells: show;\n    border: 1px solid #cbcbcb;\n}\n\n.pure-table caption {\n    color: #000;\n    font: italic 85%/1 arial, sans-serif;\n    padding: 1em 0;\n    text-align: center;\n}\n\n.pure-table td,\n.pure-table th {\n    border-left: 1px solid #cbcbcb;/*  inner column border */\n    border-width: 0 0 0 1px;\n    font-size: inherit;\n    margin: 0;\n    overflow: visible; /*to make ths where the title is really long work*/\n    padding: 0.5em 1em; /* cell padding */\n}\n.pure-table td:first-child,\n.pure-table th:first-child {\n    border-left-width: 0;\n}\n\n.pure-table thead {\n    background: #e0e0e0;\n    color: #000;\n    text-align: left;\n    vertical-align: bottom;\n}\n\n/*\nstriping:\n   even - #fff (white)\n   odd  - #f2f2f2 (light gray)\n*/\n.pure-table td {\n    background-color: transparent;\n}\n.pure-table-odd td {\n    background-color: #f2f2f2;\n}\n\n/* nth-child selector for modern browsers */\n.pure-table-striped tr:nth-child(2n-1) td {\n    background-color: #f2f2f2;\n}\n\n/* BORDERED TABLES */\n.pure-table-bordered td {\n    border-bottom: 1px solid #cbcbcb;\n}\n.pure-table-bordered tbody > tr:last-child > td {\n    border-bottom-width: 0;\n}\n\n\n/* HORIZONTAL BORDERED TABLES */\n\n.pure-table-horizontal td,\n.pure-table-horizontal th {\n    border-width: 0 0 1px 0;\n    border-bottom: 1px solid #cbcbcb;\n}\n.pure-table-horizontal tbody > tr:last-child > td {\n    border-bottom-width: 0;\n}\n"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],4:[function(require,module,exports){
+require('./css/default.css');
+require('./css/purecss-0.5.0.css');
+require('./css/pure-finetuned.css');
+},{"./css/default.css":1,"./css/pure-finetuned.css":2,"./css/purecss-0.5.0.css":3}],5:[function(require,module,exports){
 module.exports = function (css, customDocument) {
   var doc = customDocument || document;
   if (doc.createStyleSheet) {
@@ -37,7 +47,7 @@ module.exports.byUrl = function(url) {
   }
 };
 
-},{}],2:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 "use strict";
 
 /**
@@ -60,7 +70,7 @@ module.exports.byUrl = function(url) {
 
 var NAME = '[event-dom]: ',
     Event = require('event'),
-    later = require('utils').later,
+    laterSilent = require('utils').laterSilent,
     OUTSIDE = 'outside',
     REGEXP_NODE_ID = /^#\S+$/,
     REGEXP_EXTRACT_NODE_ID = /#(\S+)/,
@@ -79,6 +89,7 @@ var NAME = '[event-dom]: ',
     EV_ATTRIBUTE_REMOVED = UI+ATTRIBUTE+REMOVE,
     EV_ATTRIBUTE_CHANGED = UI+ATTRIBUTE+CHANGE,
     EV_ATTRIBUTE_INSERTED = UI+ATTRIBUTE+INSERT,
+    mutationEventsDefined = false,
 
     /*
      * Internal hash containing all DOM-events that are listened for (at `document`).
@@ -154,19 +165,21 @@ module.exports = function (window) {
         // this stage is runned during subscription
         var outsideEvent = REGEXP_UI_OUTSIDE.test(customEvent),
             selector = subscriber.f,
+            context = subscriber.o,
+            isCustomElement = subscriber.o._isCustomElement,
             nodeid, byExactId;
 
         console.log(NAME, '_domSelToFunc type of selector = '+typeof selector);
         // note: selector could still be a function: in case another subscriber
         // already changed it.
-        if (!selector || (typeof selector === 'function')) {
-            subscriber.n || (subscriber.n=DOCUMENT);
+        if ((!selector && !isCustomElement) || (typeof selector === 'function')) {
+            subscriber.n || (subscriber.n = isCustomElement ? context : DOCUMENT);
             return true;
         }
+        selector || (selector='');
 
         nodeid = selector.match(REGEXP_EXTRACT_NODE_ID);
-        nodeid ? (subscriber.nId=nodeid[1]) : (subscriber.n=DOCUMENT);
-
+        nodeid ? (subscriber.nId=nodeid[1]) : (subscriber.n=isCustomElement ? context : DOCUMENT);
         byExactId = REGEXP_NODE_ID.test(selector);
 
         subscriber.f = function(e) {
@@ -174,38 +187,47 @@ module.exports = function (window) {
             console.log(NAME, '_domSelToFunc inside filter. selector: '+selector);
             var node = e.target,
                 vnode = node.vnode,
-                character1 = selector.substr(1),
+                character1 = selector && selector.substr(1),
                 match = false;
-            // e.target is the most deeply node in the dom-tree that caught the event
-            // our listener uses `selector` which might be a node higher up the tree.
-            // we will reset e.target to this node (if there is a match)
-            // note that e.currentTarget will always be `document` --> we're not interested in that
-            // also, we don't check for `node`, but for node.matchesSelector: the highest level `document`
-            // is not null, yet it doesn;t have .matchesSelector so it would fail
-            if (vnode) {
-                // we go through the vdom
-                while (vnode && !match) {
-                    console.log(NAME, '_domSelToFunc inside filter check match using the vdom');
-                    match = byExactId ? (vnode.id===character1) : vnode.matchesSelector(selector);
-                    // if there is a match, then set
-                    // e.target to the target that matches the selector
-                    if (match && !outsideEvent) {
-                        subscriber.t = vnode.domNode;
-                    }
-                    vnode = vnode.vParent;
+            if (!subscriber.o._isCustomElement || subscriber.o.contains(node)) {
+                if (selector==='') {
+                    match = true;
                 }
-            }
-            else {
-                // we go through the dom
-                while (node.matchesSelector && !match) {
-                    console.log(NAME, '_domSelToFunc inside filter check match using the dom');
-                    match = byExactId ? (node.id===character1) : node.matchesSelector(selector);
-                    // if there is a match, then set
-                    // e.target to the target that matches the selector
-                    if (match && !outsideEvent) {
-                        subscriber.t = node;
+                else {
+                    // e.target is the most deeply node in the dom-tree that caught the event
+                    // our listener uses `selector` which might be a node higher up the tree.
+                    // we will reset e.target to this node (if there is a match)
+                    // note that e.currentTarget will always be `document` --> we're not interested in that
+                    // also, we don't check for `node`, but for node.matchesSelector: the highest level `document`
+                    // is not null, yet it doesn;t have .matchesSelector so it would fail
+                    if (vnode) {
+                        // we go through the vdom
+                        if (!vnode.removedFromDOM) {
+                            while (vnode && !match) {
+                                console.log(NAME, '_domSelToFunc inside filter check match using the vdom');
+                                match = byExactId ? (vnode.id===character1) : vnode.matchesSelector(selector);
+                                // if there is a match, then set
+                                // e.target to the target that matches the selector
+                                if (match && !outsideEvent) {
+                                    subscriber.t = vnode.domNode;
+                                }
+                                vnode = vnode.vParent;
+                            }
+                        }
                     }
-                    node = node.parentNode;
+                    else {
+                        // we go through the dom
+                        while (node.matchesSelector && !match) {
+                            console.log(NAME, '_domSelToFunc inside filter check match using the dom');
+                            match = byExactId ? (node.id===character1) : node.matchesSelector(selector);
+                            // if there is a match, then set
+                            // e.target to the target that matches the selector
+                            if (match && !outsideEvent) {
+                                subscriber.t = node;
+                            }
+                            node = node.parentNode;
+                        }
+                    }
                 }
             }
             console.log(NAME, '_domSelToFunc filter returns '+(!outsideEvent ? match : !match));
@@ -285,11 +307,11 @@ module.exports = function (window) {
             // we need to do this asynchronous: this way we pass them AFTER the DOM-event's defaultFn
             // also make sure to paas-in the payload of the manipulated eventobject
             subscribers = _getSubscribers(e, false, subs, wildcard_named_subs, named_wildcard_subs, wildcard_wildcard_subs);
-            (subscribers.length>0) && later(Event._emit.bind(Event, e.target, customEvent, eventobject, [], subscribers, _preProcessor, true), 10, false);
+            (subscribers.length>0) && laterSilent(Event._emit.bind(Event, e.target, customEvent, eventobject, [], subscribers, _preProcessor, true), 10);
 
             // now check outside subscribers
             subscribers = _getSubscribers(e, false, subsOutside, wildcard_named_subsOutside);
-            (subscribers.length>0) && later(Event._emit.bind(Event, e.target, customEvent+OUTSIDE, eventobjectOutside, [], subscribers, _preProcessor, true), 10, false);
+            (subscribers.length>0) && laterSilent(Event._emit.bind(Event, e.target, customEvent+OUTSIDE, eventobjectOutside, [], subscribers, _preProcessor, true), 10);
         }
     };
 
@@ -470,7 +492,7 @@ module.exports = function (window) {
                     buttonNode.setClass(PURE_BUTTON_ACTIVE);
                     // even if the node isn't in the DOM, we can still try to manipulate it:
                     // the vdom makes sure no errors occur when the node is already removed
-                    later(buttonNode.removeClass.bind(buttonNode, PURE_BUTTON_ACTIVE), TIME_BTN_PRESSED);
+                    laterSilent(buttonNode.removeClass.bind(buttonNode, PURE_BUTTON_ACTIVE), TIME_BTN_PRESSED);
                 }
             }
         );
@@ -479,6 +501,15 @@ module.exports = function (window) {
 
     _setupMutationListener = function() {
         DOCUMENT.hasMutationSubs = true;
+        if (!mutationEventsDefined) {
+            Event.defineEvent(EV_REMOVED).unPreventable().noRender();
+            Event.defineEvent(EV_INSERTED).unPreventable().noRender();
+            Event.defineEvent(EV_CONTENT_CHANGE).unPreventable().noRender();
+            Event.defineEvent(EV_ATTRIBUTE_REMOVED).unPreventable().noRender();
+            Event.defineEvent(EV_ATTRIBUTE_CHANGED).unPreventable().noRender();
+            Event.defineEvent(EV_ATTRIBUTE_INSERTED).unPreventable().noRender();
+            mutationEventsDefined = true;
+        }
     };
 
     /*
@@ -573,6 +604,7 @@ module.exports = function (window) {
     // making HTMLElement to be able to emit using event-emitter:
     (function(HTMLElementPrototype) {
         HTMLElementPrototype.merge(Event.Emitter('UI'));
+        HTMLElementPrototype._isCustomElement = true;
     }(window.HTMLElement.prototype));
 
 
@@ -625,7 +657,7 @@ module.exports = function (window) {
     return Event;
 };
 
-},{"event":6,"js-ext/lib/array.js":15,"js-ext/lib/object.js":16,"js-ext/lib/string.js":17,"polyfill/polyfill-base.js":23,"utils":24,"vdom":68}],3:[function(require,module,exports){
+},{"event":10,"js-ext/lib/array.js":19,"js-ext/lib/object.js":20,"js-ext/lib/string.js":21,"polyfill/polyfill-base.js":27,"utils":28,"vdom":72}],7:[function(require,module,exports){
 (function (global){
 /**
  * Defines the Event-Class, which should be instantiated to get its functionality
@@ -775,7 +807,7 @@ require('js-ext/lib/object.js');
          * Defines a CustomEvent. If the eventtype already exists, it will not be overridden,
          * unless you force to assign with `.forceAssign()`
          *
-         * The returned object comes with 4 methods which can be invoked chainable:
+         * The returned object comes with 8 methods which can be invoked chainable:
          *
          * <ul>
          *     <li>defaultFn() --> the default-function of the event</li>
@@ -798,6 +830,10 @@ require('js-ext/lib/object.js');
          *      <li>forceAssign() --> overrides any previous definition</li>
          *      <li>defaultFn() --> the default-function of the event</li>
          *      <li>preventedFn() --> the function that should be invoked when the event is defaultPrevented</li>
+         *      <li>forceAssign() --> overrides any previous definition</li>
+         *      <li>unHaltable() --> makes the customEvent cannot be halted</li>
+         *      <li>unSilencable() --> makes that emitters cannot make this event to perform silently (using e.silent)</li>
+         *      <li>noRender() --> prevents this customEvent from render the dom. Overrules unRenderPreventable()</li>
          * </ul>
          * @since 0.0.1
          */
@@ -1509,6 +1545,7 @@ require('js-ext/lib/object.js');
                     e._unPreventable = customEventDefinition.unPreventable;
                     e._unHaltable = customEventDefinition.unHaltable;
                     e._unRenderPreventable = customEventDefinition.unRenderPreventable;
+                    e._noRender = customEventDefinition.noRender;
                     customEventDefinition.unSilencable && (e.status.unSilencable = true);
                 }
                 if (payload) {
@@ -1554,7 +1591,7 @@ require('js-ext/lib/object.js');
                     // then we reset e.target to its original:
                     e.sourceTarget && (e.target=e.sourceTarget);
                     instance._final.some(function(finallySubscriber) {
-                        !e.silent && finallySubscriber(e);
+                        !e.silent && !e._noRender && !e.status.renderPrevented  && finallySubscriber(e);
                         if (e.status.unSilencable && e.silent) {
                             console.warn(NAME, ' event '+e.emitter+':'+e.type+' cannot made silent: this customEvent is defined as unSilencable');
                             e.silent = false;
@@ -1929,7 +1966,7 @@ require('js-ext/lib/object.js');
     return Event;
 }));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"js-ext/lib/function.js":7,"js-ext/lib/object.js":8,"polyfill/polyfill-base.js":14}],4:[function(require,module,exports){
+},{"js-ext/lib/function.js":11,"js-ext/lib/object.js":12,"polyfill/polyfill-base.js":18}],8:[function(require,module,exports){
 "use strict";
 
 /**
@@ -2048,7 +2085,7 @@ Event.Emitter = function(emitterName) {
     Event.defineEmitter(newEmitter, emitterName);
     return newEmitter;
 };
-},{"./index.js":6}],5:[function(require,module,exports){
+},{"./index.js":10}],9:[function(require,module,exports){
 "use strict";
 
 /**
@@ -2194,11 +2231,11 @@ Event.Listener = {
         return Event.onceBefore(customEvent, callback, this, filter, prepend);
     }
 };
-},{"./index.js":6}],6:[function(require,module,exports){
+},{"./index.js":10}],10:[function(require,module,exports){
 module.exports = require('./event-base.js');
 require('./event-emitter.js');
 require('./event-listener.js');
-},{"./event-base.js":3,"./event-emitter.js":4,"./event-listener.js":5}],7:[function(require,module,exports){
+},{"./event-base.js":7,"./event-emitter.js":8,"./event-listener.js":9}],11:[function(require,module,exports){
 /**
  *
  * Pollyfils for often used functionality for Functions
@@ -2264,19 +2301,33 @@ defineProperties(Function.prototype, {
 	 * @chainable
 	 */
 	mergePrototypes: function (map, force) {
-		var proto = this.prototype;
-
-		var names = Object.keys(map || {}),
+		var instance = this,
+		    proto = instance.prototype,
+		    names = Object.keys(map || {}),
 			l = names.length,
 			i = -1,
-			name;
+			name, nameInProto;
 		while (++i < l) {
 			name = names[i];
-			if (!force && name in proto) continue;
-			proto[name] = map[name];
+			nameInProto = (name in proto);
+			if (!nameInProto || force) {
+				// if nameInProto: set the property, but also backup for chaining using $orig
+				if (typeof map[name] === 'function') {
+/*jshint -W083 */
+					proto[name] = (function (original, methodName) {
+						return function () {
+/*jshint +W083 */
+							instance.$orig[methodName] = original;
+							return map[methodName].apply(this, arguments);
+						};
+					})(proto[name] || NOOP, name);
+				}
+				else {
+					proto[name] = map[name];
+				}
+			}
 		}
-		return this;
-
+		return instance;
 	},
 
 	/**
@@ -2338,40 +2389,6 @@ defineProperties(Function.prototype, {
 	},
 
 	/**
-	 * Overwrites the given prototype functions with the ones given in
-	 * the hashmap while still providing a means of calling the original
-	 * overridden method.
-     *
-	 * The patching function will receive a reference to the original method
-	 * prepended to the arguments the original would have received.
-     *
-	 * @method patch
-	 * @param map {Object} Hash map of method names to their new implementation.
-	 * @chainable
-	*/
-	patch: function (map) {
-		var proto = this.prototype;
-
-		var names = Object.keys(map || {}),
-			l = names.length,
-			i = -1,
-			name;
-		while (++i < l) {
-			name = names[i];
-			/*jshint -W083 */
-			proto[name] = (function (original) {
-				return function () {
-					/*jshint +W083 */
-					var a = Array.prototype.slice.call(arguments, 0);
-					a.unshift(original || NOOP);
-					return map[name].apply(this, a);
-				};
-			})(proto[name]);
-		}
-		return this;
-	},
-
-	/**
 	 * Sets the context of which the function will be execute. in the
 	 * supplied object's context, optionally adding any additional
 	 * supplied parameters to the end of the arguments the function
@@ -2419,7 +2436,7 @@ defineProperties(Function.prototype, {
 defineProperty(Object.prototype, 'createClass', function () {
 	return Function.prototype.subClass.apply(this, arguments);
 });
-},{"polyfill/polyfill-base.js":11}],8:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":15}],12:[function(require,module,exports){
 /**
  *
  * Pollyfils for often used functionality for Objects
@@ -2704,7 +2721,7 @@ defineProperties(Object.prototype, {
             keys = Object.keys(this),
             l = keys.length,
             i = -1,
-            key, attr, value;
+            key, value;
         // loop through the members:
         while (++i < l) {
             key = keys[i];
@@ -2812,7 +2829,7 @@ Object.merge = function () {
     });
     return m;
 };
-},{"polyfill/polyfill-base.js":11}],9:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":15}],13:[function(require,module,exports){
 (function (global){
 // based upon https://gist.github.com/jonathantneal/3062955
 (function (global) {
@@ -2836,7 +2853,7 @@ Object.merge = function () {
 
 }(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],10:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 (function (global){
 (function (global) {
     "use strict";
@@ -2855,16 +2872,16 @@ Object.merge = function () {
     module.exports = CONSOLE;
 }(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],11:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 require('./lib/window.console.js');
 require('./lib/matchesselector.js');
-},{"./lib/matchesselector.js":9,"./lib/window.console.js":10}],12:[function(require,module,exports){
-module.exports=require(9)
-},{}],13:[function(require,module,exports){
-module.exports=require(10)
-},{}],14:[function(require,module,exports){
-module.exports=require(11)
-},{"./lib/matchesselector.js":12,"./lib/window.console.js":13}],15:[function(require,module,exports){
+},{"./lib/matchesselector.js":13,"./lib/window.console.js":14}],16:[function(require,module,exports){
+module.exports=require(13)
+},{}],17:[function(require,module,exports){
+module.exports=require(14)
+},{}],18:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":16,"./lib/window.console.js":17}],19:[function(require,module,exports){
 /**
  *
  * Pollyfils for often used functionality for Arrays
@@ -3015,9 +3032,9 @@ var cloneObj = function(obj) {
      };
 
 }(Array.prototype));
-},{"polyfill/polyfill-base.js":20}],16:[function(require,module,exports){
-module.exports=require(8)
-},{"polyfill/polyfill-base.js":20}],17:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":24}],20:[function(require,module,exports){
+module.exports=require(12)
+},{"polyfill/polyfill-base.js":24}],21:[function(require,module,exports){
 /**
  *
  * Pollyfils for often used functionality for Strings
@@ -3249,25 +3266,27 @@ module.exports=require(8)
 
 }(String.prototype));
 
-},{}],18:[function(require,module,exports){
-module.exports=require(9)
-},{}],19:[function(require,module,exports){
-module.exports=require(10)
-},{}],20:[function(require,module,exports){
-module.exports=require(11)
-},{"./lib/matchesselector.js":18,"./lib/window.console.js":19}],21:[function(require,module,exports){
-module.exports=require(9)
 },{}],22:[function(require,module,exports){
-module.exports=require(10)
+module.exports=require(13)
 },{}],23:[function(require,module,exports){
-module.exports=require(11)
-},{"./lib/matchesselector.js":21,"./lib/window.console.js":22}],24:[function(require,module,exports){
+module.exports=require(14)
+},{}],24:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":22,"./lib/window.console.js":23}],25:[function(require,module,exports){
+module.exports=require(13)
+},{}],26:[function(require,module,exports){
+module.exports=require(14)
+},{}],27:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":25,"./lib/window.console.js":26}],28:[function(require,module,exports){
 module.exports = {
 	idGenerator: require('./lib/idgenerator.js').idGenerator,
-	later: require('./lib/timers.js').later,
-	async: require('./lib/timers.js').async
+    later: require('./lib/timers.js').later,
+    laterSilent: require('./lib/timers.js').laterSilent,
+    async: require('./lib/timers.js').async,
+    asyncSilent: require('./lib/timers.js').asyncSilent
 };
-},{"./lib/idgenerator.js":25,"./lib/timers.js":26}],25:[function(require,module,exports){
+},{"./lib/idgenerator.js":29,"./lib/timers.js":30}],29:[function(require,module,exports){
 "use strict";
 
 require('polyfill/polyfill-base.js');
@@ -3324,8 +3343,8 @@ module.exports.idGenerator = function(namespace, start) {
 	return (namespace===UNDEFINED_NS) ? namespaces[namespace]++ : namespace+'-'+namespaces[namespace]++;
 };
 
-},{"polyfill/polyfill-base.js":29}],26:[function(require,module,exports){
-(function (process,global){
+},{"polyfill/polyfill-base.js":33}],30:[function(require,module,exports){
+(function (global){
 /**
  * Collection of various utility functions.
  *
@@ -3346,7 +3365,7 @@ module.exports.idGenerator = function(namespace, start) {
 	require('polyfill/polyfill-base.js');
 
 	var NAME = '[utils-timers]: ',
-	    _asynchronizer, _async;
+	    _asynchronizer, _async, _asynchronizerSilent, _later;
 
 	/**
 	 * Forces a function to be run asynchronously, but as fast as possible. In Node.js
@@ -3357,8 +3376,32 @@ module.exports.idGenerator = function(namespace, start) {
 	 * @static
 	 * @private
 	**/
-	_asynchronizer = (typeof setImmediate !== 'undefined') ? function (fn) {setImmediate(fn);} :
-                        ((typeof process !== 'undefined') && process.nextTick) ? process.nextTick : function (fn) {setTimeout(fn, 0);};
+	_asynchronizer = (typeof global.setImmediate !== 'undefined') ?
+						function (fn) {
+							global.setImmediate(fn);
+						} :
+                	((typeof global.process !== 'undefined') && global.process.nextTick) ?
+                		global.process.nextTick :
+                		function (fn) {
+                    		global.setTimeout(fn, 0);
+                    	};
+
+	/**
+	 * Forces a function to be run asynchronously, but as fast as possible. In Node.js
+	 * this is achieved using `setImmediate` or `process.nextTick`.
+	 *
+	 * @method _asynchronizerSilent
+	 * @param callbackFn {Function} The function to call asynchronously
+	 * @static
+	 * @private
+	**/
+	_asynchronizerSilent = (typeof global.setImmediate !== 'undefined') ?
+								function (fn) {
+									global._setImmediate(fn);
+								} :
+		                		function (fn) {
+		                    		global._setTimeout(fn, 0);
+		                    	};
 
 	/**
 	 * Invokes the callbackFn once in the next turn of the JavaScript event loop. If the function
@@ -3375,18 +3418,20 @@ module.exports.idGenerator = function(namespace, start) {
 	**/
 	_async = function (callbackFn, invokeAfterFn) {
 		console.log(NAME, 'async');
-		var host = this || global,
-			canceled;
-
 		invokeAfterFn = (typeof invokeAfterFn === 'boolean') ? invokeAfterFn : true;
-		(typeof callbackFn==='function') && _asynchronizer(function () {
-			if (!canceled) {
-	        	console.log(NAME, 'async is running its callbakcFn');
-				callbackFn();
-				// in case host._afterAsyncFn is defined: invoke it, to identify that later has been executed
-				invokeAfterFn && host._afterAsyncFn && host._afterAsyncFn();
-			}
-		});
+		var canceled, callback,
+			// if not available, then don't invoke the afterFn:
+		    originalTimer = (invokeAfterFn || !global._setTimeout);
+
+		if (typeof callbackFn==='function') {
+			callback = function () {
+				if (!canceled) {
+		        	console.log(NAME, 'async is running its callbackFn');
+					callbackFn();
+				}
+			};
+			originalTimer ? _asynchronizer(callback) : _asynchronizerSilent(callback);
+		}
 
 		return {
 			cancel: function () {
@@ -3409,6 +3454,9 @@ module.exports.idGenerator = function(namespace, start) {
 	 * called before the callback function, the callback function won't be called.
 	**/
 	module.exports.async = _async;
+	module.exports.asyncSilent = function() {
+		return _async.call(this, arguments[0], false);
+	};
 
 	/**
 	 * Invokes the callbackFn after a timeout (asynchronous). If the function
@@ -3431,16 +3479,17 @@ module.exports.idGenerator = function(namespace, start) {
 	 * @param [invokeAfterFn=true] {boolean} set to false to prevent the _afterSyncFn to be invoked
 	 * @return {object} a timer object. Call the cancel() method on this object to stop the timer.
 	*/
-	module.exports.later = function (callbackFn, timeout, periodic, invokeAfterFn) {
+	_later = function (callbackFn, timeout, periodic, invokeAfterFn) {
 		console.log(NAME, 'later --> timeout: '+timeout+'ms | periodic: '+periodic);
-		var host = this || global,
-			canceled = false;
+		// if not available, then don't invoke the afterFn:
 		invokeAfterFn = (typeof invokeAfterFn === 'boolean') ? invokeAfterFn : true;
 		if (!timeout) {
-			return _async(callbackFn);
+			return _async(callbackFn, invokeAfterFn);
 		}
 		var interval = periodic,
 			secondtimeout = (typeof interval==='number'),
+		    canceled = false,
+		    originalTimer = (invokeAfterFn || !global._setTimeout),
 			secondairId,
 			wrapper = function() {
 				// IE 8- and also nodejs may execute a callback, so in order to preserve
@@ -3448,9 +3497,9 @@ module.exports.idGenerator = function(namespace, start) {
 				if (!canceled) {
 	            	console.log(NAME, 'later is running its callbakcFn');
 					callbackFn();
-					secondtimeout && (secondairId=setInterval(wrapperInterval, interval));
-					// in case host._afterAsyncFn is defined: invoke it, to identify that later has been executed
-					invokeAfterFn && host._afterAsyncFn && host._afterAsyncFn();
+					if (secondtimeout) {
+						secondairId = originalTimer ? global.setInterval(wrapperInterval, interval) : global._setInterval(wrapperInterval, interval);
+					}
 					// break closure inside returned object:
 					id = null;
 				}
@@ -3462,12 +3511,19 @@ module.exports.idGenerator = function(namespace, start) {
 				if (!canceled) {
 	            	console.log(NAME, 'later is running its callbakcFn');
 					callbackFn();
-					// in case host._afterAsyncFn is defined: invoke it, to identify that later has been executed
-					invokeAfterFn && host._afterAsyncFn && host._afterAsyncFn();
 				}
 			},
 			id;
-		(typeof callbackFn==='function') && (id=(interval && !secondtimeout) ? setInterval(wrapperInterval, timeout) : setTimeout(wrapper, timeout));
+		if (typeof callbackFn==='function') {
+/*jshint boss:true */
+			if (id=(interval && !secondtimeout)) {
+/*jshint boss:false */
+				originalTimer ? global.setInterval(wrapperInterval, timeout) : global._setInterval(wrapperInterval, timeout);
+			}
+			else {
+				originalTimer ? global.setTimeout(wrapper, timeout) : global._setTimeout(wrapper, timeout);
+			}
+		}
 
 		return {
 			cancel: function() {
@@ -3481,18 +3537,31 @@ module.exports.idGenerator = function(namespace, start) {
 		};
 	};
 
+	module.exports.later = _later;
+
+	module.exports.laterSilent = function() {
+		var args = arguments,
+			newArgs = [];
+		newArgs[0] = args[0];
+		newArgs[1] = args[1];
+		newArgs[2] = args[2];
+		newArgs[3] = false;
+		return _later.apply(this, newArgs);
+	};
+
+
 }(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this));
 
-}).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":146,"polyfill/polyfill-base.js":29}],27:[function(require,module,exports){
-module.exports=require(9)
-},{}],28:[function(require,module,exports){
-module.exports=require(10)
-},{}],29:[function(require,module,exports){
-module.exports=require(11)
-},{"./lib/matchesselector.js":27,"./lib/window.console.js":28}],30:[function(require,module,exports){
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"polyfill/polyfill-base.js":33}],31:[function(require,module,exports){
+module.exports=require(13)
+},{}],32:[function(require,module,exports){
+module.exports=require(14)
+},{}],33:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":31,"./lib/window.console.js":32}],34:[function(require,module,exports){
 var css = ".itsa-notrans, .itsa-notrans2,\n.itsa-notrans:before, .itsa-notrans2:before,\n.itsa-notrans:after, .itsa-notrans2:after {\n    -webkit-transition: none !important;\n    -moz-transition: none !important;\n    -ms-transition: none !important;\n    -o-transition: all 0s !important; /* opera doesn't support none */\n    transition: none !important;\n}\n\n.itsa-no-overflow {\n    overflow: hidden !important;\n}\n\n.itsa-invisible {\n    position: absolute !important;\n}\n\n.itsa-invisible-relative {\n    position: relative !important;\n}\n\n.itsa-invisible,\n.itsa-invisible-relative {\n    visibility: hidden !important;\n    z-index: -1;\n}\n\n.itsa-invisible *,\n.itsa-invisible-relative * {\n    visibility: hidden !important;\n}\n\n.itsa-transparent {\n    opacity: 0;\n}\n\n.itsa-hidden {\n    visibility: hidden !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n}\n\n.itsa-block {\n    display: block !important;\n}\n\n.itsa-borderbox {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],31:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],35:[function(require,module,exports){
 (function (global){
 /**
  *
@@ -3587,13 +3656,13 @@ var css = ".itsa-notrans, .itsa-notrans2,\n.itsa-notrans:before, .itsa-notrans2:
 
 }(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../lib/array.js":32,"../lib/function.js":33,"../lib/object.js":34,"polyfill/lib/weakmap.js":38}],32:[function(require,module,exports){
-module.exports=require(15)
-},{"polyfill/polyfill-base.js":40}],33:[function(require,module,exports){
-module.exports=require(7)
-},{"polyfill/polyfill-base.js":40}],34:[function(require,module,exports){
-module.exports=require(8)
-},{"polyfill/polyfill-base.js":40}],35:[function(require,module,exports){
+},{"../lib/array.js":36,"../lib/function.js":37,"../lib/object.js":38,"polyfill/lib/weakmap.js":42}],36:[function(require,module,exports){
+module.exports=require(19)
+},{"polyfill/polyfill-base.js":44}],37:[function(require,module,exports){
+module.exports=require(11)
+},{"polyfill/polyfill-base.js":44}],38:[function(require,module,exports){
+module.exports=require(12)
+},{"polyfill/polyfill-base.js":44}],39:[function(require,module,exports){
 "use strict";
 
 /**
@@ -3898,11 +3967,11 @@ Promise.manage = function (callbackFn) {
     return promise;
 };
 
-},{"polyfill":40}],36:[function(require,module,exports){
-module.exports=require(17)
-},{}],37:[function(require,module,exports){
-module.exports=require(9)
-},{}],38:[function(require,module,exports){
+},{"polyfill":44}],40:[function(require,module,exports){
+module.exports=require(21)
+},{}],41:[function(require,module,exports){
+module.exports=require(13)
+},{}],42:[function(require,module,exports){
 (function (global){
 // based upon https://gist.github.com/Gozala/1269991
 
@@ -4012,11 +4081,11 @@ module.exports=require(9)
 
 }(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],39:[function(require,module,exports){
-module.exports=require(10)
-},{}],40:[function(require,module,exports){
-module.exports=require(11)
-},{"./lib/matchesselector.js":37,"./lib/window.console.js":39}],41:[function(require,module,exports){
+},{}],43:[function(require,module,exports){
+module.exports=require(14)
+},{}],44:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":41,"./lib/window.console.js":43}],45:[function(require,module,exports){
 "use strict";
 
 /*
@@ -4066,7 +4135,7 @@ module.exports = function (window) {
 
     return transition;
 };
-},{}],42:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 "use strict";
 
 module.exports = function (window) {
@@ -4108,7 +4177,7 @@ module.exports = function (window) {
 
     return transitionEnd;
 };
-},{}],43:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 (function (global){
 "use strict";
 
@@ -4177,31 +4246,31 @@ module.exports = function (window) {
     return vendorCSS;
 };
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],44:[function(require,module,exports){
-module.exports=require(9)
-},{}],45:[function(require,module,exports){
-module.exports=require(10)
-},{}],46:[function(require,module,exports){
-module.exports=require(11)
-},{"./lib/matchesselector.js":44,"./lib/window.console.js":45}],47:[function(require,module,exports){
-module.exports=require(24)
-},{"./lib/idgenerator.js":48,"./lib/timers.js":49}],48:[function(require,module,exports){
-module.exports=require(25)
-},{"polyfill/polyfill-base.js":52}],49:[function(require,module,exports){
-module.exports=require(26)
-},{"_process":146,"polyfill/polyfill-base.js":52}],50:[function(require,module,exports){
-module.exports=require(9)
-},{}],51:[function(require,module,exports){
-module.exports=require(10)
-},{}],52:[function(require,module,exports){
-module.exports=require(11)
-},{"./lib/matchesselector.js":50,"./lib/window.console.js":51}],53:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
+module.exports=require(13)
+},{}],49:[function(require,module,exports){
+module.exports=require(14)
+},{}],50:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":48,"./lib/window.console.js":49}],51:[function(require,module,exports){
+module.exports=require(28)
+},{"./lib/idgenerator.js":52,"./lib/timers.js":53}],52:[function(require,module,exports){
+module.exports=require(29)
+},{"polyfill/polyfill-base.js":56}],53:[function(require,module,exports){
+module.exports=require(30)
+},{"polyfill/polyfill-base.js":56}],54:[function(require,module,exports){
+module.exports=require(13)
+},{}],55:[function(require,module,exports){
+module.exports=require(14)
+},{}],56:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":54,"./lib/window.console.js":55}],57:[function(require,module,exports){
 "use strict";
 
 module.exports = function (window) {
     require('./lib/sizes.js')(window);
 };
-},{"./lib/sizes.js":54}],54:[function(require,module,exports){
+},{"./lib/sizes.js":58}],58:[function(require,module,exports){
 "use strict";
 
 require('js-ext/lib/object.js');
@@ -4304,15 +4373,15 @@ module.exports = function (window) {
     };
 
 };
-},{"js-ext/lib/object.js":55}],55:[function(require,module,exports){
-module.exports=require(8)
-},{"polyfill/polyfill-base.js":58}],56:[function(require,module,exports){
-module.exports=require(9)
-},{}],57:[function(require,module,exports){
-module.exports=require(10)
-},{}],58:[function(require,module,exports){
-module.exports=require(11)
-},{"./lib/matchesselector.js":56,"./lib/window.console.js":57}],59:[function(require,module,exports){
+},{"js-ext/lib/object.js":59}],59:[function(require,module,exports){
+module.exports=require(12)
+},{"polyfill/polyfill-base.js":62}],60:[function(require,module,exports){
+module.exports=require(13)
+},{}],61:[function(require,module,exports){
+module.exports=require(14)
+},{}],62:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":60,"./lib/window.console.js":61}],63:[function(require,module,exports){
 "use strict";
 
 /**
@@ -4608,7 +4677,7 @@ module.exports = function (window) {
     return extractor;
 
 };
-},{"js-ext/lib/object.js":34,"js-ext/lib/string.js":36,"polyfill":46,"polyfill/extra/transition.js":41,"polyfill/extra/vendorCSS.js":43}],60:[function(require,module,exports){
+},{"js-ext/lib/object.js":38,"js-ext/lib/string.js":40,"polyfill":50,"polyfill/extra/transition.js":45,"polyfill/extra/vendorCSS.js":47}],64:[function(require,module,exports){
 "use strict";
 
 /**
@@ -4733,11 +4802,30 @@ module.exports = function (window) {
             *
             * @method removeAttr
             * @param attributeName {String}
-            * @return {Boolean} Whether the HtmlElement has the attribute set.
+            * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
+            * @chainable
             * @since 0.0.1
             */
-            removeAttr: function(/* attributeName */) {
+            removeAttr: function(/* attributeName, silent */) {
                 return forEach(this, 'removeAttr', arguments);
+            },
+
+           /**
+            * For all vElements of the ElementArray:
+             * Removes multiple attributes on the Element.
+             * The argument should be one ore more AttributeNames.
+             *
+             * @example
+             * instance.removeAttrs(['tabIndex', 'style']);
+             *
+             * @method removeAttrs
+             * @param attributeData {Array|String}
+             * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
+            * @chainable
+            * @since 0.0.1
+            */
+            removeAttrs: function(/* attributeData, silent */) {
+                return forEach(this, 'removeAttrs', arguments);
             },
 
            /**
@@ -4838,11 +4926,33 @@ module.exports = function (window) {
             * @method setAttr
             * @param attributeName {String}
             * @param value {Any} the value that belongs to `key`
+            * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
             * @chainable
             * @since 0.0.1
            */
-            setAttr: function(/* attributeName, value */) {
+            setAttr: function(/* attributeData, silent */) {
                 return forEach(this, 'setAttr', arguments);
+            },
+
+           /**
+            * For all vElements of the ElementArray:
+             * Sets multiple attributes on the Element with the specified value.
+             * The argument should be one ore more Objects with the properties: `name` and `value`
+             *
+             * @example
+             * instance.setAttrs([
+             *                      {name: 'tabIndex', value: '0'},
+             *                      {name: 'style', value: 'color: #000;'}
+             *                  ]);
+             *
+             * @method setAttrs
+             * @param attributeData {Array|Object}
+             * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
+            * @chainable
+            * @since 0.0.1
+           */
+            setAttrs: function(/* attributeName, value, silent */) {
+                return forEach(this, 'setAttrs', arguments);
             },
 
            /**
@@ -4993,7 +5103,7 @@ module.exports = function (window) {
 
     return ElementArray;
 };
-},{"js-ext/lib/object.js":34,"polyfill":46}],61:[function(require,module,exports){
+},{"js-ext/lib/object.js":38,"polyfill":50}],65:[function(require,module,exports){
 "use strict";
 
 /**
@@ -5125,7 +5235,7 @@ module.exports = function (window) {
 
     return ElementPlugin;
 };
-},{"js-ext/lib/object.js":34,"js-ext/lib/string.js":36,"polyfill":46}],62:[function(require,module,exports){
+},{"js-ext/lib/object.js":38,"js-ext/lib/string.js":40,"polyfill":50}],66:[function(require,module,exports){
 "use strict";
 
 /**
@@ -5144,6 +5254,7 @@ module.exports = function (window) {
 
 require('polyfill');
 require('js-ext/lib/object.js');
+require('js-ext/lib/string.js');
 
 module.exports = function (window) {
 
@@ -5230,6 +5341,40 @@ module.exports = function (window) {
      */
     DOCUMENT.getElementById = function(id) {
         return nodeids[id] || null; // force `null` instead of `undefined` to be compatible with native getElementById.
+    };
+
+    /**
+     * Returns the an Array with all Elements that have a tagName `i-parcel-*`
+     *
+     * @method getParcels
+     * @return {Array}
+     *
+     */
+    DOCUMENT.getParcels = function() {
+        var instance = this,
+            findChildren;
+        // i-parcel elements can only exists when the window.ITAGS are defined (by itags.core)
+        if (!window.ITAGS) {
+            return [];
+        }
+        if (instance._parcelList) {
+            return instance._parcelList;
+        }
+        // when not returned: it would be the first time --> we setup the current list
+        // the quickest way is by going through the vdom and inspect the tagNames ourselves:
+        findChildren = function(vnode) {
+            var vChildren = vnode.vChildren,
+                len = vChildren.length,
+                i, vChild;
+            for (i=0; i<len; i++) {
+                vChild = vChildren[i];
+                vChild.tag.startsWith('I-PARCEL-') && (DOCUMENT._parcelList[DOCUMENT._parcelList.length]=vChild.domNode);
+                findChildren(vChild);
+            }
+        };
+        Object.protectedProp(instance, '_parcelList', []);
+        findChildren(instance.getElement('body').vnode);
+        return instance._parcelList;
     };
 
     /**
@@ -5800,7 +5945,7 @@ module.exports = function (window) {
 
 
 
-},{"./vdom-ns.js":66,"js-ext/lib/object.js":34,"polyfill":46}],63:[function(require,module,exports){
+},{"./vdom-ns.js":70,"js-ext/lib/object.js":38,"js-ext/lib/string.js":40,"polyfill":50}],67:[function(require,module,exports){
 (function (global){
 "use strict";
 
@@ -5857,8 +6002,8 @@ module.exports = function (window) {
         _AFTER = ':before',
         extractor = require('./attribute-extractor.js')(window),
         UTILS = require('utils'),
-        later = UTILS.later,
-        async = UTILS.async,
+        later = UTILS.laterSilent,
+        async = UTILS.asyncSilent,
         idGenerator = UTILS.idGenerator,
         DOCUMENT = window.document,
         nodeids = NS.nodeids,
@@ -8054,11 +8199,14 @@ module.exports = function (window) {
         *
         * @method removeAttr
         * @param attributeName {String}
+        * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
         * @chainable
         * @since 0.0.1
         */
-        ElementPrototype.removeAttr = function(/* attributeName */) {
-            this.removeAttribute.apply(this, arguments);
+        ElementPrototype.removeAttr = function(attributeName, silent) {
+            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
+            this.removeAttribute(attributeName);
+            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(false);
             return this;
         };
 
@@ -8071,15 +8219,18 @@ module.exports = function (window) {
          *
          * @method removeAttrs
          * @param attributeData {Array|String}
+         * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
          * @chainable
          * @since 0.0.1
         */
-        ElementPrototype.removeAttrs = function(attributeData) {
+        ElementPrototype.removeAttrs = function(attributeData, silent) {
             var instance = this;
             Array.isArray(attributeData) || (attributeData=[attributeData]);
+            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
             attributeData.forEach(function(item) {
                 instance.removeAttribute(item);
             });
+            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(false);
             return instance;
         };
 
@@ -8122,6 +8273,7 @@ module.exports = function (window) {
         *        Setting this parameter, will calculate the true css of the transitioned properties and set this temporarely inline, to fix the issue.
         *        Don't use it when not needed, it has a slightly performancehit.
         *        No need to set when `returnPromise` is set --> returnPromise always handles the transitionFix.
+        * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
         * @return {Promise|this} In case `returnPromise` is set, a Promise returns with the next handles:
         *        <ul>
         *            <li>cancel() {Promise}</li>
@@ -8132,11 +8284,22 @@ module.exports = function (window) {
         *        These handles resolve with the `elapsed-time` as first argument of the callbackFn
         * @since 0.0.1
         */
-        ElementPrototype.removeClass = function(className, returnPromise, transitionFix) {
+        ElementPrototype.removeClass = function(className, returnPromise, transitionFix, silent) {
+            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
             var instance = this,
                 transPromise = (returnPromise || transitionFix) && getClassTransPromise(instance, REMOVE, className),
                 returnValue = returnPromise ? transPromise : instance;
             transPromise || instance.getClassList().remove(className);
+            if (silent && DOCUMENT.suppressMutationEvents) {
+                if (returnValue===instance) {
+                    DOCUMENT.suppressMutationEvents(false);
+                }
+                else {
+                    returnValue.finally(function() {
+                        DOCUMENT.suppressMutationEvents(false);
+                    });
+                }
+            }
             return returnValue;
         };
 
@@ -8472,6 +8635,7 @@ module.exports = function (window) {
         *        Setting this parameter, will calculate the true css of the transitioned properties and set this temporarely inline, to fix the issue.
         *        Don't use it when not needed, it has a slightly performancehit.
         *        No need to set when `returnPromise` is set --> returnPromise always handles the transitionFix.
+        * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
         * @return {Promise|this} In case `returnPromise` is set, a Promise returns with the next handles:
         *        <ul>
         *            <li>cancel() {Promise}</li>
@@ -8482,7 +8646,8 @@ module.exports = function (window) {
         *        These handles resolve with the `elapsed-time` as first argument of the callbackFn
         * @since 0.0.1
         */
-        ElementPrototype.replaceClass = function(prevClassName, newClassName, force, returnPromise, transitionFix) {
+        ElementPrototype.replaceClass = function(prevClassName, newClassName, force, returnPromise, transitionFix, silent) {
+            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
             var instance = this,
                 transPromise = (returnPromise || transitionFix) && getClassTransPromise(instance, REPLACE, newClassName, prevClassName, force),
                 returnValue;
@@ -8490,6 +8655,16 @@ module.exports = function (window) {
                 returnValue = returnPromise ? transPromise : instance;
                 transPromise || instance.removeClass(prevClassName).setClass(newClassName);
                 return returnValue;
+            }
+            if (silent && DOCUMENT.suppressMutationEvents) {
+                if (returnValue===instance) {
+                    DOCUMENT.suppressMutationEvents(false);
+                }
+                else {
+                    returnValue.finally(function() {
+                        DOCUMENT.suppressMutationEvents(false);
+                    });
+                }
             }
             return returnPromise ? window.Promise.resolve() : instance;
         };
@@ -8519,12 +8694,15 @@ module.exports = function (window) {
          * @method setAttr
          * @param attributeName {String}
          * @param value {Any} the value that belongs to `key`
+         * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
          * @chainable
          * @since 0.0.1
         */
-        ElementPrototype.setAttr = function(/* attributeName, value */) {
+        ElementPrototype.setAttr = function(attributeName, value, silent) {
             var instance = this;
-            instance.setAttribute.apply(instance, arguments);
+            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
+            instance.setAttribute(attributeName, value);
+            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(false);
             return instance;
         };
 
@@ -8557,15 +8735,18 @@ module.exports = function (window) {
          *
          * @method setAttrs
          * @param attributeData {Array|Object}
+         * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
          * @chainable
          * @since 0.0.1
         */
-        ElementPrototype.setAttrs = function(attributeData) {
+        ElementPrototype.setAttrs = function(attributeData, silent) {
             var instance = this;
             Array.isArray(attributeData) || (attributeData=[attributeData]);
+            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
             attributeData.forEach(function(item) {
                 instance.setAttribute(item.name, item.value);
             });
+            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(false);
             return instance;
         };
 
@@ -8580,6 +8761,7 @@ module.exports = function (window) {
         *        Setting this parameter, will calculate the true css of the transitioned properties and set this temporarely inline, to fix the issue.
         *        Don't use it when not needed, it has a slightly performancehit.
         *        No need to set when `returnPromise` is set --> returnPromise always handles the transitionFix.
+        * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
         * @return {Promise|this} In case `returnPromise` is set, a Promise returns with the next handles:
         *        <ul>
         *            <li>cancel() {Promise}</li>
@@ -8590,11 +8772,22 @@ module.exports = function (window) {
         *        These handles resolve with the `elapsed-time` as first argument of the callbackFn
         * @since 0.0.1
         */
-        ElementPrototype.setClass = function(className, returnPromise, transitionFix) {
+        ElementPrototype.setClass = function(className, returnPromise, transitionFix, silent) {
+            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
             var instance = this,
                 transPromise = (returnPromise || transitionFix) && getClassTransPromise(instance, SET, className),
                 returnValue = returnPromise ? transPromise : instance;
             transPromise || instance.getClassList().add(className);
+            if (silent && DOCUMENT.suppressMutationEvents) {
+                if (returnValue===instance) {
+                    DOCUMENT.suppressMutationEvents(false);
+                }
+                else {
+                    returnValue.finally(function() {
+                        DOCUMENT.suppressMutationEvents(false);
+                    });
+                }
+            }
             return returnValue;
         };
 
@@ -9467,6 +9660,7 @@ module.exports = function (window) {
         *        Setting this parameter, will calculate the true css of the transitioned properties and set this temporarely inline, to fix the issue.
         *        Don't use it when not needed, it has a slightly performancehit.
         *        No need to set when `returnPromise` is set --> returnPromise always handles the transitionFix.
+        * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
         * @return {Promise|this} In case `returnPromise` is set, a Promise returns with the next handles:
         *        <ul>
         *            <li>cancel() {Promise}</li>
@@ -9477,11 +9671,22 @@ module.exports = function (window) {
         *        These handles resolve with the `elapsed-time` as first argument of the callbackFn
         * @since 0.0.1
         */
-        ElementPrototype.toggleClass = function(className, forceState, returnPromise, transitionFix) {
+        ElementPrototype.toggleClass = function(className, forceState, returnPromise, transitionFix, silent) {
+            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
             var instance = this,
                 transPromise = (returnPromise || transitionFix) && getClassTransPromise(instance, TOGGLE, className, forceState),
                 returnValue = returnPromise ? transPromise : instance;
             transPromise || instance.getClassList().toggle(className, forceState);
+            if (silent && DOCUMENT.suppressMutationEvents) {
+                if (returnValue===instance) {
+                    DOCUMENT.suppressMutationEvents(false);
+                }
+                else {
+                    returnValue.finally(function() {
+                        DOCUMENT.suppressMutationEvents(false);
+                    });
+                }
+            }
             return returnValue;
         };
 
@@ -10154,7 +10359,7 @@ for (j=0; j<len2; j++) {
 * @since 0.0.1
 */
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../css/element.css":30,"./attribute-extractor.js":59,"./element-array.js":60,"./html-parser.js":64,"./node-parser.js":65,"./vdom-ns.js":66,"./vnode.js":67,"js-ext/lib/object.js":34,"js-ext/lib/promise.js":35,"js-ext/lib/string.js":36,"polyfill":46,"polyfill/extra/transition.js":41,"polyfill/extra/transitionend.js":42,"polyfill/extra/vendorCSS.js":43,"utils":47,"window-ext":53}],64:[function(require,module,exports){
+},{"../css/element.css":34,"./attribute-extractor.js":63,"./element-array.js":64,"./html-parser.js":68,"./node-parser.js":69,"./vdom-ns.js":70,"./vnode.js":71,"js-ext/lib/object.js":38,"js-ext/lib/promise.js":39,"js-ext/lib/string.js":40,"polyfill":50,"polyfill/extra/transition.js":45,"polyfill/extra/transitionend.js":46,"polyfill/extra/vendorCSS.js":47,"utils":51,"window-ext":57}],68:[function(require,module,exports){
 "use strict";
 
 /**
@@ -10290,8 +10495,8 @@ module.exports = function (window) {
                                     attributeValue = '';
                                     if (attributeisString) {
                                         i++;
-                                        while ((character!=='\\') && (++i<len) && (character=htmlString[i]) && (character!==stringMarker)) {
-                                            attributeValue += character;
+                                        while ((++i<len) && (character=htmlString[i]) && ((character!==stringMarker) || (htmlString[i-1]==='\\'))) {
+                                            ((htmlString[i+1]!==stringMarker) || (character!=='\\')) && (attributeValue+=character);
                                         }
                                     }
                                     else {
@@ -10433,7 +10638,8 @@ module.exports = function (window) {
                             vnode.isVoid = false;
                         }
                         else {
-                            (vnode.isVoid=!(new RegExp('</'+tag+'>$', 'i')).test(htmlString)) ? (voidElements[tag]=true) : (nonVoidElements[tag]=true);
+                            vnode.isVoid = ((tag[0]==='I') && (tag[1]==='-')) ? false : !(new RegExp('</'+tag+'>', 'i')).test(htmlString);
+                            vnode.isVoid ? (voidElements[tag]=true) : (nonVoidElements[tag]=true);
                         }
                         insideTagDefinition = true;
                     }
@@ -10479,7 +10685,7 @@ module.exports = function (window) {
     return htmlToVNodes;
 
 };
-},{"./attribute-extractor.js":59,"./vdom-ns.js":66,"js-ext/lib/object.js":34,"polyfill":46}],65:[function(require,module,exports){
+},{"./attribute-extractor.js":63,"./vdom-ns.js":70,"js-ext/lib/object.js":38,"polyfill":50}],69:[function(require,module,exports){
 "use strict";
 
 /**
@@ -10598,7 +10804,7 @@ module.exports = function (window) {
     return domNodeToVNode;
 
 };
-},{"./attribute-extractor.js":59,"./vdom-ns.js":66,"./vnode.js":67,"js-ext/lib/object.js":34,"polyfill":46}],66:[function(require,module,exports){
+},{"./attribute-extractor.js":63,"./vdom-ns.js":70,"./vnode.js":71,"js-ext/lib/object.js":38,"polyfill":50}],70:[function(require,module,exports){
 /**
  * Creates a Namespace that can be used accros multiple vdom-modules to share information.
  *
@@ -10700,7 +10906,7 @@ module.exports = function (window) {
 
     return NS;
 };
-},{"js-ext/lib/object.js":34,"polyfill":46}],67:[function(require,module,exports){
+},{"js-ext/lib/object.js":38,"polyfill":50}],71:[function(require,module,exports){
 "use strict";
 
 /**
@@ -10744,8 +10950,8 @@ module.exports = function (window) {
         nodeids = NS.nodeids,
         htmlToVNodes = require('./html-parser.js')(window),
         timers = require('utils/lib/timers.js'),
-        async = timers.async,
-        later = timers.later,
+        async = timers.asyncSilent,
+        later = timers.laterSilent,
 
         // cleanup memory after 1 minute: removed nodes SHOULD NOT be accessed afterwards
         // because vnode would be recalculated and might be different from before
@@ -11586,7 +11792,7 @@ module.exports = function (window) {
         * @since 0.0.1
         */
         contains: function(otherVNode) {
-            if (otherVNode.destroyed) {
+            if (otherVNode && otherVNode.destroyed) {
                 return false;
             }
             while (otherVNode && (otherVNode!==this)) {
@@ -11825,7 +12031,10 @@ module.exports = function (window) {
                 // if the size changed, then the domNode was merged
                 (size===instance.vChildNodes.length) || (domNode=instance.vChildNodes[instance.vChildNodes.length-1].domNode);
             }
-            VNode._emit(EV_INSERTED);
+            if (VNode.nodeType===1) {
+                DOCUMENT._parcelList && VNode.tag.startsWith('I-PARCEL-') && !DOCUMENT._parcelList.contains(domNode) && DOCUMENT._parcelList.push(domNode);
+                VNode._emit(EV_INSERTED);
+            }
             return domNode;
         },
 
@@ -11896,12 +12105,18 @@ module.exports = function (window) {
                 // someone might need to handle the Element when removed (fe to cleanup specific things)
                 later(function() {
                     instance._cleanData();
-                    // _destroy all its vChildNodes
-                    if ((instance.nodeType===1) && vChildNodes) {
-                        len = vChildNodes.length;
-                        for (i=0; i < len; i++) {
-                            vChildNode = vChildNodes[i];
-                            vChildNode && vChildNode._destroy(true);
+                    if (instance.nodeType===1) {
+                        // if vnode is part of DOCUMENT._parcelList then remove it
+                        if (DOCUMENT._parcelList && instance.tag.startsWith('I-PARCEL-')) {
+                            DOCUMENT._parcelList.remove(instance.domNode);
+                        }
+                        // _destroy all its vChildNodes
+                        if (vChildNodes) {
+                            len = vChildNodes.length;
+                            for (i=0; i < len; i++) {
+                                vChildNode = vChildNodes[i];
+                                vChildNode && vChildNode._destroy(true);
+                            }
                         }
                     }
                     instance._vChildren = null;
@@ -12063,7 +12278,10 @@ module.exports = function (window) {
                 newVNode._moveToParent(instance, index);
                 instance.domNode._insertBefore(domNode, refVNode.domNode);
                 (newVNode.nodeType===3) && instance._normalize();
-                newVNode._emit(EV_INSERTED);
+                if (newVNode.nodeType===1) {
+                    DOCUMENT._parcelList && newVNode.tag.startsWith('I-PARCEL-') && !DOCUMENT._parcelList.contains(domNode) && DOCUMENT._parcelList.push(domNode);
+                    newVNode._emit(EV_INSERTED);
+                }
             }
             return domNode;
         },
@@ -12269,13 +12487,15 @@ module.exports = function (window) {
                 prevVal = attrs[attributeName];
             // don't check by !== --> value isn't parsed into a String yet
 
+            if (prevVal && ((value===undefined) || (value===null))) {
+                instance._removeAttr(attributeName);
+                return instance;
+            }
+            // attribute-values are always Strings:
+            value = String(value);
+            // attribute-values will be stored without &quot; or &apos;
+            value = value.replace(/&quot;/g, '"').replace(/&apos;/g, "'");
             if (prevVal!=value) {
-                if ((value===undefined) || (value===null)) {
-                    instance._removeAttr(attributeName);
-                    return instance;
-                }
-                // attribute-values are always Strings:
-                value = String(value);
                 attrs[attributeName] = value;
                 // in case of STYLE attribute --> special treatment
                 if (attributeName===STYLE) {
@@ -12306,7 +12526,8 @@ module.exports = function (window) {
                     instance.id = value;
                     nodeids[value] = instance.domNode;
                 }
-                instance.domNode._setAttribute(attributeName, value);
+                // when set in the dom --> quotes need to be set as &quot;
+                instance.domNode._setAttribute(attributeName, value.replace(/"/g, '&quot;'));
                 instance._emit(prevVal ? EV_ATTRIBUTE_CHANGED : EV_ATTRIBUTE_INSERTED, attributeName, value, prevVal);
             }
             return instance;
@@ -12418,15 +12639,32 @@ module.exports = function (window) {
                                 newChild._setChildNodes(bkpChildNodes);
                                 newChild.id && (nodeids[newChild.id]=newChild.domNode);
                                 oldChild._replaceAtParent(newChild);
+                                DOCUMENT._parcelList && newChild.tag.startsWith('I-PARCEL-') && !DOCUMENT._parcelList.contains(newChild.domNode) && DOCUMENT._parcelList.push(newChild.domNode);
                                 newChild._emit(EV_INSERTED);
                             }
                             else {
                                 // same tag --> only update what is needed
-                                oldChild.attrs = newChild.attrs;
+                                // first: we might need to set the class `focussed` when the attributeData says so:
+                                // this happens when an itag gets rerendered: its renderFn doesn't know if any elements
+                                // were focussed
+                                if (oldChild._data && oldChild._data.focussed && !newChild.hasClass('focussed')) {
+                                    newChild.classNames.focussed = true;
+                                    if (newChild.attrs[CLASS]) {
+                                        newChild.attrs[CLASS] = newChild.attrs[CLASS] + ' focussed';
+                                    }
+                                    else {
+                                        newChild.attrs[CLASS] = 'focussed';
+                                    }
+                                }
+                                if (oldChild._data && oldChild._data['fm-tabindex']) {
+                                    // node has the tabindex set by the focusmanager,
+                                    // but that info might got lost with re-rendering of the new element
+                                    newChild.attrs.tabIndex = '0';
+                                }
                                 oldChild._setAttrs(newChild.attrs);
                                 // next: sync the vChildNodes:
                                 oldChild._setChildNodes(newChild.vChildNodes);
-                                // reset ref. to the domNode, for it might heva been changed by newChild:
+                                // reset ref. to the domNode, for it might have been changed by newChild:
                                 oldChild.id && (nodeids[oldChild.id]=childDomNode);
                                 newVChildNodes[i] = oldChild;
                             }
@@ -12455,6 +12693,7 @@ module.exports = function (window) {
                             oldChild.isVoid = newChild.isVoid;
                             delete oldChild.text;
                             instance._emit(EV_CONTENT_CHANGE);
+                            DOCUMENT._parcelList && newChild.tag.startsWith('I-PARCEL-') && !DOCUMENT._parcelList.contains(newChild.domNode) && DOCUMENT._parcelList.push(newChild.domNode);
                             newChild._emit(EV_INSERTED);
                             break;
                         case 5: // oldNodeType==TextNode, newNodeType==TextNode
@@ -12504,6 +12743,7 @@ module.exports = function (window) {
                         domNode._appendChild(newChild.domNode);
                         newChild._setAttrs(bkpAttrs);
                         newChild._setChildNodes(bkpChildNodes);
+                        DOCUMENT._parcelList && newChild.tag.startsWith('I-PARCEL-') && !DOCUMENT._parcelList.contains(newChild.domNode) && DOCUMENT._parcelList.push(newChild.domNode);
                         newChild._emit(EV_INSERTED);
                         break;
                     case 3: // TextNode
@@ -12739,6 +12979,7 @@ module.exports = function (window) {
                             // vnode.vChildNodes = bkpChildNodes;
                             vnode.id && (nodeids[vnode.id]=vnode.domNode);
                             instance._replaceAtParent(vnode);
+                            DOCUMENT._parcelList && vnode.tag.startsWith('I-PARCEL-') && !DOCUMENT._parcelList.contains(vnode.domNode) && DOCUMENT._parcelList.push(vnode.domNode);
                             vnode._emit(EV_INSERTED);
                         }
                         else {
@@ -12751,6 +12992,7 @@ module.exports = function (window) {
                         vnode.domNode.nodeValue = vnode.text;
                         vParent.domNode._replaceChild(vnode.domNode, instance.domNode);
                         instance._replaceAtParent(vnode);
+                        DOCUMENT._parcelList && vnode.tag.startsWith('I-PARCEL-') && !DOCUMENT._parcelList.contains(vnode.domNode) && DOCUMENT._parcelList.push(vnode.domNode);
                         vnode._emit(EV_INSERTED);
                     }
                 }
@@ -12763,6 +13005,7 @@ module.exports = function (window) {
                             vnode.attrs = {}; // reset, to force defined by `_setAttrs`
                             vnode.vChildNodes = []; // reset to current state, to force defined by `_setAttrs`
                             isLastChildNode ? vParent.domNode._appendChild(vnode.domNode) : vParent.domNode._insertBefore(vnode.domNode, refDomNode);
+                            DOCUMENT._parcelList && vnode.tag.startsWith('I-PARCEL-') && !DOCUMENT._parcelList.contains(vnode.domNode) && DOCUMENT._parcelList.push(vnode.domNode);
                             vnode._emit(EV_INSERTED);
                             vnode._setAttrs(bkpAttrs);
                             vnode._setChildNodes(bkpChildNodes);
@@ -13028,7 +13271,7 @@ module.exports = function (window) {
     return vNodeProto;
 
 };
-},{"./attribute-extractor.js":59,"./html-parser.js":64,"./vdom-ns.js":66,"js-ext/extra/lightmap.js":31,"js-ext/lib/array.js":32,"js-ext/lib/object.js":34,"js-ext/lib/string.js":36,"polyfill":46,"utils/lib/timers.js":49}],68:[function(require,module,exports){
+},{"./attribute-extractor.js":63,"./html-parser.js":68,"./vdom-ns.js":70,"js-ext/extra/lightmap.js":35,"js-ext/lib/array.js":36,"js-ext/lib/object.js":38,"js-ext/lib/string.js":40,"polyfill":50,"utils/lib/timers.js":53}],72:[function(require,module,exports){
 "use strict";
 
 require('js-ext/lib/object.js');
@@ -13071,252 +13314,598 @@ module.exports = function (window) {
 
     return vdom;
 };
-},{"./partials/element-plugin.js":61,"./partials/extend-document.js":62,"./partials/extend-element.js":63,"./partials/node-parser.js":65,"js-ext/lib/object.js":34}],69:[function(require,module,exports){
+},{"./partials/element-plugin.js":65,"./partials/extend-document.js":66,"./partials/extend-element.js":67,"./partials/node-parser.js":69,"js-ext/lib/object.js":38}],73:[function(require,module,exports){
+"use strict";
+
+require('js-ext/lib/object.js');
+require('polyfill');
+
 /**
  *
- * Pollyfils for often used functionality for Functions
+ *
  *
  * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
  * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
  *
- * @module js-ext
- * @submodule lib/function.js
- * @class Function
- *
+ * @module focusmanager
+ * @class FocusManager
+ * @since 0.0.1
 */
 
-"use strict";
+var NAME = '[focusmanager]: ',
+    async = require('utils').async,
+    DEFAULT_SELECTOR = 'input, button, select, textarea, .focusable',
+    SPECIAL_KEYS = {
+        shift: 'shiftKey',
+        ctrl: 'ctrlKey',
+        cmd: 'metaKey',
+        alt: 'altKey'
+    },
+    DEFAULT_KEYUP = 'shift+9',
+    DEFAULT_KEYDOWN = '9',
+    FM_SELECTION = 'fm-selection',
+    FM_SELECTION_START = FM_SELECTION+'start',
+    FM_SELECTION_END = FM_SELECTION+'end',
+    FOCUSSED = 'focussed';
 
-require('polyfill/polyfill-base.js');
+module.exports = function (window) {
 
-// Define configurable, writable and non-enumerable props
-// if they don't exist.
-var defineProperty = function (object, name, method, force) {
-	if (!force && (name in object)) {
-		return;
-	}
-	Object.defineProperty(object, name, {
-		configurable: true,
-		enumerable: false,
-		writable: true,
-		value: method
-	});
-};
-var defineProperties = function (object, map, force) {
-	var names = Object.keys(map),
-		l = names.length,
-		i = -1,
-		name;
-	while (++i < l) {
-		name = names[i];
-		defineProperty(object, name, map[name], force);
-	}
-};
-var NOOP = function () {};
+    var DOCUMENT = window.document,
+        nodePlugin, FocusManager, Event, nextFocusNode, searchFocusNode, markAsFocussed, getFocusManagerSelector, setupEvents;
 
-/**
- * Pollyfils for often used functionality for Function
- * @class Function
-*/
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', {});
 
-defineProperties(Function.prototype, {
+/*jshint boss:true */
+    if (FocusManager=window._ITSAmodules.FocusManager) {
+/*jshint boss:false */
+        return FocusManager; // FocusManager was already created
+    }
 
-	/**
-	 * Merges the given map of properties into the `prototype` of the Class.
-	 * **Not** to be used on instances.
-	 *
-	 * The members in the hash map will become members with
-	 * instances of the merged class.
-	 *
-	 * By default, this method will not override existing prototype members,
-	 * unless the second argument `force` is true.
-	 *
-	 * @method mergePrototypes
-	 * @param map {Object} Hash map of properties to add to the prototype of this object
-	 * @param force {Boolean}  If true, existing members will be overwritten
-	 * @chainable
-	 */
-  mergePrototypes: function (map, force) {
-console.warn('START');
-    var instance = this,
-        proto = instance.prototype,
-        names = Object.keys(map || {}),
-      l = names.length,
-      i = -1,
-      name, nameInProto;
-    while (++i < l) {
-      name = names[i];
-console.warn('TRY '+name);
-      nameInProto = (name in proto);
-      if (!nameInProto || force) {
-console.warn('HANDLING '+name);
-        // if nameInProto: set the property, but also backup for chaining using $orig
-        if (typeof map[name] === 'function') {
-          proto[name] = (function (original, methodName) {
-            return function () {
-              instance.$orig[methodName] = original;
-              return map[methodName].apply(this, arguments);
-            };
-          })(proto[name] || NOOP, name);
+    nodePlugin = require('vdom')(window).Plugins.nodePlugin;
+    Event = require('event-dom')(window);
+
+    getFocusManagerSelector = function(focusContainerNode) {
+        var selector = focusContainerNode.getAttr('fm-manage');
+        (selector.toLowerCase()==='true') && (selector=DEFAULT_SELECTOR);
+        return selector;
+    };
+
+    nextFocusNode = function(e, keyCode, actionkey, focusContainerNode, sourceNode, selector, downwards) {
+        console.log(NAME+'nextFocusNode');
+        var keys, lastIndex, i, specialKeysMatch, specialKey, len, enterPressedOnInput, primaryButtons,
+            inputType, foundNode, formNode, primaryonenter;
+        keys = actionkey.split('+');
+        len = keys.length;
+        lastIndex = len - 1;
+
+        if ((keyCode===13) && (sourceNode.getTagName()==='INPUT')) {
+            inputType = sourceNode.getAttr('type').toLowerCase();
+            enterPressedOnInput = (inputType==='text') || (inputType==='password');
+        }
+
+        if (enterPressedOnInput) {
+            // check if we need to press the primary button - if available
+/*jshint boss:true */
+            if ((primaryonenter=sourceNode.getAttr('fm-primaryonenter')) && (primaryonenter.toLowerCase()==='true')) {
+/*jshint boss:false */
+                primaryButtons = focusContainerNode.getAll('button.pure-button-primary');
+                primaryButtons.some(function(buttonNode) {
+                    buttonNode.matches(selector) && (foundNode=buttonNode);
+                    return foundNode;
+                });
+                if (foundNode) {
+                    async(function() {
+                        Event.emit(foundNode, 'UI:click');
+                        // _buttonPressed make event-dom to simulate a pressed button for 200ms
+                        Event.emit(foundNode, 'UI:tap', {_buttonPressed: true});
+                        // if the button is of type `submit`, then try to submit the form
+                        formNode = foundNode.inside('form');
+                        formNode && formNode.submit();
+                    });
+                    return foundNode;
+                }
+            }
+        }
+        // double == --> keyCode is number, keys is a string
+        if (enterPressedOnInput || (keyCode==keys[lastIndex])) {
+            // posible keyup --> check if special characters match:
+            specialKeysMatch = true;
+            SPECIAL_KEYS.some(function(value) {
+                specialKeysMatch = !e[value];
+                return !specialKeysMatch;
+            });
+            for (i=lastIndex-1; (i>=0) && !specialKeysMatch; i--) {
+                specialKey = keys[i].toLowerCase();
+                specialKeysMatch = e[SPECIAL_KEYS[specialKey]];
+            }
+        }
+        if (specialKeysMatch) {
+            if (downwards) {
+                return sourceNode.next(selector) || sourceNode.first(selector);
+            }
+            else {
+                return sourceNode.previous(selector) || sourceNode.last(selector);
+            }
+        }
+        return false;
+    };
+
+    markAsFocussed = function(focusContainerNode, node) {
+        console.log(NAME+'markAsFocussed');
+        var selector = getFocusManagerSelector(focusContainerNode),
+            index = focusContainerNode.getAll(selector).indexOf(node) || 0;
+        // we also need to set the appropriate nodeData, so that when the itags re-render,
+        // they don't reset this particular information
+        focusContainerNode.getAll('[fm-lastitem]')
+                          .removeAttrs(['fm-lastitem', 'tabindex'], true)
+                          .removeData('fm-tabindex');
+
+        // also store the lastitem's index --> in case the node gets removed,
+        // or re-rendering itags which don't have the attribute-data.
+        // otherwise, a refocus on the container will set the focus to the nearest item
+        focusContainerNode.setData('fm-lastitem-bkp', index);
+        node.setData('fm-tabindex', true);
+
+        node.setAttrs([
+            {name: 'tabindex', value: '0'},
+            {name: 'fm-lastitem', value: true}
+        ]);
+    };
+
+    searchFocusNode = function(initialNode) {
+        console.log(NAME+'searchFocusNode');
+        var focusContainerNode = initialNode.hasAttr('fm-manage') ? initialNode : initialNode.inside('[fm-manage]'),
+            focusNode, alwaysDefault, fmAlwaysDefault, selector, allFocusableNodes, index;
+
+        if (focusContainerNode) {
+console.warn('searchFocusNode fase 1');
+            if (initialNode.matches(getFocusManagerSelector(focusContainerNode))) {
+console.warn('searchFocusNode fase 2');
+                markAsFocussed(focusContainerNode, initialNode);
+                focusNode = initialNode;
+console.warn(focusNode.outerHTML);
+            }
+            else {
+                // find the right node that should get focus
+/*jshint boss:true */
+                alwaysDefault = ((fmAlwaysDefault=focusContainerNode.getAttr('fm-alwaysdefault')) && (fmAlwaysDefault.toLowerCase()==='true'));
+/*jshint boss:false */
+                alwaysDefault && (focusNode=focusContainerNode.getElement('[fm-defaultitem="true"]'));
+                if (!focusNode) {
+                    // search for last item
+                    focusNode = focusContainerNode.getElement('[fm-lastitem="true"]');
+                    if (!focusNode) {
+                        // set `selector` right now: we might use it later on even when index is undefined
+                        selector = getFocusManagerSelector(focusContainerNode);
+                        // look at the lastitemindex of the focuscontainer
+                        index = focusContainerNode.getData('fm-lastitem-bkp');
+                        if (index!==undefined) {
+                            allFocusableNodes = focusContainerNode.getAll(selector);
+                            focusNode = allFocusableNodes[index];
+                        }
+                    }
+                }
+                // still not found and alwaysDefault was falsy: try the defualt node:
+                !focusNode && !alwaysDefault && (focusNode=focusContainerNode.getElement('[fm-defaultitem="true"]'));
+                // still not found: try the first focussable node (which we might find inside `allFocusableNodes`:
+                !focusNode && (focusNode = allFocusableNodes ? allFocusableNodes[0] : focusContainerNode.getElement(selector));
+                if (focusNode) {
+                    markAsFocussed(focusContainerNode, focusNode);
+                }
+                else {
+                    focusNode = initialNode;
+                }
+            }
         }
         else {
-console.warn('setting '+name+' --> '+map[name]);
-            proto[name] = map[name];
+            focusNode = initialNode;
         }
-      }
-    }
-    return instance;
-  },
+        return focusNode;
+    };
 
-	/**
-	 * Returns a newly created class inheriting from this class
-	 * using the given `constructor` with the
-	 * prototypes listed in `prototypes` merged in.
-	 *
-	 *
-	 * The newly created class has the `$super` static property
-	 * available to access all of is ancestor's instance methods.
-	 *
-	 * Further methods can be added via the [mergePrototypes](#method_mergePrototypes).
-	 *
-	 * @example
-	 *
-	 * 	var Circle = Shape.subClass(
-	 * 		function (x, y, r) {
-	 * 			this.r = r;
-	 * 			Circle.$super.constructor.call(this, x, y);
-	 * 		},
-	 * 		{
-	 * 			area: function () {
-	 * 				return this.r * this.r * Math.PI;
-	 * 			}
-	 * 		}
-	 * 	);
-	 *
-	 * @method subClass
-	 * @param [constructor] {Function} The function that will serve as constructor for the new class.
-	 *        If `undefined` defaults to `Object.constructor`
-	 * @param [prototypes] {Object} Hash map of properties to be added to the prototype of the new class.
-	 * @return the new class.
-	 */
-	subClass: function (constructor, prototypes) {
+    setupEvents = function() {
 
-		if ((arguments.length === 1) && (typeof constructor !== 'function')) {
-			prototypes = constructor;
-			constructor = null;
-		}
+        Event.before('keydown', function(e) {
+            console.log(NAME+'before keydown-event');
+            var focusContainerNode,
+                sourceNode = e.target,
+                node = sourceNode.getParent(),
+                selector, keyCode, actionkey, focusNode;
+
+            focusContainerNode = sourceNode.inside('[fm-manage]');
+            if (focusContainerNode) {
+                // key was pressed inside a focusmanagable container
+                selector = getFocusManagerSelector(focusContainerNode);
+                keyCode = e.keyCode;
+
+                // first check for keydown:
+                actionkey = node.getAttr('fm-keydown') || DEFAULT_KEYDOWN;
+                focusNode = nextFocusNode(e, keyCode, actionkey, focusContainerNode, sourceNode, selector, true);
+                if (!focusNode) {
+                    // check for keyup:
+                    actionkey = node.getAttr('fm-keyup') || DEFAULT_KEYUP;
+                    focusNode = nextFocusNode(e, keyCode, actionkey, focusContainerNode, sourceNode, selector);
+                }
+                if (focusNode) {
+                    e.preventDefaultContinue();
+                    // prevent default action --> we just want to re-focus, but we DO want afterlisteners
+                    // to be handled in the after-listener: someone else might want to halt the keydown event.
+                    sourceNode.matches(selector) && (e._focusNode=focusNode);
+                }
+            }
+        });
+
+        Event.after('keydown', function(e) {
+            console.log(NAME+'after keydown-event');
+            var focusNode = e._focusNode;
+            focusNode && focusNode.focus && focusNode.focus();
+        });
+
+        Event.after('blur', function(e) {
+            console.log(NAME+'after blur-event');
+            var node = e.target,
+                body = DOCUMENT.body;
+            if (node && node.removeAttr) {
+                do {
+                    // we also need to set the appropriate nodeData, so that when the itags re-render,
+                    // they don't reset this particular information
+                    node.removeData(FOCUSSED);
+                    node.removeClass(FOCUSSED, null, null, true);
+                    node = (node===body) ? null : node.getParent();
+                } while (node);
+            }
+        });
+
+        Event.after('focus', function(e) {
+            console.log(NAME+'after focus-event');
+            var node = e.target,
+                body = DOCUMENT.body;
+            if (node && node.setClass) {
+                do {
+                    // we also need to set the appropriate nodeData, so that when the itags re-render,
+                    // they don't reset this particular information
+                    node.setData(FOCUSSED, true);
+                    node.setClass(FOCUSSED, null, null, true);
+                    node = (node===body) ? null : node.getParent();
+                } while (node);
+            }
+        });
+
+        // focus-fix for keeping focus when a mouse gets down for a longer time
+        Event.after(['mousedown', 'press'], function(e) {
+            console.log(NAME+'after focus-event');
+            var node = e.target;
+            node.hasFocus() || node.focus();
+        }, 'button');
+
+        Event.after('tap', function(e) {
+            console.log(NAME+'after tap-event');
+            var focusNode = e.target,
+                focusContainerNode;
+
+            if (focusNode && focusNode.inside) {
+                focusContainerNode = focusNode.hasAttr('fm-manage') ? focusNode : focusNode.inside('[fm-manage]');
+            }
+            if (focusContainerNode) {
+                if ((focusNode===focusContainerNode) || !focusNode.matches(getFocusManagerSelector(focusContainerNode))) {
+                    focusNode = searchFocusNode(focusNode);
+                }
+                if (focusNode.hasFocus()) {
+                    markAsFocussed(focusContainerNode, focusNode);
+                }
+                else {
+                    focusNode.focus();
+                }
+            }
+        });
+
+        Event.after(['keypress', 'mouseup', 'panup', 'mousedown', 'pandown'], function(e) {
+            console.log(NAME+'after '+e.type+'-event');
+            var focusContainerNode,
+                sourceNode = e.target,
+                selector;
+
+            focusContainerNode = sourceNode.inside('[fm-manage]');
+            if (focusContainerNode) {
+                // key was pressed inside a focusmanagable container
+                selector = getFocusManagerSelector(focusContainerNode);
+                if (sourceNode.matches(selector)) {
+                    sourceNode.setAttr(FM_SELECTION_START, sourceNode.selectionStart || '0')
+                              .setAttr(FM_SELECTION_END, sourceNode.selectionEnd || '0');
+                }
+            }
+        }, 'input[type="text"], textarea');
+
+        Event.after('focus', function(e) {
+            console.log(NAME+'after focus-event');
+            var focusContainerNode,
+                sourceNode = e.target,
+                selector, selectionStart, selectionEnd;
+
+            focusContainerNode = sourceNode.inside('[fm-manage]');
+            if (focusContainerNode) {
+                // key was pressed inside a focusmanagable container
+                selector = getFocusManagerSelector(focusContainerNode);
+                if (sourceNode.matches(selector)) {
+                    // cautious: fm-selectionstart can be 0 --> which would lead into a falsy value
+                    selectionStart = sourceNode.getAttr(FM_SELECTION_START);
+                    (selectionStart===undefined) && (selectionStart=sourceNode.getValue().length);
+                    selectionEnd = Math.max(sourceNode.getAttr(FM_SELECTION_END) || selectionStart, selectionStart);
+                    sourceNode.selectionEnd = selectionEnd;
+                    sourceNode.selectionStart = selectionStart;
+                    markAsFocussed(focusContainerNode, sourceNode);
+                }
+            }
+        }, 'input[type="text"], textarea');
+
+    };
+
+    setupEvents();
+
+    window._ITSAmodules.FocusManager = FocusManager = nodePlugin.definePlugin('fm', {manage: 'true'});
+
+    (function(HTMLElementPrototype) {
+
+        HTMLElementPrototype._focus = HTMLElementPrototype.focus;
+        HTMLElementPrototype.focus = function() {
+            console.log(NAME+'focus');
+            searchFocusNode(this)._focus();
+        };
+
+    }(window.HTMLElement.prototype));
 
 
-		constructor = constructor || function (ancestor) {
-			return function () {
-				ancestor.apply(this, arguments);
-			};
-		}(this);
-
-
-		var baseProt = this.prototype,
-			rp = Object.create(baseProt);
-		constructor.prototype = rp;
-
-		rp.constructor = constructor;
-		constructor.$super = baseProt;
-		constructor.$orig = {};
-
-		constructor.mergePrototypes(prototypes, true);
-		return constructor;
-	},
-
-	/**
-	 * Overwrites the given prototype functions with the ones given in
-	 * the hashmap while still providing a means of calling the original
-	 * overridden method.
-     *
-	 * The patching function will receive a reference to the original method
-	 * prepended to the arguments the original would have received.
-     *
-	 * @method patch
-	 * @param map {Object} Hash map of method names to their new implementation.
-	 * @chainable
-	*/
-	patch: function (map) {
-		var proto = this.prototype;
-
-		var names = Object.keys(map || {}),
-			l = names.length,
-			i = -1,
-			name;
-		while (++i < l) {
-			name = names[i];
-			/*jshint -W083 */
-			proto[name] = (function (original) {
-				return function () {
-					/*jshint +W083 */
-					var a = Array.prototype.slice.call(arguments, 0);
-					a.unshift(original || NOOP);
-					return map[name].apply(this, a);
-				};
-			})(proto[name]);
-		}
-		return this;
-	},
-
-	/**
-	 * Sets the context of which the function will be execute. in the
-	 * supplied object's context, optionally adding any additional
-	 * supplied parameters to the end of the arguments the function
-	 * is executed with.
-	 *
-	 * @method rbind
-	 * @param [context] {Object} the execution context.
-	 *        The value is ignored if the bound function is constructed using the new operator.
-	 * @param [args*] {any} args* 0..n arguments to append to the end of
-	 *        arguments collection supplied to the function.
-	 * @return {function} the wrapped function.
-	 */
-	rbind: function (context /*, args* */ ) {
-		var thisFunction = this,
-			arrayArgs,
-			slice = Array.prototype.slice;
-		context || (context = this);
-		if (arguments.length > 1) {
-			// removing `context` (first item) by slicing it out:
-			arrayArgs = slice.call(arguments, 1);
-		}
-
-		return (arrayArgs ?
-			function () {
-				// over here, `arguments` will be the "new" arguments when the final function is called!
-				return thisFunction.apply(context, slice.call(arguments, 0).concat(arrayArgs));
-			} :
-			function () {
-				// over here, `arguments` will be the "new" arguments when the final function is called!
-				return thisFunction.apply(context, arguments);
-			}
-		);
-	}
-});
-
-/**
- * Returns a base class with the given constructor and prototype methods
- *
- * @for Object
- * @method createClass
- * @param [constructor] {Function} constructor for the class
- * @param [prototype] {Object} Hash map of prototype members of the new class
- * @return {Function} the new class
-*/
-defineProperty(Object.prototype, 'createClass', function () {
-	return Function.prototype.subClass.apply(this, arguments);
-});
-},{"polyfill/polyfill-base.js":73}],70:[function(require,module,exports){
+    return FocusManager;
+};
+},{"event-dom":74,"js-ext/lib/object.js":141,"polyfill":147,"utils":148,"vdom":192}],74:[function(require,module,exports){
+module.exports=require(6)
+},{"event":78,"js-ext/lib/array.js":87,"js-ext/lib/object.js":88,"js-ext/lib/string.js":89,"polyfill/polyfill-base.js":95,"utils":96,"vdom":140}],75:[function(require,module,exports){
+module.exports=require(7)
+},{"js-ext/lib/function.js":79,"js-ext/lib/object.js":80,"polyfill/polyfill-base.js":86}],76:[function(require,module,exports){
 module.exports=require(8)
-},{"polyfill/polyfill-base.js":73}],71:[function(require,module,exports){
+},{"./index.js":78}],77:[function(require,module,exports){
 module.exports=require(9)
-},{}],72:[function(require,module,exports){
+},{"./index.js":78}],78:[function(require,module,exports){
 module.exports=require(10)
-},{}],73:[function(require,module,exports){
+},{"./event-base.js":75,"./event-emitter.js":76,"./event-listener.js":77}],79:[function(require,module,exports){
 module.exports=require(11)
-},{"./lib/matchesselector.js":71,"./lib/window.console.js":72}],74:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":83}],80:[function(require,module,exports){
+module.exports=require(12)
+},{"polyfill/polyfill-base.js":83}],81:[function(require,module,exports){
+module.exports=require(13)
+},{}],82:[function(require,module,exports){
+module.exports=require(14)
+},{}],83:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":81,"./lib/window.console.js":82}],84:[function(require,module,exports){
+module.exports=require(13)
+},{}],85:[function(require,module,exports){
+module.exports=require(14)
+},{}],86:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":84,"./lib/window.console.js":85}],87:[function(require,module,exports){
+module.exports=require(19)
+},{"polyfill/polyfill-base.js":92}],88:[function(require,module,exports){
+module.exports=require(12)
+},{"polyfill/polyfill-base.js":92}],89:[function(require,module,exports){
+module.exports=require(21)
+},{}],90:[function(require,module,exports){
+module.exports=require(13)
+},{}],91:[function(require,module,exports){
+module.exports=require(14)
+},{}],92:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":90,"./lib/window.console.js":91}],93:[function(require,module,exports){
+module.exports=require(13)
+},{}],94:[function(require,module,exports){
+module.exports=require(14)
+},{}],95:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":93,"./lib/window.console.js":94}],96:[function(require,module,exports){
+module.exports=require(28)
+},{"./lib/idgenerator.js":97,"./lib/timers.js":98}],97:[function(require,module,exports){
+module.exports=require(29)
+},{"polyfill/polyfill-base.js":101}],98:[function(require,module,exports){
+module.exports=require(30)
+},{"polyfill/polyfill-base.js":101}],99:[function(require,module,exports){
+module.exports=require(13)
+},{}],100:[function(require,module,exports){
+module.exports=require(14)
+},{}],101:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":99,"./lib/window.console.js":100}],102:[function(require,module,exports){
+module.exports=require(34)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],103:[function(require,module,exports){
+module.exports=require(35)
+},{"../lib/array.js":104,"../lib/function.js":105,"../lib/object.js":106,"polyfill/lib/weakmap.js":110}],104:[function(require,module,exports){
+module.exports=require(19)
+},{"polyfill/polyfill-base.js":112}],105:[function(require,module,exports){
+module.exports=require(11)
+},{"polyfill/polyfill-base.js":112}],106:[function(require,module,exports){
+module.exports=require(12)
+},{"polyfill/polyfill-base.js":112}],107:[function(require,module,exports){
+module.exports=require(39)
+},{"polyfill":112}],108:[function(require,module,exports){
+module.exports=require(21)
+},{}],109:[function(require,module,exports){
+module.exports=require(13)
+},{}],110:[function(require,module,exports){
+module.exports=require(42)
+},{}],111:[function(require,module,exports){
+module.exports=require(14)
+},{}],112:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":109,"./lib/window.console.js":111}],113:[function(require,module,exports){
+module.exports=require(45)
+},{}],114:[function(require,module,exports){
+module.exports=require(46)
+},{}],115:[function(require,module,exports){
+module.exports=require(47)
+},{}],116:[function(require,module,exports){
+module.exports=require(13)
+},{}],117:[function(require,module,exports){
+module.exports=require(14)
+},{}],118:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":116,"./lib/window.console.js":117}],119:[function(require,module,exports){
+module.exports=require(28)
+},{"./lib/idgenerator.js":120,"./lib/timers.js":121}],120:[function(require,module,exports){
+module.exports=require(29)
+},{"polyfill/polyfill-base.js":124}],121:[function(require,module,exports){
+module.exports=require(30)
+},{"polyfill/polyfill-base.js":124}],122:[function(require,module,exports){
+module.exports=require(13)
+},{}],123:[function(require,module,exports){
+module.exports=require(14)
+},{}],124:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":122,"./lib/window.console.js":123}],125:[function(require,module,exports){
+module.exports=require(57)
+},{"./lib/sizes.js":126}],126:[function(require,module,exports){
+module.exports=require(58)
+},{"js-ext/lib/object.js":127}],127:[function(require,module,exports){
+module.exports=require(12)
+},{"polyfill/polyfill-base.js":130}],128:[function(require,module,exports){
+module.exports=require(13)
+},{}],129:[function(require,module,exports){
+module.exports=require(14)
+},{}],130:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":128,"./lib/window.console.js":129}],131:[function(require,module,exports){
+module.exports=require(63)
+},{"js-ext/lib/object.js":106,"js-ext/lib/string.js":108,"polyfill":118,"polyfill/extra/transition.js":113,"polyfill/extra/vendorCSS.js":115}],132:[function(require,module,exports){
+module.exports=require(64)
+},{"js-ext/lib/object.js":106,"polyfill":118}],133:[function(require,module,exports){
+module.exports=require(65)
+},{"js-ext/lib/object.js":106,"js-ext/lib/string.js":108,"polyfill":118}],134:[function(require,module,exports){
+module.exports=require(66)
+},{"./vdom-ns.js":138,"js-ext/lib/object.js":106,"js-ext/lib/string.js":108,"polyfill":118}],135:[function(require,module,exports){
+module.exports=require(67)
+},{"../css/element.css":102,"./attribute-extractor.js":131,"./element-array.js":132,"./html-parser.js":136,"./node-parser.js":137,"./vdom-ns.js":138,"./vnode.js":139,"js-ext/lib/object.js":106,"js-ext/lib/promise.js":107,"js-ext/lib/string.js":108,"polyfill":118,"polyfill/extra/transition.js":113,"polyfill/extra/transitionend.js":114,"polyfill/extra/vendorCSS.js":115,"utils":119,"window-ext":125}],136:[function(require,module,exports){
+module.exports=require(68)
+},{"./attribute-extractor.js":131,"./vdom-ns.js":138,"js-ext/lib/object.js":106,"polyfill":118}],137:[function(require,module,exports){
+module.exports=require(69)
+},{"./attribute-extractor.js":131,"./vdom-ns.js":138,"./vnode.js":139,"js-ext/lib/object.js":106,"polyfill":118}],138:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/lib/object.js":106,"polyfill":118}],139:[function(require,module,exports){
+module.exports=require(71)
+},{"./attribute-extractor.js":131,"./html-parser.js":136,"./vdom-ns.js":138,"js-ext/extra/lightmap.js":103,"js-ext/lib/array.js":104,"js-ext/lib/object.js":106,"js-ext/lib/string.js":108,"polyfill":118,"utils/lib/timers.js":121}],140:[function(require,module,exports){
+module.exports=require(72)
+},{"./partials/element-plugin.js":133,"./partials/extend-document.js":134,"./partials/extend-element.js":135,"./partials/node-parser.js":137,"js-ext/lib/object.js":106}],141:[function(require,module,exports){
+module.exports=require(12)
+},{"polyfill/polyfill-base.js":144}],142:[function(require,module,exports){
+module.exports=require(13)
+},{}],143:[function(require,module,exports){
+module.exports=require(14)
+},{}],144:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":142,"./lib/window.console.js":143}],145:[function(require,module,exports){
+module.exports=require(13)
+},{}],146:[function(require,module,exports){
+module.exports=require(14)
+},{}],147:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":145,"./lib/window.console.js":146}],148:[function(require,module,exports){
+module.exports=require(28)
+},{"./lib/idgenerator.js":149,"./lib/timers.js":150}],149:[function(require,module,exports){
+module.exports=require(29)
+},{"polyfill/polyfill-base.js":153}],150:[function(require,module,exports){
+module.exports=require(30)
+},{"polyfill/polyfill-base.js":153}],151:[function(require,module,exports){
+module.exports=require(13)
+},{}],152:[function(require,module,exports){
+module.exports=require(14)
+},{}],153:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":151,"./lib/window.console.js":152}],154:[function(require,module,exports){
+module.exports=require(34)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],155:[function(require,module,exports){
+module.exports=require(35)
+},{"../lib/array.js":156,"../lib/function.js":157,"../lib/object.js":158,"polyfill/lib/weakmap.js":162}],156:[function(require,module,exports){
+module.exports=require(19)
+},{"polyfill/polyfill-base.js":164}],157:[function(require,module,exports){
+module.exports=require(11)
+},{"polyfill/polyfill-base.js":164}],158:[function(require,module,exports){
+module.exports=require(12)
+},{"polyfill/polyfill-base.js":164}],159:[function(require,module,exports){
+module.exports=require(39)
+},{"polyfill":164}],160:[function(require,module,exports){
+module.exports=require(21)
+},{}],161:[function(require,module,exports){
+module.exports=require(13)
+},{}],162:[function(require,module,exports){
+module.exports=require(42)
+},{}],163:[function(require,module,exports){
+module.exports=require(14)
+},{}],164:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":161,"./lib/window.console.js":163}],165:[function(require,module,exports){
+module.exports=require(45)
+},{}],166:[function(require,module,exports){
+module.exports=require(46)
+},{}],167:[function(require,module,exports){
+module.exports=require(47)
+},{}],168:[function(require,module,exports){
+module.exports=require(13)
+},{}],169:[function(require,module,exports){
+module.exports=require(14)
+},{}],170:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":168,"./lib/window.console.js":169}],171:[function(require,module,exports){
+module.exports=require(28)
+},{"./lib/idgenerator.js":172,"./lib/timers.js":173}],172:[function(require,module,exports){
+module.exports=require(29)
+},{"polyfill/polyfill-base.js":176}],173:[function(require,module,exports){
+module.exports=require(30)
+},{"polyfill/polyfill-base.js":176}],174:[function(require,module,exports){
+module.exports=require(13)
+},{}],175:[function(require,module,exports){
+module.exports=require(14)
+},{}],176:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":174,"./lib/window.console.js":175}],177:[function(require,module,exports){
+module.exports=require(57)
+},{"./lib/sizes.js":178}],178:[function(require,module,exports){
+module.exports=require(58)
+},{"js-ext/lib/object.js":179}],179:[function(require,module,exports){
+module.exports=require(12)
+},{"polyfill/polyfill-base.js":182}],180:[function(require,module,exports){
+module.exports=require(13)
+},{}],181:[function(require,module,exports){
+module.exports=require(14)
+},{}],182:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":180,"./lib/window.console.js":181}],183:[function(require,module,exports){
+module.exports=require(63)
+},{"js-ext/lib/object.js":158,"js-ext/lib/string.js":160,"polyfill":170,"polyfill/extra/transition.js":165,"polyfill/extra/vendorCSS.js":167}],184:[function(require,module,exports){
+module.exports=require(64)
+},{"js-ext/lib/object.js":158,"polyfill":170}],185:[function(require,module,exports){
+module.exports=require(65)
+},{"js-ext/lib/object.js":158,"js-ext/lib/string.js":160,"polyfill":170}],186:[function(require,module,exports){
+module.exports=require(66)
+},{"./vdom-ns.js":190,"js-ext/lib/object.js":158,"js-ext/lib/string.js":160,"polyfill":170}],187:[function(require,module,exports){
+module.exports=require(67)
+},{"../css/element.css":154,"./attribute-extractor.js":183,"./element-array.js":184,"./html-parser.js":188,"./node-parser.js":189,"./vdom-ns.js":190,"./vnode.js":191,"js-ext/lib/object.js":158,"js-ext/lib/promise.js":159,"js-ext/lib/string.js":160,"polyfill":170,"polyfill/extra/transition.js":165,"polyfill/extra/transitionend.js":166,"polyfill/extra/vendorCSS.js":167,"utils":171,"window-ext":177}],188:[function(require,module,exports){
+module.exports=require(68)
+},{"./attribute-extractor.js":183,"./vdom-ns.js":190,"js-ext/lib/object.js":158,"polyfill":170}],189:[function(require,module,exports){
+module.exports=require(69)
+},{"./attribute-extractor.js":183,"./vdom-ns.js":190,"./vnode.js":191,"js-ext/lib/object.js":158,"polyfill":170}],190:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/lib/object.js":158,"polyfill":170}],191:[function(require,module,exports){
+module.exports=require(71)
+},{"./attribute-extractor.js":183,"./html-parser.js":188,"./vdom-ns.js":190,"js-ext/extra/lightmap.js":155,"js-ext/lib/array.js":156,"js-ext/lib/object.js":158,"js-ext/lib/string.js":160,"polyfill":170,"utils/lib/timers.js":173}],192:[function(require,module,exports){
+module.exports=require(72)
+},{"./partials/element-plugin.js":185,"./partials/extend-document.js":186,"./partials/extend-element.js":187,"./partials/node-parser.js":189,"js-ext/lib/object.js":158}],193:[function(require,module,exports){
+module.exports=require(12)
+},{"polyfill/polyfill-base.js":197}],194:[function(require,module,exports){
+module.exports=require(21)
+},{}],195:[function(require,module,exports){
+module.exports=require(13)
+},{}],196:[function(require,module,exports){
+module.exports=require(14)
+},{}],197:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":195,"./lib/window.console.js":196}],198:[function(require,module,exports){
 (function (process,Buffer){
 "use strict";
 
@@ -13931,7 +14520,7 @@ exports.XMLHttpRequest = function() {
 };
 
 }).call(this,require('_process'),require("buffer").Buffer)
-},{"_process":146,"buffer":135,"child_process":134,"fs":134,"http":139,"https":143,"url":164,"xmldom":128}],75:[function(require,module,exports){
+},{"_process":271,"buffer":260,"child_process":259,"fs":259,"http":264,"https":268,"url":289,"xmldom":252}],199:[function(require,module,exports){
 "use strict";
 
 /**
@@ -14143,107 +14732,107 @@ reset = function () {
 reset();
 
 module.exports = win;
-},{"./lib/XMLHttpRequest.js":74,"js-ext/lib/array.js":76,"polyfill/lib/window.console.js":81,"url":164,"xmldom":128}],76:[function(require,module,exports){
+},{"./lib/XMLHttpRequest.js":198,"js-ext/lib/array.js":200,"polyfill/lib/window.console.js":205,"url":289,"xmldom":252}],200:[function(require,module,exports){
+module.exports=require(19)
+},{"polyfill/polyfill-base.js":203}],201:[function(require,module,exports){
+module.exports=require(13)
+},{}],202:[function(require,module,exports){
+module.exports=require(14)
+},{}],203:[function(require,module,exports){
 module.exports=require(15)
-},{"polyfill/polyfill-base.js":79}],77:[function(require,module,exports){
-module.exports=require(9)
-},{}],78:[function(require,module,exports){
-module.exports=require(10)
-},{}],79:[function(require,module,exports){
-module.exports=require(11)
-},{"./lib/matchesselector.js":77,"./lib/window.console.js":78}],80:[function(require,module,exports){
-module.exports=require(9)
-},{}],81:[function(require,module,exports){
-module.exports=require(10)
-},{}],82:[function(require,module,exports){
-module.exports=require(11)
-},{"./lib/matchesselector.js":80,"./lib/window.console.js":81}],83:[function(require,module,exports){
-module.exports=require(24)
-},{"./lib/idgenerator.js":84,"./lib/timers.js":85}],84:[function(require,module,exports){
-module.exports=require(25)
-},{"polyfill/polyfill-base.js":88}],85:[function(require,module,exports){
-module.exports=require(26)
-},{"_process":146,"polyfill/polyfill-base.js":88}],86:[function(require,module,exports){
-module.exports=require(9)
-},{}],87:[function(require,module,exports){
-module.exports=require(10)
-},{}],88:[function(require,module,exports){
-module.exports=require(11)
-},{"./lib/matchesselector.js":86,"./lib/window.console.js":87}],89:[function(require,module,exports){
+},{"./lib/matchesselector.js":201,"./lib/window.console.js":202}],204:[function(require,module,exports){
+module.exports=require(13)
+},{}],205:[function(require,module,exports){
+module.exports=require(14)
+},{}],206:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":204,"./lib/window.console.js":205}],207:[function(require,module,exports){
+module.exports=require(28)
+},{"./lib/idgenerator.js":208,"./lib/timers.js":209}],208:[function(require,module,exports){
+module.exports=require(29)
+},{"polyfill/polyfill-base.js":212}],209:[function(require,module,exports){
 module.exports=require(30)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],90:[function(require,module,exports){
-module.exports=require(31)
-},{"../lib/array.js":91,"../lib/function.js":92,"../lib/object.js":93,"polyfill/lib/weakmap.js":97}],91:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":212}],210:[function(require,module,exports){
+module.exports=require(13)
+},{}],211:[function(require,module,exports){
+module.exports=require(14)
+},{}],212:[function(require,module,exports){
 module.exports=require(15)
-},{"polyfill/polyfill-base.js":99}],92:[function(require,module,exports){
-module.exports=require(7)
-},{"polyfill/polyfill-base.js":99}],93:[function(require,module,exports){
-module.exports=require(8)
-},{"polyfill/polyfill-base.js":99}],94:[function(require,module,exports){
+},{"./lib/matchesselector.js":210,"./lib/window.console.js":211}],213:[function(require,module,exports){
+module.exports=require(34)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],214:[function(require,module,exports){
 module.exports=require(35)
-},{"polyfill":99}],95:[function(require,module,exports){
-module.exports=require(17)
-},{}],96:[function(require,module,exports){
-module.exports=require(9)
-},{}],97:[function(require,module,exports){
-module.exports=require(38)
-},{}],98:[function(require,module,exports){
-module.exports=require(10)
-},{}],99:[function(require,module,exports){
+},{"../lib/array.js":215,"../lib/function.js":216,"../lib/object.js":217,"polyfill/lib/weakmap.js":221}],215:[function(require,module,exports){
+module.exports=require(19)
+},{"polyfill/polyfill-base.js":223}],216:[function(require,module,exports){
 module.exports=require(11)
-},{"./lib/matchesselector.js":96,"./lib/window.console.js":98}],100:[function(require,module,exports){
-module.exports=require(41)
-},{}],101:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":223}],217:[function(require,module,exports){
+module.exports=require(12)
+},{"polyfill/polyfill-base.js":223}],218:[function(require,module,exports){
+module.exports=require(39)
+},{"polyfill":223}],219:[function(require,module,exports){
+module.exports=require(21)
+},{}],220:[function(require,module,exports){
+module.exports=require(13)
+},{}],221:[function(require,module,exports){
 module.exports=require(42)
-},{}],102:[function(require,module,exports){
-module.exports=require(43)
-},{}],103:[function(require,module,exports){
-module.exports=require(9)
-},{}],104:[function(require,module,exports){
-module.exports=require(10)
-},{}],105:[function(require,module,exports){
-module.exports=require(11)
-},{"./lib/matchesselector.js":103,"./lib/window.console.js":104}],106:[function(require,module,exports){
-module.exports=require(24)
-},{"./lib/idgenerator.js":107,"./lib/timers.js":108}],107:[function(require,module,exports){
-module.exports=require(25)
-},{"polyfill/polyfill-base.js":111}],108:[function(require,module,exports){
-module.exports=require(26)
-},{"_process":146,"polyfill/polyfill-base.js":111}],109:[function(require,module,exports){
-module.exports=require(9)
-},{}],110:[function(require,module,exports){
-module.exports=require(10)
-},{}],111:[function(require,module,exports){
-module.exports=require(11)
-},{"./lib/matchesselector.js":109,"./lib/window.console.js":110}],112:[function(require,module,exports){
-module.exports=require(53)
-},{"./lib/sizes.js":113}],113:[function(require,module,exports){
-module.exports=require(54)
-},{"js-ext/lib/object.js":114}],114:[function(require,module,exports){
-module.exports=require(8)
-},{"polyfill/polyfill-base.js":117}],115:[function(require,module,exports){
-module.exports=require(9)
-},{}],116:[function(require,module,exports){
-module.exports=require(10)
-},{}],117:[function(require,module,exports){
-module.exports=require(11)
-},{"./lib/matchesselector.js":115,"./lib/window.console.js":116}],118:[function(require,module,exports){
-module.exports=require(59)
-},{"js-ext/lib/object.js":93,"js-ext/lib/string.js":95,"polyfill":105,"polyfill/extra/transition.js":100,"polyfill/extra/vendorCSS.js":102}],119:[function(require,module,exports){
-module.exports=require(60)
-},{"js-ext/lib/object.js":93,"polyfill":105}],120:[function(require,module,exports){
-module.exports=require(61)
-},{"js-ext/lib/object.js":93,"js-ext/lib/string.js":95,"polyfill":105}],121:[function(require,module,exports){
-module.exports=require(62)
-},{"./vdom-ns.js":125,"js-ext/lib/object.js":93,"polyfill":105}],122:[function(require,module,exports){
-arguments[4][63][0].apply(exports,arguments)
-},{"../css/element.css":89,"./attribute-extractor.js":118,"./element-array.js":119,"./html-parser.js":123,"./node-parser.js":124,"./vdom-ns.js":125,"./vnode.js":126,"js-ext/lib/object.js":93,"js-ext/lib/promise.js":94,"js-ext/lib/string.js":95,"polyfill":105,"polyfill/extra/transition.js":100,"polyfill/extra/transitionend.js":101,"polyfill/extra/vendorCSS.js":102,"utils":106,"window-ext":112}],123:[function(require,module,exports){
+},{}],222:[function(require,module,exports){
+module.exports=require(14)
+},{}],223:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":220,"./lib/window.console.js":222}],224:[function(require,module,exports){
+module.exports=require(45)
+},{}],225:[function(require,module,exports){
+module.exports=require(46)
+},{}],226:[function(require,module,exports){
+module.exports=require(47)
+},{}],227:[function(require,module,exports){
+module.exports=require(13)
+},{}],228:[function(require,module,exports){
+module.exports=require(14)
+},{}],229:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":227,"./lib/window.console.js":228}],230:[function(require,module,exports){
+module.exports=require(28)
+},{"./lib/idgenerator.js":231,"./lib/timers.js":232}],231:[function(require,module,exports){
+module.exports=require(29)
+},{"polyfill/polyfill-base.js":235}],232:[function(require,module,exports){
+module.exports=require(30)
+},{"polyfill/polyfill-base.js":235}],233:[function(require,module,exports){
+module.exports=require(13)
+},{}],234:[function(require,module,exports){
+module.exports=require(14)
+},{}],235:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":233,"./lib/window.console.js":234}],236:[function(require,module,exports){
+module.exports=require(57)
+},{"./lib/sizes.js":237}],237:[function(require,module,exports){
+module.exports=require(58)
+},{"js-ext/lib/object.js":238}],238:[function(require,module,exports){
+module.exports=require(12)
+},{"polyfill/polyfill-base.js":241}],239:[function(require,module,exports){
+module.exports=require(13)
+},{}],240:[function(require,module,exports){
+module.exports=require(14)
+},{}],241:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":239,"./lib/window.console.js":240}],242:[function(require,module,exports){
+module.exports=require(63)
+},{"js-ext/lib/object.js":217,"js-ext/lib/string.js":219,"polyfill":229,"polyfill/extra/transition.js":224,"polyfill/extra/vendorCSS.js":226}],243:[function(require,module,exports){
 module.exports=require(64)
-},{"./attribute-extractor.js":118,"./vdom-ns.js":125,"js-ext/lib/object.js":93,"polyfill":105}],124:[function(require,module,exports){
-arguments[4][65][0].apply(exports,arguments)
-},{"./attribute-extractor.js":118,"./vdom-ns.js":125,"./vnode.js":126,"js-ext/lib/object.js":93,"polyfill":105}],125:[function(require,module,exports){
+},{"js-ext/lib/object.js":217,"polyfill":229}],244:[function(require,module,exports){
+module.exports=require(65)
+},{"js-ext/lib/object.js":217,"js-ext/lib/string.js":219,"polyfill":229}],245:[function(require,module,exports){
 module.exports=require(66)
-},{"js-ext/lib/object.js":93,"polyfill":105}],126:[function(require,module,exports){
+},{"./vdom-ns.js":249,"js-ext/lib/object.js":217,"js-ext/lib/string.js":219,"polyfill":229}],246:[function(require,module,exports){
+arguments[4][67][0].apply(exports,arguments)
+},{"../css/element.css":213,"./attribute-extractor.js":242,"./element-array.js":243,"./html-parser.js":247,"./node-parser.js":248,"./vdom-ns.js":249,"./vnode.js":250,"js-ext/lib/object.js":217,"js-ext/lib/promise.js":218,"js-ext/lib/string.js":219,"polyfill":229,"polyfill/extra/transition.js":224,"polyfill/extra/transitionend.js":225,"polyfill/extra/vendorCSS.js":226,"utils":230,"window-ext":236}],247:[function(require,module,exports){
+module.exports=require(68)
+},{"./attribute-extractor.js":242,"./vdom-ns.js":249,"js-ext/lib/object.js":217,"polyfill":229}],248:[function(require,module,exports){
+arguments[4][69][0].apply(exports,arguments)
+},{"./attribute-extractor.js":242,"./vdom-ns.js":249,"./vnode.js":250,"js-ext/lib/object.js":217,"polyfill":229}],249:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/lib/object.js":217,"polyfill":229}],250:[function(require,module,exports){
 "use strict";
 
 /**
@@ -14287,8 +14876,8 @@ module.exports = function (window) {
         nodeids = NS.nodeids,
         htmlToVNodes = require('./html-parser.js')(window),
         timers = require('utils/lib/timers.js'),
-        async = timers.async,
-        later = timers.later,
+        async = timers.asyncSilent,
+        later = timers.laterSilent,
 
         // cleanup memory after 1 minute: removed nodes SHOULD NOT be accessed afterwards
         // because vnode would be recalculated and might be different from before
@@ -15129,7 +15718,7 @@ module.exports = function (window) {
         * @since 0.0.1
         */
         contains: function(otherVNode) {
-            if (otherVNode.destroyed) {
+            if (otherVNode && otherVNode.destroyed) {
                 return false;
             }
             while (otherVNode && (otherVNode!==this)) {
@@ -15368,7 +15957,10 @@ module.exports = function (window) {
                 // if the size changed, then the domNode was merged
                 (size===instance.vChildNodes.length) || (domNode=instance.vChildNodes[instance.vChildNodes.length-1].domNode);
             }
-            VNode._emit(EV_INSERTED);
+            if (VNode.nodeType===1) {
+                DOCUMENT._parcelList && VNode.tag.startsWith('I-PARCEL-') && !DOCUMENT._parcelList.contains(domNode) && DOCUMENT._parcelList.push(domNode);
+                VNode._emit(EV_INSERTED);
+            }
             return domNode;
         },
 
@@ -15439,12 +16031,18 @@ module.exports = function (window) {
                 // someone might need to handle the Element when removed (fe to cleanup specific things)
                 later(function() {
                     instance._cleanData();
-                    // _destroy all its vChildNodes
-                    if ((instance.nodeType===1) && vChildNodes) {
-                        len = vChildNodes.length;
-                        for (i=0; i < len; i++) {
-                            vChildNode = vChildNodes[i];
-                            vChildNode && vChildNode._destroy(true);
+                    if (instance.nodeType===1) {
+                        // if vnode is part of DOCUMENT._parcelList then remove it
+                        if (DOCUMENT._parcelList && instance.tag.startsWith('I-PARCEL-')) {
+                            DOCUMENT._parcelList.remove(instance.domNode);
+                        }
+                        // _destroy all its vChildNodes
+                        if (vChildNodes) {
+                            len = vChildNodes.length;
+                            for (i=0; i < len; i++) {
+                                vChildNode = vChildNodes[i];
+                                vChildNode && vChildNode._destroy(true);
+                            }
                         }
                     }
                     instance._vChildren = null;
@@ -15606,7 +16204,10 @@ module.exports = function (window) {
                 newVNode._moveToParent(instance, index);
                 instance.domNode._insertBefore(domNode, refVNode.domNode);
                 (newVNode.nodeType===3) && instance._normalize();
-                newVNode._emit(EV_INSERTED);
+                if (newVNode.nodeType===1) {
+                    DOCUMENT._parcelList && newVNode.tag.startsWith('I-PARCEL-') && !DOCUMENT._parcelList.contains(domNode) && DOCUMENT._parcelList.push(domNode);
+                    newVNode._emit(EV_INSERTED);
+                }
             }
             return domNode;
         },
@@ -15812,13 +16413,15 @@ module.exports = function (window) {
                 prevVal = attrs[attributeName];
             // don't check by !== --> value isn't parsed into a String yet
 
+            if (prevVal && ((value===undefined) || (value===null))) {
+                instance._removeAttr(attributeName);
+                return instance;
+            }
+            // attribute-values are always Strings:
+            value = String(value);
+            // attribute-values will be stored without &quot; or &apos;
+            value = value.replace(/&quot;/g, '"').replace(/&apos;/g, "'");
             if (prevVal!=value) {
-                if ((value===undefined) || (value===null)) {
-                    instance._removeAttr(attributeName);
-                    return instance;
-                }
-                // attribute-values are always Strings:
-                value = String(value);
                 attrs[attributeName] = value;
                 // in case of STYLE attribute --> special treatment
                 if (attributeName===STYLE) {
@@ -15849,7 +16452,8 @@ module.exports = function (window) {
                     instance.id = value;
                     nodeids[value] = instance.domNode;
                 }
-                instance.domNode._setAttribute(attributeName, value);
+                // when set in the dom --> quotes need to be set as &quot;
+                instance.domNode._setAttribute(attributeName, value.replace(/"/g, '&quot;'));
                 instance._emit(prevVal ? EV_ATTRIBUTE_CHANGED : EV_ATTRIBUTE_INSERTED, attributeName, value, prevVal);
             }
             return instance;
@@ -15961,15 +16565,36 @@ module.exports = function (window) {
                                 newChild._setChildNodes(bkpChildNodes);
                                 newChild.id && (nodeids[newChild.id]=newChild.domNode);
                                 oldChild._replaceAtParent(newChild);
+                                DOCUMENT._parcelList && newChild.tag.startsWith('I-PARCEL-') && !DOCUMENT._parcelList.contains(newChild.domNode) && DOCUMENT._parcelList.push(newChild.domNode);
                                 newChild._emit(EV_INSERTED);
                             }
                             else {
                                 // same tag --> only update what is needed
-                                oldChild.attrs = newChild.attrs;
+                                // first: we might need to set the class `focussed` when the attributeData says so:
+                                // this happens when an itag gets rerendered: its renderFn doesn't know if any elements
+                                // were focussed
+                                if (oldChild._data && oldChild._data.focussed && !newChild.hasClass('focussed')) {
+                                    newChild.classNames.focussed = true;
+                                    if (newChild.attrs[CLASS]) {
+                                        newChild.attrs[CLASS] = newChild.attrs[CLASS] + ' focussed';
+                                    }
+                                    else {
+                                        newChild.attrs[CLASS] = 'focussed';
+                                    }
+                                }
+                                if (oldChild._data && oldChild._data['fm-tabindex']) {
+                                    // node has the tabindex set by the focusmanager,
+                                    // but that info might got lost with re-rendering of the new element
+                                    newChild.attrs.tabindex = '0';
+console.warn('set tabindex --> 0');
+                                }
+console.warn(oldChild.domNode.outerHTML);
                                 oldChild._setAttrs(newChild.attrs);
+console.warn(oldChild.domNode.outerHTML);
+console.warn('=====================');
                                 // next: sync the vChildNodes:
                                 oldChild._setChildNodes(newChild.vChildNodes);
-                                // reset ref. to the domNode, for it might heva been changed by newChild:
+                                // reset ref. to the domNode, for it might have been changed by newChild:
                                 oldChild.id && (nodeids[oldChild.id]=childDomNode);
                                 newVChildNodes[i] = oldChild;
                             }
@@ -15991,14 +16616,6 @@ module.exports = function (window) {
                             bkpChildNodes = newChild.vChildNodes;
                             newChild.attrs = {}; // reset, to force defined by `_setAttrs`
                             newChild.vChildNodes = []; // reset to current state, to force defined by `_setAttrs`
-console.warn('CHECK');
-console.warn(newChild.domNode.__proto__ == window.HTMLUnknownElement.prototype);
-console.warn(newChild.domNode.__proto__ == window.HTMLElement.prototype);
-console.warn(newChild.domNode.__proto__ == window.Element.prototype);
-console.warn(newChild.domNode.__proto__ == window.Node.prototype);
-console.warn(newChild.domNode.__proto__ == Object.prototype);
-console.warn(newChild.domNode.__proto__ == Function.prototype);
-console.warn(newChild.domNode.__proto__);
                             domNode._replaceChild(newChild.domNode, childDomNode);
                             newChild._setAttrs(bkpAttrs);
                             newChild._setChildNodes(bkpChildNodes);
@@ -16006,6 +16623,7 @@ console.warn(newChild.domNode.__proto__);
                             oldChild.isVoid = newChild.isVoid;
                             delete oldChild.text;
                             instance._emit(EV_CONTENT_CHANGE);
+                            DOCUMENT._parcelList && newChild.tag.startsWith('I-PARCEL-') && !DOCUMENT._parcelList.contains(newChild.domNode) && DOCUMENT._parcelList.push(newChild.domNode);
                             newChild._emit(EV_INSERTED);
                             break;
                         case 5: // oldNodeType==TextNode, newNodeType==TextNode
@@ -16055,6 +16673,7 @@ console.warn(newChild.domNode.__proto__);
                         domNode._appendChild(newChild.domNode);
                         newChild._setAttrs(bkpAttrs);
                         newChild._setChildNodes(bkpChildNodes);
+                        DOCUMENT._parcelList && newChild.tag.startsWith('I-PARCEL-') && !DOCUMENT._parcelList.contains(newChild.domNode) && DOCUMENT._parcelList.push(newChild.domNode);
                         newChild._emit(EV_INSERTED);
                         break;
                     case 3: // TextNode
@@ -16290,6 +16909,7 @@ console.warn(newChild.domNode.__proto__);
                             // vnode.vChildNodes = bkpChildNodes;
                             vnode.id && (nodeids[vnode.id]=vnode.domNode);
                             instance._replaceAtParent(vnode);
+                            DOCUMENT._parcelList && vnode.tag.startsWith('I-PARCEL-') && !DOCUMENT._parcelList.contains(vnode.domNode) && DOCUMENT._parcelList.push(vnode.domNode);
                             vnode._emit(EV_INSERTED);
                         }
                         else {
@@ -16302,6 +16922,7 @@ console.warn(newChild.domNode.__proto__);
                         vnode.domNode.nodeValue = vnode.text;
                         vParent.domNode._replaceChild(vnode.domNode, instance.domNode);
                         instance._replaceAtParent(vnode);
+                        DOCUMENT._parcelList && vnode.tag.startsWith('I-PARCEL-') && !DOCUMENT._parcelList.contains(vnode.domNode) && DOCUMENT._parcelList.push(vnode.domNode);
                         vnode._emit(EV_INSERTED);
                     }
                 }
@@ -16314,6 +16935,7 @@ console.warn(newChild.domNode.__proto__);
                             vnode.attrs = {}; // reset, to force defined by `_setAttrs`
                             vnode.vChildNodes = []; // reset to current state, to force defined by `_setAttrs`
                             isLastChildNode ? vParent.domNode._appendChild(vnode.domNode) : vParent.domNode._insertBefore(vnode.domNode, refDomNode);
+                            DOCUMENT._parcelList && vnode.tag.startsWith('I-PARCEL-') && !DOCUMENT._parcelList.contains(vnode.domNode) && DOCUMENT._parcelList.push(vnode.domNode);
                             vnode._emit(EV_INSERTED);
                             vnode._setAttrs(bkpAttrs);
                             vnode._setChildNodes(bkpChildNodes);
@@ -16579,9 +17201,9 @@ console.warn(newChild.domNode.__proto__);
     return vNodeProto;
 
 };
-},{"./attribute-extractor.js":118,"./html-parser.js":123,"./vdom-ns.js":125,"js-ext/extra/lightmap.js":90,"js-ext/lib/array.js":91,"js-ext/lib/object.js":93,"js-ext/lib/string.js":95,"polyfill":105,"utils/lib/timers.js":108}],127:[function(require,module,exports){
-arguments[4][68][0].apply(exports,arguments)
-},{"./partials/element-plugin.js":120,"./partials/extend-document.js":121,"./partials/extend-element.js":122,"./partials/node-parser.js":124,"js-ext/lib/object.js":93}],128:[function(require,module,exports){
+},{"./attribute-extractor.js":242,"./html-parser.js":247,"./vdom-ns.js":249,"js-ext/extra/lightmap.js":214,"js-ext/lib/array.js":215,"js-ext/lib/object.js":217,"js-ext/lib/string.js":219,"polyfill":229,"utils/lib/timers.js":232}],251:[function(require,module,exports){
+arguments[4][72][0].apply(exports,arguments)
+},{"./partials/element-plugin.js":244,"./partials/extend-document.js":245,"./partials/extend-element.js":246,"./partials/node-parser.js":248,"js-ext/lib/object.js":217}],252:[function(require,module,exports){
 function DOMParser(options){
 	this.options = options ||{locator:{}};
 	
@@ -16838,7 +17460,7 @@ if(typeof require == 'function'){
 	exports.DOMParser = DOMParser;
 }
 
-},{"./dom":129,"./sax":130}],129:[function(require,module,exports){
+},{"./dom":253,"./sax":254}],253:[function(require,module,exports){
 /*
  * DOM Level 2
  * Object DOMException
@@ -17978,7 +18600,7 @@ if(typeof require == 'function'){
 	exports.XMLSerializer = XMLSerializer;
 }
 
-},{}],130:[function(require,module,exports){
+},{}],254:[function(require,module,exports){
 //[4]   	NameStartChar	   ::=   	":" | [A-Z] | "_" | [a-z] | [#xC0-#xD6] | [#xD8-#xF6] | [#xF8-#x2FF] | [#x370-#x37D] | [#x37F-#x1FFF] | [#x200C-#x200D] | [#x2070-#x218F] | [#x2C00-#x2FEF] | [#x3001-#xD7FF] | [#xF900-#xFDCF] | [#xFDF0-#xFFFD] | [#x10000-#xEFFFF]
 //[4a]   	NameChar	   ::=   	NameStartChar | "-" | "." | [0-9] | #xB7 | [#x0300-#x036F] | [#x203F-#x2040]
 //[5]   	Name	   ::=   	NameStartChar (NameChar)*
@@ -18564,37 +19186,164 @@ if(typeof require == 'function'){
 }
 
 
-},{}],131:[function(require,module,exports){
-module.exports = function (window) {
-    "use strict";
-};
-},{}],132:[function(require,module,exports){
+},{}],255:[function(require,module,exports){
 // See for all prototypes: https://developer.mozilla.org/en-US/docs/Web/API
+require('polyfill/polyfill-base.js');
+
 module.exports = function (window) {
 
     "use strict";
-    var ItagBase = require('itags.core')(window),
-        ISelectClass;
+    var itagsCore = require('itags.core')(window),
+        Event = require('event-dom')(window);
 
-    ISelectClass = ItagBase.subClass('i-select', function() {
-        // ISelectClass.$super.constructor.call(this);
-        this.setHTML('I am rendered '+this.dummy);
+    Event.after('click', function(e) {
+        e.target.setAttr('value', 'I am clicked i-parcel-userdata!');
+    }, 'i-parcel-userdata');
+
+    itagsCore.defineParcel(
+        'userdata',
+        function() {
+console.info('renderFunc i-parcel');
+            this.setHTML('I am <b>'+this.getTagName()+'</b> '+this.dummy+' modeldata.b: '+this.getData('modeldata').b);
+            this.after('dblclick', this.msg);
+        },
+        {
+            init: function() {
+                console.info('initFunc');
+            },
+            destroy: function() {
+                console.info('destroyFunc');
+            },
+            dummy: 10,
+            msg: function() {
+                this.setAttr('value', 'I am double clicked!');
+            }
+        }
+    );
+
+};
+},{"event-dom":6,"itags.core":258,"polyfill/polyfill-base.js":206}],256:[function(require,module,exports){
+var css = "i-select > div {\n    position: relative !important;\n}\n\ni-select > button {\n    -webkit-touch-callout: none !important;\n    -webkit-user-select: none !important;\n    -khtml-user-select: none !important;\n    -moz-user-select: none !important;\n    -ms-user-select: none !important;\n    user-select: none !important;\n}\n\ni-select > div > div {\n    position: absolute !important;\n    left: 0 !important;\n    top: 0 !important;\n    cursor: pointer !important;\n    border-style: solid !important;\n    border-width: 0.1em !important;\n    -webkit-border-radius: 0 0 0.3em 0.3em !important;\n    -moz-border-radius: 0 0 0.3em 0.3em !important;\n    border-radius: 0 0 0.3em 0.3em !important;\n    -webkit-box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15) !important;\n    -moz-box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15) !important;\n    box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15) !important;\n}\n\ni-select ul {\n    font-size: 1.2em !important;\n    padding: 0 0 0.3em !important;\n    list-style: none !important;\n    margin: 0 !important;\n}\n\ni-select li {\n    padding: 0.25em 0.9em !important;\n}\n\ni-select li.focussed {\n    background-color: #B3D4FF !important;\n}\n\ni-select li.selected:before {\n    content: '*' !important;\n    margin-left: -0.7em !important;\n    padding-right: 0.25em !important;\n}\n\ni-select li:before,\ni-select li:after {\n    content: '' !important;\n    padding: 0 !important;\n    margin: 0 !important;\n}\n\n/* color specification:; */\n\ni-select > div > div {\n    background-color: #FFF !important;\n    border-color: #000 !important;\n}\n\ni-select li:hover {\n    background-color: #B3D4FF !important;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],257:[function(require,module,exports){
+/*
+* attributes:
+* value, expanded, primary-button
+*/
+require('polyfill/polyfill-base.js');
+require('js-ext/lib/string.js');
+require('css');
+require('./css/i-select.css');
+
+module.exports = function (window) {
+
+    "use strict";
+    var itagsCore = require('itags.core')(window),
+        Event = require('event-dom')(window),
+        DEFAULT_INVALID_VALUE = 'choose';
+
+    require('focusmanager')(window);
+
+    Event.after('click', function(e) {
+        var element = e.target.getParent(),
+            expanded = element.getAttr('expanded')==='true',
+            value, liNodes, focusNode;
+        if (!expanded) {
+            value = element.getValue1();
+            liNodes = element.getAll('li');
+            focusNode = liNodes[value-1];
+console.warn(focusNode);
+            focusNode && focusNode.focus();
+        }
+        element.setAttr('expanded', expanded ? 'false' : 'true');
+    }, 'i-select button');
+
+    Event.after('click', function(e) {
+        var liNode = e.target,
+            element = liNode.inside('i-select'),
+            index = liNode.getParent().getAll('li').indexOf(liNode);
+        element.setAttrs([
+            // {name: 'expanded', value: 'false'},
+            {name: 'value', value: index+1}
+        ]);
+    }, 'i-select li');
+
+    itagsCore.defineElement( 'i-select', function() {
+        var element = this,
+            expanded = element.isExpanded(),
+            primaryButton = element.isPrimaryBtn(),
+            value = element.getValue1(),
+            items = element.getItems(),
+            item, content, buttonText, len, i, markValue;
+console.warn('dummy: '+element.dummy);
+console.warn(element.getValue1);
+console.warn('value: '+element.getValue1());
+        len = items.length;
+        (value>len) && (value=0);
+        markValue = value - 1;
+        buttonText = (value>0) ? items[markValue] : element.getInvalidValue();
+
+        // building the content of the itag:
+        content = '<button class="pure-button pure-button-bordered'+(primaryButton ? ' pure-button-primary' : '')+'">'+buttonText+'</button>';
+        // first: outerdiv which will be relative positioned
+        if (expanded) {
+            content += '<div>';
+        }
+        else {
+            content += '<div class="itsa-hidden">';
+        }
+        content += '<div>'; // innerdiv which will be absolute positioned
+        content += '<ul fm-manage="li" fm-keyup="38" fm-keydown="40">';
+        for (i=0; i<len; i++) {
+            item = items[i];
+            content += '<li'+((i===markValue) ? ' id="dummy" class="selected"' : '')+'>'+String(item)+'</li>';
+        }
+        content += '</ul>';
+        content += '</div>';
+
+        // set the content:
+        element.setHTML(content);
     }, {
-        dummy: 10
+        dummy: 23,
+        getValue1: function() {
+console.warn('invoking getValue');
+            var valueString = this.getAttr('value');
+console.warn('valueString '+valueString);
+            return valueString.validateNumber() ? Math.max(0, parseInt(valueString, 10)) : 0;
+        },
+        getItems: function() {
+            var items;
+            try {
+                items = JSON.parse(this.getAttr('items'));
+                Array.isArray(items) || (items=[]);
+            }
+            catch (e) {
+                items = [];
+            }
+            return items;
+        },
+        getInvalidValue: function() {
+            return this.getAttr('invalid-value') || DEFAULT_INVALID_VALUE;
+        },
+        isExpanded: function() {
+            return this.getAttr('expanded')==='true';
+        },
+        isPrimaryBtn: function() {
+            return this.getAttr('primary-button')==='true';
+        }
     });
 
-    return ISelectClass;
-
 };
-},{"itags.core":133}],133:[function(require,module,exports){
+},{"./css/i-select.css":256,"css":4,"event-dom":6,"focusmanager":73,"itags.core":258,"js-ext/lib/string.js":194,"polyfill/polyfill-base.js":206}],258:[function(require,module,exports){
 
 "use strict";
 
 require('js-ext/lib/object.js');
-require('js-ext/lib/function.js');
+require('js-ext/lib/string.js');
 require('polyfill/polyfill-base.js');
 
-var async = require('utils').async,
+var asyncSilent = require('utils').asyncSilent,
+    laterSilent = require('utils').laterSilent,
+    CLASS_CE_HIDDEN_BEFORE_RENDER = 'itag-unrendered',
     NODE = 'node',
     REMOVE = 'remove',
     INSERT = 'insert',
@@ -18606,252 +19355,285 @@ var async = require('utils').async,
     ATTRIBUTE_REMOVED = ATTRIBUTE+REMOVE,
     ATTRIBUTE_CHANGED = ATTRIBUTE+CHANGE,
     ATTRIBUTE_INSERTED = ATTRIBUTE+INSERT,
+    DELAYED_FINALIZE_EVENTS = {
+        'mousedown': true,
+        'mouseup': true,
+        'mousemove': true,
+        'panmove': true,
+        'panstart': true,
+        'panleft': true,
+        'panright': true,
+        'panup': true,
+        'pandown': true,
+        'pinchmove': true,
+        'rotatemove': true,
+        'focus': true,
+        'blur': true,
+        'keydown': true,
+        'keyup': true,
+        'keypress': true
+    },
+    DELAYED_EVT_TIME = 1000,
+    merge = function (sourceObj, targetObj) {
+        var name;
+        for (name in sourceObj) {
+            if (!(name in targetObj)) {
+                if (name==='init') {
+console.info('store init function');
+/*jshint -W083 */
+                    targetObj._init = function() {
+/*jshint +W083 */
+                        var vnode = targetObj.vnode;
+                        if (!vnode.ce_initialized && !vnode.removedFromDOM) {
+                            sourceObj.init.call(targetObj);
+                            Object.protectedProp(vnode, 'ce_initialized', true);
+                        }
+                    };
+                }
+                else if (name==='destroy') {
+/*jshint -W083 */
+                    targetObj._destroy = function() {
+/*jshint +W083 */
+                        var vnode = targetObj.vnode;
+                        if (!vnode.removedFromDOM && vnode.ce_initialized) {
+                            sourceObj.destroy.call(targetObj);
+                        }
+                    };
+                }
+                else {
+                    targetObj[name] = sourceObj[name];
+                }
+            }
+        }
+    },
     NOOP = function() {};
+
+DELAYED_FINALIZE_EVENTS.keys().forEach(function(key) {
+    DELAYED_FINALIZE_EVENTS[key+'outside'] = true;
+});
 
 module.exports = function (window) {
 
     var DOCUMENT = window.document,
-        ItagBase, MUTATION_EVENTS, itagFilter, Event, renderDomElements,
-        defineProperty, defineProperties, fullMerge;
+        itagCore, MUTATION_EVENTS, Event, registerDelay, focusManager;
 
     require('vdom')(window);
     Event = require('event-dom')(window);
 
-    window.ITAGS || Object.protectedProp(window, 'ITAGS', {});
-
 /*jshint boss:true */
-    if (ItagBase=window.ITAGS.ItagBase) {
+    if (itagCore=window._ItagCore) {
 /*jshint boss:false */
-        return ItagBase; // ItagBase was already defined
+        return itagCore; // itagCore was already defined
     }
+
+    Object.protectedProp(window, 'ITAGS', {});
 
     MUTATION_EVENTS = [NODE_REMOVED, NODE_INSERTED, NODE_CONTENT_CHANGE, ATTRIBUTE_REMOVED, ATTRIBUTE_CHANGED, ATTRIBUTE_INSERTED];
 
-    itagFilter = function(e) {
-        return !!e.target.renderCE;
+    focusManager = function(element) {
+        var focusManagerNode = element.getElement('[focusmanager].focussed');
+        focusManagerNode && focusManagerNode.focus();
     };
 
-    Event.after(
-        [NODE_INSERTED, ATTRIBUTE_CHANGED, ATTRIBUTE_INSERTED, ATTRIBUTE_REMOVED],
-        function(e) {
-            e.target.renderCE();
+    itagCore = {
+
+        itagFilter: function(e) {
+            return !!e.target.renderCE;
         },
-        itagFilter
-    );
 
-    renderDomElements = function(tagName) {
-console.warn('renderDomElements '+tagName);
-        var itagElements = DOCUMENT.getAll(tagName),
-            len = itagElements.length,
-            i, itagElement;
-console.warn('found: '+len);
-        for (i=0; i<len; i++) {
-            itagElement = itagElements[i];
-console.warn(itagElement.getOuterHTML());
-console.warn(itagElement.renderCE);
-            itagElement.renderCE && itagElement.renderCE();
-        }
-    };
+        renderDomElements: function(tagName, renderFn, properties, isParcel) {
+            var itagElements = DOCUMENT.getAll(tagName),
+                len = itagElements.length,
+                i, itagElement;
+            for (i=0; i<len; i++) {
+                itagElement = itagElements[i];
+                this._upgradeElement(itagElement, renderFn, properties, isParcel);
+            }
+        },
+
+        defineParcel: function(parcelName, renderFn, properties) {
+            if (parcelName.contains('-')) {
+                console.warn(parcelName+' should not consist of a minus token');
+                return;
+            }
+            this._defineElement('i-parcel-'+parcelName, renderFn, properties, true);
+        },
 
 
-// Define configurable, writable and non-enumerable props
-// if they don't exist.
-defineProperty = function (object, name, method, force) {
-  if (!force && (name in object)) {
-    return;
-  }
-  Object.defineProperty(object, name, {
-    configurable: true,
-    enumerable: false,
-    writable: true,
-    value: method
-  });
-};
+        defineElement: function(itagName, renderFn, properties) {
+            if (!itagName.contains('-')) {
+                console.warn('defineElement: '+itagName+' should consist of a minus token');
+                return;
+            }
+            this._defineElement(itagName, renderFn, properties);
+        },
 
-defineProperties = function (object, map, force) {
-  var names = Object.keys(map),
-    l = names.length,
-    i = -1,
-    name;
-  while (++i < l) {
-    name = names[i];
-    defineProperty(object, name, map[name], force);
-  }
-};
+        _defineElement: function(itagName, renderFn, properties, isParcel) {
+            itagName = itagName.toLowerCase();
+/*jshint boss:true */
+            if (window.ITAGS[itagName]) {
+/*jshint boss:false */
+                console.warn(itagName+' already exists and cannot be redefined');
+                return;
+            }
+            (typeof renderFn === 'function') || (renderFn=NOOP);
+            this.renderDomElements(itagName, renderFn, properties, isParcel);
+            window.ITAGS[itagName] = this._createElement(itagName, renderFn, properties, isParcel);
+        },
 
-fullMerge = function (sourceObj, targetObj) {
-console.info('merging...');
-    var name;
-    for (name in sourceObj) {
-console.info(name);
-        if (!(name in targetObj)) {
-console.info(name+' will be set');
-            targetObj[name] = sourceObj[name];
-        }
-    }
-};
-
-/**
- * Pollyfils for often used functionality for Function
- * @class Function
-*/
-ItagBase = {};
-
-defineProperties(ItagBase, {
-
-  /**
-   * Merges the given map of properties into the `prototype` of the Class.
-   * **Not** to be used on instances.
-   *
-   * The members in the hash map will become members with
-   * instances of the merged class.
-   *
-   * By default, this method will not override existing prototype members,
-   * unless the second argument `force` is true.
-   *
-   * @method mergePrototypes
-   * @param map {Object} Hash map of properties to add to the prototype of this object
-   * @param force {Boolean}  If true, existing members will be overwritten
-   * @chainable
-   */
-  mergePrototypes: function (map, force) {
-console.warn('START');
-    var instance = this,
-        proto = instance.prototype,
-        names = Object.keys(map || {}),
-      l = names.length,
-      i = -1,
-      name, nameInProto;
-    while (++i < l) {
-      name = names[i];
-console.warn('TRY '+name);
-      nameInProto = (name in proto);
-      if (!nameInProto || force) {
-console.warn('HANDLING '+name);
-        // if nameInProto: set the property, but also backup for chaining using $orig
-        if (typeof map[name] === 'function') {
-          proto[name] = (function (original, methodName) {
-            return function () {
-              instance.$orig[methodName] = original;
-              return map[methodName].apply(this, arguments);
+        _createElement: function(itagName, renderFn, properties, isParcel) {
+            var instance = this;
+            return function() {
+                var element = DOCUMENT._createElement(itagName);
+                instance._upgradeElement(element, renderFn, properties, isParcel);
+                return element;
             };
-          })(proto[name] || NOOP, name);
-        }
-        else {
-console.warn('setting '+name+' --> '+map[name]);
-            proto[name] = map[name];
-        }
-      }
-    }
-    return instance;
-  },
+        },
 
-  /**
-   * Returns a newly created class inheriting from this class
-   * using the given `constructor` with the
-   * prototypes listed in `prototypes` merged in.
-   *
-   *
-   * The newly created class has the `$super` static property
-   * available to access all of is ancestor's instance methods.
-   *
-   * Further methods can be added via the [mergePrototypes](#method_mergePrototypes).
-   *
-   * @example
-   *
-   *  var Circle = Shape.subClass(
-   *    function (x, y, r) {
-   *      this.r = r;
-   *      Circle.$super.constructor.call(this, x, y);
-   *    },
-   *    {
-   *      area: function () {
-   *        return this.r * this.r * Math.PI;
-   *      }
-   *    }
-   *  );
-   *
-   * @method subClass
-   * @param [constructor] {Function} The function that will serve as constructor for the new class.
-   *        If `undefined` defaults to `Object.constructor`
-   * @param [prototypes] {Object} Hash map of properties to be added to the prototype of the new class.
-   * @return the new class.
-   */
-    subClass: function (itagName, constructor, prototypes) {
-  console.warn('subclassing htmlelement');
-        var instance = this,
-            baseProt = instance.prototype || {},
-            previousDefinition = window.ITAGS[itagName],
-            rp, customElement;
-
-        if (previousDefinition) {
-            console.warn(itagName+' already exists and cannot be redefined');
-            return previousDefinition;
-        }
-
-        if ((arguments.length === 2) && (typeof constructor !== 'function')) {
-            prototypes = constructor;
-            constructor = null;
-        }
-
-        constructor = constructor || function (ancestor) {
-            return function () {
-              ancestor.apply(this, arguments);
-            };
-        }(instance);
-
-        rp = Object.create(baseProt);
-
-        constructor.prototype = rp;
-
-        rp.constructor = constructor;
-        constructor.$super = baseProt;
-        constructor.$orig = {};
-
-        Object.protectedProp(constructor, 'itagName', itagName);
-
-        constructor.mergePrototypes(prototypes, true);
-
-        customElement = function() {
-            var element = DOCUMENT._createElement(itagName);
-            // merge all properties of the constructor:
-            // fullMerge(constructor, element);
+        _upgradeElement: function(element, renderFn, properties, isParcel) {
+            merge(properties, element);
+            if (isParcel) {
+                merge({renderCE: function() {
+console.info('look if parcel can be rendered');
+                    var vnode = element.vnode;
+                    if (vnode._data) {
+                        if (!vnode.ce_initialized) {
+                            if (typeof element._init==='function') {
+                                element._init();
+                            }
+                            else {
+                                Object.protectedProp(vnode, 'ce_initialized', true);
+                            }
+                            element.removeClass(CLASS_CE_HIDDEN_BEFORE_RENDER);
+                        }
+console.info('going to render parcel');
+                        renderFn.call(element);
+                    }
+                }}, element);
+            }
+            else {
+                merge({renderCE: renderFn}, element);
+            }
+            merge(Event.Listener, element);
             // render, but do this after the element is created:
             // in the next eventcycle:
-            async(function() {
-                constructor.call(element);
+            asyncSilent(function() {
+                (typeof element._init==='function') && element._init();
+                element.renderCE();
+                isParcel || element.removeClass(CLASS_CE_HIDDEN_BEFORE_RENDER);
+                element.hasClass('focussed') && focusManager(element);
             });
-            return element;
-        };
-        window.ITAGS[itagName.toUpperCase()] = customElement;
-        renderDomElements(itagName);
-        return constructor;
-    }
+        }
 
-});
-
-
+    };
 
     DOCUMENT._createElement = DOCUMENT.createElement;
     DOCUMENT.createElement = function(tag) {
-console.warn('createElement '+tag);
-        var ItagClass = window.ITAGS[tag];
+        var ItagClass = window.ITAGS[tag.toLowerCase()];
         if (ItagClass) {
-console.warn('create itag!');
             return new ItagClass();
         }
-console.warn('create native');
         return this._createElement(tag);
     };
 
-    window.ITAGS.ItagBase = ItagBase;
+    DOCUMENT.refreshParcels = function() {
+console.info('refreshParcels');
+        var list = this.getParcels(),
+            len = list.length,
+            i, parcel;
+        for (i=0; i<len; i++) {
+            parcel = list[i];
+            parcel.renderCE();
+            parcel.hasClass('focussed') && focusManager(parcel);
+        }
+    };
 
-    return ItagBase;
+    Event.after(
+        [ATTRIBUTE_CHANGED, ATTRIBUTE_INSERTED, ATTRIBUTE_REMOVED],
+        function(e) {
+console.info('itag changed attributes '+e.type);
+console.info(e.changed);
+            var element = e.target;
+            element.renderCE();
+            element.hasClass('focussed') && focusManager(element);
+        },
+        itagCore.itagFilter
+    );
+
+    Event.after(
+        NODE_REMOVED,
+        function(e) {
+console.info('itag removed');
+            var node = e.target;
+            (typeof node._destroy==='function') && node._destroy();
+            node.detachAll();
+        },
+        itagCore.itagFilter
+    );
+
+    Event.finalize(function(e) {
+        if (DELAYED_FINALIZE_EVENTS[e.type]) {
+            registerDelay || (registerDelay = laterSilent(function() {
+console.info('Event finalize multi');
+                DOCUMENT.refreshParcels();
+                registerDelay = null;
+            }, DELAYED_EVT_TIME));
+        }
+        else {
+console.info('Event finalize '+e.type);
+            DOCUMENT.refreshParcels();
+        }
+    });
+
+    // we patch the window timer functions in order to run `refreshParcels` afterwards:
+    window._setTimeout = window.setTimeout;
+    window._setInterval = window.setInterval;
+
+    window.setTimeout = function() {
+        var args = arguments;
+        args[0] = (function(originalFn) {
+            return function() {
+                console.info('setTimeout');
+                originalFn();
+                DOCUMENT.refreshParcels();
+            };
+        })(args[0]);
+        window._setTimeout.apply(this, arguments);
+    };
+
+    window.setInterval = function() {
+        var args = arguments;
+        args[0] = (function(originalFn) {
+            return function() {
+                originalFn();
+                DOCUMENT.refreshParcels();
+            };
+        })(args[0]);
+        window._setInterval.apply(this, arguments);
+    };
+
+    if (typeof window.setImmediate !== 'undefined') {
+        window._setImmediate = window.setImmediate;
+        window.setImmediate = function() {
+            var args = arguments;
+            args[0] = (function(originalFn) {
+                return function() {
+                    originalFn();
+                    DOCUMENT.refreshParcels();
+                };
+            })(args[0]);
+            window._setImmediate.apply(this, arguments);
+        };
+    }
+
+    Object.protectedProp(window, '_ItagCore', itagCore);
+
+    return itagCore;
 
 };
-},{"event-dom":2,"js-ext/lib/function.js":69,"js-ext/lib/object.js":70,"polyfill/polyfill-base.js":82,"utils":83,"vdom":127}],134:[function(require,module,exports){
+},{"event-dom":6,"js-ext/lib/object.js":193,"js-ext/lib/string.js":194,"polyfill/polyfill-base.js":206,"utils":207,"vdom":251}],259:[function(require,module,exports){
 
-},{}],135:[function(require,module,exports){
+},{}],260:[function(require,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -20022,7 +20804,7 @@ function assert (test, message) {
   if (!test) throw new Error(message || 'Failed assertion')
 }
 
-},{"base64-js":136,"ieee754":137}],136:[function(require,module,exports){
+},{"base64-js":261,"ieee754":262}],261:[function(require,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
@@ -20144,7 +20926,7 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	exports.fromByteArray = uint8ToBase64
 }(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
 
-},{}],137:[function(require,module,exports){
+},{}],262:[function(require,module,exports){
 exports.read = function(buffer, offset, isLE, mLen, nBytes) {
   var e, m,
       eLen = nBytes * 8 - mLen - 1,
@@ -20230,7 +21012,7 @@ exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128;
 };
 
-},{}],138:[function(require,module,exports){
+},{}],263:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -20535,7 +21317,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],139:[function(require,module,exports){
+},{}],264:[function(require,module,exports){
 var http = module.exports;
 var EventEmitter = require('events').EventEmitter;
 var Request = require('./lib/request');
@@ -20674,7 +21456,7 @@ http.STATUS_CODES = {
     510 : 'Not Extended',               // RFC 2774
     511 : 'Network Authentication Required' // RFC 6585
 };
-},{"./lib/request":140,"events":138,"url":164}],140:[function(require,module,exports){
+},{"./lib/request":265,"events":263,"url":289}],265:[function(require,module,exports){
 var Stream = require('stream');
 var Response = require('./response');
 var Base64 = require('Base64');
@@ -20868,7 +21650,7 @@ var indexOf = function (xs, x) {
     return -1;
 };
 
-},{"./response":141,"Base64":142,"inherits":144,"stream":163}],141:[function(require,module,exports){
+},{"./response":266,"Base64":267,"inherits":269,"stream":288}],266:[function(require,module,exports){
 var Stream = require('stream');
 var util = require('util');
 
@@ -20990,7 +21772,7 @@ var isArray = Array.isArray || function (xs) {
     return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{"stream":163,"util":166}],142:[function(require,module,exports){
+},{"stream":288,"util":291}],267:[function(require,module,exports){
 ;(function () {
 
   var object = typeof exports != 'undefined' ? exports : this; // #8: web workers
@@ -21052,7 +21834,7 @@ var isArray = Array.isArray || function (xs) {
 
 }());
 
-},{}],143:[function(require,module,exports){
+},{}],268:[function(require,module,exports){
 var http = require('http');
 
 var https = module.exports;
@@ -21067,7 +21849,7 @@ https.request = function (params, cb) {
     return http.request.call(this, params, cb);
 }
 
-},{"http":139}],144:[function(require,module,exports){
+},{"http":264}],269:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -21092,12 +21874,12 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],145:[function(require,module,exports){
+},{}],270:[function(require,module,exports){
 module.exports = Array.isArray || function (arr) {
   return Object.prototype.toString.call(arr) == '[object Array]';
 };
 
-},{}],146:[function(require,module,exports){
+},{}],271:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -21162,7 +21944,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],147:[function(require,module,exports){
+},{}],272:[function(require,module,exports){
 (function (global){
 /*! http://mths.be/punycode v1.2.4 by @mathias */
 ;(function(root) {
@@ -21673,7 +22455,7 @@ process.chdir = function (dir) {
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],148:[function(require,module,exports){
+},{}],273:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -21759,7 +22541,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],149:[function(require,module,exports){
+},{}],274:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -21846,16 +22628,16 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],150:[function(require,module,exports){
+},{}],275:[function(require,module,exports){
 'use strict';
 
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
-},{"./decode":148,"./encode":149}],151:[function(require,module,exports){
+},{"./decode":273,"./encode":274}],276:[function(require,module,exports){
 module.exports = require("./lib/_stream_duplex.js")
 
-},{"./lib/_stream_duplex.js":152}],152:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":277}],277:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -21948,7 +22730,7 @@ function forEach (xs, f) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_readable":154,"./_stream_writable":156,"_process":146,"core-util-is":157,"inherits":144}],153:[function(require,module,exports){
+},{"./_stream_readable":279,"./_stream_writable":281,"_process":271,"core-util-is":282,"inherits":269}],278:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -21996,7 +22778,7 @@ PassThrough.prototype._transform = function(chunk, encoding, cb) {
   cb(null, chunk);
 };
 
-},{"./_stream_transform":155,"core-util-is":157,"inherits":144}],154:[function(require,module,exports){
+},{"./_stream_transform":280,"core-util-is":282,"inherits":269}],279:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -22959,7 +23741,7 @@ function indexOf (xs, x) {
 }
 
 }).call(this,require('_process'))
-},{"_process":146,"buffer":135,"core-util-is":157,"events":138,"inherits":144,"isarray":145,"stream":163,"string_decoder/":158}],155:[function(require,module,exports){
+},{"_process":271,"buffer":260,"core-util-is":282,"events":263,"inherits":269,"isarray":270,"stream":288,"string_decoder/":283}],280:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -23171,7 +23953,7 @@ function done(stream, er) {
   return stream.push(null);
 }
 
-},{"./_stream_duplex":152,"core-util-is":157,"inherits":144}],156:[function(require,module,exports){
+},{"./_stream_duplex":277,"core-util-is":282,"inherits":269}],281:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -23562,7 +24344,7 @@ function endWritable(stream, state, cb) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_duplex":152,"_process":146,"buffer":135,"core-util-is":157,"inherits":144,"stream":163}],157:[function(require,module,exports){
+},{"./_stream_duplex":277,"_process":271,"buffer":260,"core-util-is":282,"inherits":269,"stream":288}],282:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -23672,7 +24454,7 @@ function objectToString(o) {
   return Object.prototype.toString.call(o);
 }
 }).call(this,require("buffer").Buffer)
-},{"buffer":135}],158:[function(require,module,exports){
+},{"buffer":260}],283:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -23874,10 +24656,10 @@ function base64DetectIncompleteChar(buffer) {
   return incomplete;
 }
 
-},{"buffer":135}],159:[function(require,module,exports){
+},{"buffer":260}],284:[function(require,module,exports){
 module.exports = require("./lib/_stream_passthrough.js")
 
-},{"./lib/_stream_passthrough.js":153}],160:[function(require,module,exports){
+},{"./lib/_stream_passthrough.js":278}],285:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Readable = exports;
 exports.Writable = require('./lib/_stream_writable.js');
@@ -23885,13 +24667,13 @@ exports.Duplex = require('./lib/_stream_duplex.js');
 exports.Transform = require('./lib/_stream_transform.js');
 exports.PassThrough = require('./lib/_stream_passthrough.js');
 
-},{"./lib/_stream_duplex.js":152,"./lib/_stream_passthrough.js":153,"./lib/_stream_readable.js":154,"./lib/_stream_transform.js":155,"./lib/_stream_writable.js":156}],161:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":277,"./lib/_stream_passthrough.js":278,"./lib/_stream_readable.js":279,"./lib/_stream_transform.js":280,"./lib/_stream_writable.js":281}],286:[function(require,module,exports){
 module.exports = require("./lib/_stream_transform.js")
 
-},{"./lib/_stream_transform.js":155}],162:[function(require,module,exports){
+},{"./lib/_stream_transform.js":280}],287:[function(require,module,exports){
 module.exports = require("./lib/_stream_writable.js")
 
-},{"./lib/_stream_writable.js":156}],163:[function(require,module,exports){
+},{"./lib/_stream_writable.js":281}],288:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -24020,7 +24802,7 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"events":138,"inherits":144,"readable-stream/duplex.js":151,"readable-stream/passthrough.js":159,"readable-stream/readable.js":160,"readable-stream/transform.js":161,"readable-stream/writable.js":162}],164:[function(require,module,exports){
+},{"events":263,"inherits":269,"readable-stream/duplex.js":276,"readable-stream/passthrough.js":284,"readable-stream/readable.js":285,"readable-stream/transform.js":286,"readable-stream/writable.js":287}],289:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -24729,14 +25511,14 @@ function isNullOrUndefined(arg) {
   return  arg == null;
 }
 
-},{"punycode":147,"querystring":150}],165:[function(require,module,exports){
+},{"punycode":272,"querystring":275}],290:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],166:[function(require,module,exports){
+},{}],291:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -25326,7 +26108,7 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":165,"_process":146,"inherits":144}],"itags":[function(require,module,exports){
+},{"./support/isBuffer":290,"_process":271,"inherits":269}],"itags":[function(require,module,exports){
 (function (global){
 /**
  * The ITSA module is an aggregator for all the individual modules that the library uses.
@@ -25346,10 +26128,13 @@ function hasOwnProperty(obj, prop) {
 (function (window) {
 
     "use strict";
-    require('itags.core')(window);
     require('i-select')(window);
     require('i-parcel')(window);
-
+global.I = {};
+global.I.async = require('utils').async;
+global.I.asyncSilent = require('utils').asyncSilent;
+global.I.later = require('utils').later;
+global.I.laterSilent = require('utils').laterSilent;
 })(global.window || require('node-win'));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"i-parcel":131,"i-select":132,"itags.core":133,"node-win":75}]},{},[]);
+},{"i-parcel":255,"i-select":257,"node-win":199,"utils":207}]},{},[]);
