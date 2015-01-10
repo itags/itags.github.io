@@ -190,11 +190,9 @@
     &quot;use strict&quot;;
     require(&#x27;i-select&#x27;)(window);
     require(&#x27;i-parcel&#x27;)(window);
-global.I = {};
-global.I.async = require(&#x27;utils&#x27;).async;
-global.I.asyncSilent = require(&#x27;utils&#x27;).asyncSilent;
-global.I.later = require(&#x27;utils&#x27;).later;
-global.I.laterSilent = require(&#x27;utils&#x27;).laterSilent;
+    require(&#x27;i-head&#x27;)(window);
+    require(&#x27;i-item&#x27;)(window);
+
 })(global.window || require(&#x27;node-win&#x27;));
     </pre>
 </div>

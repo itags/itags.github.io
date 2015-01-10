@@ -3560,7 +3560,7 @@ module.exports=require(14)
 },{}],33:[function(require,module,exports){
 module.exports=require(15)
 },{"./lib/matchesselector.js":31,"./lib/window.console.js":32}],34:[function(require,module,exports){
-var css = ".itsa-notrans, .itsa-notrans2,\n.itsa-notrans:before, .itsa-notrans2:before,\n.itsa-notrans:after, .itsa-notrans2:after {\n    -webkit-transition: none !important;\n    -moz-transition: none !important;\n    -ms-transition: none !important;\n    -o-transition: all 0s !important; /* opera doesn't support none */\n    transition: none !important;\n}\n\n.itsa-no-overflow {\n    overflow: hidden !important;\n}\n\n.itsa-invisible {\n    position: absolute !important;\n}\n\n.itsa-invisible-relative {\n    position: relative !important;\n}\n\n.itsa-invisible,\n.itsa-invisible-relative {\n    visibility: hidden !important;\n    z-index: -1;\n}\n\n.itsa-invisible *,\n.itsa-invisible-relative * {\n    visibility: hidden !important;\n}\n\n.itsa-transparent {\n    opacity: 0;\n}\n\n.itsa-hidden {\n    visibility: hidden !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n}\n\n.itsa-block {\n    display: block !important;\n}\n\n.itsa-borderbox {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+var css = ".itsa-notrans, .itsa-notrans2,\n.itsa-notrans:before, .itsa-notrans2:before,\n.itsa-notrans:after, .itsa-notrans2:after {\n    -webkit-transition: none !important;\n    -moz-transition: none !important;\n    -ms-transition: none !important;\n    -o-transition: all 0s !important; /* opera doesn't support none */\n    transition: none !important;\n}\n\n.itsa-no-overflow {\n    overflow: hidden !important;\n}\n\n.itsa-invisible {\n    position: absolute !important;\n}\n\n.itsa-invisible-relative {\n    position: relative !important;\n}\n\n/* don't set visibility to hidden --> you cannot set a focus on those items */\n.itsa-invisible,\n.itsa-invisible-relative {\n    opacity: 0 !important;\n    z-index: -1;\n}\n\n.itsa-invisible *,\n.itsa-invisible-relative * {\n    opacity: 0 !important;\n}\n\n.itsa-transparent {\n    opacity: 0;\n}\n\n/* don't set visibility to hidden --> you cannot set a focus on those items */\n.itsa-hidden {\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n}\n\n.itsa-hidden * {\n    opacity: 0 !important;\n}\n\n.itsa-block {\n    display: block !important;\n}\n\n.itsa-borderbox {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
 },{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],35:[function(require,module,exports){
 (function (global){
 /**
@@ -8181,14 +8181,17 @@ module.exports = function (window) {
         * Alias for thisNode.parentNode.removeChild(thisNode);
         *
         * @method remove
+        * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
         * @return {Node} the DOM-node that was removed. You could re-insert it at a later time.
         * @since 0.0.1
         */
-        ElementPrototype.remove = function() {
+        ElementPrototype.remove = function(silent) {
             var instance = this,
                 vnode = instance.vnode,
                 vParent = vnode.vParent;
+            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
             vParent && vParent._removeChild(vnode);
+            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(false);
             return instance;
         };
 
@@ -10521,7 +10524,7 @@ module.exports = function (window) {
 
                         extractStyle = extractor.extractStyle(vnode.attrs.style);
                         extractStyle.attrStyle && (vnode.attrs.style=extractStyle.attrStyle);
-                        vnode.styles = extractClass.styles;
+                        vnode.styles = extractStyle.styles;
 
                     }
 
@@ -12622,6 +12625,7 @@ module.exports = function (window) {
                 childDomNode = oldChild.domNode;
                 if (i < newLength) {
                     newChild = newVChildNodes[i];
+                    newChild.vParent || (newChild.vParent=instance);
 /*jshint boss:true */
                     switch (nodeswitch=NODESWITCH[oldChild.nodeType][newChild.nodeType]) {
 /*jshint boss:false */
@@ -12659,7 +12663,7 @@ module.exports = function (window) {
                                 if (oldChild._data && oldChild._data['fm-tabindex']) {
                                     // node has the tabindex set by the focusmanager,
                                     // but that info might got lost with re-rendering of the new element
-                                    newChild.attrs.tabIndex = '0';
+                                    newChild.attrs.tabindex = '0';
                                 }
                                 oldChild._setAttrs(newChild.attrs);
                                 // next: sync the vChildNodes:
@@ -13373,7 +13377,7 @@ module.exports = function (window) {
     nextFocusNode = function(e, keyCode, actionkey, focusContainerNode, sourceNode, selector, downwards) {
         console.log(NAME+'nextFocusNode');
         var keys, lastIndex, i, specialKeysMatch, specialKey, len, enterPressedOnInput, primaryButtons,
-            inputType, foundNode, formNode, primaryonenter;
+            inputType, foundNode, formNode, primaryonenter, noloop;
         keys = actionkey.split('+');
         len = keys.length;
         lastIndex = len - 1;
@@ -13420,11 +13424,13 @@ module.exports = function (window) {
             }
         }
         if (specialKeysMatch) {
+            noloop = focusContainerNode.getAttr('fm-noloop');
+            noloop = noloop && (noloop.toLowerCase()==='true');
             if (downwards) {
-                return sourceNode.next(selector) || sourceNode.first(selector);
+                return sourceNode.next(selector) || (noloop ? sourceNode.last(selector) : sourceNode.first(selector));
             }
             else {
-                return sourceNode.previous(selector) || sourceNode.last(selector);
+                return sourceNode.previous(selector) || (noloop ? sourceNode.first(selector) : sourceNode.last(selector));
             }
         }
         return false;
@@ -13458,12 +13464,9 @@ module.exports = function (window) {
             focusNode, alwaysDefault, fmAlwaysDefault, selector, allFocusableNodes, index;
 
         if (focusContainerNode) {
-console.warn('searchFocusNode fase 1');
             if (initialNode.matches(getFocusManagerSelector(focusContainerNode))) {
-console.warn('searchFocusNode fase 2');
                 markAsFocussed(focusContainerNode, initialNode);
                 focusNode = initialNode;
-console.warn(focusNode.outerHTML);
             }
             else {
                 // find the right node that should get focus
@@ -13644,12 +13647,16 @@ console.warn(focusNode.outerHTML);
 
     window._ITSAmodules.FocusManager = FocusManager = nodePlugin.definePlugin('fm', {manage: 'true'});
 
+    Event.defineEvent('UI:manualfocus').defaultFn(function(e) {
+             e.target._focus();
+         });
+
     (function(HTMLElementPrototype) {
 
         HTMLElementPrototype._focus = HTMLElementPrototype.focus;
         HTMLElementPrototype.focus = function() {
             console.log(NAME+'focus');
-            searchFocusNode(this)._focus();
+            searchFocusNode(this).emit('manualfocus');
         };
 
     }(window.HTMLElement.prototype));
@@ -13714,7 +13721,7 @@ module.exports=require(14)
 },{}],101:[function(require,module,exports){
 module.exports=require(15)
 },{"./lib/matchesselector.js":99,"./lib/window.console.js":100}],102:[function(require,module,exports){
-module.exports=require(34)
+var css = ".itsa-notrans, .itsa-notrans2,\n.itsa-notrans:before, .itsa-notrans2:before,\n.itsa-notrans:after, .itsa-notrans2:after {\n    -webkit-transition: none !important;\n    -moz-transition: none !important;\n    -ms-transition: none !important;\n    -o-transition: all 0s !important; /* opera doesn't support none */\n    transition: none !important;\n}\n\n.itsa-no-overflow {\n    overflow: hidden !important;\n}\n\n.itsa-invisible {\n    position: absolute !important;\n}\n\n.itsa-invisible-relative {\n    position: relative !important;\n}\n\n.itsa-invisible,\n.itsa-invisible-relative {\n    visibility: hidden !important;\n    z-index: -1;\n}\n\n.itsa-invisible *,\n.itsa-invisible-relative * {\n    visibility: hidden !important;\n}\n\n.itsa-transparent {\n    opacity: 0;\n}\n\n.itsa-hidden {\n    visibility: hidden !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n}\n\n.itsa-block {\n    display: block !important;\n}\n\n.itsa-borderbox {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
 },{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],103:[function(require,module,exports){
 module.exports=require(35)
 },{"../lib/array.js":104,"../lib/function.js":105,"../lib/object.js":106,"polyfill/lib/weakmap.js":110}],104:[function(require,module,exports){
@@ -13780,1059 +13787,14 @@ module.exports=require(65)
 },{"js-ext/lib/object.js":106,"js-ext/lib/string.js":108,"polyfill":118}],134:[function(require,module,exports){
 module.exports=require(66)
 },{"./vdom-ns.js":138,"js-ext/lib/object.js":106,"js-ext/lib/string.js":108,"polyfill":118}],135:[function(require,module,exports){
-module.exports=require(67)
+arguments[4][67][0].apply(exports,arguments)
 },{"../css/element.css":102,"./attribute-extractor.js":131,"./element-array.js":132,"./html-parser.js":136,"./node-parser.js":137,"./vdom-ns.js":138,"./vnode.js":139,"js-ext/lib/object.js":106,"js-ext/lib/promise.js":107,"js-ext/lib/string.js":108,"polyfill":118,"polyfill/extra/transition.js":113,"polyfill/extra/transitionend.js":114,"polyfill/extra/vendorCSS.js":115,"utils":119,"window-ext":125}],136:[function(require,module,exports){
 module.exports=require(68)
 },{"./attribute-extractor.js":131,"./vdom-ns.js":138,"js-ext/lib/object.js":106,"polyfill":118}],137:[function(require,module,exports){
-module.exports=require(69)
+arguments[4][69][0].apply(exports,arguments)
 },{"./attribute-extractor.js":131,"./vdom-ns.js":138,"./vnode.js":139,"js-ext/lib/object.js":106,"polyfill":118}],138:[function(require,module,exports){
 module.exports=require(70)
 },{"js-ext/lib/object.js":106,"polyfill":118}],139:[function(require,module,exports){
-module.exports=require(71)
-},{"./attribute-extractor.js":131,"./html-parser.js":136,"./vdom-ns.js":138,"js-ext/extra/lightmap.js":103,"js-ext/lib/array.js":104,"js-ext/lib/object.js":106,"js-ext/lib/string.js":108,"polyfill":118,"utils/lib/timers.js":121}],140:[function(require,module,exports){
-module.exports=require(72)
-},{"./partials/element-plugin.js":133,"./partials/extend-document.js":134,"./partials/extend-element.js":135,"./partials/node-parser.js":137,"js-ext/lib/object.js":106}],141:[function(require,module,exports){
-module.exports=require(12)
-},{"polyfill/polyfill-base.js":144}],142:[function(require,module,exports){
-module.exports=require(13)
-},{}],143:[function(require,module,exports){
-module.exports=require(14)
-},{}],144:[function(require,module,exports){
-module.exports=require(15)
-},{"./lib/matchesselector.js":142,"./lib/window.console.js":143}],145:[function(require,module,exports){
-module.exports=require(13)
-},{}],146:[function(require,module,exports){
-module.exports=require(14)
-},{}],147:[function(require,module,exports){
-module.exports=require(15)
-},{"./lib/matchesselector.js":145,"./lib/window.console.js":146}],148:[function(require,module,exports){
-module.exports=require(28)
-},{"./lib/idgenerator.js":149,"./lib/timers.js":150}],149:[function(require,module,exports){
-module.exports=require(29)
-},{"polyfill/polyfill-base.js":153}],150:[function(require,module,exports){
-module.exports=require(30)
-},{"polyfill/polyfill-base.js":153}],151:[function(require,module,exports){
-module.exports=require(13)
-},{}],152:[function(require,module,exports){
-module.exports=require(14)
-},{}],153:[function(require,module,exports){
-module.exports=require(15)
-},{"./lib/matchesselector.js":151,"./lib/window.console.js":152}],154:[function(require,module,exports){
-module.exports=require(34)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],155:[function(require,module,exports){
-module.exports=require(35)
-},{"../lib/array.js":156,"../lib/function.js":157,"../lib/object.js":158,"polyfill/lib/weakmap.js":162}],156:[function(require,module,exports){
-module.exports=require(19)
-},{"polyfill/polyfill-base.js":164}],157:[function(require,module,exports){
-module.exports=require(11)
-},{"polyfill/polyfill-base.js":164}],158:[function(require,module,exports){
-module.exports=require(12)
-},{"polyfill/polyfill-base.js":164}],159:[function(require,module,exports){
-module.exports=require(39)
-},{"polyfill":164}],160:[function(require,module,exports){
-module.exports=require(21)
-},{}],161:[function(require,module,exports){
-module.exports=require(13)
-},{}],162:[function(require,module,exports){
-module.exports=require(42)
-},{}],163:[function(require,module,exports){
-module.exports=require(14)
-},{}],164:[function(require,module,exports){
-module.exports=require(15)
-},{"./lib/matchesselector.js":161,"./lib/window.console.js":163}],165:[function(require,module,exports){
-module.exports=require(45)
-},{}],166:[function(require,module,exports){
-module.exports=require(46)
-},{}],167:[function(require,module,exports){
-module.exports=require(47)
-},{}],168:[function(require,module,exports){
-module.exports=require(13)
-},{}],169:[function(require,module,exports){
-module.exports=require(14)
-},{}],170:[function(require,module,exports){
-module.exports=require(15)
-},{"./lib/matchesselector.js":168,"./lib/window.console.js":169}],171:[function(require,module,exports){
-module.exports=require(28)
-},{"./lib/idgenerator.js":172,"./lib/timers.js":173}],172:[function(require,module,exports){
-module.exports=require(29)
-},{"polyfill/polyfill-base.js":176}],173:[function(require,module,exports){
-module.exports=require(30)
-},{"polyfill/polyfill-base.js":176}],174:[function(require,module,exports){
-module.exports=require(13)
-},{}],175:[function(require,module,exports){
-module.exports=require(14)
-},{}],176:[function(require,module,exports){
-module.exports=require(15)
-},{"./lib/matchesselector.js":174,"./lib/window.console.js":175}],177:[function(require,module,exports){
-module.exports=require(57)
-},{"./lib/sizes.js":178}],178:[function(require,module,exports){
-module.exports=require(58)
-},{"js-ext/lib/object.js":179}],179:[function(require,module,exports){
-module.exports=require(12)
-},{"polyfill/polyfill-base.js":182}],180:[function(require,module,exports){
-module.exports=require(13)
-},{}],181:[function(require,module,exports){
-module.exports=require(14)
-},{}],182:[function(require,module,exports){
-module.exports=require(15)
-},{"./lib/matchesselector.js":180,"./lib/window.console.js":181}],183:[function(require,module,exports){
-module.exports=require(63)
-},{"js-ext/lib/object.js":158,"js-ext/lib/string.js":160,"polyfill":170,"polyfill/extra/transition.js":165,"polyfill/extra/vendorCSS.js":167}],184:[function(require,module,exports){
-module.exports=require(64)
-},{"js-ext/lib/object.js":158,"polyfill":170}],185:[function(require,module,exports){
-module.exports=require(65)
-},{"js-ext/lib/object.js":158,"js-ext/lib/string.js":160,"polyfill":170}],186:[function(require,module,exports){
-module.exports=require(66)
-},{"./vdom-ns.js":190,"js-ext/lib/object.js":158,"js-ext/lib/string.js":160,"polyfill":170}],187:[function(require,module,exports){
-module.exports=require(67)
-},{"../css/element.css":154,"./attribute-extractor.js":183,"./element-array.js":184,"./html-parser.js":188,"./node-parser.js":189,"./vdom-ns.js":190,"./vnode.js":191,"js-ext/lib/object.js":158,"js-ext/lib/promise.js":159,"js-ext/lib/string.js":160,"polyfill":170,"polyfill/extra/transition.js":165,"polyfill/extra/transitionend.js":166,"polyfill/extra/vendorCSS.js":167,"utils":171,"window-ext":177}],188:[function(require,module,exports){
-module.exports=require(68)
-},{"./attribute-extractor.js":183,"./vdom-ns.js":190,"js-ext/lib/object.js":158,"polyfill":170}],189:[function(require,module,exports){
-module.exports=require(69)
-},{"./attribute-extractor.js":183,"./vdom-ns.js":190,"./vnode.js":191,"js-ext/lib/object.js":158,"polyfill":170}],190:[function(require,module,exports){
-module.exports=require(70)
-},{"js-ext/lib/object.js":158,"polyfill":170}],191:[function(require,module,exports){
-module.exports=require(71)
-},{"./attribute-extractor.js":183,"./html-parser.js":188,"./vdom-ns.js":190,"js-ext/extra/lightmap.js":155,"js-ext/lib/array.js":156,"js-ext/lib/object.js":158,"js-ext/lib/string.js":160,"polyfill":170,"utils/lib/timers.js":173}],192:[function(require,module,exports){
-module.exports=require(72)
-},{"./partials/element-plugin.js":185,"./partials/extend-document.js":186,"./partials/extend-element.js":187,"./partials/node-parser.js":189,"js-ext/lib/object.js":158}],193:[function(require,module,exports){
-module.exports=require(12)
-},{"polyfill/polyfill-base.js":197}],194:[function(require,module,exports){
-module.exports=require(21)
-},{}],195:[function(require,module,exports){
-module.exports=require(13)
-},{}],196:[function(require,module,exports){
-module.exports=require(14)
-},{}],197:[function(require,module,exports){
-module.exports=require(15)
-},{"./lib/matchesselector.js":195,"./lib/window.console.js":196}],198:[function(require,module,exports){
-(function (process,Buffer){
-"use strict";
-
-/**
- * Wrapper for built-in http.js to emulate the browser XMLHttpRequest object.
- *
- * This can be used with JS designed for browsers to improve reuse of code and
- * allow the use of existing libraries.
- *
- * Usage: include("XMLHttpRequest.js") and use XMLHttpRequest per W3C specs.
- *
- * @author Dan DeFelippi <dan@driverdan.com>
- * @contributor David Ellis <d.f.ellis@ieee.org>
- * @license MIT
- */
-
-var Url = require("url"),
-    spawn = require("child_process").spawn,
-    fs = require('fs'),
-    XmlDOMParser = require('xmldom').DOMParser;
-
-exports.XMLHttpRequest = function() {
-  /**
-   * Private variables
-   */
-  var self = this;
-  var http = require('http');
-  var https = require('https');
-
-  // Holds http.js objects
-  var request;
-  var response;
-
-  // Request settings
-  var settings = {};
-
-  // Disable header blacklist.
-  // Not part of XHR specs.
-  var disableHeaderCheck = false;
-
-  // Set some default headers
-  var defaultHeaders = {
-    "User-Agent": "node-XMLHttpRequest",
-    "Accept": "*/*"
-  };
-
-  var headers = defaultHeaders;
-
-  // These headers are not user setable.
-  // The following are allowed but banned in the spec:
-  // * user-agent
-  var forbiddenRequestHeaders = [
-    "accept-charset",
-    "accept-encoding",
-    "access-control-request-headers",
-    "access-control-request-method",
-    "connection",
-    "content-length",
-    "content-transfer-encoding",
-    "cookie",
-    "cookie2",
-    "date",
-    "expect",
-    "host",
-    "keep-alive",
-    "origin",
-    "referer",
-    "te",
-    "trailer",
-    "transfer-encoding",
-    "upgrade",
-    "via"
-  ];
-
-  // These request methods are not allowed
-  var forbiddenRequestMethods = [
-    "TRACE",
-    "TRACK",
-    "CONNECT"
-  ];
-
-  // Send flag
-  var sendFlag = false;
-  // Error flag, used when errors occur or abort is called
-  var errorFlag = false;
-
-  // Event listeners
-  var listeners = {};
-
-  /**
-   * Constants
-   */
-
-  this.UNSENT = 0;
-  this.OPENED = 1;
-  this.HEADERS_RECEIVED = 2;
-  this.LOADING = 3;
-  this.DONE = 4;
-
-  /**
-   * Public vars
-   */
-
-  // Current state
-  this.readyState = this.UNSENT;
-
-  // default ready state change handler in case one is not set or is set late
-  this.onreadystatechange = null;
-
-  // Result & response
-  this.responseText = "";
-  this.responseXML = null;
-  this.status = null;
-  this.statusText = null;
-
-  /**
-   * Private methods
-   */
-
-  var isXMLRequest = function() {
-      return /^text\/xml/.test(response.headers['content-type']);
-  };
-
-  /**
-   * Check if the specified header is allowed.
-   *
-   * @param string header Header to validate
-   * @return boolean False if not allowed, otherwise true
-   */
-  var isAllowedHttpHeader = function(header) {
-    return disableHeaderCheck || (header && forbiddenRequestHeaders.indexOf(header.toLowerCase()) === -1);
-  };
-
-  /**
-   * Check if the specified method is allowed.
-   *
-   * @param string method Request method to validate
-   * @return boolean False if not allowed, otherwise true
-   */
-  var isAllowedHttpMethod = function(method) {
-    return (method && forbiddenRequestMethods.indexOf(method) === -1);
-  };
-
-  /**
-   * Public methods
-   */
-
-  /**
-   * Open the connection. Currently supports local server requests.
-   *
-   * @param string method Connection method (eg GET, POST)
-   * @param string url URL for the connection.
-   * @param boolean async Asynchronous connection. Default is true.
-   * @param string user Username for basic authentication (optional)
-   * @param string password Password for basic authentication (optional)
-   */
-  this.open = function(method, url, async, user, password) {
-    this.abort();
-    errorFlag = false;
-
-    // Check for valid request method
-    if (!isAllowedHttpMethod(method)) {
-      throw "SecurityError: Request method not allowed";
-    }
-
-    settings = {
-      "method": method,
-      "url": url.toString(),
-      "async": (typeof async !== "boolean" ? true : async),
-      "user": user || null,
-      "password": password || null
-    };
-
-    setState(this.OPENED);
-  };
-
-  /**
-   * Disables or enables isAllowedHttpHeader() check the request. Enabled by default.
-   * This does not conform to the W3C spec.
-   *
-   * @param boolean state Enable or disable header checking.
-   */
-  this.setDisableHeaderCheck = function(state) {
-    disableHeaderCheck = state;
-  };
-
-  /**
-   * Sets a header for the request.
-   *
-   * @param string header Header name
-   * @param string value Header value
-   */
-  this.setRequestHeader = function(header, value) {
-    if (this.readyState != this.OPENED) {
-      throw "INVALID_STATE_ERR: setRequestHeader can only be called when state is OPEN";
-    }
-    if (!isAllowedHttpHeader(header)) {
-      console.warn('Refused to set unsafe header "' + header + '"');
-      return;
-    }
-    if (sendFlag) {
-      throw "INVALID_STATE_ERR: send flag is true";
-    }
-    headers[header] = value;
-  };
-
-  /**
-   * Gets a header from the server response.
-   *
-   * @param string header Name of header to get.
-   * @return string Text of the header or null if it doesn't exist.
-   */
-  this.getResponseHeader = function(header) {
-    if (typeof header === "string" && this.readyState > this.OPENED && response.headers[header.toLowerCase()] && !errorFlag) {
-      return response.headers[header.toLowerCase()];
-    }
-
-    return null;
-  };
-
-  /**
-   * Gets all the response headers.
-   *
-   * @return string A string with all response headers separated by CR+LF
-   */
-  this.getAllResponseHeaders = function() {
-    if (this.readyState < this.HEADERS_RECEIVED || errorFlag) {
-      return "";
-    }
-    var result = "";
-
-    for (var i in response.headers) {
-      // Cookie headers are excluded
-      if (i !== "set-cookie" && i !== "set-cookie2") {
-        result += i + ": " + response.headers[i] + "\r\n";
-      }
-    }
-    return result.substr(0, result.length - 2);
-  };
-
-  /**
-   * Gets a request header
-   *
-   * @param string name Name of header to get
-   * @return string Returns the request header or empty string if not set
-   */
-  this.getRequestHeader = function(name) {
-    // @TODO Make this case insensitive
-    if (typeof name === "string" && headers[name]) {
-      return headers[name];
-    }
-
-    return "";
-  };
-
-  /**
-   * Sends the request to the server.
-   *
-   * @param string data Optional data to send as request body.
-   */
-  this.send = function(data) {
-    if (this.readyState != this.OPENED) {
-      throw "INVALID_STATE_ERR: connection must be opened before send() is called";
-    }
-
-    if (sendFlag) {
-      throw "INVALID_STATE_ERR: send has already been called";
-    }
-
-    var ssl = false, local = false;
-    var url = Url.parse(settings.url);
-    var host, responseHandler, errorHandler;
-    // Determine the server
-    switch (url.protocol) {
-      case 'https:':
-        ssl = true;
-        host = url.hostname;
-        break;
-
-      case 'http:':
-        host = url.hostname;
-        break;
-
-      case 'file:':
-        local = true;
-        break;
-
-      case undefined:
-      case '':
-        host = "localhost";
-        break;
-
-      default:
-        throw "Protocol not supported.";
-    }
-
-    // Load files off the local filesystem (file://)
-    if (local) {
-      if (settings.method !== "GET") {
-        throw "XMLHttpRequest: Only GET method is supported";
-      }
-
-      if (settings.async) {
-        fs.readFile(url.pathname, 'utf8', function(error, data) {
-          if (error) {
-            self.handleError(error);
-          } else {
-            self.status = 200;
-            self.responseText = data;
-            self.responseXML = isXMLRequest() ? new XmlDOMParser().parseFromString(data) : null;
-            setState(self.DONE);
-          }
-        });
-      } else {
-        try {
-          this.responseText = fs.readFileSync(url.pathname, 'utf8');
-          self.responseXML = isXMLRequest() ? new XmlDOMParser().parseFromString(this.responseText) : null;
-          this.status = 200;
-          setState(self.DONE);
-        } catch(e) {
-          this.handleError(e);
-        }
-      }
-
-      return;
-    }
-
-    // Default to port 80. If accessing localhost on another port be sure
-    // to use http://localhost:port/path
-    var port = url.port || (ssl ? 443 : 80);
-    // Add query string if one is used
-    var uri = url.pathname + (url.search ? url.search : '');
-
-    // Set the Host header or the server may reject the request
-    headers.Host = host;
-    if (!((ssl && port === 443) || port === 80)) {
-      headers.Host += ':' + url.port;
-    }
-
-    // Set Basic Auth if necessary
-    if (settings.user) {
-      if (typeof settings.password == "undefined") {
-        settings.password = "";
-      }
-      var authBuf = new Buffer(settings.user + ":" + settings.password);
-      headers.Authorization = "Basic " + authBuf.toString("base64");
-    }
-
-    // Set content length header
-    if (settings.method === "GET" || settings.method === "HEAD") {
-      data = null;
-    } else if (data) {
-      headers["Content-Length"] = Buffer.isBuffer(data) ? data.length : Buffer.byteLength(data);
-
-      if (!headers["Content-Type"]) {
-        headers["Content-Type"] = "text/plain;charset=UTF-8";
-      }
-    } else if (settings.method === "POST") {
-      // For a post with no data set Content-Length: 0.
-      // This is required by buggy servers that don't meet the specs.
-      headers["Content-Length"] = 0;
-    }
-
-    var options = {
-      host: host,
-      port: port,
-      path: uri,
-      method: settings.method,
-      headers: headers,
-      agent: false
-    };
-
-    // Reset error flag
-    errorFlag = false;
-
-    // Handle async requests
-    if (settings.async) {
-      // Use the proper protocol
-      var doRequest = ssl ? https.request : http.request;
-
-      // Request is being sent, set send flag
-      sendFlag = true;
-
-      // As per spec, this is called here for historical reasons.
-      self.dispatchEvent("readystatechange");
-
-      // Handler for the response
-      responseHandler = function(resp) {
-        // Set response var to the response we got back
-        // This is so it remains accessable outside this scope
-        response = resp;
-        // Check for redirect
-        // @TODO Prevent looped redirects
-        if (response.statusCode === 302 || response.statusCode === 303 || response.statusCode === 307) {
-          // Change URL to the redirect location
-          settings.url = response.headers.location;
-          var url = Url.parse(settings.url);
-          // Set host var in case it's used later
-          host = url.hostname;
-          // Options for the new request
-          var newOptions = {
-            hostname: url.hostname,
-            port: url.port,
-            path: url.path,
-            method: response.statusCode === 303 ? 'GET' : settings.method,
-            headers: headers
-          };
-
-          // Issue the new request
-          request = doRequest(newOptions, responseHandler).on('error', errorHandler);
-          request.end();
-          // @TODO Check if an XHR event needs to be fired here
-          return;
-        }
-
-        response.setEncoding("utf8");
-
-        setState(self.HEADERS_RECEIVED);
-        self.status = response.statusCode;
-
-        response.on('data', function(chunk) {
-          // Make sure there's some data
-          if (chunk) {
-            self.responseText += chunk;
-          }
-          // Don't emit state changes if the connection has been aborted.
-          if (sendFlag) {
-            setState(self.LOADING);
-          }
-        });
-
-        response.on('end', function() {
-          if (sendFlag) {
-            self.responseXML = isXMLRequest() ? new XmlDOMParser().parseFromString(self.responseText) : null;
-            // Discard the 'end' event if the connection has been aborted
-            setState(self.DONE);
-            sendFlag = false;
-          }
-        });
-
-        response.on('error', function(error) {
-          self.handleError(error);
-        });
-      };
-
-      // Error handler for the request
-      errorHandler = function(error) {
-        self.handleError(error);
-      };
-
-      // Create the request
-      request = doRequest(options, responseHandler).on('error', errorHandler);
-
-      // Node 0.4 and later won't accept empty data. Make sure it's needed.
-      if (data) {
-        request.write(data);
-      }
-
-      request.end();
-
-      self.dispatchEvent("loadstart");
-    } else { // Synchronous
-      // Create a temporary file for communication with the other Node process
-      var contentFile = ".node-xmlhttprequest-content-" + process.pid;
-      var syncFile = ".node-xmlhttprequest-sync-" + process.pid;
-      fs.writeFileSync(syncFile, "", "utf8");
-      // The async request the other Node process executes
-      var execString = "var http = require('http'), https = require('https'), fs = require('fs');" +
-        "var doRequest = http" + (ssl ? "s" : "") + ".request;" +
-        "var options = " + JSON.stringify(options) + ";" +
-        "var responseText = '';" +
-        "var req = doRequest(options, function(response) {" +
-        "response.setEncoding('utf8');" +
-        "response.on('data', function(chunk) {" +
-        "  responseText += chunk;" +
-        "});" +
-        "response.on('end', function() {" +
-        "fs.writeFileSync('" + contentFile + "', 'NODE-XMLHTTPREQUEST-STATUS:' + response.statusCode + ',' + responseText, 'utf8');" +
-        "fs.unlinkSync('" + syncFile + "');" +
-        "});" +
-        "response.on('error', function(error) {" +
-        "fs.writeFileSync('" + contentFile + "', 'NODE-XMLHTTPREQUEST-ERROR:' + JSON.stringify(error), 'utf8');" +
-        "fs.unlinkSync('" + syncFile + "');" +
-        "});" +
-        "}).on('error', function(error) {" +
-        "fs.writeFileSync('" + contentFile + "', 'NODE-XMLHTTPREQUEST-ERROR:' + JSON.stringify(error), 'utf8');" +
-        "fs.unlinkSync('" + syncFile + "');" +
-        "});" +
-        (data ? "req.write('" + data.replace(/'/g, "\\'") + "');":"") +
-        "req.end();";
-      // Start the other Node Process, executing this string
-      var syncProc = spawn(process.argv[0], ["-e", execString]);
-/*jshint noempty:true */
-      // Wait while the sync file is empty
-      while (fs.existsSync(syncFile)) {}
-/*jshint noempty:false */
-      self.responseText = fs.readFileSync(contentFile, 'utf8');
-      self.responseXML = isXMLRequest() ? new XmlDOMParser().parseFromString(self.responseText) : null;
-      // Kill the child process once the file has data
-      syncProc.stdin.end();
-      // Remove the temporary file
-      fs.unlinkSync(contentFile);
-      if (self.responseText.match(/^NODE-XMLHTTPREQUEST-ERROR:/)) {
-        // If the file returned an error, handle it
-        var errorObj = self.responseText.replace(/^NODE-XMLHTTPREQUEST-ERROR:/, "");
-        self.handleError(errorObj);
-      } else {
-        // If the file returned okay, parse its data and move to the DONE state
-        self.status = self.responseText.replace(/^NODE-XMLHTTPREQUEST-STATUS:([0-9]*),.*/, "$1");
-        self.responseText = self.responseText.replace(/^NODE-XMLHTTPREQUEST-STATUS:[0-9]*,(.*)/, "$1");
-        setState(self.DONE);
-      }
-    }
-  };
-
-  /**
-   * Called when an error is encountered to deal with it.
-   */
-  this.handleError = function(error) {
-    this.status = 503;
-    this.statusText = error;
-    this.responseText = error.stack;
-    errorFlag = true;
-    setState(this.DONE);
-  };
-
-  /**
-   * Aborts a request.
-   */
-  this.abort = function() {
-    if (request) {
-      request.abort();
-      request = null;
-    }
-
-    headers = defaultHeaders;
-    this.responseText = "";
-    this.responseXML = "";
-
-    errorFlag = true;
-
-    if (this.readyState !== this.UNSENT && (this.readyState !== this.OPENED || sendFlag) && this.readyState !== this.DONE) {
-      sendFlag = false;
-      setState(this.DONE);
-    }
-    this.readyState = this.UNSENT;
-  };
-
-  /**
-   * Adds an event listener. Preferred method of binding to events.
-   */
-  this.addEventListener = function(event, callback) {
-    if (!(event in listeners)) {
-      listeners[event] = [];
-    }
-    // Currently allows duplicate callbacks. Should it?
-    listeners[event].push(callback);
-  };
-
-  /**
-   * Remove an event callback that has already been bound.
-   * Only works on the matching funciton, cannot be a copy.
-   */
-  this.removeEventListener = function(event, callback) {
-    if (event in listeners) {
-      // Filter will return a new array with the callback removed
-      listeners[event] = listeners[event].filter(function(ev) {
-        return ev !== callback;
-      });
-    }
-  };
-
-  /**
-   * Dispatch any events, including both "on" methods and events attached using addEventListener.
-   */
-  this.dispatchEvent = function(event) {
-    if (typeof self["on" + event] === "function") {
-      self["on" + event]();
-    }
-    if (event in listeners) {
-      for (var i = 0, len = listeners[event].length; i < len; i++) {
-        listeners[event][i].call(self);
-      }
-    }
-  };
-
-  /**
-   * Changes readyState and calls onreadystatechange.
-   *
-   * @param int state New state
-   */
-  var setState = function(state) {
-    if ((self.readyState !== state) || (settings.async && (self.readyState===self.LOADING))) {
-      self.readyState = state;
-
-      if (settings.async || self.readyState < self.OPENED || self.readyState === self.DONE) {
-          self.dispatchEvent("readystatechange");
-      }
-
-      if (settings.async && (self.readyState===self.LOADING)) {
-          self.dispatchEvent("progress");
-      }
-
-      if (self.readyState === self.DONE && !errorFlag) {
-          self.dispatchEvent("load");
-          // @TODO figure out InspectorInstrumentation::didLoadXHR(cookie)
-          self.dispatchEvent("loadend");
-      }
-    }
-
-  };
-};
-
-}).call(this,require('_process'),require("buffer").Buffer)
-},{"_process":271,"buffer":260,"child_process":259,"fs":259,"http":264,"https":268,"url":289,"xmldom":252}],199:[function(require,module,exports){
-"use strict";
-
-/**
- * Emulation of browser `window` and `dom`. Just enough to make ITSA work.
- *
- *
- * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
- * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
- *
- * @module node-win
- * @class window
- * @static
-*/
-
-require('js-ext/lib/array.js');
-
-var xmlhttprequest = require('./lib/XMLHttpRequest.js').XMLHttpRequest,
-    xmlDOMParser = require('xmldom').DOMParser,
-	Url = require('url'),
-    used = {},
-    vNodeParser = /(?:(^|#|\.)([^#\.\[\]]+))|(\[.+?\])/g,
-    count, doc, win, getHTML, reset;
-    EventTypes = {
-		MouseEvents: function () {
-			this.initMouseEvent = function (type, bubbles, cancelable, view, detail,
-					screenX, screenY, clientX, clientY,
-					ctrlKey, altKey, shiftKey, metaKey,
-					button, relatedTarget) {
-				count('initMouseEvent');
-				this.ev = {
-					type:type,
-					bubbles:bubbles,
-					cancelable:cancelable,
-					view:view,
-					detail:detail,
-					screenX:screenX,
-					screenY:screenY,
-					clientX:clientX,
-					clientY:clientY,
-					ctrlKey:ctrlKey,
-					altKey:altKey,
-					shiftKey:shiftKey,
-					metaKey:metaKey,
-					button:button,
-					relatedTarget:relatedTarget
-				};
-			};
-		}
-	};
-
-count = function (method) {
-	if (!used[method]) {
-		used[method] = 1;
-	} else {
-		used[method] += 1;
-	}
-};
-
-getHTML = function (node) {
-	var prop, val,
-		style, styles = [],
-		html = '';
-
-	if (!node.nodeName && node.nodeValue) {
-		// For text nodes, I return the uppercase text
-		// so that you can tell the parts generated at the server
-		// from the normal lowercase of the actual app when run on the client
-		return node.nodeValue.toUpperCase();
-	}
-	html += '<' + node.nodeName;
-	for (prop in node) {
-		val = node[prop];
-
-		// Ignore functions, those will be revived on the client side.
-		if (typeof val == 'function') continue;
-		switch (prop) {
-		case 'nodeName':
-		case 'parentNode':
-		case 'childNodes':
-		case 'pathname':
-		case 'search':
-			continue;
-		case 'checked':
-			if (val == 'false') continue;
-			break;
-		case 'href':
-			val = node.pathname;
-			break;
-		case 'className':
-			prop = 'class';
-			break;
-		case 'style':
-			if (val) {
-				for (style in val) {
-					if (val[style]) {
-						styles.push(style + ': ' + val[style]);
-					}
-				}
-				if (!styles.length) {
-					continue;
-				}
-				val = styles.join(';');
-			}
-			break;
-		}
-		html += ' ' + prop + '="' + val.replace('"', '\\"') + '"';
-	}
-
-	if (node.childNodes.length) {
-		html += '>' + node.childNodes.reduce(function (prev, node) {
-			return prev + getHTML(node);
-		}, '') + '</' + node.nodeName + '>';
-	}
-	else {
-		// I don't know why Mithril assigns the content of textareas
-		// to its value attribute instead of the innerHTML property.
-		// Since it doesn't have children, the closing tag has to be forced.
-		if (node.nodeName == 'TEXTAREA') {
-			html += '></TEXTAREA>';
-		} else {
-			html += '/>';
-		}
-	}
-	return html;
-};
-
-
-win = {
-    cancelAnimationFrame: function() {
-
-    },
-
-    console: require('polyfill/lib/window.console.js'),
-
-    CSSStyleDeclaration: {},
-
-	document: doc,
-
-    DOMParser: xmlDOMParser,
-
-    HTMLCollection: Array,
-
-    location: {},
-
-	navigator: {
-		userAgent: 'fake',
-		stats: {
-			clear: function () {
-				used = {};
-			},
-			get: function () {
-				return used;
-			}
-		},
-		reset: reset,
-		getHTML: function () {
-			return getHTML(doc.body);
-		},
-		navigate: function (url) {
-			var u = Url.parse(url, false, true);
-			window.location.search = u.search || '';
-			window.location.pathname = u.pathname || '';
-			window.location.hash = u.hash || '';
-		}
-	},
-
-    NodeList: Array,
-
-	performance: function () {
-		var timestamp = 50;
-		this.$elapse = function(amount) {
-			timestamp += amount;
-		};
-		this.now = function() {
-			return timestamp;
-		};
-	},
-
-	requestAnimationFrame: function(callback) {
-		var instance = this;
-		instance.requestAnimationFrame.$callback = callback;
-		instance.requestAnimationFrame.$resolve = function() {
-			instance.requestAnimationFrame.$callback && instance.requestAnimationFrame.$callback();
-			instance.requestAnimationFrame.$callback = null;
-			instance.performance.$elapse(20);
-		};
-	},
-
-    XMLHttpRequest: xmlhttprequest
-
-};
-
-reset = function () {
-	var body = doc.createElement('body');
-	win.location.search = "?/";
-	win.location.pathname = "/";
-	win.location.hash = "";
-	win.history = {};
-	win.history.pushState = function(data, title, url) {
-		win.location.pathname = win.location.search = win.location.hash = url;
-	},
-	win.history.replaceState = function(data, title, url) {
-		win.location.pathname = win.location.search = win.location.hash = url;
-	};
-	doc.appendChild(body);
-	doc.body = body;
-};
-
-reset();
-
-module.exports = win;
-},{"./lib/XMLHttpRequest.js":198,"js-ext/lib/array.js":200,"polyfill/lib/window.console.js":205,"url":289,"xmldom":252}],200:[function(require,module,exports){
-module.exports=require(19)
-},{"polyfill/polyfill-base.js":203}],201:[function(require,module,exports){
-module.exports=require(13)
-},{}],202:[function(require,module,exports){
-module.exports=require(14)
-},{}],203:[function(require,module,exports){
-module.exports=require(15)
-},{"./lib/matchesselector.js":201,"./lib/window.console.js":202}],204:[function(require,module,exports){
-module.exports=require(13)
-},{}],205:[function(require,module,exports){
-module.exports=require(14)
-},{}],206:[function(require,module,exports){
-module.exports=require(15)
-},{"./lib/matchesselector.js":204,"./lib/window.console.js":205}],207:[function(require,module,exports){
-module.exports=require(28)
-},{"./lib/idgenerator.js":208,"./lib/timers.js":209}],208:[function(require,module,exports){
-module.exports=require(29)
-},{"polyfill/polyfill-base.js":212}],209:[function(require,module,exports){
-module.exports=require(30)
-},{"polyfill/polyfill-base.js":212}],210:[function(require,module,exports){
-module.exports=require(13)
-},{}],211:[function(require,module,exports){
-module.exports=require(14)
-},{}],212:[function(require,module,exports){
-module.exports=require(15)
-},{"./lib/matchesselector.js":210,"./lib/window.console.js":211}],213:[function(require,module,exports){
-module.exports=require(34)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],214:[function(require,module,exports){
-module.exports=require(35)
-},{"../lib/array.js":215,"../lib/function.js":216,"../lib/object.js":217,"polyfill/lib/weakmap.js":221}],215:[function(require,module,exports){
-module.exports=require(19)
-},{"polyfill/polyfill-base.js":223}],216:[function(require,module,exports){
-module.exports=require(11)
-},{"polyfill/polyfill-base.js":223}],217:[function(require,module,exports){
-module.exports=require(12)
-},{"polyfill/polyfill-base.js":223}],218:[function(require,module,exports){
-module.exports=require(39)
-},{"polyfill":223}],219:[function(require,module,exports){
-module.exports=require(21)
-},{}],220:[function(require,module,exports){
-module.exports=require(13)
-},{}],221:[function(require,module,exports){
-module.exports=require(42)
-},{}],222:[function(require,module,exports){
-module.exports=require(14)
-},{}],223:[function(require,module,exports){
-module.exports=require(15)
-},{"./lib/matchesselector.js":220,"./lib/window.console.js":222}],224:[function(require,module,exports){
-module.exports=require(45)
-},{}],225:[function(require,module,exports){
-module.exports=require(46)
-},{}],226:[function(require,module,exports){
-module.exports=require(47)
-},{}],227:[function(require,module,exports){
-module.exports=require(13)
-},{}],228:[function(require,module,exports){
-module.exports=require(14)
-},{}],229:[function(require,module,exports){
-module.exports=require(15)
-},{"./lib/matchesselector.js":227,"./lib/window.console.js":228}],230:[function(require,module,exports){
-module.exports=require(28)
-},{"./lib/idgenerator.js":231,"./lib/timers.js":232}],231:[function(require,module,exports){
-module.exports=require(29)
-},{"polyfill/polyfill-base.js":235}],232:[function(require,module,exports){
-module.exports=require(30)
-},{"polyfill/polyfill-base.js":235}],233:[function(require,module,exports){
-module.exports=require(13)
-},{}],234:[function(require,module,exports){
-module.exports=require(14)
-},{}],235:[function(require,module,exports){
-module.exports=require(15)
-},{"./lib/matchesselector.js":233,"./lib/window.console.js":234}],236:[function(require,module,exports){
-module.exports=require(57)
-},{"./lib/sizes.js":237}],237:[function(require,module,exports){
-module.exports=require(58)
-},{"js-ext/lib/object.js":238}],238:[function(require,module,exports){
-module.exports=require(12)
-},{"polyfill/polyfill-base.js":241}],239:[function(require,module,exports){
-module.exports=require(13)
-},{}],240:[function(require,module,exports){
-module.exports=require(14)
-},{}],241:[function(require,module,exports){
-module.exports=require(15)
-},{"./lib/matchesselector.js":239,"./lib/window.console.js":240}],242:[function(require,module,exports){
-module.exports=require(63)
-},{"js-ext/lib/object.js":217,"js-ext/lib/string.js":219,"polyfill":229,"polyfill/extra/transition.js":224,"polyfill/extra/vendorCSS.js":226}],243:[function(require,module,exports){
-module.exports=require(64)
-},{"js-ext/lib/object.js":217,"polyfill":229}],244:[function(require,module,exports){
-module.exports=require(65)
-},{"js-ext/lib/object.js":217,"js-ext/lib/string.js":219,"polyfill":229}],245:[function(require,module,exports){
-module.exports=require(66)
-},{"./vdom-ns.js":249,"js-ext/lib/object.js":217,"js-ext/lib/string.js":219,"polyfill":229}],246:[function(require,module,exports){
-arguments[4][67][0].apply(exports,arguments)
-},{"../css/element.css":213,"./attribute-extractor.js":242,"./element-array.js":243,"./html-parser.js":247,"./node-parser.js":248,"./vdom-ns.js":249,"./vnode.js":250,"js-ext/lib/object.js":217,"js-ext/lib/promise.js":218,"js-ext/lib/string.js":219,"polyfill":229,"polyfill/extra/transition.js":224,"polyfill/extra/transitionend.js":225,"polyfill/extra/vendorCSS.js":226,"utils":230,"window-ext":236}],247:[function(require,module,exports){
-module.exports=require(68)
-},{"./attribute-extractor.js":242,"./vdom-ns.js":249,"js-ext/lib/object.js":217,"polyfill":229}],248:[function(require,module,exports){
-arguments[4][69][0].apply(exports,arguments)
-},{"./attribute-extractor.js":242,"./vdom-ns.js":249,"./vnode.js":250,"js-ext/lib/object.js":217,"polyfill":229}],249:[function(require,module,exports){
-module.exports=require(70)
-},{"js-ext/lib/object.js":217,"polyfill":229}],250:[function(require,module,exports){
 "use strict";
 
 /**
@@ -16586,12 +15548,8 @@ module.exports = function (window) {
                                     // node has the tabindex set by the focusmanager,
                                     // but that info might got lost with re-rendering of the new element
                                     newChild.attrs.tabindex = '0';
-console.warn('set tabindex --> 0');
                                 }
-console.warn(oldChild.domNode.outerHTML);
                                 oldChild._setAttrs(newChild.attrs);
-console.warn(oldChild.domNode.outerHTML);
-console.warn('=====================');
                                 // next: sync the vChildNodes:
                                 oldChild._setChildNodes(newChild.vChildNodes);
                                 // reset ref. to the domNode, for it might have been changed by newChild:
@@ -17201,9 +16159,1092 @@ console.warn('=====================');
     return vNodeProto;
 
 };
-},{"./attribute-extractor.js":242,"./html-parser.js":247,"./vdom-ns.js":249,"js-ext/extra/lightmap.js":214,"js-ext/lib/array.js":215,"js-ext/lib/object.js":217,"js-ext/lib/string.js":219,"polyfill":229,"utils/lib/timers.js":232}],251:[function(require,module,exports){
+},{"./attribute-extractor.js":131,"./html-parser.js":136,"./vdom-ns.js":138,"js-ext/extra/lightmap.js":103,"js-ext/lib/array.js":104,"js-ext/lib/object.js":106,"js-ext/lib/string.js":108,"polyfill":118,"utils/lib/timers.js":121}],140:[function(require,module,exports){
 arguments[4][72][0].apply(exports,arguments)
-},{"./partials/element-plugin.js":244,"./partials/extend-document.js":245,"./partials/extend-element.js":246,"./partials/node-parser.js":248,"js-ext/lib/object.js":217}],252:[function(require,module,exports){
+},{"./partials/element-plugin.js":133,"./partials/extend-document.js":134,"./partials/extend-element.js":135,"./partials/node-parser.js":137,"js-ext/lib/object.js":106}],141:[function(require,module,exports){
+module.exports=require(12)
+},{"polyfill/polyfill-base.js":144}],142:[function(require,module,exports){
+module.exports=require(13)
+},{}],143:[function(require,module,exports){
+module.exports=require(14)
+},{}],144:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":142,"./lib/window.console.js":143}],145:[function(require,module,exports){
+module.exports=require(13)
+},{}],146:[function(require,module,exports){
+module.exports=require(14)
+},{}],147:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":145,"./lib/window.console.js":146}],148:[function(require,module,exports){
+module.exports=require(28)
+},{"./lib/idgenerator.js":149,"./lib/timers.js":150}],149:[function(require,module,exports){
+module.exports=require(29)
+},{"polyfill/polyfill-base.js":153}],150:[function(require,module,exports){
+module.exports=require(30)
+},{"polyfill/polyfill-base.js":153}],151:[function(require,module,exports){
+module.exports=require(13)
+},{}],152:[function(require,module,exports){
+module.exports=require(14)
+},{}],153:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":151,"./lib/window.console.js":152}],154:[function(require,module,exports){
+module.exports=require(102)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],155:[function(require,module,exports){
+module.exports=require(35)
+},{"../lib/array.js":156,"../lib/function.js":157,"../lib/object.js":158,"polyfill/lib/weakmap.js":162}],156:[function(require,module,exports){
+module.exports=require(19)
+},{"polyfill/polyfill-base.js":164}],157:[function(require,module,exports){
+module.exports=require(11)
+},{"polyfill/polyfill-base.js":164}],158:[function(require,module,exports){
+module.exports=require(12)
+},{"polyfill/polyfill-base.js":164}],159:[function(require,module,exports){
+module.exports=require(39)
+},{"polyfill":164}],160:[function(require,module,exports){
+module.exports=require(21)
+},{}],161:[function(require,module,exports){
+module.exports=require(13)
+},{}],162:[function(require,module,exports){
+module.exports=require(42)
+},{}],163:[function(require,module,exports){
+module.exports=require(14)
+},{}],164:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":161,"./lib/window.console.js":163}],165:[function(require,module,exports){
+module.exports=require(45)
+},{}],166:[function(require,module,exports){
+module.exports=require(46)
+},{}],167:[function(require,module,exports){
+module.exports=require(47)
+},{}],168:[function(require,module,exports){
+module.exports=require(13)
+},{}],169:[function(require,module,exports){
+module.exports=require(14)
+},{}],170:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":168,"./lib/window.console.js":169}],171:[function(require,module,exports){
+module.exports=require(28)
+},{"./lib/idgenerator.js":172,"./lib/timers.js":173}],172:[function(require,module,exports){
+module.exports=require(29)
+},{"polyfill/polyfill-base.js":176}],173:[function(require,module,exports){
+module.exports=require(30)
+},{"polyfill/polyfill-base.js":176}],174:[function(require,module,exports){
+module.exports=require(13)
+},{}],175:[function(require,module,exports){
+module.exports=require(14)
+},{}],176:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":174,"./lib/window.console.js":175}],177:[function(require,module,exports){
+module.exports=require(57)
+},{"./lib/sizes.js":178}],178:[function(require,module,exports){
+module.exports=require(58)
+},{"js-ext/lib/object.js":179}],179:[function(require,module,exports){
+module.exports=require(12)
+},{"polyfill/polyfill-base.js":182}],180:[function(require,module,exports){
+module.exports=require(13)
+},{}],181:[function(require,module,exports){
+module.exports=require(14)
+},{}],182:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":180,"./lib/window.console.js":181}],183:[function(require,module,exports){
+module.exports=require(63)
+},{"js-ext/lib/object.js":158,"js-ext/lib/string.js":160,"polyfill":170,"polyfill/extra/transition.js":165,"polyfill/extra/vendorCSS.js":167}],184:[function(require,module,exports){
+module.exports=require(64)
+},{"js-ext/lib/object.js":158,"polyfill":170}],185:[function(require,module,exports){
+module.exports=require(65)
+},{"js-ext/lib/object.js":158,"js-ext/lib/string.js":160,"polyfill":170}],186:[function(require,module,exports){
+module.exports=require(66)
+},{"./vdom-ns.js":190,"js-ext/lib/object.js":158,"js-ext/lib/string.js":160,"polyfill":170}],187:[function(require,module,exports){
+arguments[4][67][0].apply(exports,arguments)
+},{"../css/element.css":154,"./attribute-extractor.js":183,"./element-array.js":184,"./html-parser.js":188,"./node-parser.js":189,"./vdom-ns.js":190,"./vnode.js":191,"js-ext/lib/object.js":158,"js-ext/lib/promise.js":159,"js-ext/lib/string.js":160,"polyfill":170,"polyfill/extra/transition.js":165,"polyfill/extra/transitionend.js":166,"polyfill/extra/vendorCSS.js":167,"utils":171,"window-ext":177}],188:[function(require,module,exports){
+module.exports=require(68)
+},{"./attribute-extractor.js":183,"./vdom-ns.js":190,"js-ext/lib/object.js":158,"polyfill":170}],189:[function(require,module,exports){
+arguments[4][69][0].apply(exports,arguments)
+},{"./attribute-extractor.js":183,"./vdom-ns.js":190,"./vnode.js":191,"js-ext/lib/object.js":158,"polyfill":170}],190:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/lib/object.js":158,"polyfill":170}],191:[function(require,module,exports){
+module.exports=require(139)
+},{"./attribute-extractor.js":183,"./html-parser.js":188,"./vdom-ns.js":190,"js-ext/extra/lightmap.js":155,"js-ext/lib/array.js":156,"js-ext/lib/object.js":158,"js-ext/lib/string.js":160,"polyfill":170,"utils/lib/timers.js":173}],192:[function(require,module,exports){
+arguments[4][72][0].apply(exports,arguments)
+},{"./partials/element-plugin.js":185,"./partials/extend-document.js":186,"./partials/extend-element.js":187,"./partials/node-parser.js":189,"js-ext/lib/object.js":158}],193:[function(require,module,exports){
+require('./lib/function.js');
+require('./lib/object.js');
+require('./lib/string.js');
+require('./lib/array.js');
+require('./lib/json.js');
+require('./lib/promise.js');
+},{"./lib/array.js":194,"./lib/function.js":195,"./lib/json.js":196,"./lib/object.js":197,"./lib/promise.js":198,"./lib/string.js":199}],194:[function(require,module,exports){
+module.exports=require(19)
+},{"polyfill/polyfill-base.js":202}],195:[function(require,module,exports){
+module.exports=require(11)
+},{"polyfill/polyfill-base.js":202}],196:[function(require,module,exports){
+/**
+ *
+ * Pollyfils for often used functionality for Arrays
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ * @module js-ext
+ * @submodule lib/array.js
+ * @class Array
+ *
+ */
+
+"use strict";
+
+require('polyfill/polyfill-base.js');
+
+var REVIVER = function(key, value) {
+    return ((typeof value==='string') && value.toDate()) || value;
+};
+
+JSON.parseWithDate = function(stringifiedObj) {
+    return this.parse(obj, REVIVER);
+};
+},{"polyfill/polyfill-base.js":202}],197:[function(require,module,exports){
+module.exports=require(12)
+},{"polyfill/polyfill-base.js":202}],198:[function(require,module,exports){
+module.exports=require(39)
+},{"polyfill":202}],199:[function(require,module,exports){
+module.exports=require(21)
+},{}],200:[function(require,module,exports){
+module.exports=require(13)
+},{}],201:[function(require,module,exports){
+module.exports=require(14)
+},{}],202:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":200,"./lib/window.console.js":201}],203:[function(require,module,exports){
+(function (process,Buffer){
+"use strict";
+
+/**
+ * Wrapper for built-in http.js to emulate the browser XMLHttpRequest object.
+ *
+ * This can be used with JS designed for browsers to improve reuse of code and
+ * allow the use of existing libraries.
+ *
+ * Usage: include("XMLHttpRequest.js") and use XMLHttpRequest per W3C specs.
+ *
+ * @author Dan DeFelippi <dan@driverdan.com>
+ * @contributor David Ellis <d.f.ellis@ieee.org>
+ * @license MIT
+ */
+
+var Url = require("url"),
+    spawn = require("child_process").spawn,
+    fs = require('fs'),
+    XmlDOMParser = require('xmldom').DOMParser;
+
+exports.XMLHttpRequest = function() {
+  /**
+   * Private variables
+   */
+  var self = this;
+  var http = require('http');
+  var https = require('https');
+
+  // Holds http.js objects
+  var request;
+  var response;
+
+  // Request settings
+  var settings = {};
+
+  // Disable header blacklist.
+  // Not part of XHR specs.
+  var disableHeaderCheck = false;
+
+  // Set some default headers
+  var defaultHeaders = {
+    "User-Agent": "node-XMLHttpRequest",
+    "Accept": "*/*"
+  };
+
+  var headers = defaultHeaders;
+
+  // These headers are not user setable.
+  // The following are allowed but banned in the spec:
+  // * user-agent
+  var forbiddenRequestHeaders = [
+    "accept-charset",
+    "accept-encoding",
+    "access-control-request-headers",
+    "access-control-request-method",
+    "connection",
+    "content-length",
+    "content-transfer-encoding",
+    "cookie",
+    "cookie2",
+    "date",
+    "expect",
+    "host",
+    "keep-alive",
+    "origin",
+    "referer",
+    "te",
+    "trailer",
+    "transfer-encoding",
+    "upgrade",
+    "via"
+  ];
+
+  // These request methods are not allowed
+  var forbiddenRequestMethods = [
+    "TRACE",
+    "TRACK",
+    "CONNECT"
+  ];
+
+  // Send flag
+  var sendFlag = false;
+  // Error flag, used when errors occur or abort is called
+  var errorFlag = false;
+
+  // Event listeners
+  var listeners = {};
+
+  /**
+   * Constants
+   */
+
+  this.UNSENT = 0;
+  this.OPENED = 1;
+  this.HEADERS_RECEIVED = 2;
+  this.LOADING = 3;
+  this.DONE = 4;
+
+  /**
+   * Public vars
+   */
+
+  // Current state
+  this.readyState = this.UNSENT;
+
+  // default ready state change handler in case one is not set or is set late
+  this.onreadystatechange = null;
+
+  // Result & response
+  this.responseText = "";
+  this.responseXML = null;
+  this.status = null;
+  this.statusText = null;
+
+  /**
+   * Private methods
+   */
+
+  var isXMLRequest = function() {
+      return /^text\/xml/.test(response.headers['content-type']);
+  };
+
+  /**
+   * Check if the specified header is allowed.
+   *
+   * @param string header Header to validate
+   * @return boolean False if not allowed, otherwise true
+   */
+  var isAllowedHttpHeader = function(header) {
+    return disableHeaderCheck || (header && forbiddenRequestHeaders.indexOf(header.toLowerCase()) === -1);
+  };
+
+  /**
+   * Check if the specified method is allowed.
+   *
+   * @param string method Request method to validate
+   * @return boolean False if not allowed, otherwise true
+   */
+  var isAllowedHttpMethod = function(method) {
+    return (method && forbiddenRequestMethods.indexOf(method) === -1);
+  };
+
+  /**
+   * Public methods
+   */
+
+  /**
+   * Open the connection. Currently supports local server requests.
+   *
+   * @param string method Connection method (eg GET, POST)
+   * @param string url URL for the connection.
+   * @param boolean async Asynchronous connection. Default is true.
+   * @param string user Username for basic authentication (optional)
+   * @param string password Password for basic authentication (optional)
+   */
+  this.open = function(method, url, async, user, password) {
+    this.abort();
+    errorFlag = false;
+
+    // Check for valid request method
+    if (!isAllowedHttpMethod(method)) {
+      throw "SecurityError: Request method not allowed";
+    }
+
+    settings = {
+      "method": method,
+      "url": url.toString(),
+      "async": (typeof async !== "boolean" ? true : async),
+      "user": user || null,
+      "password": password || null
+    };
+
+    setState(this.OPENED);
+  };
+
+  /**
+   * Disables or enables isAllowedHttpHeader() check the request. Enabled by default.
+   * This does not conform to the W3C spec.
+   *
+   * @param boolean state Enable or disable header checking.
+   */
+  this.setDisableHeaderCheck = function(state) {
+    disableHeaderCheck = state;
+  };
+
+  /**
+   * Sets a header for the request.
+   *
+   * @param string header Header name
+   * @param string value Header value
+   */
+  this.setRequestHeader = function(header, value) {
+    if (this.readyState != this.OPENED) {
+      throw "INVALID_STATE_ERR: setRequestHeader can only be called when state is OPEN";
+    }
+    if (!isAllowedHttpHeader(header)) {
+      console.warn('Refused to set unsafe header "' + header + '"');
+      return;
+    }
+    if (sendFlag) {
+      throw "INVALID_STATE_ERR: send flag is true";
+    }
+    headers[header] = value;
+  };
+
+  /**
+   * Gets a header from the server response.
+   *
+   * @param string header Name of header to get.
+   * @return string Text of the header or null if it doesn't exist.
+   */
+  this.getResponseHeader = function(header) {
+    if (typeof header === "string" && this.readyState > this.OPENED && response.headers[header.toLowerCase()] && !errorFlag) {
+      return response.headers[header.toLowerCase()];
+    }
+
+    return null;
+  };
+
+  /**
+   * Gets all the response headers.
+   *
+   * @return string A string with all response headers separated by CR+LF
+   */
+  this.getAllResponseHeaders = function() {
+    if (this.readyState < this.HEADERS_RECEIVED || errorFlag) {
+      return "";
+    }
+    var result = "";
+
+    for (var i in response.headers) {
+      // Cookie headers are excluded
+      if (i !== "set-cookie" && i !== "set-cookie2") {
+        result += i + ": " + response.headers[i] + "\r\n";
+      }
+    }
+    return result.substr(0, result.length - 2);
+  };
+
+  /**
+   * Gets a request header
+   *
+   * @param string name Name of header to get
+   * @return string Returns the request header or empty string if not set
+   */
+  this.getRequestHeader = function(name) {
+    // @TODO Make this case insensitive
+    if (typeof name === "string" && headers[name]) {
+      return headers[name];
+    }
+
+    return "";
+  };
+
+  /**
+   * Sends the request to the server.
+   *
+   * @param string data Optional data to send as request body.
+   */
+  this.send = function(data) {
+    if (this.readyState != this.OPENED) {
+      throw "INVALID_STATE_ERR: connection must be opened before send() is called";
+    }
+
+    if (sendFlag) {
+      throw "INVALID_STATE_ERR: send has already been called";
+    }
+
+    var ssl = false, local = false;
+    var url = Url.parse(settings.url);
+    var host, responseHandler, errorHandler;
+    // Determine the server
+    switch (url.protocol) {
+      case 'https:':
+        ssl = true;
+        host = url.hostname;
+        break;
+
+      case 'http:':
+        host = url.hostname;
+        break;
+
+      case 'file:':
+        local = true;
+        break;
+
+      case undefined:
+      case '':
+        host = "localhost";
+        break;
+
+      default:
+        throw "Protocol not supported.";
+    }
+
+    // Load files off the local filesystem (file://)
+    if (local) {
+      if (settings.method !== "GET") {
+        throw "XMLHttpRequest: Only GET method is supported";
+      }
+
+      if (settings.async) {
+        fs.readFile(url.pathname, 'utf8', function(error, data) {
+          if (error) {
+            self.handleError(error);
+          } else {
+            self.status = 200;
+            self.responseText = data;
+            self.responseXML = isXMLRequest() ? new XmlDOMParser().parseFromString(data) : null;
+            setState(self.DONE);
+          }
+        });
+      } else {
+        try {
+          this.responseText = fs.readFileSync(url.pathname, 'utf8');
+          self.responseXML = isXMLRequest() ? new XmlDOMParser().parseFromString(this.responseText) : null;
+          this.status = 200;
+          setState(self.DONE);
+        } catch(e) {
+          this.handleError(e);
+        }
+      }
+
+      return;
+    }
+
+    // Default to port 80. If accessing localhost on another port be sure
+    // to use http://localhost:port/path
+    var port = url.port || (ssl ? 443 : 80);
+    // Add query string if one is used
+    var uri = url.pathname + (url.search ? url.search : '');
+
+    // Set the Host header or the server may reject the request
+    headers.Host = host;
+    if (!((ssl && port === 443) || port === 80)) {
+      headers.Host += ':' + url.port;
+    }
+
+    // Set Basic Auth if necessary
+    if (settings.user) {
+      if (typeof settings.password == "undefined") {
+        settings.password = "";
+      }
+      var authBuf = new Buffer(settings.user + ":" + settings.password);
+      headers.Authorization = "Basic " + authBuf.toString("base64");
+    }
+
+    // Set content length header
+    if (settings.method === "GET" || settings.method === "HEAD") {
+      data = null;
+    } else if (data) {
+      headers["Content-Length"] = Buffer.isBuffer(data) ? data.length : Buffer.byteLength(data);
+
+      if (!headers["Content-Type"]) {
+        headers["Content-Type"] = "text/plain;charset=UTF-8";
+      }
+    } else if (settings.method === "POST") {
+      // For a post with no data set Content-Length: 0.
+      // This is required by buggy servers that don't meet the specs.
+      headers["Content-Length"] = 0;
+    }
+
+    var options = {
+      host: host,
+      port: port,
+      path: uri,
+      method: settings.method,
+      headers: headers,
+      agent: false
+    };
+
+    // Reset error flag
+    errorFlag = false;
+
+    // Handle async requests
+    if (settings.async) {
+      // Use the proper protocol
+      var doRequest = ssl ? https.request : http.request;
+
+      // Request is being sent, set send flag
+      sendFlag = true;
+
+      // As per spec, this is called here for historical reasons.
+      self.dispatchEvent("readystatechange");
+
+      // Handler for the response
+      responseHandler = function(resp) {
+        // Set response var to the response we got back
+        // This is so it remains accessable outside this scope
+        response = resp;
+        // Check for redirect
+        // @TODO Prevent looped redirects
+        if (response.statusCode === 302 || response.statusCode === 303 || response.statusCode === 307) {
+          // Change URL to the redirect location
+          settings.url = response.headers.location;
+          var url = Url.parse(settings.url);
+          // Set host var in case it's used later
+          host = url.hostname;
+          // Options for the new request
+          var newOptions = {
+            hostname: url.hostname,
+            port: url.port,
+            path: url.path,
+            method: response.statusCode === 303 ? 'GET' : settings.method,
+            headers: headers
+          };
+
+          // Issue the new request
+          request = doRequest(newOptions, responseHandler).on('error', errorHandler);
+          request.end();
+          // @TODO Check if an XHR event needs to be fired here
+          return;
+        }
+
+        response.setEncoding("utf8");
+
+        setState(self.HEADERS_RECEIVED);
+        self.status = response.statusCode;
+
+        response.on('data', function(chunk) {
+          // Make sure there's some data
+          if (chunk) {
+            self.responseText += chunk;
+          }
+          // Don't emit state changes if the connection has been aborted.
+          if (sendFlag) {
+            setState(self.LOADING);
+          }
+        });
+
+        response.on('end', function() {
+          if (sendFlag) {
+            self.responseXML = isXMLRequest() ? new XmlDOMParser().parseFromString(self.responseText) : null;
+            // Discard the 'end' event if the connection has been aborted
+            setState(self.DONE);
+            sendFlag = false;
+          }
+        });
+
+        response.on('error', function(error) {
+          self.handleError(error);
+        });
+      };
+
+      // Error handler for the request
+      errorHandler = function(error) {
+        self.handleError(error);
+      };
+
+      // Create the request
+      request = doRequest(options, responseHandler).on('error', errorHandler);
+
+      // Node 0.4 and later won't accept empty data. Make sure it's needed.
+      if (data) {
+        request.write(data);
+      }
+
+      request.end();
+
+      self.dispatchEvent("loadstart");
+    } else { // Synchronous
+      // Create a temporary file for communication with the other Node process
+      var contentFile = ".node-xmlhttprequest-content-" + process.pid;
+      var syncFile = ".node-xmlhttprequest-sync-" + process.pid;
+      fs.writeFileSync(syncFile, "", "utf8");
+      // The async request the other Node process executes
+      var execString = "var http = require('http'), https = require('https'), fs = require('fs');" +
+        "var doRequest = http" + (ssl ? "s" : "") + ".request;" +
+        "var options = " + JSON.stringify(options) + ";" +
+        "var responseText = '';" +
+        "var req = doRequest(options, function(response) {" +
+        "response.setEncoding('utf8');" +
+        "response.on('data', function(chunk) {" +
+        "  responseText += chunk;" +
+        "});" +
+        "response.on('end', function() {" +
+        "fs.writeFileSync('" + contentFile + "', 'NODE-XMLHTTPREQUEST-STATUS:' + response.statusCode + ',' + responseText, 'utf8');" +
+        "fs.unlinkSync('" + syncFile + "');" +
+        "});" +
+        "response.on('error', function(error) {" +
+        "fs.writeFileSync('" + contentFile + "', 'NODE-XMLHTTPREQUEST-ERROR:' + JSON.stringify(error), 'utf8');" +
+        "fs.unlinkSync('" + syncFile + "');" +
+        "});" +
+        "}).on('error', function(error) {" +
+        "fs.writeFileSync('" + contentFile + "', 'NODE-XMLHTTPREQUEST-ERROR:' + JSON.stringify(error), 'utf8');" +
+        "fs.unlinkSync('" + syncFile + "');" +
+        "});" +
+        (data ? "req.write('" + data.replace(/'/g, "\\'") + "');":"") +
+        "req.end();";
+      // Start the other Node Process, executing this string
+      var syncProc = spawn(process.argv[0], ["-e", execString]);
+/*jshint noempty:true */
+      // Wait while the sync file is empty
+      while (fs.existsSync(syncFile)) {}
+/*jshint noempty:false */
+      self.responseText = fs.readFileSync(contentFile, 'utf8');
+      self.responseXML = isXMLRequest() ? new XmlDOMParser().parseFromString(self.responseText) : null;
+      // Kill the child process once the file has data
+      syncProc.stdin.end();
+      // Remove the temporary file
+      fs.unlinkSync(contentFile);
+      if (self.responseText.match(/^NODE-XMLHTTPREQUEST-ERROR:/)) {
+        // If the file returned an error, handle it
+        var errorObj = self.responseText.replace(/^NODE-XMLHTTPREQUEST-ERROR:/, "");
+        self.handleError(errorObj);
+      } else {
+        // If the file returned okay, parse its data and move to the DONE state
+        self.status = self.responseText.replace(/^NODE-XMLHTTPREQUEST-STATUS:([0-9]*),.*/, "$1");
+        self.responseText = self.responseText.replace(/^NODE-XMLHTTPREQUEST-STATUS:[0-9]*,(.*)/, "$1");
+        setState(self.DONE);
+      }
+    }
+  };
+
+  /**
+   * Called when an error is encountered to deal with it.
+   */
+  this.handleError = function(error) {
+    this.status = 503;
+    this.statusText = error;
+    this.responseText = error.stack;
+    errorFlag = true;
+    setState(this.DONE);
+  };
+
+  /**
+   * Aborts a request.
+   */
+  this.abort = function() {
+    if (request) {
+      request.abort();
+      request = null;
+    }
+
+    headers = defaultHeaders;
+    this.responseText = "";
+    this.responseXML = "";
+
+    errorFlag = true;
+
+    if (this.readyState !== this.UNSENT && (this.readyState !== this.OPENED || sendFlag) && this.readyState !== this.DONE) {
+      sendFlag = false;
+      setState(this.DONE);
+    }
+    this.readyState = this.UNSENT;
+  };
+
+  /**
+   * Adds an event listener. Preferred method of binding to events.
+   */
+  this.addEventListener = function(event, callback) {
+    if (!(event in listeners)) {
+      listeners[event] = [];
+    }
+    // Currently allows duplicate callbacks. Should it?
+    listeners[event].push(callback);
+  };
+
+  /**
+   * Remove an event callback that has already been bound.
+   * Only works on the matching funciton, cannot be a copy.
+   */
+  this.removeEventListener = function(event, callback) {
+    if (event in listeners) {
+      // Filter will return a new array with the callback removed
+      listeners[event] = listeners[event].filter(function(ev) {
+        return ev !== callback;
+      });
+    }
+  };
+
+  /**
+   * Dispatch any events, including both "on" methods and events attached using addEventListener.
+   */
+  this.dispatchEvent = function(event) {
+    if (typeof self["on" + event] === "function") {
+      self["on" + event]();
+    }
+    if (event in listeners) {
+      for (var i = 0, len = listeners[event].length; i < len; i++) {
+        listeners[event][i].call(self);
+      }
+    }
+  };
+
+  /**
+   * Changes readyState and calls onreadystatechange.
+   *
+   * @param int state New state
+   */
+  var setState = function(state) {
+    if ((self.readyState !== state) || (settings.async && (self.readyState===self.LOADING))) {
+      self.readyState = state;
+
+      if (settings.async || self.readyState < self.OPENED || self.readyState === self.DONE) {
+          self.dispatchEvent("readystatechange");
+      }
+
+      if (settings.async && (self.readyState===self.LOADING)) {
+          self.dispatchEvent("progress");
+      }
+
+      if (self.readyState === self.DONE && !errorFlag) {
+          self.dispatchEvent("load");
+          // @TODO figure out InspectorInstrumentation::didLoadXHR(cookie)
+          self.dispatchEvent("loadend");
+      }
+    }
+
+  };
+};
+
+}).call(this,require('_process'),require("buffer").Buffer)
+},{"_process":279,"buffer":268,"child_process":267,"fs":267,"http":272,"https":276,"url":297,"xmldom":257}],204:[function(require,module,exports){
+"use strict";
+
+/**
+ * Emulation of browser `window` and `dom`. Just enough to make ITSA work.
+ *
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ * @module node-win
+ * @class window
+ * @static
+*/
+
+require('js-ext/lib/array.js');
+
+var xmlhttprequest = require('./lib/XMLHttpRequest.js').XMLHttpRequest,
+    xmlDOMParser = require('xmldom').DOMParser,
+	Url = require('url'),
+    used = {},
+    vNodeParser = /(?:(^|#|\.)([^#\.\[\]]+))|(\[.+?\])/g,
+    count, doc, win, getHTML, reset;
+    EventTypes = {
+		MouseEvents: function () {
+			this.initMouseEvent = function (type, bubbles, cancelable, view, detail,
+					screenX, screenY, clientX, clientY,
+					ctrlKey, altKey, shiftKey, metaKey,
+					button, relatedTarget) {
+				count('initMouseEvent');
+				this.ev = {
+					type:type,
+					bubbles:bubbles,
+					cancelable:cancelable,
+					view:view,
+					detail:detail,
+					screenX:screenX,
+					screenY:screenY,
+					clientX:clientX,
+					clientY:clientY,
+					ctrlKey:ctrlKey,
+					altKey:altKey,
+					shiftKey:shiftKey,
+					metaKey:metaKey,
+					button:button,
+					relatedTarget:relatedTarget
+				};
+			};
+		}
+	};
+
+count = function (method) {
+	if (!used[method]) {
+		used[method] = 1;
+	} else {
+		used[method] += 1;
+	}
+};
+
+getHTML = function (node) {
+	var prop, val,
+		style, styles = [],
+		html = '';
+
+	if (!node.nodeName && node.nodeValue) {
+		// For text nodes, I return the uppercase text
+		// so that you can tell the parts generated at the server
+		// from the normal lowercase of the actual app when run on the client
+		return node.nodeValue.toUpperCase();
+	}
+	html += '<' + node.nodeName;
+	for (prop in node) {
+		val = node[prop];
+
+		// Ignore functions, those will be revived on the client side.
+		if (typeof val == 'function') continue;
+		switch (prop) {
+		case 'nodeName':
+		case 'parentNode':
+		case 'childNodes':
+		case 'pathname':
+		case 'search':
+			continue;
+		case 'checked':
+			if (val == 'false') continue;
+			break;
+		case 'href':
+			val = node.pathname;
+			break;
+		case 'className':
+			prop = 'class';
+			break;
+		case 'style':
+			if (val) {
+				for (style in val) {
+					if (val[style]) {
+						styles.push(style + ': ' + val[style]);
+					}
+				}
+				if (!styles.length) {
+					continue;
+				}
+				val = styles.join(';');
+			}
+			break;
+		}
+		html += ' ' + prop + '="' + val.replace('"', '\\"') + '"';
+	}
+
+	if (node.childNodes.length) {
+		html += '>' + node.childNodes.reduce(function (prev, node) {
+			return prev + getHTML(node);
+		}, '') + '</' + node.nodeName + '>';
+	}
+	else {
+		// I don't know why Mithril assigns the content of textareas
+		// to its value attribute instead of the innerHTML property.
+		// Since it doesn't have children, the closing tag has to be forced.
+		if (node.nodeName == 'TEXTAREA') {
+			html += '></TEXTAREA>';
+		} else {
+			html += '/>';
+		}
+	}
+	return html;
+};
+
+
+win = {
+    cancelAnimationFrame: function() {
+
+    },
+
+    console: require('polyfill/lib/window.console.js'),
+
+    CSSStyleDeclaration: {},
+
+	document: doc,
+
+    DOMParser: xmlDOMParser,
+
+    HTMLCollection: Array,
+
+    location: {},
+
+	navigator: {
+		userAgent: 'fake',
+		stats: {
+			clear: function () {
+				used = {};
+			},
+			get: function () {
+				return used;
+			}
+		},
+		reset: reset,
+		getHTML: function () {
+			return getHTML(doc.body);
+		},
+		navigate: function (url) {
+			var u = Url.parse(url, false, true);
+			window.location.search = u.search || '';
+			window.location.pathname = u.pathname || '';
+			window.location.hash = u.hash || '';
+		}
+	},
+
+    NodeList: Array,
+
+	performance: function () {
+		var timestamp = 50;
+		this.$elapse = function(amount) {
+			timestamp += amount;
+		};
+		this.now = function() {
+			return timestamp;
+		};
+	},
+
+	requestAnimationFrame: function(callback) {
+		var instance = this;
+		instance.requestAnimationFrame.$callback = callback;
+		instance.requestAnimationFrame.$resolve = function() {
+			instance.requestAnimationFrame.$callback && instance.requestAnimationFrame.$callback();
+			instance.requestAnimationFrame.$callback = null;
+			instance.performance.$elapse(20);
+		};
+	},
+
+    XMLHttpRequest: xmlhttprequest
+
+};
+
+reset = function () {
+	var body = doc.createElement('body');
+	win.location.search = "?/";
+	win.location.pathname = "/";
+	win.location.hash = "";
+	win.history = {};
+	win.history.pushState = function(data, title, url) {
+		win.location.pathname = win.location.search = win.location.hash = url;
+	},
+	win.history.replaceState = function(data, title, url) {
+		win.location.pathname = win.location.search = win.location.hash = url;
+	};
+	doc.appendChild(body);
+	doc.body = body;
+};
+
+reset();
+
+module.exports = win;
+},{"./lib/XMLHttpRequest.js":203,"js-ext/lib/array.js":205,"polyfill/lib/window.console.js":210,"url":297,"xmldom":257}],205:[function(require,module,exports){
+module.exports=require(19)
+},{"polyfill/polyfill-base.js":208}],206:[function(require,module,exports){
+module.exports=require(13)
+},{}],207:[function(require,module,exports){
+module.exports=require(14)
+},{}],208:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":206,"./lib/window.console.js":207}],209:[function(require,module,exports){
+module.exports=require(13)
+},{}],210:[function(require,module,exports){
+module.exports=require(14)
+},{}],211:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":209,"./lib/window.console.js":210}],212:[function(require,module,exports){
+module.exports=require(28)
+},{"./lib/idgenerator.js":213,"./lib/timers.js":214}],213:[function(require,module,exports){
+module.exports=require(29)
+},{"polyfill/polyfill-base.js":217}],214:[function(require,module,exports){
+module.exports=require(30)
+},{"polyfill/polyfill-base.js":217}],215:[function(require,module,exports){
+module.exports=require(13)
+},{}],216:[function(require,module,exports){
+module.exports=require(14)
+},{}],217:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":215,"./lib/window.console.js":216}],218:[function(require,module,exports){
+var css = ".itsa-notrans, .itsa-notrans2,\n.itsa-notrans:before, .itsa-notrans2:before,\n.itsa-notrans:after, .itsa-notrans2:after {\n    -webkit-transition: none !important;\n    -moz-transition: none !important;\n    -ms-transition: none !important;\n    -o-transition: all 0s !important; /* opera doesn't support none */\n    transition: none !important;\n}\n\n.itsa-no-overflow {\n    overflow: hidden !important;\n}\n\n.itsa-invisible {\n    position: absolute !important;\n}\n\n.itsa-invisible-relative {\n    position: relative !important;\n}\n\n/* don't set visibility to hidden --> you cannot set a focus on those items */\n.itsa-invisible,\n.itsa-invisible-relative {\n    opacity: 0 !important;\n}\n\n.itsa-invisible *,\n.itsa-invisible-relative * {\n    opacity: 0 !important;\n}\n\n.itsa-transparent {\n    opacity: 0;\n}\n\n/* don't set visibility to hidden --> you cannot set a focus on those items */\n.itsa-hidden {\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\n.itsa-hidden * {\n    opacity: 0 !important;\n}\n\n.itsa-block {\n    display: block !important;\n}\n\n.itsa-borderbox {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],219:[function(require,module,exports){
+module.exports=require(35)
+},{"../lib/array.js":220,"../lib/function.js":221,"../lib/object.js":222,"polyfill/lib/weakmap.js":226}],220:[function(require,module,exports){
+module.exports=require(19)
+},{"polyfill/polyfill-base.js":228}],221:[function(require,module,exports){
+module.exports=require(11)
+},{"polyfill/polyfill-base.js":228}],222:[function(require,module,exports){
+module.exports=require(12)
+},{"polyfill/polyfill-base.js":228}],223:[function(require,module,exports){
+module.exports=require(39)
+},{"polyfill":228}],224:[function(require,module,exports){
+module.exports=require(21)
+},{}],225:[function(require,module,exports){
+module.exports=require(13)
+},{}],226:[function(require,module,exports){
+module.exports=require(42)
+},{}],227:[function(require,module,exports){
+module.exports=require(14)
+},{}],228:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":225,"./lib/window.console.js":227}],229:[function(require,module,exports){
+module.exports=require(45)
+},{}],230:[function(require,module,exports){
+module.exports=require(46)
+},{}],231:[function(require,module,exports){
+module.exports=require(47)
+},{}],232:[function(require,module,exports){
+module.exports=require(13)
+},{}],233:[function(require,module,exports){
+module.exports=require(14)
+},{}],234:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":232,"./lib/window.console.js":233}],235:[function(require,module,exports){
+module.exports=require(28)
+},{"./lib/idgenerator.js":236,"./lib/timers.js":237}],236:[function(require,module,exports){
+module.exports=require(29)
+},{"polyfill/polyfill-base.js":240}],237:[function(require,module,exports){
+module.exports=require(30)
+},{"polyfill/polyfill-base.js":240}],238:[function(require,module,exports){
+module.exports=require(13)
+},{}],239:[function(require,module,exports){
+module.exports=require(14)
+},{}],240:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":238,"./lib/window.console.js":239}],241:[function(require,module,exports){
+module.exports=require(57)
+},{"./lib/sizes.js":242}],242:[function(require,module,exports){
+module.exports=require(58)
+},{"js-ext/lib/object.js":243}],243:[function(require,module,exports){
+module.exports=require(12)
+},{"polyfill/polyfill-base.js":246}],244:[function(require,module,exports){
+module.exports=require(13)
+},{}],245:[function(require,module,exports){
+module.exports=require(14)
+},{}],246:[function(require,module,exports){
+module.exports=require(15)
+},{"./lib/matchesselector.js":244,"./lib/window.console.js":245}],247:[function(require,module,exports){
+module.exports=require(63)
+},{"js-ext/lib/object.js":222,"js-ext/lib/string.js":224,"polyfill":234,"polyfill/extra/transition.js":229,"polyfill/extra/vendorCSS.js":231}],248:[function(require,module,exports){
+module.exports=require(64)
+},{"js-ext/lib/object.js":222,"polyfill":234}],249:[function(require,module,exports){
+module.exports=require(65)
+},{"js-ext/lib/object.js":222,"js-ext/lib/string.js":224,"polyfill":234}],250:[function(require,module,exports){
+module.exports=require(66)
+},{"./vdom-ns.js":254,"js-ext/lib/object.js":222,"js-ext/lib/string.js":224,"polyfill":234}],251:[function(require,module,exports){
+arguments[4][67][0].apply(exports,arguments)
+},{"../css/element.css":218,"./attribute-extractor.js":247,"./element-array.js":248,"./html-parser.js":252,"./node-parser.js":253,"./vdom-ns.js":254,"./vnode.js":255,"js-ext/lib/object.js":222,"js-ext/lib/promise.js":223,"js-ext/lib/string.js":224,"polyfill":234,"polyfill/extra/transition.js":229,"polyfill/extra/transitionend.js":230,"polyfill/extra/vendorCSS.js":231,"utils":235,"window-ext":241}],252:[function(require,module,exports){
+module.exports=require(68)
+},{"./attribute-extractor.js":247,"./vdom-ns.js":254,"js-ext/lib/object.js":222,"polyfill":234}],253:[function(require,module,exports){
+module.exports=require(69)
+},{"./attribute-extractor.js":247,"./vdom-ns.js":254,"./vnode.js":255,"js-ext/lib/object.js":222,"polyfill":234}],254:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/lib/object.js":222,"polyfill":234}],255:[function(require,module,exports){
+module.exports=require(71)
+},{"./attribute-extractor.js":247,"./html-parser.js":252,"./vdom-ns.js":254,"js-ext/extra/lightmap.js":219,"js-ext/lib/array.js":220,"js-ext/lib/object.js":222,"js-ext/lib/string.js":224,"polyfill":234,"utils/lib/timers.js":237}],256:[function(require,module,exports){
+arguments[4][72][0].apply(exports,arguments)
+},{"./partials/element-plugin.js":249,"./partials/extend-document.js":250,"./partials/extend-element.js":251,"./partials/node-parser.js":253,"js-ext/lib/object.js":222}],257:[function(require,module,exports){
 function DOMParser(options){
 	this.options = options ||{locator:{}};
 	
@@ -17460,7 +17501,7 @@ if(typeof require == 'function'){
 	exports.DOMParser = DOMParser;
 }
 
-},{"./dom":253,"./sax":254}],253:[function(require,module,exports){
+},{"./dom":258,"./sax":259}],258:[function(require,module,exports){
 /*
  * DOM Level 2
  * Object DOMException
@@ -18600,7 +18641,7 @@ if(typeof require == 'function'){
 	exports.XMLSerializer = XMLSerializer;
 }
 
-},{}],254:[function(require,module,exports){
+},{}],259:[function(require,module,exports){
 //[4]   	NameStartChar	   ::=   	":" | [A-Z] | "_" | [a-z] | [#xC0-#xD6] | [#xD8-#xF6] | [#xF8-#x2FF] | [#x370-#x37D] | [#x37F-#x1FFF] | [#x200C-#x200D] | [#x2070-#x218F] | [#x2C00-#x2FEF] | [#x3001-#xD7FF] | [#xF900-#xFDCF] | [#xFDF0-#xFFFD] | [#x10000-#xEFFFF]
 //[4a]   	NameChar	   ::=   	NameStartChar | "-" | "." | [0-9] | #xB7 | [#x0300-#x036F] | [#x203F-#x2040]
 //[5]   	Name	   ::=   	NameStartChar (NameChar)*
@@ -19186,7 +19227,35 @@ if(typeof require == 'function'){
 }
 
 
-},{}],255:[function(require,module,exports){
+},{}],260:[function(require,module,exports){
+/*
+* attributes:
+* value, expanded, primary-button
+*/
+require('polyfill/polyfill-base.js');
+
+module.exports = function (window) {
+
+    "use strict";
+    var itagsCore = require('itags.core')(window);
+    itagsCore.defineElement('i-head');
+
+};
+},{"itags.core":266,"polyfill/polyfill-base.js":211}],261:[function(require,module,exports){
+/*
+* attributes:
+* value, expanded, primary-button
+*/
+require('polyfill/polyfill-base.js');
+
+module.exports = function (window) {
+
+    "use strict";
+    var itagsCore = require('itags.core')(window);
+    itagsCore.defineElement('i-item');
+
+};
+},{"itags.core":266,"polyfill/polyfill-base.js":211}],262:[function(require,module,exports){
 // See for all prototypes: https://developer.mozilla.org/en-US/docs/Web/API
 require('polyfill/polyfill-base.js');
 
@@ -19222,9 +19291,9 @@ console.info('renderFunc i-parcel');
     );
 
 };
-},{"event-dom":6,"itags.core":258,"polyfill/polyfill-base.js":206}],256:[function(require,module,exports){
-var css = "i-select > div {\n    position: relative !important;\n}\n\ni-select > button {\n    -webkit-touch-callout: none !important;\n    -webkit-user-select: none !important;\n    -khtml-user-select: none !important;\n    -moz-user-select: none !important;\n    -ms-user-select: none !important;\n    user-select: none !important;\n}\n\ni-select > div > div {\n    position: absolute !important;\n    left: 0 !important;\n    top: 0 !important;\n    cursor: pointer !important;\n    border-style: solid !important;\n    border-width: 0.1em !important;\n    -webkit-border-radius: 0 0 0.3em 0.3em !important;\n    -moz-border-radius: 0 0 0.3em 0.3em !important;\n    border-radius: 0 0 0.3em 0.3em !important;\n    -webkit-box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15) !important;\n    -moz-box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15) !important;\n    box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15) !important;\n}\n\ni-select ul {\n    font-size: 1.2em !important;\n    padding: 0 0 0.3em !important;\n    list-style: none !important;\n    margin: 0 !important;\n}\n\ni-select li {\n    padding: 0.25em 0.9em !important;\n}\n\ni-select li.focussed {\n    background-color: #B3D4FF !important;\n}\n\ni-select li.selected:before {\n    content: '*' !important;\n    margin-left: -0.7em !important;\n    padding-right: 0.25em !important;\n}\n\ni-select li:before,\ni-select li:after {\n    content: '' !important;\n    padding: 0 !important;\n    margin: 0 !important;\n}\n\n/* color specification:; */\n\ni-select > div > div {\n    background-color: #FFF !important;\n    border-color: #000 !important;\n}\n\ni-select li:hover {\n    background-color: #B3D4FF !important;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],257:[function(require,module,exports){
+},{"event-dom":6,"itags.core":266,"polyfill/polyfill-base.js":211}],263:[function(require,module,exports){
+var css = "/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-select:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-select:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\n\ni-select > div {\n    position: relative;\n}\n\ni-select > button.pure-button {\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    -khtml-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    position: relative;\n    padding-right: 1.45em;\n    padding-left: 0;\n    max-width: 6em;\n}\n\ni-select > button div.btntext {\n    margin: 0 0.25em 0 1em;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 6em;\n}\n\ni-select > button div.pointer {\n    border-left: 0.4em solid rgba(0, 0, 0, 0);\n    border-right: 0.4em solid rgba(0, 0, 0, 0);\n    border-top: 0.5em solid #000;\n    right: 0.25em;\n    position: absolute;\n    bottom: 0.25em;\n}\n\ni-select > div > div {\n    position: absolute;\n    left: 0;\n    top: 0;\n    cursor: pointer;\n    border-style: solid;\n    border-width: 0.1em;\n    -webkit-border-radius: 0 0 0.3em 0.3em;\n    -moz-border-radius: 0 0 0.3em 0.3em;\n    border-radius: 0 0 0.3em 0.3em;\n    -webkit-box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n    -moz-box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n    box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n}\n\ni-select ul {\n    font-size: 1.2em;\n    padding: 0 0 0.3em;\n    list-style: none;\n    margin: 0;\n}\n\ni-select li {\n    padding: 0.25em 0.7em;\n}\n\ni-select li.focussed {\n    background-color: #B3D4FF;\n}\n\ni-select li.selected:before {\n    content: '*';\n    margin-left: -0.7em;\n    padding-right: 0.25em;\n}\n\ni-select li:before,\ni-select li:after {\n    content: '';\n    padding: 0;\n    margin: 0;\n}\n\n/* color specification:; */\n\ni-select > div > div {\n    background-color: #FFF;\n    border-color: #000;\n}\n\ni-select li:hover {\n    background-color: #B3D4FF;\n}\n\ni-select > button.pure-button-primary div.pointer {\n    border-top: 0.5em solid #FEFEFE;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],264:[function(require,module,exports){
 /*
 * attributes:
 * value, expanded, primary-button
@@ -19234,6 +19303,10 @@ require('js-ext/lib/string.js');
 require('css');
 require('./css/i-select.css');
 
+var TRANS_TIME_SHOW = 0.3,
+    TRANS_TIME_HIDE = 0.1,
+    CLASS_ITAG_RENDERED = 'itag-rendered';
+
 module.exports = function (window) {
 
     "use strict";
@@ -19242,108 +19315,165 @@ module.exports = function (window) {
         DEFAULT_INVALID_VALUE = 'choose';
 
     require('focusmanager')(window);
+    require('i-item')(window);
+    require('i-head')(window);
 
-    Event.after('click', function(e) {
-        var element = e.target.getParent(),
-            expanded = element.getAttr('expanded')==='true',
-            value, liNodes, focusNode;
-        if (!expanded) {
-            value = element.getValue1();
-            liNodes = element.getAll('li');
-            focusNode = liNodes[value-1];
-console.warn(focusNode);
-            focusNode && focusNode.focus();
+    Event.before('manualfocus', function(e) {
+        // the i-select itself is unfocussable, but its button is
+        // we need to patch `manualfocus`,
+        // which is emitted on node.focus()
+        // a focus by userinteraction will always appear on the button itself
+        // so we don't bother that
+        var element = e.target;
+        // cautious:  all child-elements that have `manualfocus` event are
+        // subscribed as well: we NEED to inspect e.target and only continue
+        // if e.target===i-select
+        if (e.target.getTagName()==='I-SELECT') {
+            e.preventDefault();
+            element.itagReady().then(
+                function() {
+                    var button = element.getElement('button');
+                    button && button.focus();
+                }
+            );
         }
-        element.setAttr('expanded', expanded ? 'false' : 'true');
-    }, 'i-select button');
+    }, 'i-select');
 
-    Event.after('click', function(e) {
+    Event.after(['click', 'keydown'], function(e) {
+        var element = e.target.getParent(),
+            expanded, value, liNodes, focusNode;
+        if ((e.type==='click') || (e.keyCode===40)) {
+            expanded = element.model.expanded;
+            value = element.model.value;
+            if (!expanded) {
+                liNodes = element.getAll('ul[fm-manage] > li');
+                focusNode = liNodes[value-1];
+                focusNode && focusNode.focus();
+            }
+            element.setAttr('expanded', expanded ? 'false' : 'true');
+        }
+    }, 'i-select > button');
+
+    Event.after(['click', 'keypress'], function(e) {
         var liNode = e.target,
-            element = liNode.inside('i-select'),
+            element, index;
+        if ((e.type==='click') || (e.keyCode===13)) {
+            element = liNode.inside('i-select');
             index = liNode.getParent().getAll('li').indexOf(liNode);
-        element.setAttrs([
-            // {name: 'expanded', value: 'false'},
-            {name: 'value', value: index+1}
-        ]);
-    }, 'i-select li');
+            element.setAttrs([
+                {name: 'expanded', value: 'false'},
+                {name: 'value', value: index+1}
+            ]);
+            element.getElement('button').focus();
+        }
+    }, 'i-select ul[fm-manage] > li');
 
-    itagsCore.defineElement( 'i-select', function() {
+    itagsCore.defineItag('i-select', function() {
         var element = this,
-            expanded = element.isExpanded(),
-            primaryButton = element.isPrimaryBtn(),
-            value = element.getValue1(),
-            items = element.getItems(),
-            item, content, buttonText, len, i, markValue;
-console.warn('dummy: '+element.dummy);
-console.warn(element.getValue1);
-console.warn('value: '+element.getValue1());
+            model = element.model,
+            items = model.items,
+            buttonTexts = model.buttonTexts,
+            expanded, primaryButton, valueString, value, invalidValue,
+            item, content, buttonText, len, i, markValue,
+            button, container, itemsContainer, renderedBefore;
+
+        // read the current state of the attributes:
+        expanded = (element.getAttr('expanded')==='true');
+        primaryButton = (element.getAttr('primary-button')==='true');
+        valueString = element.getAttr('value');
+        value = valueString.validateNumber() ? Math.max(0, parseInt(valueString, 10)) : 0;
+        invalidValue = (element.getAttr('invalid-value') || DEFAULT_INVALID_VALUE);
+
+        // store the state inside element.model:
+        model.expanded = expanded;
+        model.primaryButton = primaryButton;
+        model.value = value;
+        model.invalidValue = invalidValue;
+
         len = items.length;
         (value>len) && (value=0);
         markValue = value - 1;
-        buttonText = (value>0) ? items[markValue] : element.getInvalidValue();
 
-        // building the content of the itag:
-        content = '<button class="pure-button pure-button-bordered'+(primaryButton ? ' pure-button-primary' : '')+'">'+buttonText+'</button>';
-        // first: outerdiv which will be relative positioned
-        if (expanded) {
-            content += '<div>';
+        if (value>0) {
+            buttonText = buttonTexts[markValue] || items[markValue];
         }
         else {
-            content += '<div class="itsa-hidden">';
+            buttonText = invalidValue;
         }
-        content += '<div>'; // innerdiv which will be absolute positioned
-        content += '<ul fm-manage="li" fm-keyup="38" fm-keydown="40">';
+
+        // rebuild the button:
+        button = element.getElement('button');
+        button.toggleClass('pure-button-primary', primaryButton);
+        button.getElement('div.btntext').setHTML(buttonText);
+
+        // show or hide the content, note that when not rendered before, you should use transitions
+        renderedBefore = element.hasClass(CLASS_ITAG_RENDERED);
+        container = element.getElement('>div');
+        if (expanded) {
+            container.show(renderedBefore ? TRANS_TIME_SHOW : null);
+        }
+        else {
+            container.hide(renderedBefore ? TRANS_TIME_HIDE : null);
+        }
+
+        itemsContainer = element.getElement('ul[fm-manage]');
+        content = '';
         for (i=0; i<len; i++) {
             item = items[i];
-            content += '<li'+((i===markValue) ? ' id="dummy" class="selected"' : '')+'>'+String(item)+'</li>';
+            content += '<li'+((i===markValue) ? ' class="selected"' : '')+'>'+item+'</li>';
         }
-        content += '</ul>';
-        content += '</div>';
 
-        // set the content:
-        element.setHTML(content);
+        // set the items:
+        itemsContainer.setHTML(content);
     }, {
-        dummy: 23,
-        getValue1: function() {
-console.warn('invoking getValue');
-            var valueString = this.getAttr('value');
-console.warn('valueString '+valueString);
-            return valueString.validateNumber() ? Math.max(0, parseInt(valueString, 10)) : 0;
-        },
-        getItems: function() {
-            var items;
-            try {
-                items = JSON.parse(this.getAttr('items'));
-                Array.isArray(items) || (items=[]);
-            }
-            catch (e) {
-                items = [];
-            }
-            return items;
-        },
-        getInvalidValue: function() {
-            return this.getAttr('invalid-value') || DEFAULT_INVALID_VALUE;
-        },
-        isExpanded: function() {
-            return this.getAttr('expanded')==='true';
-        },
-        isPrimaryBtn: function() {
-            return this.getAttr('primary-button')==='true';
+        init: function() {
+            var element = this,
+                itemNodes = element.getAll('>i-item'),
+                items = [],
+                buttonTexts = [],
+                content;
+
+            itemNodes.forEach(function(node, i) {
+                var header = node.getElement('i-head');
+                if (header) {
+                    buttonTexts[i] = header.getHTML();
+                    header.remove(true);
+                }
+                items[items.length] = node.getHTML();
+            });
+            element.model.items = items;
+            element.model.buttonTexts = buttonTexts;
+
+            // building the template of the itag:
+            content = '<button class="pure-button pure-button-bordered"><div class="pointer"></div><div class="btntext"></div></button>';
+            // first: outerdiv which will be relative positioned
+            // next: innerdiv which will be absolute positioned
+            // also: hide the container by default --> updateUI could make it shown
+            content += '<div class="itsa-hidden">' +
+                         '<div>'+
+                           '<ul fm-manage="li" fm-keyup="38" fm-keydown="40" fm-noloop="true"></ul>';
+                         '</div>'+
+                       '</div>';
+            // set the content:
+            element.setHTML(content);
         }
     });
 
 };
-},{"./css/i-select.css":256,"css":4,"event-dom":6,"focusmanager":73,"itags.core":258,"js-ext/lib/string.js":194,"polyfill/polyfill-base.js":206}],258:[function(require,module,exports){
+},{"./css/i-select.css":263,"css":4,"event-dom":6,"focusmanager":73,"i-head":260,"i-item":261,"itags.core":266,"js-ext/lib/string.js":199,"polyfill/polyfill-base.js":211}],265:[function(require,module,exports){
+var css = "span.itag-data {\n    display: none !important;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],266:[function(require,module,exports){
+(function (global){
 
 "use strict";
 
-require('js-ext/lib/object.js');
-require('js-ext/lib/string.js');
+require('js-ext');
 require('polyfill/polyfill-base.js');
+require('./css/itags-core.css');
 
 var asyncSilent = require('utils').asyncSilent,
     laterSilent = require('utils').laterSilent,
-    CLASS_CE_HIDDEN_BEFORE_RENDER = 'itag-unrendered',
+    CLASS_ITAG_RENDERED = 'itag-rendered',
     NODE = 'node',
     REMOVE = 'remove',
     INSERT = 'insert',
@@ -19377,32 +19507,30 @@ var asyncSilent = require('utils').asyncSilent,
     merge = function (sourceObj, targetObj) {
         var name;
         for (name in sourceObj) {
-            if (!(name in targetObj)) {
-                if (name==='init') {
+            if (name==='init') {
 console.info('store init function');
 /*jshint -W083 */
-                    targetObj._init = function() {
+                targetObj._init = function() {
 /*jshint +W083 */
-                        var vnode = targetObj.vnode;
-                        if (!vnode.ce_initialized && !vnode.removedFromDOM) {
-                            sourceObj.init.call(targetObj);
-                            Object.protectedProp(vnode, 'ce_initialized', true);
-                        }
-                    };
-                }
-                else if (name==='destroy') {
+                    var vnode = targetObj.vnode;
+                    if (!vnode.ce_initialized && !vnode.removedFromDOM) {
+                        sourceObj.init.call(targetObj);
+                        Object.protectedProp(vnode, 'ce_initialized', true);
+                    }
+                };
+            }
+            else if (name==='destroy') {
 /*jshint -W083 */
-                    targetObj._destroy = function() {
+                targetObj._destroy = function() {
 /*jshint +W083 */
-                        var vnode = targetObj.vnode;
-                        if (!vnode.removedFromDOM && vnode.ce_initialized) {
-                            sourceObj.destroy.call(targetObj);
-                        }
-                    };
-                }
-                else {
-                    targetObj[name] = sourceObj[name];
-                }
+                    var vnode = targetObj.vnode;
+                    if (!vnode.removedFromDOM && vnode.ce_initialized) {
+                        sourceObj.destroy.call(targetObj);
+                    }
+                };
+            }
+            else {
+                targetObj[name] = sourceObj[name];
             }
         }
     },
@@ -19415,6 +19543,7 @@ DELAYED_FINALIZE_EVENTS.keys().forEach(function(key) {
 module.exports = function (window) {
 
     var DOCUMENT = window.document,
+        RUNNING_ON_NODE = (typeof global !== 'undefined') && (global.window!==window),
         itagCore, MUTATION_EVENTS, Event, registerDelay, focusManager;
 
     require('vdom')(window);
@@ -19438,37 +19567,47 @@ module.exports = function (window) {
     itagCore = {
 
         itagFilter: function(e) {
-            return !!e.target.renderCE;
+            return !!e.target._updateUI;
         },
 
-        renderDomElements: function(tagName, renderFn, properties, isParcel) {
+        renderDomElements: function(tagName, updateFn, properties, isParcel) {
             var itagElements = DOCUMENT.getAll(tagName),
                 len = itagElements.length,
                 i, itagElement;
             for (i=0; i<len; i++) {
                 itagElement = itagElements[i];
-                this._upgradeElement(itagElement, renderFn, properties, isParcel);
+                this._upgradeElement(itagElement, updateFn, properties, isParcel);
             }
         },
 
-        defineParcel: function(parcelName, renderFn, properties) {
+        defineParcel: function(parcelName, updateFn, properties) {
             if (parcelName.contains('-')) {
                 console.warn(parcelName+' should not consist of a minus token');
                 return;
             }
-            this._defineElement('i-parcel-'+parcelName, renderFn, properties, true);
+            this._defineElement('i-parcel-'+parcelName, updateFn, properties, true);
         },
 
 
-        defineElement: function(itagName, renderFn, properties) {
+        defineElement: function(itagName) {
             if (!itagName.contains('-')) {
                 console.warn('defineElement: '+itagName+' should consist of a minus token');
                 return;
             }
-            this._defineElement(itagName, renderFn, properties);
+            window.ITAGS[itagName] = function() {
+                return DOCUMENT._createElement(itagName);
+            };
         },
 
-        _defineElement: function(itagName, renderFn, properties, isParcel) {
+        defineItag: function(itagName, updateFn, properties) {
+            if (!itagName.contains('-')) {
+                console.warn('defineItag: '+itagName+' should consist of a minus token');
+                return;
+            }
+            this._defineElement(itagName, updateFn, properties);
+        },
+
+        _defineElement: function(itagName, updateFn, properties, isParcel) {
             itagName = itagName.toLowerCase();
 /*jshint boss:true */
             if (window.ITAGS[itagName]) {
@@ -19476,56 +19615,108 @@ module.exports = function (window) {
                 console.warn(itagName+' already exists and cannot be redefined');
                 return;
             }
-            (typeof renderFn === 'function') || (renderFn=NOOP);
-            this.renderDomElements(itagName, renderFn, properties, isParcel);
-            window.ITAGS[itagName] = this._createElement(itagName, renderFn, properties, isParcel);
+            (typeof updateFn === 'function') || (updateFn=NOOP);
+            this.renderDomElements(itagName, updateFn, properties, isParcel);
+            window.ITAGS[itagName] = this._createElement(itagName, updateFn, properties, isParcel);
         },
 
-        _createElement: function(itagName, renderFn, properties, isParcel) {
+        _createElement: function(itagName, updateFn, properties, isParcel) {
             var instance = this;
             return function() {
                 var element = DOCUMENT._createElement(itagName);
-                instance._upgradeElement(element, renderFn, properties, isParcel);
+                instance._upgradeElement(element, updateFn, properties, isParcel);
                 return element;
             };
         },
 
-        _upgradeElement: function(element, renderFn, properties, isParcel) {
+        _upgradeElement: function(element, updateFn, properties, isParcel) {
             merge(properties, element);
-            if (isParcel) {
-                merge({renderCE: function() {
+            merge({
+                _updateUI: isParcel ? function() {
 console.info('look if parcel can be rendered');
-                    var vnode = element.vnode;
-                    if (vnode._data) {
-                        if (!vnode.ce_initialized) {
-                            if (typeof element._init==='function') {
-                                element._init();
+                        var vnode = element.vnode;
+                        if (vnode._data) {
+                            if (!vnode.ce_initialized) {
+                                if (typeof element._init==='function') {
+                                    element._init();
+                                }
+                                else {
+                                    Object.protectedProp(vnode, 'ce_initialized', true);
+                                }
+                                element._setRendered();
                             }
-                            else {
-                                Object.protectedProp(vnode, 'ce_initialized', true);
-                            }
-                            element.removeClass(CLASS_CE_HIDDEN_BEFORE_RENDER);
+    console.info('going to render parcel');
+                            updateFn.call(element);
                         }
-console.info('going to render parcel');
-                        renderFn.call(element);
+                    } : updateFn,
+                _injectModel: function(model) {
+                    var instance = this,
+                        stringifiedData;
+                    instance.model = model;
+                    instance._updateUI();
+                    if (RUNNING_ON_NODE) {
+                        // store the modeldata inside an inner div-node
+                        try {
+                            stringifiedData = JSON.stringify(model);
+                            instance.prepend('<span class="itag-data">'+stringifiedData+'</span>');
+                        }
+                        catch(e) {
+                            console.warn(e);
+                        }
                     }
-                }}, element);
-            }
-            else {
-                merge({renderCE: renderFn}, element);
-            }
+                },
+                _retrieveModel: function() {
+                    // try to load the model from a stored inner div-node
+                    var instance = this,
+                        dataNode = instance.getElement('span.itag-data'),
+                        stringifiedData;
+                    if (dataNode) {
+                        try {
+                            stringifiedData = dataNode.getHTML();
+                            instance.model = JSON.parseWithDate(stringifiedData);
+                            dataNode.remove(true);
+                        }
+                        catch(e) {
+                            console.warn(e);
+                        }
+                    }
+                    return instance.model;
+                },
+                _setRendered: function() {
+                    var instance = this;
+                    if (instance.hasClass(CLASS_ITAG_RENDERED)) {
+                        // already rendered on the server:
+                        // bin the sored json-data on the property `model`:
+                        instance.retrieveModel();
+                    }
+                    else {
+                        instance.setClass(CLASS_ITAG_RENDERED, null, null, true);
+                    }
+                    instance._itagReady || (instance._itagReady=window.Promise.manage());
+                    instance._itagReady.fulfill();
+                },
+                model: {}
+            }, element);
             merge(Event.Listener, element);
             // render, but do this after the element is created:
             // in the next eventcycle:
             asyncSilent(function() {
                 (typeof element._init==='function') && element._init();
-                element.renderCE();
-                isParcel || element.removeClass(CLASS_CE_HIDDEN_BEFORE_RENDER);
+                element._updateUI();
+                isParcel || element._setRendered();
                 element.hasClass('focussed') && focusManager(element);
             });
         }
 
     };
+
+    (function(HTMLElementPrototype) {
+        HTMLElementPrototype.itagReady = function() {
+            var instance = this;
+            instance._itagReady || (instance._itagReady=window.Promise.manage());
+            return instance._itagReady;
+        };
+    }(window.HTMLElement.prototype));
 
     DOCUMENT._createElement = DOCUMENT.createElement;
     DOCUMENT.createElement = function(tag) {
@@ -19543,7 +19734,7 @@ console.info('refreshParcels');
             i, parcel;
         for (i=0; i<len; i++) {
             parcel = list[i];
-            parcel.renderCE();
+            parcel._updateUI();
             parcel.hasClass('focussed') && focusManager(parcel);
         }
     };
@@ -19554,7 +19745,7 @@ console.info('refreshParcels');
 console.info('itag changed attributes '+e.type);
 console.info(e.changed);
             var element = e.target;
-            element.renderCE();
+            element._updateUI();
             element.hasClass('focussed') && focusManager(element);
         },
         itagCore.itagFilter
@@ -19631,9 +19822,10 @@ console.info('Event finalize '+e.type);
     return itagCore;
 
 };
-},{"event-dom":6,"js-ext/lib/object.js":193,"js-ext/lib/string.js":194,"polyfill/polyfill-base.js":206,"utils":207,"vdom":251}],259:[function(require,module,exports){
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"./css/itags-core.css":265,"event-dom":6,"js-ext":193,"polyfill/polyfill-base.js":211,"utils":212,"vdom":256}],267:[function(require,module,exports){
 
-},{}],260:[function(require,module,exports){
+},{}],268:[function(require,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -20804,7 +20996,7 @@ function assert (test, message) {
   if (!test) throw new Error(message || 'Failed assertion')
 }
 
-},{"base64-js":261,"ieee754":262}],261:[function(require,module,exports){
+},{"base64-js":269,"ieee754":270}],269:[function(require,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
@@ -20926,7 +21118,7 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	exports.fromByteArray = uint8ToBase64
 }(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
 
-},{}],262:[function(require,module,exports){
+},{}],270:[function(require,module,exports){
 exports.read = function(buffer, offset, isLE, mLen, nBytes) {
   var e, m,
       eLen = nBytes * 8 - mLen - 1,
@@ -21012,7 +21204,7 @@ exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128;
 };
 
-},{}],263:[function(require,module,exports){
+},{}],271:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -21317,7 +21509,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],264:[function(require,module,exports){
+},{}],272:[function(require,module,exports){
 var http = module.exports;
 var EventEmitter = require('events').EventEmitter;
 var Request = require('./lib/request');
@@ -21456,7 +21648,7 @@ http.STATUS_CODES = {
     510 : 'Not Extended',               // RFC 2774
     511 : 'Network Authentication Required' // RFC 6585
 };
-},{"./lib/request":265,"events":263,"url":289}],265:[function(require,module,exports){
+},{"./lib/request":273,"events":271,"url":297}],273:[function(require,module,exports){
 var Stream = require('stream');
 var Response = require('./response');
 var Base64 = require('Base64');
@@ -21650,7 +21842,7 @@ var indexOf = function (xs, x) {
     return -1;
 };
 
-},{"./response":266,"Base64":267,"inherits":269,"stream":288}],266:[function(require,module,exports){
+},{"./response":274,"Base64":275,"inherits":277,"stream":296}],274:[function(require,module,exports){
 var Stream = require('stream');
 var util = require('util');
 
@@ -21772,7 +21964,7 @@ var isArray = Array.isArray || function (xs) {
     return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{"stream":288,"util":291}],267:[function(require,module,exports){
+},{"stream":296,"util":299}],275:[function(require,module,exports){
 ;(function () {
 
   var object = typeof exports != 'undefined' ? exports : this; // #8: web workers
@@ -21834,7 +22026,7 @@ var isArray = Array.isArray || function (xs) {
 
 }());
 
-},{}],268:[function(require,module,exports){
+},{}],276:[function(require,module,exports){
 var http = require('http');
 
 var https = module.exports;
@@ -21849,7 +22041,7 @@ https.request = function (params, cb) {
     return http.request.call(this, params, cb);
 }
 
-},{"http":264}],269:[function(require,module,exports){
+},{"http":272}],277:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -21874,12 +22066,12 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],270:[function(require,module,exports){
+},{}],278:[function(require,module,exports){
 module.exports = Array.isArray || function (arr) {
   return Object.prototype.toString.call(arr) == '[object Array]';
 };
 
-},{}],271:[function(require,module,exports){
+},{}],279:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -21944,7 +22136,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],272:[function(require,module,exports){
+},{}],280:[function(require,module,exports){
 (function (global){
 /*! http://mths.be/punycode v1.2.4 by @mathias */
 ;(function(root) {
@@ -22455,7 +22647,7 @@ process.chdir = function (dir) {
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],273:[function(require,module,exports){
+},{}],281:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -22541,7 +22733,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],274:[function(require,module,exports){
+},{}],282:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -22628,16 +22820,16 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],275:[function(require,module,exports){
+},{}],283:[function(require,module,exports){
 'use strict';
 
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
-},{"./decode":273,"./encode":274}],276:[function(require,module,exports){
+},{"./decode":281,"./encode":282}],284:[function(require,module,exports){
 module.exports = require("./lib/_stream_duplex.js")
 
-},{"./lib/_stream_duplex.js":277}],277:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":285}],285:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -22730,7 +22922,7 @@ function forEach (xs, f) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_readable":279,"./_stream_writable":281,"_process":271,"core-util-is":282,"inherits":269}],278:[function(require,module,exports){
+},{"./_stream_readable":287,"./_stream_writable":289,"_process":279,"core-util-is":290,"inherits":277}],286:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -22778,7 +22970,7 @@ PassThrough.prototype._transform = function(chunk, encoding, cb) {
   cb(null, chunk);
 };
 
-},{"./_stream_transform":280,"core-util-is":282,"inherits":269}],279:[function(require,module,exports){
+},{"./_stream_transform":288,"core-util-is":290,"inherits":277}],287:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -23741,7 +23933,7 @@ function indexOf (xs, x) {
 }
 
 }).call(this,require('_process'))
-},{"_process":271,"buffer":260,"core-util-is":282,"events":263,"inherits":269,"isarray":270,"stream":288,"string_decoder/":283}],280:[function(require,module,exports){
+},{"_process":279,"buffer":268,"core-util-is":290,"events":271,"inherits":277,"isarray":278,"stream":296,"string_decoder/":291}],288:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -23953,7 +24145,7 @@ function done(stream, er) {
   return stream.push(null);
 }
 
-},{"./_stream_duplex":277,"core-util-is":282,"inherits":269}],281:[function(require,module,exports){
+},{"./_stream_duplex":285,"core-util-is":290,"inherits":277}],289:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -24344,7 +24536,7 @@ function endWritable(stream, state, cb) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_duplex":277,"_process":271,"buffer":260,"core-util-is":282,"inherits":269,"stream":288}],282:[function(require,module,exports){
+},{"./_stream_duplex":285,"_process":279,"buffer":268,"core-util-is":290,"inherits":277,"stream":296}],290:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -24454,7 +24646,7 @@ function objectToString(o) {
   return Object.prototype.toString.call(o);
 }
 }).call(this,require("buffer").Buffer)
-},{"buffer":260}],283:[function(require,module,exports){
+},{"buffer":268}],291:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -24656,10 +24848,10 @@ function base64DetectIncompleteChar(buffer) {
   return incomplete;
 }
 
-},{"buffer":260}],284:[function(require,module,exports){
+},{"buffer":268}],292:[function(require,module,exports){
 module.exports = require("./lib/_stream_passthrough.js")
 
-},{"./lib/_stream_passthrough.js":278}],285:[function(require,module,exports){
+},{"./lib/_stream_passthrough.js":286}],293:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Readable = exports;
 exports.Writable = require('./lib/_stream_writable.js');
@@ -24667,13 +24859,13 @@ exports.Duplex = require('./lib/_stream_duplex.js');
 exports.Transform = require('./lib/_stream_transform.js');
 exports.PassThrough = require('./lib/_stream_passthrough.js');
 
-},{"./lib/_stream_duplex.js":277,"./lib/_stream_passthrough.js":278,"./lib/_stream_readable.js":279,"./lib/_stream_transform.js":280,"./lib/_stream_writable.js":281}],286:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":285,"./lib/_stream_passthrough.js":286,"./lib/_stream_readable.js":287,"./lib/_stream_transform.js":288,"./lib/_stream_writable.js":289}],294:[function(require,module,exports){
 module.exports = require("./lib/_stream_transform.js")
 
-},{"./lib/_stream_transform.js":280}],287:[function(require,module,exports){
+},{"./lib/_stream_transform.js":288}],295:[function(require,module,exports){
 module.exports = require("./lib/_stream_writable.js")
 
-},{"./lib/_stream_writable.js":281}],288:[function(require,module,exports){
+},{"./lib/_stream_writable.js":289}],296:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -24802,7 +24994,7 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"events":263,"inherits":269,"readable-stream/duplex.js":276,"readable-stream/passthrough.js":284,"readable-stream/readable.js":285,"readable-stream/transform.js":286,"readable-stream/writable.js":287}],289:[function(require,module,exports){
+},{"events":271,"inherits":277,"readable-stream/duplex.js":284,"readable-stream/passthrough.js":292,"readable-stream/readable.js":293,"readable-stream/transform.js":294,"readable-stream/writable.js":295}],297:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -25511,14 +25703,14 @@ function isNullOrUndefined(arg) {
   return  arg == null;
 }
 
-},{"punycode":272,"querystring":275}],290:[function(require,module,exports){
+},{"punycode":280,"querystring":283}],298:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],291:[function(require,module,exports){
+},{}],299:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -26108,7 +26300,7 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":290,"_process":271,"inherits":269}],"itags":[function(require,module,exports){
+},{"./support/isBuffer":298,"_process":279,"inherits":277}],"itags":[function(require,module,exports){
 (function (global){
 /**
  * The ITSA module is an aggregator for all the individual modules that the library uses.
@@ -26130,11 +26322,9 @@ function hasOwnProperty(obj, prop) {
     "use strict";
     require('i-select')(window);
     require('i-parcel')(window);
-global.I = {};
-global.I.async = require('utils').async;
-global.I.asyncSilent = require('utils').asyncSilent;
-global.I.later = require('utils').later;
-global.I.laterSilent = require('utils').laterSilent;
+    require('i-head')(window);
+    require('i-item')(window);
+
 })(global.window || require('node-win'));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"i-parcel":255,"i-select":257,"node-win":199,"utils":207}]},{},[]);
+},{"i-head":260,"i-item":261,"i-parcel":262,"i-select":264,"node-win":204}]},{},[]);

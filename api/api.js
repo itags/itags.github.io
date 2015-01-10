@@ -45,7 +45,6 @@ YUI.add("yuidoc-meta", function(Y) {
         "utils",
         "vdom",
         "vdom-ns",
-        "vnode",
         "vnode"
     ],
     "allModules": [
