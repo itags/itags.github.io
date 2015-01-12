@@ -16928,7 +16928,7 @@ exports.XMLHttpRequest = function() {
 };
 
 }).call(this,require('_process'),require("buffer").Buffer)
-},{"_process":279,"buffer":268,"child_process":267,"fs":267,"http":272,"https":276,"url":297,"xmldom":257}],204:[function(require,module,exports){
+},{"_process":281,"buffer":270,"child_process":269,"fs":269,"http":274,"https":278,"url":299,"xmldom":257}],204:[function(require,module,exports){
 "use strict";
 
 /**
@@ -17140,7 +17140,7 @@ reset = function () {
 reset();
 
 module.exports = win;
-},{"./lib/XMLHttpRequest.js":203,"js-ext/lib/array.js":205,"polyfill/lib/window.console.js":210,"url":297,"xmldom":257}],205:[function(require,module,exports){
+},{"./lib/XMLHttpRequest.js":203,"js-ext/lib/array.js":205,"polyfill/lib/window.console.js":210,"url":299,"xmldom":257}],205:[function(require,module,exports){
 module.exports=require(19)
 },{"polyfill/polyfill-base.js":208}],206:[function(require,module,exports){
 module.exports=require(13)
@@ -19241,7 +19241,7 @@ module.exports = function (window) {
     itagsCore.defineElement('i-head');
 
 };
-},{"itags.core":266,"polyfill/polyfill-base.js":211}],261:[function(require,module,exports){
+},{"itags.core":268,"polyfill/polyfill-base.js":211}],261:[function(require,module,exports){
 /*
 * attributes:
 * value, expanded, primary-button
@@ -19255,7 +19255,7 @@ module.exports = function (window) {
     itagsCore.defineElement('i-item');
 
 };
-},{"itags.core":266,"polyfill/polyfill-base.js":211}],262:[function(require,module,exports){
+},{"itags.core":268,"polyfill/polyfill-base.js":211}],262:[function(require,module,exports){
 // See for all prototypes: https://developer.mozilla.org/en-US/docs/Web/API
 require('polyfill/polyfill-base.js');
 
@@ -19291,8 +19291,8 @@ console.info('renderFunc i-parcel');
     );
 
 };
-},{"event-dom":6,"itags.core":266,"polyfill/polyfill-base.js":211}],263:[function(require,module,exports){
-var css = "/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-select:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-select:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\n\ni-select > div {\n    position: relative;\n}\n\ni-select > button.pure-button {\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    -khtml-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    position: relative;\n    padding-right: 1.45em;\n    padding-left: 0;\n    max-width: 6em;\n}\n\ni-select > button div.btntext {\n    margin: 0 0.25em 0 1em;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 6em;\n}\n\ni-select > button div.pointer {\n    border-left: 0.4em solid rgba(0, 0, 0, 0);\n    border-right: 0.4em solid rgba(0, 0, 0, 0);\n    border-top: 0.5em solid #000;\n    right: 0.25em;\n    position: absolute;\n    bottom: 0.25em;\n}\n\ni-select > div > div {\n    position: absolute;\n    left: 0;\n    top: 0;\n    cursor: pointer;\n    border-style: solid;\n    border-width: 0.1em;\n    -webkit-border-radius: 0 0 0.3em 0.3em;\n    -moz-border-radius: 0 0 0.3em 0.3em;\n    border-radius: 0 0 0.3em 0.3em;\n    -webkit-box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n    -moz-box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n    box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n}\n\ni-select ul {\n    font-size: 1.2em;\n    padding: 0 0 0.3em;\n    list-style: none;\n    margin: 0;\n}\n\ni-select li {\n    padding: 0.25em 0.7em;\n}\n\ni-select li.focussed {\n    background-color: #B3D4FF;\n}\n\ni-select li.selected:before {\n    content: '*';\n    margin-left: -0.7em;\n    padding-right: 0.25em;\n}\n\ni-select li:before,\ni-select li:after {\n    content: '';\n    padding: 0;\n    margin: 0;\n}\n\n/* color specification:; */\n\ni-select > div > div {\n    background-color: #FFF;\n    border-color: #000;\n}\n\ni-select li:hover {\n    background-color: #B3D4FF;\n}\n\ni-select > button.pure-button-primary div.pointer {\n    border-top: 0.5em solid #FEFEFE;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+},{"event-dom":6,"itags.core":268,"polyfill/polyfill-base.js":211}],263:[function(require,module,exports){
+var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-select;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-select:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-select:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\n\ni-select > div {\n    position: relative;\n}\n\ni-select > button.pure-button {\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    -khtml-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    position: relative;\n    padding-right: 1.45em;\n    padding-left: 0;\n    max-width: 6em;\n}\n\ni-select > button div.btntext {\n    margin: 0 0.25em 0 1em;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 6em;\n}\n\ni-select > button div.pointer {\n    border-left: 0.4em solid rgba(0, 0, 0, 0);\n    border-right: 0.4em solid rgba(0, 0, 0, 0);\n    border-top: 0.5em solid #000;\n    right: 0.25em;\n    position: absolute;\n    bottom: 0.2em;\n}\n\ni-select > div > div {\n    position: absolute;\n    z-index: 2;\n    left: 0;\n    top: 0;\n    cursor: pointer;\n    border-style: solid;\n    border-width: 0.1em;\n    -webkit-border-radius: 0 0 0.3em 0.3em;\n    -moz-border-radius: 0 0 0.3em 0.3em;\n    border-radius: 0 0 0.3em 0.3em;\n    -webkit-box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n    -moz-box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n    box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n}\n\ni-select ul {\n    font-size: 1.2em;\n    padding: 0 0 0.3em;\n    list-style: none;\n    margin: 0;\n}\n\ni-select li {\n    padding: 0.25em 0.7em;\n}\n\ni-select li.focussed {\n    background-color: #B3D4FF;\n}\n\ni-select li.selected:before {\n    content: '*';\n    margin-left: -0.7em;\n    padding-right: 0.25em;\n}\n\ni-select li:before,\ni-select li:after {\n    content: '';\n    padding: 0;\n    margin: 0;\n}\n\n/* color specification:; */\n\ni-select > div > div {\n    background-color: #FFF;\n    border-color: #000;\n}\n\ni-select li:hover {\n    background-color: #B3D4FF;\n}\n\ni-select > button.pure-button-primary div.pointer {\n    border-top: 0.5em solid #FEFEFE;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
 },{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],264:[function(require,module,exports){
 /*
 * attributes:
@@ -19460,16 +19460,51 @@ module.exports = function (window) {
     });
 
 };
-},{"./css/i-select.css":263,"css":4,"event-dom":6,"focusmanager":73,"i-head":260,"i-item":261,"itags.core":266,"js-ext/lib/string.js":199,"polyfill/polyfill-base.js":211}],265:[function(require,module,exports){
-var css = "span.itag-data {\n    display: none !important;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+},{"./css/i-select.css":263,"css":4,"event-dom":6,"focusmanager":73,"i-head":260,"i-item":261,"itags.core":268,"js-ext/lib/string.js":199,"polyfill/polyfill-base.js":211}],265:[function(require,module,exports){
+var css = ""; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
 },{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],266:[function(require,module,exports){
+/*
+* attributes:
+* value, expanded, primary-button
+*/
+require('polyfill/polyfill-base.js');
+require('js-ext/lib/string.js');
+require('css');
+require('./css/i-tabpane.css');
+
+var TRANS_TIME_SHOW = 0.3,
+    TRANS_TIME_HIDE = 0.1,
+    CLASS_ITAG_RENDERED = 'itag-rendered';
+
+module.exports = function (window) {
+
+    "use strict";
+    var itagsCore = require('itags.core')(window),
+        Event = require('event-dom')(window);
+
+    // require('focusmanager')(window);
+    require('i-item')(window);
+    require('i-head')(window);
+
+    window.document.createTag('i-tabpane');
+
+    // window.HTMLElement.prototype.subClass('i-tabpane', function() {
+        // console.warn('constructor itabpane');
+    // });
+
+};
+},{"./css/i-tabpane.css":265,"css":4,"event-dom":6,"i-head":260,"i-item":261,"itags.core":268,"js-ext/lib/string.js":199,"polyfill/polyfill-base.js":211}],267:[function(require,module,exports){
+var css = "span.itag-data {\n    display: none !important;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],268:[function(require,module,exports){
 (function (global){
+
+/*jshint proto:true */
 
 "use strict";
 
 require('js-ext');
 require('polyfill/polyfill-base.js');
-require('./css/itags-core.css');
+require('./css/itags.core.css');
 
 var asyncSilent = require('utils').asyncSilent,
     laterSilent = require('utils').laterSilent,
@@ -19534,7 +19569,18 @@ console.info('store init function');
             }
         }
     },
-    NOOP = function() {};
+    NOOP = function() {},
+    // Define configurable, writable and non-enumerable props
+    // if they don't exist.
+    defineUnErasableProperty = function (object, name, method) {
+        Object.defineProperty(object, name, {
+            configurable: true,
+            enumerable: false,
+            writable: true,
+            value: method
+        });
+    },
+    DEFAULT_METHODS = {};
 
 DELAYED_FINALIZE_EVENTS.keys().forEach(function(key) {
     DELAYED_FINALIZE_EVENTS[key+'outside'] = true;
@@ -19543,7 +19589,10 @@ DELAYED_FINALIZE_EVENTS.keys().forEach(function(key) {
 module.exports = function (window) {
 
     var DOCUMENT = window.document,
+        PROTOTYPE_CHAIN_CAN_BE_SET = arguments[1], // hidden feature, used by unit-test
         RUNNING_ON_NODE = (typeof global !== 'undefined') && (global.window!==window),
+        PROTO_SUPPORTED = !!Object.__proto__,
+        dummyTag = DOCUMENT.createElement('div'),
         itagCore, MUTATION_EVENTS, Event, registerDelay, focusManager;
 
     require('vdom')(window);
@@ -19556,6 +19605,12 @@ module.exports = function (window) {
     }
 
     Object.protectedProp(window, 'ITAGS', {});
+
+    DEFAULT_METHODS = Object.create(dummyTag.__proto__);
+    Object.protectedProp(DEFAULT_METHODS, '_isItag', true);
+    defineUnErasableProperty(DEFAULT_METHODS, 'initUI', NOOP);
+    defineUnErasableProperty(DEFAULT_METHODS, 'renderUI', NOOP);
+    defineUnErasableProperty(DEFAULT_METHODS, 'destroyUI', NOOP);
 
     MUTATION_EVENTS = [NODE_REMOVED, NODE_INSERTED, NODE_CONTENT_CHANGE, ATTRIBUTE_REMOVED, ATTRIBUTE_CHANGED, ATTRIBUTE_INSERTED];
 
@@ -19570,7 +19625,7 @@ module.exports = function (window) {
             return !!e.target._updateUI;
         },
 
-        renderDomElements: function(tagName, updateFn, properties, isParcel) {
+        _renderDomElements: function(tagName, updateFn, properties, isParcel) {
             var itagElements = DOCUMENT.getAll(tagName),
                 len = itagElements.length,
                 i, itagElement;
@@ -19609,14 +19664,12 @@ module.exports = function (window) {
 
         _defineElement: function(itagName, updateFn, properties, isParcel) {
             itagName = itagName.toLowerCase();
-/*jshint boss:true */
             if (window.ITAGS[itagName]) {
-/*jshint boss:false */
                 console.warn(itagName+' already exists and cannot be redefined');
                 return;
             }
             (typeof updateFn === 'function') || (updateFn=NOOP);
-            this.renderDomElements(itagName, updateFn, properties, isParcel);
+            this._renderDomElements(itagName, updateFn, properties, isParcel);
             window.ITAGS[itagName] = this._createElement(itagName, updateFn, properties, isParcel);
         },
 
@@ -19633,7 +19686,6 @@ module.exports = function (window) {
             merge(properties, element);
             merge({
                 _updateUI: isParcel ? function() {
-console.info('look if parcel can be rendered');
                         var vnode = element.vnode;
                         if (vnode._data) {
                             if (!vnode.ce_initialized) {
@@ -19645,7 +19697,6 @@ console.info('look if parcel can be rendered');
                                 }
                                 element._setRendered();
                             }
-    console.info('going to render parcel');
                             updateFn.call(element);
                         }
                     } : updateFn,
@@ -19710,25 +19761,82 @@ console.info('look if parcel can be rendered');
 
     };
 
+    DOCUMENT._createElement = DOCUMENT.createElement;
+    DOCUMENT.createElement = function(tag) {
+        var ItagClass = window.ITAGS[tag.toLowerCase()];
+        if (ItagClass) {
+console.warn('return custom element '+tag);
+            return new ItagClass();
+        }
+console.warn('return native element '+tag);
+        return this._createElement(tag);
+    };
+
+    Object.protectedProp(Function.prototype, 'subItag', function(itagName, itagPrototypes) {
+    console.warn('subItag');
+        var instance = this,
+            baseProt, constructor, domElementConstructor, rp;
+        itagName = itagName.toLowerCase();
+        if (window.ITAGS[itagName]) {
+            console.warn(itagName+' already exists and cannot be redefined');
+            return;
+        }
+
+        constructor = function () {
+            return {};
+        };
+
+        baseProt = instance.prototype || DEFAULT_METHODS;
+        rp = Object.create(baseProt);
+        constructor.prototype = rp;
+
+        rp.constructor = constructor;
+        constructor.$super = baseProt;
+        constructor.$orig = {};
+
+        constructor.mergePrototypes(itagPrototypes, true);
+
+        // merge some system function in case they don't exists
+        domElementConstructor = function() {
+            var domElement = DOCUMENT._createElement('i-tabpane'),
+                domElementNewProto = constructor(),
+                nativeProto;
+            if (PROTO_SUPPORTED) {
+    console.warn('Object.__proto__ is available --> redefine prototypechain');
+                nativeProto = domElement.__proto__;
+                domElement.__proto__ = domElementNewProto;
+                domElementNewProto.__proto__ = nativeProto;
+            }
+            else {
+                merge(domElementNewProto, domElement);
+            }
+            return domElement;
+        };
+
+        window.ITAGS[itagName] = domElementConstructor;
+        return domElementConstructor;
+    });
+
+    Object.protectedProp(DOCUMENT, 'createTag', function () {
+        return Function.prototype.subItag.apply({}, arguments);
+    });
+
     (function(HTMLElementPrototype) {
+        HTMLElementPrototype.isItag = function() {
+            return !!this._isItag;
+        };
         HTMLElementPrototype.itagReady = function() {
             var instance = this;
+            if (!instance.isItag()) {
+                console.warn('itagReady() invoked on a non-itag element');
+                return window.Promise.reject('Element is no itag');
+            }
             instance._itagReady || (instance._itagReady=window.Promise.manage());
             return instance._itagReady;
         };
     }(window.HTMLElement.prototype));
 
-    DOCUMENT._createElement = DOCUMENT.createElement;
-    DOCUMENT.createElement = function(tag) {
-        var ItagClass = window.ITAGS[tag.toLowerCase()];
-        if (ItagClass) {
-            return new ItagClass();
-        }
-        return this._createElement(tag);
-    };
-
     DOCUMENT.refreshParcels = function() {
-console.info('refreshParcels');
         var list = this.getParcels(),
             len = list.length,
             i, parcel;
@@ -19742,8 +19850,6 @@ console.info('refreshParcels');
     Event.after(
         [ATTRIBUTE_CHANGED, ATTRIBUTE_INSERTED, ATTRIBUTE_REMOVED],
         function(e) {
-console.info('itag changed attributes '+e.type);
-console.info(e.changed);
             var element = e.target;
             element._updateUI();
             element.hasClass('focussed') && focusManager(element);
@@ -19754,7 +19860,6 @@ console.info(e.changed);
     Event.after(
         NODE_REMOVED,
         function(e) {
-console.info('itag removed');
             var node = e.target;
             (typeof node._destroy==='function') && node._destroy();
             node.detachAll();
@@ -19765,13 +19870,11 @@ console.info('itag removed');
     Event.finalize(function(e) {
         if (DELAYED_FINALIZE_EVENTS[e.type]) {
             registerDelay || (registerDelay = laterSilent(function() {
-console.info('Event finalize multi');
                 DOCUMENT.refreshParcels();
                 registerDelay = null;
             }, DELAYED_EVT_TIME));
         }
         else {
-console.info('Event finalize '+e.type);
             DOCUMENT.refreshParcels();
         }
     });
@@ -19819,13 +19922,19 @@ console.info('Event finalize '+e.type);
 
     Object.protectedProp(window, '_ItagCore', itagCore);
 
+    if (PROTOTYPE_CHAIN_CAN_BE_SET) {
+        itagCore.setPrototypeChain = function(activate) {
+            PROTO_SUPPORTED = activate ? !!Object.__proto__ : false;
+        };
+    }
+
     return itagCore;
 
 };
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./css/itags-core.css":265,"event-dom":6,"js-ext":193,"polyfill/polyfill-base.js":211,"utils":212,"vdom":256}],267:[function(require,module,exports){
+},{"./css/itags.core.css":267,"event-dom":6,"js-ext":193,"polyfill/polyfill-base.js":211,"utils":212,"vdom":256}],269:[function(require,module,exports){
 
-},{}],268:[function(require,module,exports){
+},{}],270:[function(require,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -20996,7 +21105,7 @@ function assert (test, message) {
   if (!test) throw new Error(message || 'Failed assertion')
 }
 
-},{"base64-js":269,"ieee754":270}],269:[function(require,module,exports){
+},{"base64-js":271,"ieee754":272}],271:[function(require,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
@@ -21118,7 +21227,7 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	exports.fromByteArray = uint8ToBase64
 }(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
 
-},{}],270:[function(require,module,exports){
+},{}],272:[function(require,module,exports){
 exports.read = function(buffer, offset, isLE, mLen, nBytes) {
   var e, m,
       eLen = nBytes * 8 - mLen - 1,
@@ -21204,7 +21313,7 @@ exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128;
 };
 
-},{}],271:[function(require,module,exports){
+},{}],273:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -21509,7 +21618,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],272:[function(require,module,exports){
+},{}],274:[function(require,module,exports){
 var http = module.exports;
 var EventEmitter = require('events').EventEmitter;
 var Request = require('./lib/request');
@@ -21648,7 +21757,7 @@ http.STATUS_CODES = {
     510 : 'Not Extended',               // RFC 2774
     511 : 'Network Authentication Required' // RFC 6585
 };
-},{"./lib/request":273,"events":271,"url":297}],273:[function(require,module,exports){
+},{"./lib/request":275,"events":273,"url":299}],275:[function(require,module,exports){
 var Stream = require('stream');
 var Response = require('./response');
 var Base64 = require('Base64');
@@ -21842,7 +21951,7 @@ var indexOf = function (xs, x) {
     return -1;
 };
 
-},{"./response":274,"Base64":275,"inherits":277,"stream":296}],274:[function(require,module,exports){
+},{"./response":276,"Base64":277,"inherits":279,"stream":298}],276:[function(require,module,exports){
 var Stream = require('stream');
 var util = require('util');
 
@@ -21964,7 +22073,7 @@ var isArray = Array.isArray || function (xs) {
     return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{"stream":296,"util":299}],275:[function(require,module,exports){
+},{"stream":298,"util":301}],277:[function(require,module,exports){
 ;(function () {
 
   var object = typeof exports != 'undefined' ? exports : this; // #8: web workers
@@ -22026,7 +22135,7 @@ var isArray = Array.isArray || function (xs) {
 
 }());
 
-},{}],276:[function(require,module,exports){
+},{}],278:[function(require,module,exports){
 var http = require('http');
 
 var https = module.exports;
@@ -22041,7 +22150,7 @@ https.request = function (params, cb) {
     return http.request.call(this, params, cb);
 }
 
-},{"http":272}],277:[function(require,module,exports){
+},{"http":274}],279:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -22066,12 +22175,12 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],278:[function(require,module,exports){
+},{}],280:[function(require,module,exports){
 module.exports = Array.isArray || function (arr) {
   return Object.prototype.toString.call(arr) == '[object Array]';
 };
 
-},{}],279:[function(require,module,exports){
+},{}],281:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -22136,7 +22245,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],280:[function(require,module,exports){
+},{}],282:[function(require,module,exports){
 (function (global){
 /*! http://mths.be/punycode v1.2.4 by @mathias */
 ;(function(root) {
@@ -22647,7 +22756,7 @@ process.chdir = function (dir) {
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],281:[function(require,module,exports){
+},{}],283:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -22733,7 +22842,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],282:[function(require,module,exports){
+},{}],284:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -22820,16 +22929,16 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],283:[function(require,module,exports){
+},{}],285:[function(require,module,exports){
 'use strict';
 
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
-},{"./decode":281,"./encode":282}],284:[function(require,module,exports){
+},{"./decode":283,"./encode":284}],286:[function(require,module,exports){
 module.exports = require("./lib/_stream_duplex.js")
 
-},{"./lib/_stream_duplex.js":285}],285:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":287}],287:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -22922,7 +23031,7 @@ function forEach (xs, f) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_readable":287,"./_stream_writable":289,"_process":279,"core-util-is":290,"inherits":277}],286:[function(require,module,exports){
+},{"./_stream_readable":289,"./_stream_writable":291,"_process":281,"core-util-is":292,"inherits":279}],288:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -22970,7 +23079,7 @@ PassThrough.prototype._transform = function(chunk, encoding, cb) {
   cb(null, chunk);
 };
 
-},{"./_stream_transform":288,"core-util-is":290,"inherits":277}],287:[function(require,module,exports){
+},{"./_stream_transform":290,"core-util-is":292,"inherits":279}],289:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -23933,7 +24042,7 @@ function indexOf (xs, x) {
 }
 
 }).call(this,require('_process'))
-},{"_process":279,"buffer":268,"core-util-is":290,"events":271,"inherits":277,"isarray":278,"stream":296,"string_decoder/":291}],288:[function(require,module,exports){
+},{"_process":281,"buffer":270,"core-util-is":292,"events":273,"inherits":279,"isarray":280,"stream":298,"string_decoder/":293}],290:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -24145,7 +24254,7 @@ function done(stream, er) {
   return stream.push(null);
 }
 
-},{"./_stream_duplex":285,"core-util-is":290,"inherits":277}],289:[function(require,module,exports){
+},{"./_stream_duplex":287,"core-util-is":292,"inherits":279}],291:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -24536,7 +24645,7 @@ function endWritable(stream, state, cb) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_duplex":285,"_process":279,"buffer":268,"core-util-is":290,"inherits":277,"stream":296}],290:[function(require,module,exports){
+},{"./_stream_duplex":287,"_process":281,"buffer":270,"core-util-is":292,"inherits":279,"stream":298}],292:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -24646,7 +24755,7 @@ function objectToString(o) {
   return Object.prototype.toString.call(o);
 }
 }).call(this,require("buffer").Buffer)
-},{"buffer":268}],291:[function(require,module,exports){
+},{"buffer":270}],293:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -24848,10 +24957,10 @@ function base64DetectIncompleteChar(buffer) {
   return incomplete;
 }
 
-},{"buffer":268}],292:[function(require,module,exports){
+},{"buffer":270}],294:[function(require,module,exports){
 module.exports = require("./lib/_stream_passthrough.js")
 
-},{"./lib/_stream_passthrough.js":286}],293:[function(require,module,exports){
+},{"./lib/_stream_passthrough.js":288}],295:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Readable = exports;
 exports.Writable = require('./lib/_stream_writable.js');
@@ -24859,13 +24968,13 @@ exports.Duplex = require('./lib/_stream_duplex.js');
 exports.Transform = require('./lib/_stream_transform.js');
 exports.PassThrough = require('./lib/_stream_passthrough.js');
 
-},{"./lib/_stream_duplex.js":285,"./lib/_stream_passthrough.js":286,"./lib/_stream_readable.js":287,"./lib/_stream_transform.js":288,"./lib/_stream_writable.js":289}],294:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":287,"./lib/_stream_passthrough.js":288,"./lib/_stream_readable.js":289,"./lib/_stream_transform.js":290,"./lib/_stream_writable.js":291}],296:[function(require,module,exports){
 module.exports = require("./lib/_stream_transform.js")
 
-},{"./lib/_stream_transform.js":288}],295:[function(require,module,exports){
+},{"./lib/_stream_transform.js":290}],297:[function(require,module,exports){
 module.exports = require("./lib/_stream_writable.js")
 
-},{"./lib/_stream_writable.js":289}],296:[function(require,module,exports){
+},{"./lib/_stream_writable.js":291}],298:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -24994,7 +25103,7 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"events":271,"inherits":277,"readable-stream/duplex.js":284,"readable-stream/passthrough.js":292,"readable-stream/readable.js":293,"readable-stream/transform.js":294,"readable-stream/writable.js":295}],297:[function(require,module,exports){
+},{"events":273,"inherits":279,"readable-stream/duplex.js":286,"readable-stream/passthrough.js":294,"readable-stream/readable.js":295,"readable-stream/transform.js":296,"readable-stream/writable.js":297}],299:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -25703,14 +25812,14 @@ function isNullOrUndefined(arg) {
   return  arg == null;
 }
 
-},{"punycode":280,"querystring":283}],298:[function(require,module,exports){
+},{"punycode":282,"querystring":285}],300:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],299:[function(require,module,exports){
+},{}],301:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -26300,7 +26409,7 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":298,"_process":279,"inherits":277}],"itags":[function(require,module,exports){
+},{"./support/isBuffer":300,"_process":281,"inherits":279}],"itags":[function(require,module,exports){
 (function (global){
 /**
  * The ITSA module is an aggregator for all the individual modules that the library uses.
@@ -26320,6 +26429,7 @@ function hasOwnProperty(obj, prop) {
 (function (window) {
 
     "use strict";
+    require('i-tabpane')(window);
     require('i-select')(window);
     require('i-parcel')(window);
     require('i-head')(window);
@@ -26327,4 +26437,4 @@ function hasOwnProperty(obj, prop) {
 
 })(global.window || require('node-win'));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"i-head":260,"i-item":261,"i-parcel":262,"i-select":264,"node-win":204}]},{},[]);
+},{"i-head":260,"i-item":261,"i-parcel":262,"i-select":264,"i-tabpane":266,"node-win":204}]},{},[]);

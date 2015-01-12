@@ -9,7 +9,6 @@ YUI.add("yuidoc-meta", function(Y) {
         "Event.Listener",
         "FocusManager",
         "Function",
-        "ITSA",
         "NS-vdom",
         "Node",
         "Object",
