@@ -9,6 +9,7 @@ YUI.add("yuidoc-meta", function(Y) {
         "Event.Listener",
         "FocusManager",
         "Function",
+        "IO",
         "NS-vdom",
         "Node",
         "Object",
@@ -32,8 +33,10 @@ YUI.add("yuidoc-meta", function(Y) {
         "extend-element",
         "focusmanager",
         "html-parser",
+        "io",
         "itsa.build",
         "js-ext",
+        "lib/array.js",
         "lib/array.js",
         "lib/function.js",
         "lib/object.js",
@@ -101,6 +104,11 @@ YUI.add("yuidoc-meta", function(Y) {
             "displayName": "html-parser",
             "name": "html-parser",
             "description": "Exports `htmlToVNodes` which transforms html-text into vnodes.\n\n\n<i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>\n<br>\nNew BSD License - http://choosealicense.com/licenses/bsd-3-clause/"
+        },
+        {
+            "displayName": "io",
+            "name": "io",
+            "description": "Provides core IO-functionality.\n\n\n<i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>\nNew BSD License - http://choosealicense.com/licenses/bsd-3-clause/"
         },
         {
             "displayName": "itsa.build",

@@ -71,6 +71,7 @@ module.exports.byUrl = function(url) {
 var NAME = '[event-dom]: ',
     Event = require('event'),
     laterSilent = require('utils').laterSilent,
+    createHashMap = require('js-ext/extra/hashmap.js').createMap,
     OUTSIDE = 'outside',
     REGEXP_NODE_ID = /^#\S+$/,
     REGEXP_EXTRACT_NODE_ID = /#(\S+)/,
@@ -120,7 +121,7 @@ module.exports = function (window) {
 
     require('vdom')(window);
 
-    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', {});
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
 
     if (window._ITSAmodules.EventDom) {
         return Event; // Event was already extended
@@ -283,13 +284,13 @@ module.exports = function (window) {
         // eventobject = eventobject from our Eventsystem, which get returned by calling `emit()`
 
         subscribers = _getSubscribers(e, true, subs, wildcard_named_subs, named_wildcard_subs, wildcard_wildcard_subs);
-        eventobject = Event._emit(e.target, customEvent, e, subscribers, [], _preProcessor);
+        eventobject = Event._emit(e.target, customEvent, e, subscribers, [], _preProcessor, false, true);
 
         // now check outside subscribers
         subsOutside = allSubscribers[customEvent+OUTSIDE];
         wildcard_named_subsOutside = allSubscribers['*:'+eventName+OUTSIDE];
         subscribers = _getSubscribers(e, true, subsOutside, wildcard_named_subsOutside);
-        eventobjectOutside = Event._emit(e.target, customEvent+OUTSIDE, e, subscribers, [], _preProcessor);
+        eventobjectOutside = Event._emit(e.target, customEvent+OUTSIDE, e, subscribers, [], _preProcessor, false, true);
 
         // if eventobject was preventdefaulted or halted: take appropriate action on
         // the original dom-event. Note: only the original event can caused this, not the outsideevent
@@ -657,7 +658,7 @@ module.exports = function (window) {
     return Event;
 };
 
-},{"event":10,"js-ext/lib/array.js":19,"js-ext/lib/object.js":20,"js-ext/lib/string.js":21,"polyfill/polyfill-base.js":27,"utils":28,"vdom":72}],7:[function(require,module,exports){
+},{"event":10,"js-ext/extra/hashmap.js":20,"js-ext/lib/array.js":21,"js-ext/lib/object.js":22,"js-ext/lib/string.js":23,"polyfill/polyfill-base.js":29,"utils":30,"vdom":77}],7:[function(require,module,exports){
 (function (global){
 /**
  * Defines the Event-Class, which should be instantiated to get its functionality
@@ -674,8 +675,9 @@ module.exports = function (window) {
 */
 
 require('polyfill/polyfill-base.js');
-require('js-ext/lib/function.js');
 require('js-ext/lib/object.js');
+
+var createHashMap = require('js-ext/extra/hashmap.js').createMap;
 
 // to prevent multiple Event instances
 // (which might happen: http://nodejs.org/docs/latest/api/modules.html#modules_module_caching_caveats)
@@ -686,7 +688,7 @@ require('js-ext/lib/object.js');
 
     "use strict";
 
-    global._ITSAmodules || Object.protectedProp(global, '_ITSAmodules', {});
+    global._ITSAmodules || Object.protectedProp(global, '_ITSAmodules', createHashMap());
     global._ITSAmodules.Event || (global._ITSAmodules.Event = factory());
 
     module.exports = global._ITSAmodules.Event;
@@ -717,14 +719,6 @@ require('js-ext/lib/object.js');
          * ':save'
          */
         REGEXP_EVENTNAME_WITH_SEMICOLON = /:((?:\w|-)+)$/,
-        DEFINE_IMMUTAL_PROPERTY = function (obj, property, value) {
-            Object.defineProperty(obj, property, {
-                configurable: false,
-                enumerable: false,
-                writable: false,
-                value: value // `writable` is false means we cannot chance the value-reference, but we can change {} or [] its members
-            });
-        },
         Event;
 
     Event = {
@@ -1500,12 +1494,13 @@ require('js-ext/lib/object.js');
          *                       It is meant to manipulate the eventobject, something that `event-dom` needs to do
          *                       This function expects 2 arguments: `subscriber` and `eventobject`.
          *                       <b>should not be used</b> other than by any submodule like `event-dom`.
-         * @param [keepPayload] {Boolean} whether `payload` should be used as the ventobject instead of creating a new
+         * @param [keepPayload=false] {Boolean} whether `payload` should be used as the ventobject instead of creating a new
          *                      eventobject and merge payload. <b>should not be used</b> other than by any submodule like `event-dom`.
+         * @param [noFinalize=false] {Boolean} To supress finalization
          * @return {Object|undefined} eventobject or undefined when the event was halted or preventDefaulted.
          * @since 0.0.1
          */
-        _emit: function (emitter, customEvent, payload, beforeSubscribers, afterSubscribers, preProcessor, keepPayload) {
+        _emit: function (emitter, customEvent, payload, beforeSubscribers, afterSubscribers, preProcessor, keepPayload, noFinalize) {
             // NOTE: emit() needs to be synchronous! otherwise we wouldn't be able
             // to preventDefault DOM-events in time.
             var instance = this,
@@ -1590,7 +1585,7 @@ require('js-ext/lib/object.js');
                     // in case any subscriber changed e.target inside its filter (event-dom does this),
                     // then we reset e.target to its original:
                     e.sourceTarget && (e.target=e.sourceTarget);
-                    instance._final.some(function(finallySubscriber) {
+                    noFinalize || instance._final.some(function(finallySubscriber) {
                         !e.silent && !e._noRender && !e.status.renderPrevented  && finallySubscriber(e);
                         if (e.status.unSilencable && e.silent) {
                             console.warn(NAME, ' event '+e.emitter+':'+e.type+' cannot made silent: this customEvent is defined as unSilencable');
@@ -1787,7 +1782,7 @@ require('js-ext/lib/object.js');
          */
         _setEventObjProperty: function (property, value) {
             console.log(NAME, '_setEventObjProperty');
-            DEFINE_IMMUTAL_PROPERTY(this._defaultEventObj, property, value);
+            Object.protectedProp(this._defaultEventObj, property, value);
             return this;
         }
 
@@ -1874,7 +1869,7 @@ require('js-ext/lib/object.js');
      * @private
      * @since 0.0.1
     */
-    DEFINE_IMMUTAL_PROPERTY(Event, '_subs', {});
+    Object.protectedProp(Event, '_subs', {});
 
     /**
      * Internal list of finalize-subscribers which are invoked at the finalization-cycle, which happens after the after-subscribers.
@@ -1886,7 +1881,7 @@ require('js-ext/lib/object.js');
      * @private
      * @since 0.0.1
     */
-    DEFINE_IMMUTAL_PROPERTY(Event, '_final', []);
+    Object.protectedProp(Event, '_final', []);
 
     /**
      * Object that acts as the prototype of the eventobject.
@@ -1902,7 +1897,7 @@ require('js-ext/lib/object.js');
      * @private
      * @since 0.0.1
     */
-    DEFINE_IMMUTAL_PROPERTY(Event, '_defaultEventObj', {});
+    Object.protectedProp(Event, '_defaultEventObj', {});
 
     /**
      * Objecthash containing all detach-notifiers, keyed by customEvent name.
@@ -1929,7 +1924,7 @@ require('js-ext/lib/object.js');
      * @private
      * @since 0.0.1
     */
-    DEFINE_IMMUTAL_PROPERTY(Event, '_detachNotifiers', {});
+    Object.protectedProp(Event, '_detachNotifiers', {});
 
     /**
      * Objecthash containing all notifiers, keyed by customEvent name.
@@ -1956,7 +1951,7 @@ require('js-ext/lib/object.js');
      * @private
      * @since 0.0.1
     */
-    DEFINE_IMMUTAL_PROPERTY(Event, '_notifiers', {});
+    Object.protectedProp(Event, '_notifiers', {});
 
     Event._setEventObjProperty('halt', function(reason) {this.status.ok || this._unHaltable || (this.status.halted = (reason || true));})
          ._setEventObjProperty('preventDefault', function(reason) {this.status.ok || this._unPreventable || (this.status.defaultPrevented = (reason || true));})
@@ -1966,7 +1961,7 @@ require('js-ext/lib/object.js');
     return Event;
 }));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"js-ext/lib/function.js":11,"js-ext/lib/object.js":12,"polyfill/polyfill-base.js":18}],8:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":12,"js-ext/lib/object.js":13,"polyfill/polyfill-base.js":19}],8:[function(require,module,exports){
 "use strict";
 
 /**
@@ -2108,7 +2103,11 @@ Event.Emitter = function(emitterName) {
  * @since 0.0.1
 */
 
-var Event = require('./index.js');
+require('js-ext/lib/object.js');
+
+var Event = require('./index.js'),
+    Classes = require("js-ext/extra/classes.js"),
+    filterFn, ClassListener;
 
 Event.Listener = {
     /**
@@ -2231,11 +2230,128 @@ Event.Listener = {
         return Event.onceBefore(customEvent, callback, this, filter, prepend);
     }
 };
-},{"./index.js":10}],10:[function(require,module,exports){
+
+filterFn = function(e) {
+    return e.target===this;
+};
+
+Event._CE_listener = ClassListener = {
+    /**
+     * Is automaticly available for Classes.
+     * Subscribes to a customEvent on behalf of the class-instance and will only
+     * be executed when the emitter is the instance itself.
+     *
+     * The callback will be executed `after` the defaultFn.
+     *
+     * @method selfAfter
+     * @param customEvent {String|Array} the custom-event (or Array of events) to subscribe to. CustomEvents should
+     *        have the syntax: `emitterName:eventName`. Wildcard `*` may be used for both `emitterName` as well as `eventName`.
+     *        If `emitterName` is not defined, `UI` is assumed.
+     * @param callback {Function} subscriber:will be invoked when the event occurs. An `eventobject` will be passed
+     *        as its only argument.
+     * @param [prepend=false] {Boolean} whether the subscriber should be the first in the list of after-subscribers.
+     * @return {Object} handler with a `detach()`-method which can be used to detach the subscriber
+     * @since 0.0.1
+    */
+    selfAfter: function (customEvent, callback, prepend) {
+        return Event.after(customEvent, callback, this, filterFn.bind(this), prepend);
+    },
+
+    /**
+     * Is automaticly available for Classes.
+     * Subscribes to a customEvent on behalf of the class-instance and will only
+     * be executed when the emitter is the instance itself.
+     *
+     * The callback will be executed `before` the defaultFn.
+     *
+     * @method selfBefore
+     * @param customEvent {String|Array} the custom-event (or Array of events) to subscribe to. CustomEvents should
+     *        have the syntax: `emitterName:eventName`. Wildcard `*` may be used for both `emitterName` as well as `eventName`.
+     *        If `emitterName` is not defined, `UI` is assumed.
+     * @param callback {Function} subscriber:will be invoked when the event occurs. An `eventobject` will be passed
+     *        as its only argument.
+     * @param [prepend=false] {Boolean} whether the subscriber should be the first in the list of before-subscribers.
+     * @return {Object} handler with a `detach()`-method which can be used to detach the subscriber
+     * @since 0.0.1
+    */
+    selfBefore: function (customEvent, callback, prepend) {
+        return Event.before(customEvent, callback, this, filterFn.bind(this), prepend);
+    },
+
+    /**
+     * Is automaticly available for Classes.
+     * Subscribes to a customEvent on behalf of the class-instance and will only
+     * be executed when the emitter is the instance itself.
+     *
+     * The callback will be executed `after` the defaultFn.
+     * The subscriber will be automaticly removed once the callback executed the first time.
+     * No need to `detach()` (unless you want to undescribe before the first event)
+     *
+     * @method selfOnceAfter
+     * @param customEvent {String|Array} the custom-event (or Array of events) to subscribe to. CustomEvents should
+     *        have the syntax: `emitterName:eventName`. Wildcard `*` may be used for both `emitterName` as well as `eventName`.
+     *        If `emitterName` is not defined, `UI` is assumed.
+     * @param callback {Function} subscriber:will be invoked when the event occurs. An `eventobject` will be passed
+     *        as its only argument.
+     * @param [prepend=false] {Boolean} whether the subscriber should be the first in the list of after-subscribers.
+     * @return {Object} handler with a `detach()`-method which can be used to detach the subscriber
+     * @since 0.0.1
+    */
+    selfOnceAfter: function (customEvent, callback, prepend) {
+        return Event.onceAfter(customEvent, callback, this, filterFn.bind(this), prepend);
+    },
+
+    /**
+     * Is automaticly available for Classes.
+     * Subscribes to a customEvent on behalf of the class-instance and will only
+     * be executed when the emitter is the instance itself.
+     *
+     * The callback will be executed `before` the defaultFn.
+     * The subscriber will be automaticly removed once the callback executed the first time.
+     * No need to `detach()` (unless you want to undescribe before the first event)
+     *
+     * @method selfOnceBefore
+     * @param customEvent {String|Array} the custom-event (or Array of events) to subscribe to. CustomEvents should
+     *        have the syntax: `emitterName:eventName`. Wildcard `*` may be used for both `emitterName` as well as `eventName`.
+     *        If `emitterName` is not defined, `UI` is assumed.
+     * @param callback {Function} subscriber:will be invoked when the event occurs. An `eventobject` will be passed
+     *        as its only argument.
+     * @param [prepend=false] {Boolean} whether the subscriber should be the first in the list of before-subscribers.
+     * @return {Object} handler with a `detach()`-method which can be used to detach the subscriber
+     * @since 0.0.1
+    */
+    selfOnceBefore: function (customEvent, callback, prepend) {
+        return Event.onceBefore(customEvent, callback, this, filterFn.bind(this), prepend);
+    },
+
+    destroy: function(notChained) {
+        var instance = this,
+            superDestroy;
+        if (!instance._destroyed) {
+            superDestroy = function(constructor) {
+                // don't call `hasOwnProperty` directly on obj --> it might have been overruled
+                Object.prototype.hasOwnProperty.call(constructor.prototype, '_destroy') && constructor.prototype._destroy.call(instance);
+                if (!notChained && constructor.$$super) {
+                    instance.__classCarier__ = constructor.$$super.constructor;
+                    superDestroy(constructor.$$super.constructor);
+                }
+            };
+            superDestroy(instance.constructor);
+            instance.detachAll();
+            Object.protectedProp(instance, '_destroyed', true);
+        }
+    }
+};
+
+// Patching Classes.BaseClass to make it an eventlistener that auto cleans-up:
+Classes.BaseClass.mergePrototypes(Event.Listener, true)
+                 .mergePrototypes(ClassListener, true, {}, {});
+},{"./index.js":10,"js-ext/extra/classes.js":11,"js-ext/lib/object.js":13}],10:[function(require,module,exports){
 module.exports = require('./event-base.js');
 require('./event-emitter.js');
 require('./event-listener.js');
 },{"./event-base.js":7,"./event-emitter.js":8,"./event-listener.js":9}],11:[function(require,module,exports){
+(function (global){
 /**
  *
  * Pollyfils for often used functionality for Functions
@@ -2249,194 +2365,486 @@ require('./event-listener.js');
  *
 */
 
+require('polyfill/polyfill-base.js');
+require('../lib/object.js');
+
+(function (global) {
+
+    "use strict";
+
+    var NAME = '[Classes]: ',
+        createHashMap = require('js-ext/extra/hashmap.js').createMap,
+        DEFAULT_CHAIN_CONSTRUCT, defineProperty, defineProperties,
+        NOOP, REPLACE_CLASS_METHODS, PROTECTED_CLASS_METHODS, PROTO_RESERVED_NAMES,
+        BASE_MEMBERS, createBaseClass, Classes, coreMethods;
+
+    global._ITSAmodules || Object.protectedProp(global, '_ITSAmodules', createHashMap());
+
+/*jshint boss:true */
+    if (Classes=global._ITSAmodules.Classes) {
+/*jshint boss:false */
+        module.exports = Classes; // Classes was already created
+        return;
+    }
+
+    // Define configurable, writable and non-enumerable props
+    // if they don't exist.
+
+    DEFAULT_CHAIN_CONSTRUCT = true;
+    defineProperty = function (object, name, method, force) {
+        if (!force && (name in object)) {
+            return;
+        }
+        Object.defineProperty(object, name, {
+            configurable: true,
+            enumerable: false,
+            writable: true,
+            value: method
+        });
+    };
+    defineProperties = function (object, map, force) {
+        var names = Object.keys(map),
+            l = names.length,
+            i = -1,
+            name;
+        while (++i < l) {
+            name = names[i];
+            defineProperty(object, name, map[name], force);
+        }
+    };
+    NOOP = function () {};
+    REPLACE_CLASS_METHODS = createHashMap({
+        destroy: '_destroy'
+    });
+    PROTECTED_CLASS_METHODS = createHashMap({
+        $super: true,
+        $superProp: true,
+        $orig: true
+    });
+/*jshint proto:true */
+/* jshint -W001 */
+    PROTO_RESERVED_NAMES = createHashMap({
+        constructor: true,
+        prototype: true,
+        hasOwnProperty: true,
+        isPrototypeOf: true,
+        propertyIsEnumerable: true,
+        __defineGetter__: true,
+        __defineSetter__: true,
+        __lookupGetter__: true,
+        __lookupSetter__: true,
+        __proto__: true
+    });
+/* jshint +W001 */
+/*jshint proto:false */
+
+    /**
+     * Pollyfils for often used functionality for Function
+     * @class Function
+    */
+
+    defineProperties(Function.prototype, {
+
+        /**
+         * Merges the given prototypes of properties into the `prototype` of the Class.
+         *
+         * **Note1 ** to be used on instances --> ONLY on Classes
+         * **Note2 ** properties with getters and/or unwritable will NOT be merged
+         *
+         * The members in the hash prototypes will become members with
+         * instances of the merged class.
+         *
+         * By default, this method will not override existing prototype members,
+         * unless the second argument `force` is true.
+         *
+         * @method mergePrototypes
+         * @param prototypes {Object} Hash prototypes of properties to add to the prototype of this object
+         * @param force {Boolean}  If true, existing members will be overwritten
+         * @chainable
+         */
+        mergePrototypes: function (prototypes, force) {
+            var instance, proto, names, l, i, replaceMap, protectedMap, name, nameInProto, finalName, propDescriptor;
+            if (!prototypes) {
+                return;
+            }
+            instance = this; // the Class
+            proto = instance.prototype;
+            names = Object.getOwnPropertyNames(prototypes);
+            l = names.length;
+            i = -1;
+            replaceMap = arguments[2] || REPLACE_CLASS_METHODS; // hidden feature, used by itags
+
+            protectedMap = arguments[3] || PROTECTED_CLASS_METHODS; // hidden feature, used by itags
+            while (++i < l) {
+                name = names[i];
+                finalName = replaceMap[name] || name;
+                nameInProto = (finalName in proto);
+                if (!PROTO_RESERVED_NAMES[finalName] && !protectedMap[finalName] && (!nameInProto || force)) {
+                    // if nameInProto: set the property, but also backup for chaining using $$orig
+                    propDescriptor = Object.getOwnPropertyDescriptor(prototypes, name);
+                    if (!propDescriptor.writable) {
+                        console.warn(NAME+'mergePrototypes will set property of '+name+'without its property-descriptor: for it is an unwritable property.');
+                        proto[finalName] = prototypes[name];
+                    }
+                    else {
+                        // adding prototypes[name] into $$orig:
+                        instance.$$orig[finalName] || (instance.$$orig[finalName]=[]);
+                        instance.$$orig[finalName][instance.$$orig[finalName].length] = prototypes[name];
+                        if (typeof prototypes[name] === 'function') {
+        /*jshint -W083 */
+                            propDescriptor.value = (function (originalMethodName, finalMethodName) {
+                                return function () {
+        /*jshint +W083 */
+                                    // this.$own = prot;
+                                    // this.$origMethods = instance.$$orig[finalMethodName];
+                                    var context = this,
+                                        classCarierBkp = context.__classCarier__,
+                                        methodClassCarierBkp = context.__methodClassCarier__,
+                                        origPropBkp = context.__origProp__,
+                                        returnValue;
+
+                                    context.__methodClassCarier__ = instance;
+
+                                    context.__classCarier__ = null;
+
+                                    context.__origProp__ = finalMethodName;
+                                    returnValue = prototypes[originalMethodName].apply(context, arguments);
+                                    context.__origProp__ = origPropBkp;
+
+                                    context.__classCarier__ = classCarierBkp;
+
+                                    context.__methodClassCarier__ = methodClassCarierBkp;
+
+                                    return returnValue;
+
+                                };
+                            })(name, finalName);
+                        }
+                        Object.defineProperty(proto, finalName, propDescriptor);
+                    }
+                }
+                else {
+                    console.warn(NAME+'mergePrototypes is not allowed to set the property: '+name);
+                }
+            }
+            return instance;
+        },
+
+        /**
+         * Removes the specified prototypes from the Class.
+         *
+         *
+         * @method removePrototypes
+         * @param properties {String|Array} Hash of properties to be removed from the Class
+         * @chainable
+         */
+        removePrototypes: function (properties) {
+            var proto = this.prototype,
+                replaceMap = arguments[1] || REPLACE_CLASS_METHODS; // hidden feature, used by itags
+            Array.isArray(properties) || (properties=[properties]);
+            properties.forEach(function(prop) {
+                prop = replaceMap[prop] || prop;
+                delete proto[prop];
+            });
+            return this;
+        },
+
+        /**
+         * Redefines the constructor fo the Class
+         *
+         * @method setConstructor
+         * @param [constructorFn] {Function} The function that will serve as the new constructor for the class.
+         *        If `undefined` defaults to `NOOP`
+         * @param [prototypes] {Object} Hash map of properties to be added to the prototype of the new class.
+         * @param [chainConstruct=true] {Boolean} Whether -during instance creation- to automaticly construct in the complete hierarchy with the given constructor arguments.
+         * @chainable
+         */
+        setConstructor: function(constructorFn, chainConstruct) {
+            var instance = this;
+            if (typeof constructorFn==='boolean') {
+                chainConstruct = constructorFn;
+                constructorFn = null;
+            }
+            (typeof chainConstruct === 'boolean') || (chainConstruct=DEFAULT_CHAIN_CONSTRUCT);
+            instance.$$constrFn = constructorFn || NOOP;
+            instance.$$chainConstructed = chainConstruct ? true : false;
+            return instance;
+        },
+
+        /**
+         * Returns a newly created class inheriting from this class
+         * using the given `constructor` with the
+         * prototypes listed in `prototypes` merged in.
+         *
+         *
+         * The newly created class has the `$$super` static property
+         * available to access all of is ancestor's instance methods.
+         *
+         * Further methods can be added via the [mergePrototypes](#method_mergePrototypes).
+         *
+         * @example
+         *
+         *  var Circle = Shape.subClass(
+         *      function (x, y, r) {
+         *          // arguments will automaticly be passed through to Shape's constructor
+         *          this.r = r;
+         *      },
+         *      {
+         *          area: function () {
+         *              return this.r * this.r * Math.PI;
+         *          }
+         *      }
+         *  );
+         *
+         * @method subClass
+         * @param [constructor] {Function} The function that will serve as constructor for the new class.
+         *        If `undefined` defaults to `NOOP`
+         * @param [prototypes] {Object} Hash map of properties to be added to the prototype of the new class.
+         * @param [chainConstruct=true] {Boolean} Whether -during instance creation- to automaticly construct in the complete hierarchy with the given constructor arguments.
+         * @return the new class.
+         */
+        subClass: function (constructor, prototypes, chainConstruct) {
+
+            var instance = this,
+                constructorClosure = {},
+                baseProt, proto, constrFn;
+            if (typeof constructor === 'boolean') {
+                constructor = null;
+                prototypes = null;
+                chainConstruct = constructor;
+            }
+
+            else {
+                if (Object.isObject(constructor)) {
+                    chainConstruct = prototypes;
+                    prototypes = constructor;
+                    constructor = null;
+                }
+
+                if (typeof prototypes === 'boolean') {
+                    chainConstruct = prototypes;
+                    prototypes = null;
+                }
+            }
+
+            (typeof chainConstruct === 'boolean') || (chainConstruct=DEFAULT_CHAIN_CONSTRUCT);
+
+            constrFn = constructor || NOOP;
+            constructor = function() {
+                constructorClosure.constructor.$$constrFn.apply(this, arguments);
+            };
+
+            constructor = (function(originalConstructor) {
+                return function() {
+                    var context = this;
+                    if (constructorClosure.constructor.$$chainConstructed) {
+                        context.__classCarier__ = constructorClosure.constructor.$$super.constructor;
+                        context.__origProp__ = 'constructor';
+                        context.__classCarier__.apply(context, arguments);
+                        context.$origMethods = constructorClosure.constructor.$$orig.constructor;
+                    }
+                    context.__classCarier__ = constructorClosure.constructor;
+                    context.__origProp__ = 'constructor';
+                    originalConstructor.apply(context, arguments);
+
+                };
+            })(constructor);
+
+            baseProt = instance.prototype;
+            proto = Object.create(baseProt);
+            constructor.prototype = proto;
+
+            proto.constructor = constructor;
+            constructor.$$chainConstructed = chainConstruct ? true : false;
+            constructor.$$super = baseProt;
+            constructor.$$orig = {
+                constructor: constructor
+            };
+            constructor.$$constrFn = constrFn;
+            constructorClosure.constructor = constructor;
+            prototypes && constructor.mergePrototypes(prototypes, true);
+            return constructor;
+        }
+
+    });
+
+    global._ITSAmodules.Classes = Classes = {};
+
+    BASE_MEMBERS = {
+        _destroy: NOOP,
+        destroy: function(notChained) {
+            var instance = this,
+                superDestroy;
+            if (!instance._destroyed) {
+                superDestroy = function(constructor) {
+                    // don't call `hasOwnProperty` directly on obj --> it might have been overruled
+                    Object.prototype.hasOwnProperty.call(constructor.prototype, '_destroy') && constructor.prototype._destroy.call(instance);
+                    if (!notChained && constructor.$$super) {
+                        instance.__classCarier__ = constructor.$$super.constructor;
+                        superDestroy(constructor.$$super.constructor);
+                    }
+                };
+                // instance.detachAll();  <-- is what Event will add
+                superDestroy(instance.constructor);
+                Object.protectedProp(instance, '_destroyed', true);
+            }
+        }
+    };
+
+    coreMethods = Classes.coreMethods = {
+        $super: {
+            get: function() {
+                var instance = this;
+                instance.__classCarier__ || (instance.__classCarier__= instance.__methodClassCarier__);
+                instance.__$superCarierStart__ || (instance.__$superCarierStart__=instance.__classCarier__);
+                instance.__classCarier__ = instance.__classCarier__ && instance.__classCarier__.$$super.constructor;
+                return instance;
+            }
+        },
+        $superProp: {
+            configurable: true,
+            writable: true,
+            value: function(/* func, *args */) {
+                var instance = this,
+                    classCarierReturn = instance.__$superCarierStart__ || instance.__classCarier__ || instance.__methodClassCarier__,
+                    currentClassCarier = instance.__classCarier__ || instance.__methodClassCarier__,
+                    args = arguments,
+                    superClass, superPrototype, firstArg, returnValue;
+
+                instance.__$superCarierStart__ = null;
+                if (args.length === 0) {
+                    instance.__classCarier__ = classCarierReturn;
+                    return;
+                }
+
+                superClass = currentClassCarier.$$super.constructor,
+                superPrototype = superClass.prototype,
+                firstArg = Array.prototype.shift.apply(args); // will decrease the length of args with one
+                if ((firstArg==='constructor') && currentClassCarier.$$chainConstructed) {
+                    console.warn('the constructor of this Class cannot be invoked manually, because it is chainConstructed');
+                    return currentClassCarier;
+                }
+                if (typeof superPrototype[firstArg] === 'function') {
+                    instance.__classCarier__ = superClass;
+                    returnValue = superPrototype[firstArg].apply(instance, args);
+                }
+                instance.__classCarier__ = classCarierReturn;
+                return returnValue || superPrototype[firstArg];
+            }
+        },
+        $orig: {
+            configurable: true,
+            writable: true,
+            value: function() {
+                var instance = this,
+                    classCarierReturn = instance.__$superCarierStart__,
+                    currentClassCarier = instance.__classCarier__ || instance.__methodClassCarier__,
+                    args = arguments,
+                    propertyName = instance.__origProp__,
+                    returnValue, origArray, orig, item;
+
+                instance.__$superCarierStart__ = null;
+
+                origArray = currentClassCarier.$$orig[propertyName];
+
+                instance.__origPos__ || (instance.__origPos__ = []);
+
+                // every class can have its own overruled $orig for even the same method
+                // first: seek for the item that matches propertyName/classRef:
+                instance.__origPos__.some(function(element) {
+                    if ((element.propertyName===propertyName) && (element.classRef===currentClassCarier)) {
+                        item = element;
+                    }
+                    return item;
+                });
+
+                if (!item) {
+                    item = {
+                        propertyName: propertyName,
+                        classRef: currentClassCarier,
+                        position: origArray.length-1
+                    };
+                    instance.__origPos__.push(item);
+                }
+                if (item.position===0) {
+                    return undefined;
+                }
+                item.position--;
+                orig = origArray[item.position];
+                if (typeof orig === 'function') {
+                    instance.__classCarier__ = currentClassCarier;
+                    returnValue = orig.apply(instance, args);
+                }
+                instance.__classCarier__ = classCarierReturn;
+
+                item.position++;
+
+                return returnValue || orig;
+            }
+        }
+    };
+
+    createBaseClass = function () {
+        var InitClass = function() {};
+        return Function.prototype.subClass.apply(InitClass, arguments);
+    };
+
+    /**
+     * Returns a base class with the given constructor and prototype methods
+     *
+     * @for Object
+     * @method createClass
+     * @param [constructor] {Function} constructor for the class
+     * @param [prototype] {Object} Hash map of prototype members of the new class
+     * @static
+     * @return {Function} the new class
+    */
+    Object.protectedProp(Classes, 'BaseClass', createBaseClass().mergePrototypes(BASE_MEMBERS, true, {}, {}));
+
+    // because `mergePrototypes` cannot merge object-getters, we will add the getter `$super` manually:
+    Object.defineProperties(Classes.BaseClass.prototype, coreMethods);
+
+    /**
+     * Returns a base class with the given constructor and prototype methods
+     *
+     * @for Object
+     * @method createClass
+     * @param [constructor] {Function} constructor for the class
+     * @param [prototype] {Object} Hash map of prototype members of the new class
+     * @static
+     * @return {Function} the new class
+    */
+    Object.protectedProp(Classes, 'createClass', Classes.BaseClass.subClass.bind(Classes.BaseClass));
+
+    module.exports = Classes;
+
+}(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this));
+
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"../lib/object.js":13,"js-ext/extra/hashmap.js":12,"polyfill/polyfill-base.js":16}],12:[function(require,module,exports){
 "use strict";
 
-require('polyfill/polyfill-base.js');
+var merge = function (source, target) {
+        var keys = Object.keys(source),
+            l = keys.length,
+            i = -1,
+            key;
+        while (++i < l) {
+            key = keys[i];
+            target[key] = source[key];
+        }
+    },
+    hashMap = function(members) {
+        // important to set the prototype to `null` --> this will exclude any Object.prototype members
+        var obj = Object.create(null);
+        members && merge(members, obj);
+        return obj;
+    };
 
-// Define configurable, writable and non-enumerable props
-// if they don't exist.
-var defineProperty = function (object, name, method, force) {
-	if (!force && (name in object)) {
-		return;
-	}
-	Object.defineProperty(object, name, {
-		configurable: true,
-		enumerable: false,
-		writable: true,
-		value: method
-	});
+module.exports = {
+    createMap: hashMap
 };
-var defineProperties = function (object, map, force) {
-	var names = Object.keys(map),
-		l = names.length,
-		i = -1,
-		name;
-	while (++i < l) {
-		name = names[i];
-		defineProperty(object, name, map[name], force);
-	}
-};
-var NOOP = function () {};
-
-/**
- * Pollyfils for often used functionality for Function
- * @class Function
-*/
-
-defineProperties(Function.prototype, {
-
-	/**
-	 * Merges the given map of properties into the `prototype` of the Class.
-	 * **Not** to be used on instances.
-	 *
-	 * The members in the hash map will become members with
-	 * instances of the merged class.
-	 *
-	 * By default, this method will not override existing prototype members,
-	 * unless the second argument `force` is true.
-	 *
-	 * @method mergePrototypes
-	 * @param map {Object} Hash map of properties to add to the prototype of this object
-	 * @param force {Boolean}  If true, existing members will be overwritten
-	 * @chainable
-	 */
-	mergePrototypes: function (map, force) {
-		var instance = this,
-		    proto = instance.prototype,
-		    names = Object.keys(map || {}),
-			l = names.length,
-			i = -1,
-			name, nameInProto;
-		while (++i < l) {
-			name = names[i];
-			nameInProto = (name in proto);
-			if (!nameInProto || force) {
-				// if nameInProto: set the property, but also backup for chaining using $orig
-				if (typeof map[name] === 'function') {
-/*jshint -W083 */
-					proto[name] = (function (original, methodName) {
-						return function () {
-/*jshint +W083 */
-							instance.$orig[methodName] = original;
-							return map[methodName].apply(this, arguments);
-						};
-					})(proto[name] || NOOP, name);
-				}
-				else {
-					proto[name] = map[name];
-				}
-			}
-		}
-		return instance;
-	},
-
-	/**
-	 * Returns a newly created class inheriting from this class
-	 * using the given `constructor` with the
-	 * prototypes listed in `prototypes` merged in.
-	 *
-	 *
-	 * The newly created class has the `$super` static property
-	 * available to access all of is ancestor's instance methods.
-	 *
-	 * Further methods can be added via the [mergePrototypes](#method_mergePrototypes).
-	 *
-	 * @example
-	 *
-	 * 	var Circle = Shape.subClass(
-	 * 		function (x, y, r) {
-	 * 			this.r = r;
-	 * 			Circle.$super.constructor.call(this, x, y);
-	 * 		},
-	 * 		{
-	 * 			area: function () {
-	 * 				return this.r * this.r * Math.PI;
-	 * 			}
-	 * 		}
-	 * 	);
-	 *
-	 * @method subClass
-	 * @param [constructor] {Function} The function that will serve as constructor for the new class.
-	 *        If `undefined` defaults to `Object.constructor`
-	 * @param [prototypes] {Object} Hash map of properties to be added to the prototype of the new class.
-	 * @return the new class.
-	 */
-	subClass: function (constructor, prototypes) {
-
-		if ((arguments.length === 1) && (typeof constructor !== 'function')) {
-			prototypes = constructor;
-			constructor = null;
-		}
-
-
-		constructor = constructor || function (ancestor) {
-			return function () {
-				ancestor.apply(this, arguments);
-			};
-		}(this);
-
-
-		var baseProt = this.prototype,
-			rp = Object.create(baseProt);
-		constructor.prototype = rp;
-
-		rp.constructor = constructor;
-		constructor.$super = baseProt;
-		constructor.$orig = {};
-
-		constructor.mergePrototypes(prototypes, true);
-		return constructor;
-	},
-
-	/**
-	 * Sets the context of which the function will be execute. in the
-	 * supplied object's context, optionally adding any additional
-	 * supplied parameters to the end of the arguments the function
-	 * is executed with.
-	 *
-	 * @method rbind
-	 * @param [context] {Object} the execution context.
-	 *        The value is ignored if the bound function is constructed using the new operator.
-	 * @param [args*] {any} args* 0..n arguments to append to the end of
-	 *        arguments collection supplied to the function.
-	 * @return {function} the wrapped function.
-	 */
-	rbind: function (context /*, args* */ ) {
-		var thisFunction = this,
-			arrayArgs,
-			slice = Array.prototype.slice;
-		context || (context = this);
-		if (arguments.length > 1) {
-			// removing `context` (first item) by slicing it out:
-			arrayArgs = slice.call(arguments, 1);
-		}
-
-		return (arrayArgs ?
-			function () {
-				// over here, `arguments` will be the "new" arguments when the final function is called!
-				return thisFunction.apply(context, slice.call(arguments, 0).concat(arrayArgs));
-			} :
-			function () {
-				// over here, `arguments` will be the "new" arguments when the final function is called!
-				return thisFunction.apply(context, arguments);
-			}
-		);
-	}
-});
-
-/**
- * Returns a base class with the given constructor and prototype methods
- *
- * @for Object
- * @method createClass
- * @param [constructor] {Function} constructor for the class
- * @param [prototype] {Object} Hash map of prototype members of the new class
- * @return {Function} the new class
-*/
-defineProperty(Object.prototype, 'createClass', function () {
-	return Function.prototype.subClass.apply(this, arguments);
-});
-},{"polyfill/polyfill-base.js":15}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 /**
  *
  * Pollyfils for often used functionality for Objects
@@ -2454,7 +2862,8 @@ defineProperty(Object.prototype, 'createClass', function () {
 
 require('polyfill/polyfill-base.js');
 
-var TYPES = {
+var createHashMap = require('js-ext/extra/hashmap.js').createMap,
+    TYPES = createHashMap({
        'undefined' : true,
        'number' : true,
        'boolean' : true,
@@ -2465,72 +2874,71 @@ var TYPES = {
        '[object Date]' : true,
        '[object Error]' : true,
        '[object Promise]' : true
-   },
-
-// Define configurable, writable and non-enumerable props
-// if they don't exist.
-defineProperty = function (object, name, method, force) {
-    if (!force && (name in object)) {
-        return;
-    }
-    Object.defineProperty(object, name, {
-        configurable: true,
-        enumerable: false,
-        writable: true,
-        value: method
-    });
-},
-defineProperties = function (object, map, force) {
-    var names = Object.keys(map),
-        l = names.length,
-        i = -1,
-        name;
-    while (++i < l) {
-        name = names[i];
-        defineProperty(object, name, map[name], force);
-    }
-},
-
-_each = function (obj, fn, context) {
-    var keys = Object.keys(obj),
-        l = keys.length,
-        i = -1,
-        key;
-    while (++i < l) {
-        key = keys[i];
-        fn.call(context, obj[key], key, obj);
-    }
-    return obj;
-},
-
-cloneObj = function(obj) {
-    var copy, i, len, value;
-
-    // Handle Array
-    if (obj instanceof Array) {
-        copy = [];
-        len = obj.length;
-        for (i=0; i<len; i++) {
-            value = obj[i];
-            copy[i] = ((value===null) || (typeof value!=='object')) ? value : cloneObj(value);
+    }),
+    // Define configurable, writable and non-enumerable props
+    // if they don't exist.
+    defineProperty = function (object, name, method, force) {
+        if (!force && (name in object)) {
+            return;
         }
+        Object.defineProperty(object, name, {
+            configurable: true,
+            enumerable: false,
+            writable: true,
+            value: method
+        });
+    },
+    defineProperties = function (object, map, force) {
+        var names = Object.keys(map),
+            l = names.length,
+            i = -1,
+            name;
+        while (++i < l) {
+            name = names[i];
+            defineProperty(object, name, map[name], force);
+        }
+    },
+
+    _each = function (obj, fn, context) {
+        var keys = Object.keys(obj),
+            l = keys.length,
+            i = -1,
+            key;
+        while (++i < l) {
+            key = keys[i];
+            fn.call(context, obj[key], key, obj);
+        }
+        return obj;
+    },
+
+    cloneObj = function(obj, descriptors) {
+        var copy, i, len, value;
+
+        // Handle Array
+        if (obj instanceof Array) {
+            copy = [];
+            len = obj.length;
+            for (i=0; i<len; i++) {
+                value = obj[i];
+                copy[i] = ((value===null) || (typeof value!=='object')) ? value : cloneObj(value, descriptors);
+            }
+            return copy;
+        }
+
+        // Handle Date
+        if (obj instanceof Date) {
+            copy = new Date();
+            copy.setTime(obj.getTime());
+            return copy;
+        }
+
+        // Handle Object
+        else if (obj instanceof Object) {
+            copy = obj.deepClone(descriptors);
+        }
+
         return copy;
-    }
-
-    // Handle Date
-    if (obj instanceof Date) {
-        copy = new Date();
-        copy.setTime(obj.getTime());
-        return copy;
-    }
-
-    // Handle Object
-    else if (obj instanceof Object) {
-        copy = obj.deepClone();
-    }
-
-    return copy;
-};
+    };
 
 /**
  * Pollyfils for often used functionality for objects
@@ -2624,7 +3032,7 @@ defineProperties(Object.prototype, {
         return m;
     },
     /**
-     * Returns the keys of the object.
+     * Returns the keys of the object: the enumerable properties.
      *
      * @method keys
      * @return {Array} Keys of the object
@@ -2632,6 +3040,17 @@ defineProperties(Object.prototype, {
     keys: function () {
         return Object.keys(this);
     },
+    /**
+     * Checks whether the given property is a key: an enumerable property.
+     *
+     * @method hasKey
+     * @param property {String} the property to check for
+     * @return {Boolean} Keys of the object
+     */
+    hasKey: function (property) {
+        return this.hasOwnProperty(property) && this.propertyIsEnumerable(property);
+    },
+
     /**
      * Returns the number of keys of the object
      *
@@ -2680,17 +3099,30 @@ defineProperties(Object.prototype, {
      * Fast, mostly useful for plain hash maps.
      *
      * @method shallowClone
+     * @param [options.descriptors=false] {Boolean} If true, the full descriptors will be set. This takes more time, but avoids any info to be lost.
      * @return {Object} shallow copy of the original
      */
-    shallowClone: function () {
-        var m = {},
-            keys = Object.keys(this),
+    shallowClone: function (descriptors) {
+        var instance = this,
+            m = Object.create(Object.getPrototypeOf(instance)),
+            keys = Object.getOwnPropertyNames(instance),
             l = keys.length,
             i = -1,
-            key;
+            key, propDescriptor;
         while (++i < l) {
             key = keys[i];
-            m[key] = this[key];
+            if (descriptors) {
+                propDescriptor = Object.getOwnPropertyDescriptor(instance, key);
+                if (!propDescriptor.writable) {
+                    m[key] = instance[key];
+                }
+                else {
+                    Object.defineProperty(m, key, propDescriptor);
+                }
+            }
+            else {
+                m[key] = instance[key];
+            }
         }
         return m;
     },
@@ -2712,25 +3144,42 @@ defineProperties(Object.prototype, {
     /**
      * Returns a deep copy of the object.
      * Only handles members of primary types, Dates, Arrays and Objects.
+     * Will clone all the properties, also the non-enumerable.
      *
      * @method deepClone
+     * @param [descriptors=false] {Boolean} If true, the full descriptors will be set. This takes more time, but avoids any info to be lost.
+     * @param [proto] {Object} Another prototype for the new object.
      * @return {Object} deep-copy of the original
      */
-    deepClone: function () {
-        var m = {},
-            keys = Object.keys(this),
+    deepClone: function (descriptors, proto) {
+        var instance = this,
+            m = Object.create(proto || Object.getPrototypeOf(instance)),
+            keys = Object.getOwnPropertyNames(instance),
             l = keys.length,
             i = -1,
-            key, value;
+            key, value, propDescriptor;
         // loop through the members:
         while (++i < l) {
             key = keys[i];
-            value = this[key];
-            m[key] = ((value===null) || (typeof value!=='object')) ? value : cloneObj(value);
+            value = instance[key];
+            if (descriptors) {
+                propDescriptor = Object.getOwnPropertyDescriptor(instance, key);
+                if (propDescriptor.writable) {
+                    Object.defineProperty(m, key, propDescriptor);
+                }
+                else {
+                    m[key] = value;
+                }
+                if ((value!==null) && (typeof value==='object') && ((typeof propDescriptor.get)!=='function') && ((typeof propDescriptor.set)!=='function') ) {
+                    m[key] = cloneObj(value, true);
+                }
+            }
+            else {
+                m[key] = ((value===null) || (typeof value!=='object')) ? value : cloneObj(value);
+            }
         }
         return m;
     },
-
     /**
      * Transforms the object into an array with  'key/value' objects
      *
@@ -2763,18 +3212,44 @@ defineProperties(Object.prototype, {
      *
      * @method merge
      * @param obj {Object} Object with the properties to be added to the original object
-     * @param force {Boolean} If true, the properties in `obj` will override those of the same name
+     * @param [options] {Object}
+     * @param [options.force=false] {Boolean} If true, the properties in `obj` will override those of the same name
      *        in the original object
+     * @param [options.full=false] {Boolean} If true, also any non-enumerable properties will be merged
+     * @param [options.descriptors=false] {Boolean} If true, the full descriptors will be set. This takes more time, but avoids any info to be lost.
      * @chainable
      */
-    merge: function (obj, force) {
-        var m = this;
-        if (obj && obj.each) obj.each(function (value, key) {
-            if (force || !(key in m)) {
-                m[key] = obj[key];
+    merge: function (obj, options) {
+        var instance = this,
+            i = -1,
+            keys, l, key, force, descriptors, propDescriptor;
+        if (!Object.isObject(obj)) {
+            return instance;
+        }
+        options || (options={});
+        keys = options.full ? Object.getOwnPropertyNames(obj) : Object.keys(obj);
+        l = keys.length;
+        force = options.force;
+        descriptors = options.descriptors;
+        // we cannot use obj.each --> obj might be an object defined through Object.create(null) and missing Object.prototype!
+        while (++i < l) {
+            key = keys[i];
+            if (force || !(key in instance)) {
+                if (descriptors) {
+                    propDescriptor = Object.getOwnPropertyDescriptor(obj, key);
+                    if (!propDescriptor.writable) {
+                        instance[key] = obj[key];
+                    }
+                    else {
+                        Object.defineProperty(instance, key, propDescriptor);
+                    }
+                }
+                else {
+                    instance[key] = obj[key];
+                }
             }
-        });
-        return m;
+        }
+        return instance;
     }
 
 });
@@ -2829,7 +3304,7 @@ Object.merge = function () {
     });
     return m;
 };
-},{"polyfill/polyfill-base.js":15}],13:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":12,"polyfill/polyfill-base.js":16}],14:[function(require,module,exports){
 (function (global){
 // based upon https://gist.github.com/jonathantneal/3062955
 (function (global) {
@@ -2853,7 +3328,7 @@ Object.merge = function () {
 
 }(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 (function (global){
 (function (global) {
     "use strict";
@@ -2872,16 +3347,18 @@ Object.merge = function () {
     module.exports = CONSOLE;
 }(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 require('./lib/window.console.js');
 require('./lib/matchesselector.js');
-},{"./lib/matchesselector.js":13,"./lib/window.console.js":14}],16:[function(require,module,exports){
-module.exports=require(13)
-},{}],17:[function(require,module,exports){
+},{"./lib/matchesselector.js":14,"./lib/window.console.js":15}],17:[function(require,module,exports){
 module.exports=require(14)
 },{}],18:[function(require,module,exports){
 module.exports=require(15)
-},{"./lib/matchesselector.js":16,"./lib/window.console.js":17}],19:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":17,"./lib/window.console.js":18}],20:[function(require,module,exports){
+module.exports=require(12)
+},{}],21:[function(require,module,exports){
 /**
  *
  * Pollyfils for often used functionality for Arrays
@@ -3032,9 +3509,9 @@ var cloneObj = function(obj) {
      };
 
 }(Array.prototype));
-},{"polyfill/polyfill-base.js":24}],20:[function(require,module,exports){
-module.exports=require(12)
-},{"polyfill/polyfill-base.js":24}],21:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":26}],22:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":20,"polyfill/polyfill-base.js":26}],23:[function(require,module,exports){
 /**
  *
  * Pollyfils for often used functionality for Strings
@@ -3091,9 +3568,10 @@ module.exports=require(12)
      * @param [caseInsensitive=false] {Boolean} whether to ignore case-sensivity
      * @return {Boolean} whether the string ends with `test`
      */
-    String.endsWith || (StringPrototype.endsWith=function(test, caseInsensitive) {
+     // NOTE: we ALWAYS set this method --> ES6 native `startsWiths` lacks the second argument
+    StringPrototype.endsWith=function(test, caseInsensitive) {
         return (new RegExp(test+'$', caseInsensitive ? 'i': '')).test(this);
-    });
+    };
 
     /**
      * Checks if the string can be parsed into a number when using `parseInt()`
@@ -3116,9 +3594,10 @@ module.exports=require(12)
      * @param [caseInsensitive=false] {Boolean} whether to ignore case-sensivity
      * @return {Boolean} whether the string starts with `test`
      */
-    String.startsWith || (StringPrototype.startsWith=function(test, caseInsensitive) {
+     // NOTE: we ALWAYS set this method --> ES6 native `startsWiths` lacks the second argument
+    StringPrototype.startsWith=function(test, caseInsensitive) {
         return (new RegExp('^'+test, caseInsensitive ? 'i': '')).test(this);
-    });
+    };
 
     /**
      * Performs `{placeholder}` substitution on a string. The object passed
@@ -3266,19 +3745,19 @@ module.exports=require(12)
 
 }(String.prototype));
 
-},{}],22:[function(require,module,exports){
-module.exports=require(13)
-},{}],23:[function(require,module,exports){
-module.exports=require(14)
 },{}],24:[function(require,module,exports){
-module.exports=require(15)
-},{"./lib/matchesselector.js":22,"./lib/window.console.js":23}],25:[function(require,module,exports){
-module.exports=require(13)
-},{}],26:[function(require,module,exports){
 module.exports=require(14)
-},{}],27:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 module.exports=require(15)
-},{"./lib/matchesselector.js":25,"./lib/window.console.js":26}],28:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":24,"./lib/window.console.js":25}],27:[function(require,module,exports){
+module.exports=require(14)
+},{}],28:[function(require,module,exports){
+module.exports=require(15)
+},{}],29:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":27,"./lib/window.console.js":28}],30:[function(require,module,exports){
 module.exports = {
 	idGenerator: require('./lib/idgenerator.js').idGenerator,
     later: require('./lib/timers.js').later,
@@ -3286,13 +3765,14 @@ module.exports = {
     async: require('./lib/timers.js').async,
     asyncSilent: require('./lib/timers.js').asyncSilent
 };
-},{"./lib/idgenerator.js":29,"./lib/timers.js":30}],29:[function(require,module,exports){
+},{"./lib/idgenerator.js":31,"./lib/timers.js":32}],31:[function(require,module,exports){
 "use strict";
 
 require('polyfill/polyfill-base.js');
 
-var UNDEFINED_NS = '__undefined__';
-var namespaces = {};
+var UNDEFINED_NS = '__undefined__',
+    createHashMap = require('js-ext/extra/hashmap.js').createMap,
+    namespaces = createHashMap();
 
 /**
  * Collection of various utility functions.
@@ -3343,7 +3823,7 @@ module.exports.idGenerator = function(namespace, start) {
 	return (namespace===UNDEFINED_NS) ? namespaces[namespace]++ : namespace+'-'+namespaces[namespace]++;
 };
 
-},{"polyfill/polyfill-base.js":33}],30:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":20,"polyfill/polyfill-base.js":35}],32:[function(require,module,exports){
 (function (global){
 /**
  * Collection of various utility functions.
@@ -3553,15 +4033,19 @@ module.exports.idGenerator = function(namespace, start) {
 }(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"polyfill/polyfill-base.js":33}],31:[function(require,module,exports){
-module.exports=require(13)
-},{}],32:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":35}],33:[function(require,module,exports){
 module.exports=require(14)
-},{}],33:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 module.exports=require(15)
-},{"./lib/matchesselector.js":31,"./lib/window.console.js":32}],34:[function(require,module,exports){
-var css = "var css = \".itsa-notrans, .itsa-notrans2,\\n.itsa-notrans:before, .itsa-notrans2:before,\\n.itsa-notrans:after, .itsa-notrans2:after {\\n    -webkit-transition: none !important;\\n    -moz-transition: none !important;\\n    -ms-transition: none !important;\\n    -o-transition: all 0s !important; /* opera doesn't support none */\\n    transition: none !important;\\n}\\n\\n.itsa-no-overflow {\\n    overflow: hidden !important;\\n}\\n\\n.itsa-invisible {\\n    position: absolute !important;\\n}\\n\\n.itsa-invisible-relative {\\n    position: relative !important;\\n}\\n\\n/* don't set visibility to hidden --> you cannot set a focus on those items */\\n.itsa-invisible,\\n.itsa-invisible-relative {\\n    opacity: 0 !important;\\n}\\n\\n.itsa-invisible *,\\n.itsa-invisible-relative * {\\n    opacity: 0 !important;\\n}\\n\\n.itsa-transparent {\\n    opacity: 0;\\n}\\n\\n/* don't set visibility to hidden --> you cannot set a focus on those items */\\n.itsa-hidden {\\n    opacity: 0 !important;\\n    position: absolute !important;\\n    left: -9999px !important;\\n    top: -9999px !important;\\n    z-index: -9;\\n}\\n\\n.itsa-hidden * {\\n    opacity: 0 !important;\\n}\\n\\n.itsa-block {\\n    display: block !important;\\n}\\n\\n.itsa-borderbox {\\n    -webkit-box-sizing: border-box;\\n    -moz-box-sizing: border-box;\\n    box-sizing: border-box;\\n}\"; (require(\"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify\"))(css); module.exports = css;"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],35:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":33,"./lib/window.console.js":34}],36:[function(require,module,exports){
+var css = ".itsa-notrans, .itsa-notrans2,\n.itsa-notrans:before, .itsa-notrans2:before,\n.itsa-notrans:after, .itsa-notrans2:after {\n    -webkit-transition: none !important;\n    -moz-transition: none !important;\n    -ms-transition: none !important;\n    -o-transition: all 0s !important; /* opera doesn't support none */\n    transition: none !important;\n}\n\n.itsa-no-overflow {\n    overflow: hidden !important;\n}\n\n.itsa-invisible {\n    position: absolute !important;\n}\n\n.itsa-invisible-relative {\n    position: relative !important;\n}\n\n/* don't set visibility to hidden --> you cannot set a focus on those items */\n.itsa-invisible,\n.itsa-invisible *,\n.itsa-invisible-relative,\n.itsa-invisible-relative * {\n    opacity: 0 !important;\n}\n\n/* don't set visibility to hidden --> you cannot set a focus on those items */\n.itsa-invisible-unfocusable,\n.itsa-invisible-unfocusable * {\n    visibility: hidden !important;\n}\n\n.itsa-transparent {\n    opacity: 0;\n}\n\n/* don't set visibility to hidden --> you cannot set a focus on those items */\n.itsa-hidden {\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -9;\n}\n\n.itsa-hidden * {\n    opacity: 0 !important;\n}\n\n.itsa-block {\n    display: block !important;\n}\n\n.itsa-borderbox {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],37:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":41,"js-ext/extra/hashmap.js":38,"polyfill/polyfill-base.js":47}],38:[function(require,module,exports){
+module.exports=require(12)
+},{}],39:[function(require,module,exports){
 (function (global){
 /**
  *
@@ -3575,18 +4059,30 @@ var css = "var css = \".itsa-notrans, .itsa-notrans2,\\n.itsa-notrans:before, .i
  * @class String
  *
  */
+
+
 (function (global) {
 
-    "use strict";
+"use strict";
 
-    require('../lib/function.js');
+var LightMap, Classes,
+    createHashMap = require('js-ext/extra/hashmap.js').createMap;
+
+    global._ITSAmodules || Object.protectedProp(global, '_ITSAmodules', createHashMap());
+
+/*jshint boss:true */
+    if (LightMap=global._ITSAmodules.LightMap) {
+/*jshint boss:false */
+        module.exports = LightMap; // LightMap was already created
+        return;
+    }
+
     require('../lib/array.js');
     require('../lib/object.js');
     require('polyfill/lib/weakmap.js');
+    Classes = require("./classes.js");
 
-    var LightMap;
-
-    global.LightMap = LightMap = Object.createClass(
+    global._ITSAmodules.LightMap = LightMap = Classes.createClass(
         function() {
             Object.protectedProp(this, '_array', []);
             Object.protectedProp(this, '_map', new global.WeakMap());
@@ -3642,6 +4138,9 @@ var css = "var css = \".itsa-notrans, .itsa-notrans2,\\n.itsa-notrans:before, .i
                 array.contains(key) || array.push(key);
                 return instance;
             },
+            size: function () {
+                return this._array.length;
+            },
             'delete': function (key) {
                 var instance = this,
                     array = instance._array,
@@ -3654,15 +4153,15 @@ var css = "var css = \".itsa-notrans, .itsa-notrans2,\\n.itsa-notrans:before, .i
         }
     );
 
+    module.exports = LightMap;
+
 }(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../lib/array.js":36,"../lib/function.js":37,"../lib/object.js":38,"polyfill/lib/weakmap.js":42}],36:[function(require,module,exports){
-module.exports=require(19)
-},{"polyfill/polyfill-base.js":44}],37:[function(require,module,exports){
-module.exports=require(11)
-},{"polyfill/polyfill-base.js":44}],38:[function(require,module,exports){
-module.exports=require(12)
-},{"polyfill/polyfill-base.js":44}],39:[function(require,module,exports){
+},{"../lib/array.js":40,"../lib/object.js":41,"./classes.js":37,"js-ext/extra/hashmap.js":38,"polyfill/lib/weakmap.js":45}],40:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":47}],41:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":38,"polyfill/polyfill-base.js":47}],42:[function(require,module,exports){
 "use strict";
 
 /**
@@ -3967,11 +4466,11 @@ Promise.manage = function (callbackFn) {
     return promise;
 };
 
-},{"polyfill":44}],40:[function(require,module,exports){
-module.exports=require(21)
-},{}],41:[function(require,module,exports){
-module.exports=require(13)
-},{}],42:[function(require,module,exports){
+},{"polyfill":47}],43:[function(require,module,exports){
+module.exports=require(23)
+},{}],44:[function(require,module,exports){
+module.exports=require(14)
+},{}],45:[function(require,module,exports){
 (function (global){
 // based upon https://gist.github.com/Gozala/1269991
 
@@ -4081,11 +4580,34 @@ module.exports=require(13)
 
 }(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],43:[function(require,module,exports){
-module.exports=require(14)
-},{}],44:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 module.exports=require(15)
-},{"./lib/matchesselector.js":41,"./lib/window.console.js":43}],45:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":44,"./lib/window.console.js":46}],48:[function(require,module,exports){
+"use strict";
+
+var merge = function (source, target) {
+        var keys = Object.keys(source),
+            l = keys.length,
+            i = -1,
+            key;
+        while (++i < l) {
+            key = keys[i];
+            target[key] = source[key];
+        }
+    },
+    hashMap = function(members) {
+        // important to set the prototype to `null` --> this will exclude any Object.prototype members
+        var obj = Object.create(null);
+        merge(members, obj);
+        return obj;
+    };
+
+module.exports = {
+    createMap: hashMap
+};
+},{}],49:[function(require,module,exports){
 "use strict";
 
 /*
@@ -4093,6 +4615,9 @@ module.exports=require(15)
  *
  * `transform`, `-webkit-transform`, `-moz-transform`, `-ms-transform`, `-o-transform` or `undefined` when not supported
  */
+
+// CAUTIOUS: need a copy of hashmap --> we cannot use js-ext/extra/hashap.js for that would lead to circular references!
+var createHashMap = require('../bin/local-hashmap.js').createMap;
 
 module.exports = function (window) {
 
@@ -4102,7 +4627,7 @@ module.exports = function (window) {
             configurable: false,
             enumerable: false,
             writable: false,
-            value: {} // `writable` is false means we cannot chance the value-reference, but we can change {} its members
+            value: createHashMap() // `writable` is false means we cannot chance the value-reference, but we can change {} its members
         });
     }
 
@@ -4135,8 +4660,11 @@ module.exports = function (window) {
 
     return transition;
 };
-},{}],46:[function(require,module,exports){
+},{"../bin/local-hashmap.js":48}],50:[function(require,module,exports){
 "use strict";
+
+// CAUTIOUS: need a copy of hashmap --> we cannot use js-ext/extra/hashap.js for that would lead to circular references!
+var createHashMap = require('../bin/local-hashmap.js').createMap;
 
 module.exports = function (window) {
 
@@ -4146,7 +4674,7 @@ module.exports = function (window) {
             configurable: false,
             enumerable: false,
             writable: false,
-            value: {} // `writable` is false means we cannot chance the value-reference, but we can change {} its members
+            value: createHashMap() // `writable` is false means we cannot chance the value-reference, but we can change {} its members
         });
     }
 
@@ -4177,7 +4705,7 @@ module.exports = function (window) {
 
     return transitionEnd;
 };
-},{}],47:[function(require,module,exports){
+},{"../bin/local-hashmap.js":48}],51:[function(require,module,exports){
 (function (global){
 "use strict";
 
@@ -4192,7 +4720,9 @@ var toCamelCase = function(input) {
             return group.toUpperCase();
         });
     },
-    UNDEFINED = 'undefined';
+    UNDEFINED = 'undefined',
+    // CAUTIOUS: need a copy of hashmap --> we cannot use js-ext/extra/hashap.js for that would lead to circular references!
+    createHashMap = require('../bin/local-hashmap.js').createMap;
 
 module.exports = function (window) {
 
@@ -4202,7 +4732,7 @@ module.exports = function (window) {
             configurable: false,
             enumerable: false,
             writable: false,
-            value: {} // `writable` is false means we cannot chance the value-reference, but we can change {} its members
+            value: createHashMap() // `writable` is false means we cannot chance the value-reference, but we can change {} its members
         });
     }
 
@@ -4246,38 +4776,39 @@ module.exports = function (window) {
     return vendorCSS;
 };
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],48:[function(require,module,exports){
-module.exports=require(13)
-},{}],49:[function(require,module,exports){
+},{"../bin/local-hashmap.js":48}],52:[function(require,module,exports){
 module.exports=require(14)
-},{}],50:[function(require,module,exports){
+},{}],53:[function(require,module,exports){
 module.exports=require(15)
-},{"./lib/matchesselector.js":48,"./lib/window.console.js":49}],51:[function(require,module,exports){
-module.exports=require(28)
-},{"./lib/idgenerator.js":52,"./lib/timers.js":53}],52:[function(require,module,exports){
-module.exports=require(29)
-},{"polyfill/polyfill-base.js":56}],53:[function(require,module,exports){
+},{}],54:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":52,"./lib/window.console.js":53}],55:[function(require,module,exports){
 module.exports=require(30)
-},{"polyfill/polyfill-base.js":56}],54:[function(require,module,exports){
-module.exports=require(13)
-},{}],55:[function(require,module,exports){
+},{"./lib/idgenerator.js":56,"./lib/timers.js":57}],56:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":38,"polyfill/polyfill-base.js":60}],57:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":60}],58:[function(require,module,exports){
 module.exports=require(14)
-},{}],56:[function(require,module,exports){
+},{}],59:[function(require,module,exports){
 module.exports=require(15)
-},{"./lib/matchesselector.js":54,"./lib/window.console.js":55}],57:[function(require,module,exports){
+},{}],60:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":58,"./lib/window.console.js":59}],61:[function(require,module,exports){
 "use strict";
 
 module.exports = function (window) {
     require('./lib/sizes.js')(window);
 };
-},{"./lib/sizes.js":58}],58:[function(require,module,exports){
+},{"./lib/sizes.js":62}],62:[function(require,module,exports){
 "use strict";
 
 require('js-ext/lib/object.js');
+var createHashMap = require('js-ext/extra/hashmap.js').createMap;
 
 module.exports = function (window) {
 
-    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', {});
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
 
     if (window._ITSAmodules.WindowSizes) {
         return; // WindowSizes was already created
@@ -4373,15 +4904,17 @@ module.exports = function (window) {
     };
 
 };
-},{"js-ext/lib/object.js":59}],59:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":63,"js-ext/lib/object.js":64}],63:[function(require,module,exports){
 module.exports=require(12)
-},{"polyfill/polyfill-base.js":62}],60:[function(require,module,exports){
+},{}],64:[function(require,module,exports){
 module.exports=require(13)
-},{}],61:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":63,"polyfill/polyfill-base.js":67}],65:[function(require,module,exports){
 module.exports=require(14)
-},{}],62:[function(require,module,exports){
+},{}],66:[function(require,module,exports){
 module.exports=require(15)
-},{"./lib/matchesselector.js":60,"./lib/window.console.js":61}],63:[function(require,module,exports){
+},{}],67:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":65,"./lib/window.console.js":66}],68:[function(require,module,exports){
 "use strict";
 
 /**
@@ -4401,19 +4934,21 @@ require('js-ext/lib/string.js');
 require('js-ext/lib/object.js');
 require('polyfill');
 
+var createHashMap = require('js-ext/extra/hashmap.js').createMap;
+
 module.exports = function (window) {
 
-    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', {});
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
 
     if (window._ITSAmodules.AttributeExtractor) {
         return window._ITSAmodules.AttributeExtractor; // AttributeExtractor was already created
     }
 
     var SUPPORT_INLINE_PSEUDO_STYLES = false, // current browsers don't support this. When tey do, set this value `true`
-        END_OF_VALUE = {
+        END_OF_VALUE = createHashMap({
             ';': true,
             '}': true
-        },
+        }),
         VENDOR_CSS = require('polyfill/extra/vendorCSS.js')(window),
         generateVendorCSSProp = VENDOR_CSS.generator,
         VENDOR_CSS_PROPERTIES = VENDOR_CSS.cssProps,
@@ -4677,7 +5212,7 @@ module.exports = function (window) {
     return extractor;
 
 };
-},{"js-ext/lib/object.js":38,"js-ext/lib/string.js":40,"polyfill":50,"polyfill/extra/transition.js":45,"polyfill/extra/vendorCSS.js":47}],64:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":38,"js-ext/lib/object.js":41,"js-ext/lib/string.js":43,"polyfill":54,"polyfill/extra/transition.js":49,"polyfill/extra/vendorCSS.js":51}],69:[function(require,module,exports){
 "use strict";
 
 /**
@@ -4698,9 +5233,11 @@ module.exports = function (window) {
 require('polyfill');
 require('js-ext/lib/object.js');
 
+var createHashMap = require('js-ext/extra/hashmap.js').createMap;
+
 module.exports = function (window) {
 
-    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', {});
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
 
     if (window._ITSAmodules.ElementArray) {
         return window._ITSAmodules.ElementArray; // ElementArray was already created
@@ -5103,7 +5640,7 @@ module.exports = function (window) {
 
     return ElementArray;
 };
-},{"js-ext/lib/object.js":38,"polyfill":50}],65:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":38,"js-ext/lib/object.js":41,"polyfill":54}],70:[function(require,module,exports){
 "use strict";
 
 /**
@@ -5125,7 +5662,8 @@ require('js-ext/lib/object.js');
 require('js-ext/lib/string.js');
 require('polyfill');
 
-var fromCamelCase = function(input) {
+var createHashMap = require('js-ext/extra/hashmap.js').createMap,
+    fromCamelCase = function(input) {
         return input.replace(/[a-z]([A-Z])/g, function(match, group) {
             return match[0]+'-'+group.toLowerCase();
         });
@@ -5133,7 +5671,7 @@ var fromCamelCase = function(input) {
 
 module.exports = function (window) {
 
-    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', {});
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
 
     if (window._ITSAmodules.ElementPlugin) {
         return window._ITSAmodules.ElementPlugin; // ElementPlugin was already created
@@ -5187,7 +5725,7 @@ module.exports = function (window) {
         setup: function (hostElement, config) {
             var instance = this,
                 attrs = instance.defaults.shallowClone();
-            attrs.merge(config, true);
+            attrs.merge(config, {force: true});
             attrs.each(
                 function(value, key) {
                     key = fromCamelCase(key);
@@ -5235,7 +5773,7 @@ module.exports = function (window) {
 
     return ElementPlugin;
 };
-},{"js-ext/lib/object.js":38,"js-ext/lib/string.js":40,"polyfill":50}],66:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":38,"js-ext/lib/object.js":41,"js-ext/lib/string.js":43,"polyfill":54}],71:[function(require,module,exports){
 "use strict";
 
 /**
@@ -5256,9 +5794,11 @@ require('polyfill');
 require('js-ext/lib/object.js');
 require('js-ext/lib/string.js');
 
+var createHashMap = require('js-ext/extra/hashmap.js').createMap;
+
 module.exports = function (window) {
 
-    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', {});
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
 
     if (window._ITSAmodules.ExtendDocument) {
         return; // ExtendDocument was already created
@@ -5344,21 +5884,21 @@ module.exports = function (window) {
     };
 
     /**
-     * Returns the an Array with all Elements that have a tagName `i-parcel-*`
+     * Returns the an Array with all itag-Elements
      *
-     * @method getParcels
+     * @method getItags
      * @return {Array}
      *
      */
-    DOCUMENT.getParcels = function() {
+    DOCUMENT.getItags = function() {
         var instance = this,
             findChildren;
-        // i-parcel elements can only exists when the window.ITAGS are defined (by itags.core)
+        // i-tag elements can only exists when the window.ITAGS are defined (by itags.core)
         if (!window.ITAGS) {
             return [];
         }
-        if (instance._parcelList) {
-            return instance._parcelList;
+        if (instance._itagList) {
+            return instance._itagList;
         }
         // when not returned: it would be the first time --> we setup the current list
         // the quickest way is by going through the vdom and inspect the tagNames ourselves:
@@ -5368,13 +5908,13 @@ module.exports = function (window) {
                 i, vChild;
             for (i=0; i<len; i++) {
                 vChild = vChildren[i];
-                vChild.tag.startsWith('I-PARCEL-') && (DOCUMENT._parcelList[DOCUMENT._parcelList.length]=vChild.domNode);
+                vChild.isItag && (DOCUMENT._itagList[DOCUMENT._itagList.length]=vChild.domNode);
                 findChildren(vChild);
             }
         };
-        Object.protectedProp(instance, '_parcelList', []);
+        Object.protectedProp(instance, '_itagList', []);
         findChildren(instance.getElement('body').vnode);
-        return instance._parcelList;
+        return instance._itagList;
     };
 
     /**
@@ -5945,7 +6485,7 @@ module.exports = function (window) {
 
 
 
-},{"./vdom-ns.js":70,"js-ext/lib/object.js":38,"js-ext/lib/string.js":40,"polyfill":50}],67:[function(require,module,exports){
+},{"./vdom-ns.js":75,"js-ext/extra/hashmap.js":38,"js-ext/lib/object.js":41,"js-ext/lib/string.js":43,"polyfill":54}],72:[function(require,module,exports){
 (function (global){
 "use strict";
 
@@ -5970,9 +6510,11 @@ require('js-ext/lib/string.js');
 require('js-ext/lib/promise.js');
 require('polyfill');
 
+var createHashMap = require('js-ext/extra/hashmap.js').createMap;
+
 module.exports = function (window) {
 
-    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', {});
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
 
     if (window._ITSAmodules.ExtendElement) {
         return; // ExtendElement was already created
@@ -6016,6 +6558,7 @@ module.exports = function (window) {
         NO_TRANS2 = NO_TRANS+'2', // needed to prevent removal of NO_TRANS when still needed `notrans`
         INVISIBLE = ITSA_+'invisible',
         INVISIBLE_RELATIVE = INVISIBLE+'-relative',
+        INVISIBLE_UNFOCUSABLE = INVISIBLE+'-unfocusable',
         HIDDEN = ITSA_+'hidden',
         REGEXP_NODE_ID = /^#\S+$/,
         LEFT = 'left',
@@ -6040,15 +6583,16 @@ module.exports = function (window) {
         REMOVE = 'remove',
         _STARTSTYLE = '_startStyle',
         setupObserver,
-        SIBLING_MATCH_CHARACTER = {
+        SIBLING_MATCH_CHARACTER = createHashMap({
             '+': true,
             '~': true
-        },
-        NON_CLONABLE_STYLES = {
+        }),
+        NON_CLONABLE_STYLES = createHashMap({
             absolute: true,
             hidden: true,
             block: true
-        },
+        }),
+        // CSS_PROPS_TO_CALCULATE should not be a hashMap, but an object --> we need to iterate with .each
         CSS_PROPS_TO_CALCULATE = { // http://www.w3.org/TR/css3-transitions/#animatable-css
             backgroundColor: true,
             backgroundPositionX: true,
@@ -6096,8 +6640,8 @@ module.exports = function (window) {
             zIndex: true
         },
         // CSS_PROPS_TO_CALCULATE.transform is set later on by the vendor specific transform-property
-        htmlToVFragments = function(html) {
-            var vnodes = htmlToVNodes(html, vNodeProto),
+        htmlToVFragments = function(html, nameSpace) {
+            var vnodes = htmlToVNodes(html, vNodeProto, nameSpace),
                 len = vnodes.length,
                 vnode, i, bkpAttrs, bkpVChildNodes;
             for (i=0; i<len; i++) {
@@ -6437,7 +6981,7 @@ module.exports = function (window) {
 
             finalNode = node.cloneNode(true);
             finalNode.setClass(NO_TRANS2);
-            finalNode.setClass(INVISIBLE);
+            finalNode.setClass(INVISIBLE_UNFOCUSABLE);
             node.setData(bkpNodeData, finalNode);
 
             startStyle = node.getData(_STARTSTYLE);
@@ -6887,7 +7431,7 @@ module.exports = function (window) {
                 vRefElement = refElement.vnode.vNext;
                 refElement = vRefElement && vRefElement.domNode;
             }
-            (typeof content===STRING) && (content=htmlToVFragments(content));
+            (typeof content===STRING) && (content=htmlToVFragments(content, vnode.ns));
             if (content.isFragment) {
                 vnodes = content.vnodes;
                 len = vnodes.length;
@@ -7201,7 +7745,7 @@ module.exports = function (window) {
         * @since 0.0.2
         */
         ElementPrototype.forceIntoView = function(notransition, rectangle) {
-            // TODO: 'notransition' can be calculated with this.getTransition(left) this.getTransition(left) and this.getTransform(translateX) and this.getTransform(translateY)
+            // TODO: 'notransition' can be calculated with this.getTransition(left) this.getTransition(left)
             // TODO: transitioned: http://wibblystuff.blogspot.nl/2014/04/in-page-smooth-scroll-using-css3.html
             console.log(NAME, 'forceIntoView');
             var instance = this,
@@ -7802,7 +8346,7 @@ module.exports = function (window) {
 
             originalOpacity = instance.getData('_showNodeOpacity');
             if (!originalOpacity && !showPromise && !hidePromise) {
-                originalOpacity = instance.getInlineStyle('opacity');
+                originalOpacity = parseFloat(instance.getInlineStyle('opacity'));
                 instance.setData('_showNodeOpacity', originalOpacity);
             }
             hasOriginalOpacity = !!originalOpacity;
@@ -7912,6 +8456,17 @@ module.exports = function (window) {
         ElementPrototype._insertBefore = ElementPrototype.insertBefore;
         ElementPrototype.insertBefore = function(domNode, refDomNode, escape) {
             return this.prepend(domNode, escape, refDomNode);
+        };
+
+        /**
+         * Whether the element is an Itag-element
+         *
+         * @method isItag
+         * @return {Boolean}
+         * @since 0.0.1
+         */
+        ElementPrototype.isItag = function() {
+            return this.vnode.isItag;
         };
 
         /**
@@ -8029,7 +8584,7 @@ module.exports = function (window) {
                 vRefElement = vChildNodes && vChildNodes[0];
                 refElement = vRefElement && vRefElement.domNode;
             }
-            (typeof content===STRING) && (content=htmlToVFragments(content));
+            (typeof content===STRING) && (content=htmlToVFragments(content, vnode.ns));
             if (content.isFragment) {
                 vnodes = content.vnodes;
                 len = vnodes.length;
@@ -8207,9 +8762,7 @@ module.exports = function (window) {
         * @since 0.0.1
         */
         ElementPrototype.removeAttr = function(attributeName, silent) {
-            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
-            this.removeAttribute(attributeName);
-            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(false);
+            this.removeAttribute(attributeName, silent);
             return this;
         };
 
@@ -8229,11 +8782,9 @@ module.exports = function (window) {
         ElementPrototype.removeAttrs = function(attributeData, silent) {
             var instance = this;
             Array.isArray(attributeData) || (attributeData=[attributeData]);
-            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
             attributeData.forEach(function(item) {
-                instance.removeAttribute(item);
+                instance.removeAttribute(item, silent);
             });
-            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(false);
             return instance;
         };
 
@@ -8244,11 +8795,27 @@ module.exports = function (window) {
         *
         * @method removeAttr
         * @param attributeName {String}
+        * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
         * @since 0.0.1
         */
         ElementPrototype._removeAttribute = ElementPrototype.removeAttribute;
-        ElementPrototype.removeAttribute = function(attributeName) {
+        ElementPrototype.removeAttribute = function(attributeName, silent) {
+            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
             this.vnode._removeAttr(attributeName);
+            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(false);
+        };
+
+       /**
+         * Removes the attribute of the Elementinside a specified namespace
+         *
+         * @method removeAttributeNS
+         * @param nameSpace {String} the namespace where to attribuyte should be set in
+         * @param attributeName {String}
+         * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
+        */
+        ElementPrototype._removeAttributeNS = ElementPrototype.removeAttributeNS;
+        ElementPrototype.removeAttributeNS = function(nameSpace, attributeName, silent) {
+            this.removeAttribute((nameSpace ? nameSpace+':' : '')+attributeName, silent);
         };
 
         /**
@@ -8449,8 +9016,8 @@ module.exports = function (window) {
                 clonedElement = instance.cloneNode(true);
                 toStylesExact = vnodeStyles.deepClone();
                 clonedElement.vnode.styles = toStylesExact;
+                clonedElement.setClass(INVISIBLE_UNFOCUSABLE);
                 clonedElement.setAttr(STYLE, clonedElement.vnode.serializeStyles());
-                clonedElement.setClass(INVISIBLE);
                 DOCUMENT.body.append(clonedElement);
                 // clonedElement has `vnodeStyles`, but we change them into `toStylesExact`
 
@@ -8703,9 +9270,7 @@ module.exports = function (window) {
         */
         ElementPrototype.setAttr = function(attributeName, value, silent) {
             var instance = this;
-            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
-            instance.setAttribute(attributeName, value);
-            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(false);
+            instance.setAttribute(attributeName, value, silent);
             return instance;
         };
 
@@ -8717,13 +9282,30 @@ module.exports = function (window) {
          * @method setAttribute
          * @param attributeName {String}
          * @param value {String} the value for the attributeName
+         * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
         */
         ElementPrototype._setAttribute = ElementPrototype.setAttribute;
-        ElementPrototype.setAttribute = function(attributeName, value) {
+        ElementPrototype.setAttribute = function(attributeName, value, silent) {
             var instance = this,
                 vnode = instance.vnode;
             (value==='') && (value=null);
+            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
             ((value!==null) && (value!==undefined)) ? vnode._setAttr(attributeName, value) : vnode._removeAttr(attributeName);
+            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(false);
+        };
+
+       /**
+         * Sets the attribute on the Element with the specified value inside a specified namespace
+         *
+         * @method setAttributeNS
+         * @param nameSpace {String} the namespace where to attribuyte should be set in
+         * @param attributeName {String}
+         * @param value {String} the value for the attributeName
+         * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
+        */
+        ElementPrototype._setAttributeNS = ElementPrototype.setAttributeNS;
+        ElementPrototype.setAttributeNS = function(nameSpace, attributeName, value, silent) {
+            this.setAttribute((nameSpace ? nameSpace+':' : '')+attributeName, value, silent);
         };
 
        /**
@@ -8745,11 +9327,9 @@ module.exports = function (window) {
         ElementPrototype.setAttrs = function(attributeData, silent) {
             var instance = this;
             Array.isArray(attributeData) || (attributeData=[attributeData]);
-            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
             attributeData.forEach(function(item) {
-                instance.setAttribute(item.name, item.value);
+                instance.setAttribute(item.name, item.value, silent);
             });
-            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(false);
             return instance;
         };
 
@@ -8990,7 +9570,7 @@ module.exports = function (window) {
                 });
 
                 // clonedElement has `vnodeStyles`, but we change them into `toStylesExact`
-                clonedElement.setClass(INVISIBLE);
+                clonedElement.setClass(INVISIBLE_UNFOCUSABLE);
                 clonedElement.setAttr(STYLE, clonedElement.vnode.serializeStyles());
                 DOCUMENT.body.append(clonedElement);
 
@@ -9413,9 +9993,8 @@ module.exports = function (window) {
                 finalValue = (forceFull || !hasOriginalOpacity) ? 1 : originalOpacity;
                 if (showPromise || hidePromise) {
                     freezedOpacity = instance.getInlineStyle('opacity');
-                    duration = (finalValue>0) ? Math.min(1, (freezedOpacity/finalValue))*duration : 0;
+                    duration = (finalValue>0) ? Math.min(1, ((finalValue-freezedOpacity)/finalValue))*duration : 0;
                 }
-
                 promise = instance.transition({property: 'opacity', value: finalValue, duration: duration});
                 instance.setData('_showNodeBusy', promise);
 
@@ -9476,13 +10055,15 @@ module.exports = function (window) {
         */
         ElementPrototype.transition = function(to, from) {
             var instance = this,
-                currentInlineTransition, transitions, transitionRun, transitionError, promise, resolveHandle, initialStyle, time1,
+                currentInlineTransition, transitions, transitionRun, transitionError, promise, resolveHandle, initialStyle, time1, intermediateInvoked,
                 initialProperties, cleanup, getCurrentProperties, manipulated, getNoTransProp, transpromise, endIntermediate, time2;
 
             to || (to={});
             Array.isArray(to) || (to=[to]);
             to = getVendorCSS(to);
+            transitions = Array.isArray(to) ? to.deepClone() : [to.shallowClone()];
             time1 = Date.now();
+            // transitions = Array.isArray(to) ? to.deepClone() : [to.shallowClone()];
             cleanup = function() {
                 currentInlineTransition = instance.getData('_bkpTransition');
                 currentInlineTransition ? instance.setInlineStyle(TRANSITION, currentInlineTransition) : instance.removeInlineStyle(TRANSITION);
@@ -9522,8 +10103,8 @@ module.exports = function (window) {
                 });
                 return props;
             };
-
             endIntermediate = function(type) {
+                intermediateInvoked = true;
                 if (!promise.isFulfilled) {
                     manipulated = true;
                     instance.setInlineTransitions(getNoTransProp());
@@ -9559,8 +10140,10 @@ module.exports = function (window) {
                         writable: false,
                         value: true
                     });
-                    transpromise.reject(); // prevent transitionpromise to set its own final values after finishing
-                    resolveHandle();
+                    // prevent transitionpromise to set its own final values after finishing
+                    // but only if it is already available:
+                    transpromise && transpromise.reject();
+                    resolveHandle && resolveHandle();
                 }
                 time2 || (time2=Date.now());
                 return new window.Promise(function(resolve) {
@@ -9571,6 +10154,10 @@ module.exports = function (window) {
             };
             promise = new window.Promise(function(resolve, reject) {
                 async(function() {
+                    if (intermediateInvoked) {
+                        reject();
+                        return;
+                    }
                     resolveHandle = resolve;
                     transitionRun = idGenerator('nodeTransition');
                     // only make ready on the last run
@@ -9593,7 +10180,6 @@ module.exports = function (window) {
 
                     // we could use the `to` object and pass into `setInlineTransitions` directly,
                     // however, in case `duration` is not specified, we will define them to 1 sec.
-                    transitions = Array.isArray(to) ? to.deepClone() : [to.shallowClone()];
 
                     // CAUTIOUS: the sum of `duration`+`delay` determines when the transition will be ready.
                     // This leads into separate transitions, we must prevent the promise to fulfill on the
@@ -10334,7 +10920,7 @@ for (j=0; j<len2; j++) {
 * @since 0.0.1
 */
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../css/element.css":34,"./attribute-extractor.js":63,"./element-array.js":64,"./html-parser.js":68,"./node-parser.js":69,"./vdom-ns.js":70,"./vnode.js":71,"js-ext/lib/object.js":38,"js-ext/lib/promise.js":39,"js-ext/lib/string.js":40,"polyfill":50,"polyfill/extra/transition.js":45,"polyfill/extra/transitionend.js":46,"polyfill/extra/vendorCSS.js":47,"utils":51,"window-ext":57}],68:[function(require,module,exports){
+},{"../css/element.css":36,"./attribute-extractor.js":68,"./element-array.js":69,"./html-parser.js":73,"./node-parser.js":74,"./vdom-ns.js":75,"./vnode.js":76,"js-ext/extra/hashmap.js":38,"js-ext/lib/object.js":41,"js-ext/lib/promise.js":42,"js-ext/lib/string.js":43,"polyfill":54,"polyfill/extra/transition.js":49,"polyfill/extra/transitionend.js":50,"polyfill/extra/vendorCSS.js":51,"utils":55,"window-ext":61}],73:[function(require,module,exports){
 "use strict";
 
 /**
@@ -10353,9 +10939,11 @@ for (j=0; j<len2; j++) {
 require('polyfill');
 require('js-ext/lib/object.js');
 
+var createHashMap = require('js-ext/extra/hashmap.js').createMap;
+
 module.exports = function (window) {
 
-    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', {});
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
 
     if (window._ITSAmodules.HtmlParser) {
         return window._ITSAmodules.HtmlParser; // HtmlParser was already created
@@ -10364,10 +10952,11 @@ module.exports = function (window) {
     var NS = require('./vdom-ns.js')(window),
         extractor = require('./attribute-extractor.js')(window),
         DOCUMENT = window.document,
+        xmlNS = NS.xmlNS,
         voidElements = NS.voidElements,
         nonVoidElements = NS.nonVoidElements,
 
-        TAG_OR_ATTR_START_CHARACTERS = {
+        TAG_OR_ATTR_START_CHARACTERS = createHashMap({
             a: true,
             b: true,
             c: true,
@@ -10420,16 +11009,16 @@ module.exports = function (window) {
             X: true,
             Y: true,
             Z: true
-        },
-        STARTTAG_OR_ATTR_VALUE_ENDS_CHARACTERS = {
+        }),
+        STARTTAG_OR_ATTR_VALUE_ENDS_CHARACTERS = createHashMap({
             ' ': true,
             '>': true
-        },
-        ATTRUBUTE_NAME_ENDS_CHARACTER = {
+        }),
+        ATTRUBUTE_NAME_ENDS_CHARACTER = createHashMap({
             ' ': true,
             '=': true,
             '>': true
-        },
+        }),
 
         /**
          * Transforms html-text into a vnodes-Array.
@@ -10439,11 +11028,11 @@ module.exports = function (window) {
          * @return {Array} array with `vnodes`
          * @since 0.0.1
          */
-        htmlToVNodes = window._ITSAmodules.HtmlParser = function(htmlString, vNodeProto) {
+        htmlToVNodes = window._ITSAmodules.HtmlParser = function(htmlString, vNodeProto, nameSpace) {
             var i = 0,
                 len = htmlString.length,
                 vnodes = [],
-                parentVNode = arguments[2], // private pass through-argument, only available when internal looped
+                parentVNode = arguments[3], // private pass through-argument, only available when internal looped
                 insideTagDefinition, insideComment, innerText, endTagCount, stringMarker, attributeisString, attribute, attributeValue,
                 j, character, character2, vnode, tag, isBeginTag, isEndTag, scriptVNode, extractClass, extractStyle;
             while (i<len) {
@@ -10539,6 +11128,7 @@ module.exports = function (window) {
                         if (NS.SCRIPT_OR_STYLE_TAG[vnode.tag]) {
                             // CREATE INNER TEXTNODE
                             scriptVNode = Object.create(vNodeProto);
+                            scriptVNode.ns = nameSpace;
                             scriptVNode.nodeType = 3;
                             scriptVNode.domNode = DOCUMENT.createTextNode(innerText);
                             // create circular reference:
@@ -10548,7 +11138,7 @@ module.exports = function (window) {
                             vnode.vChildNodes = [scriptVNode];
                         }
                         else {
-                            vnode.vChildNodes = (innerText!=='') ? htmlToVNodes(innerText, vNodeProto, vnode) : [];
+                            vnode.vChildNodes = (innerText!=='') ? htmlToVNodes(innerText, vNodeProto, vnode.ns, vnode) : [];
                         }
                     }
                     else {
@@ -10591,6 +11181,7 @@ module.exports = function (window) {
                             vnodes[vnodes.length] = vnode;
                         }
                         vnode = Object.create(vNodeProto);
+                        vnode.ns = nameSpace;
                         vnode.nodeType = 1;
                         vnode.vParent = parentVNode;
                         vnode.tag = '';
@@ -10602,7 +11193,10 @@ module.exports = function (window) {
                         }
 
                         tag = vnode.tag;
-                        vnode.domNode = DOCUMENT.createElement(tag);
+                        vnode.isItag = ((tag[0]==='I') && (tag[1]==='-'));
+                        vnode.ns = xmlNS[tag] || nameSpace;
+                        vnode.domNode = vnode.ns ? DOCUMENT.createElementNS(vnode.ns, tag.toLowerCase()) : DOCUMENT.createElement(tag);
+
                         // create circular reference:
                         vnode.domNode._vnode = vnode;
                         // check if it is a void-tag, but only need to do the regexp once per tag-element:
@@ -10613,7 +11207,7 @@ module.exports = function (window) {
                             vnode.isVoid = false;
                         }
                         else {
-                            vnode.isVoid = ((tag[0]==='I') && (tag[1]==='-')) ? false : !(new RegExp('</'+tag+'>', 'i')).test(htmlString);
+                            vnode.isVoid = vnode.isItag ? false : !(new RegExp('</'+tag+'>', 'i')).test(htmlString);
                             vnode.isVoid ? (voidElements[tag]=true) : (nonVoidElements[tag]=true);
                         }
                         insideTagDefinition = true;
@@ -10627,6 +11221,7 @@ module.exports = function (window) {
                             vnodes[vnodes.length] = vnode;
                         }
                         vnode = Object.create(vNodeProto);
+                        vnode.ns = nameSpace;
                         vnode.nodeType = 8;
                         vnode.text = '';
                         vnode.vParent = parentVNode;
@@ -10638,6 +11233,7 @@ module.exports = function (window) {
                         if (!vnode) {
                             // no current vnode --> create a TextNode:
                             vnode = Object.create(vNodeProto);
+                            vnode.ns = nameSpace;
                             vnode.nodeType = 3;
                             vnode.text = '';
                             vnode.vParent = parentVNode;
@@ -10660,7 +11256,7 @@ module.exports = function (window) {
     return htmlToVNodes;
 
 };
-},{"./attribute-extractor.js":63,"./vdom-ns.js":70,"js-ext/lib/object.js":38,"polyfill":50}],69:[function(require,module,exports){
+},{"./attribute-extractor.js":68,"./vdom-ns.js":75,"js-ext/extra/hashmap.js":38,"js-ext/lib/object.js":41,"polyfill":54}],74:[function(require,module,exports){
 "use strict";
 
 /**
@@ -10678,9 +11274,11 @@ module.exports = function (window) {
 require('polyfill');
 require('js-ext/lib/object.js');
 
+var createHashMap = require('js-ext/extra/hashmap.js').createMap;
+
 module.exports = function (window) {
 
-    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', {});
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
 
     if (window._ITSAmodules.NodeParser) {
         return window._ITSAmodules.NodeParser; // NodeParser was already created
@@ -10688,6 +11286,7 @@ module.exports = function (window) {
 
     var NS = require('./vdom-ns.js')(window),
         extractor = require('./attribute-extractor.js')(window),
+        xmlNS = NS.xmlNS,
         voidElements = NS.voidElements,
         nonVoidElements = NS.nonVoidElements,
         vNodeProto = require('./vnode.js')(window),
@@ -10714,12 +11313,15 @@ module.exports = function (window) {
             // create circular reference:
             vnode.domNode._vnode = vnode;
 
+            parentVNode && (vnode.ns=parentVNode.ns);
             vnode.nodeType = nodeType;
             vnode.vParent = parentVNode;
 
             if (nodeType===1) {
                 // ElementNode
                 tag = vnode.tag = domNode.nodeName; // is always uppercase
+                vnode.isItag = ((tag[0]==='I') && (tag[1]==='-'));
+                vnode.ns = xmlNS[tag] || vnode.ns;
 
                 vnode.attrs = {};
 
@@ -10779,7 +11381,7 @@ module.exports = function (window) {
     return domNodeToVNode;
 
 };
-},{"./attribute-extractor.js":63,"./vdom-ns.js":70,"./vnode.js":71,"js-ext/lib/object.js":38,"polyfill":50}],70:[function(require,module,exports){
+},{"./attribute-extractor.js":68,"./vdom-ns.js":75,"./vnode.js":76,"js-ext/extra/hashmap.js":38,"js-ext/lib/object.js":41,"polyfill":54}],75:[function(require,module,exports){
 /**
  * Creates a Namespace that can be used accros multiple vdom-modules to share information.
  *
@@ -10800,16 +11402,18 @@ module.exports = function (window) {
 require('js-ext/lib/object.js');
 require('polyfill');
 
+var createHashMap = require('js-ext/extra/hashmap.js').createMap;
+
 module.exports = function (window) {
     var NS;
 
-    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', {});
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
 
     if (window._ITSAmodules.VDOM_NS) {
         return window._ITSAmodules.VDOM_NS; // VDOM_NS was already created
     }
 
-    NS = window._ITSAmodules.VDOM_NS = {};
+    NS = window._ITSAmodules.VDOM_NS = createHashMap();
 
     /**
      * Reference to the VElement of document.body (gets its value as soon as it gets refered to)
@@ -10819,8 +11423,15 @@ module.exports = function (window) {
      * @type VElement
      * @since 0.0.1
      */
-     NS.body = null;
+    NS.body = null;
 
+    NS.xmlNS = createHashMap({
+        SVG: 'http://www.w3.org/2000/svg',
+        XBL: 'http://www.mozilla.org/xbl',
+        XUL: 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul',
+        MATH: 'http://www.w3.org/1998/Math/MathML',
+        XLINK: 'http://www.w3.org/1999/xlink'
+    });
 
     /**
      * A hash with all node'ids (of all the domnodes that have an id). The value is a reference to an VElement.
@@ -10830,7 +11441,7 @@ module.exports = function (window) {
      * @type Object
      * @since 0.0.1
      */
-    NS.nodeids || (NS.nodeids={});
+    NS.nodeids || (NS.nodeids=createHashMap());
 
     /**
      * A hash with all encountered non-void Elements
@@ -10840,7 +11451,7 @@ module.exports = function (window) {
      * @type Object
      * @since 0.0.1
      */
-    NS.nonVoidElements || (NS.nonVoidElements={});
+    NS.nonVoidElements || (NS.nonVoidElements=createHashMap());
 
     /**
      * A hash to identify what tagNames are equal to `SCRIPT` or `STYLE`.
@@ -10850,10 +11461,10 @@ module.exports = function (window) {
      * @type Object
      * @since 0.0.1
      */
-    NS.SCRIPT_OR_STYLE_TAG = {
+    NS.SCRIPT_OR_STYLE_TAG = createHashMap({
         SCRIPT: true,
         STYLE: true
-    };
+    });
 
     /**
      * A hash with all nodeTypes that should be captured by the vDOM.
@@ -10863,11 +11474,11 @@ module.exports = function (window) {
      * @type Object
      * @since 0.0.1
      */
-    NS.VALID_NODE_TYPES = {
+    NS.VALID_NODE_TYPES = createHashMap({
         1: true,
         3: true,
         8: true
-    };
+    });
 
     /**
      * A hash with all encountered void Elements
@@ -10877,11 +11488,11 @@ module.exports = function (window) {
      * @type Object
      * @since 0.0.1
      */
-    NS.voidElements || (NS.voidElements={});
+    NS.voidElements || (NS.voidElements=createHashMap());
 
     return NS;
 };
-},{"js-ext/lib/object.js":38,"polyfill":50}],71:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":38,"js-ext/lib/object.js":41,"polyfill":54}],76:[function(require,module,exports){
 "use strict";
 
 /**
@@ -10906,12 +11517,13 @@ module.exports = function (window) {
 require('js-ext/lib/array.js');
 require('js-ext/lib/object.js');
 require('js-ext/lib/string.js');
-require('js-ext/extra/lightmap.js');
 require('polyfill');
+
+var createHashMap = require('js-ext/extra/hashmap.js').createMap;
 
 module.exports = function (window) {
 
-    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', {});
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
 
     if (window._ITSAmodules.VNode) {
         return window._ITSAmodules.VNode; // VNODE was already created
@@ -10920,8 +11532,10 @@ module.exports = function (window) {
     var NS = require('./vdom-ns.js')(window),
         extractor = require('./attribute-extractor.js')(window),
         DOCUMENT = window.document,
-        MUTATION_EVENTS = new window.LightMap(),
+        LightMap = require('js-ext/extra/lightmap.js'),
+        MUTATION_EVENTS = new LightMap(),
         BATCH_WILL_RUN = false,
+        xmlNS = NS.xmlNS,
         nodeids = NS.nodeids,
         htmlToVNodes = require('./html-parser.js')(window),
         timers = require('utils/lib/timers.js'),
@@ -10948,28 +11562,28 @@ module.exports = function (window) {
         EV_ATTRIBUTE_REMOVED = ATTRIBUTE+REMOVE,
         EV_ATTRIBUTE_CHANGED = ATTRIBUTE+CHANGE,
         EV_ATTRIBUTE_INSERTED = ATTRIBUTE+INSERT,
-        SPLIT_CHARACTER = {
+        SPLIT_CHARACTER = createHashMap({
             ' ': true,
             '>': true,
             '+': true, // only select the element when it is immediately preceded by the former element
             '~': true  // only the element when it has the former element as a sibling. (just like `+`, but less strict)
-        },
-        STORABLE_SPLIT_CHARACTER = {
+        }),
+        STORABLE_SPLIT_CHARACTER = createHashMap({
             '>': true,
             '+': true,
             '~': true
-        },
-        SIBLING_MATCH_CHARACTER = {
+        }),
+        SIBLING_MATCH_CHARACTER = createHashMap({
             '+': true,
             '~': true
-        },
-        ATTR_DETAIL_SPECIFIERS = {
+        }),
+        ATTR_DETAIL_SPECIFIERS = createHashMap({
             '^': true, // “begins with” selector
             '$': true, // “ends with” selector
             '*': true, // “contains” selector (might be a substring)
             '~': true, // “contains” selector as a separate word, separated by spaces
             '|': true // “contains” selector as a separate word, separated by `|`
-        },
+        }),
         /**
          * Object to gain quick access to attribute-name end-tokens.
          *
@@ -10982,7 +11596,7 @@ module.exports = function (window) {
          * @protected
          * @since 0.0.1
          */
-        END_ATTRIBUTENAME = {
+        END_ATTRIBUTENAME = createHashMap({
             '=': true,
             ']': true,
             '^': true, // “begins with” selector
@@ -10990,7 +11604,7 @@ module.exports = function (window) {
             '*': true, // “contains” selector (might be a substring)
             '~': true, // “contains” selector as a separate word, separated by spaces
             '|': true // “contains” selector as a separate word, separated by `|`
-        },
+        }),
         /**
          * Object to gain quick access to different changes of Element nodeType changes.
          *
@@ -11016,23 +11630,23 @@ module.exports = function (window) {
          * @protected
          * @since 0.0.1
          */
-        NODESWITCH = {
-            1: {
+        NODESWITCH = createHashMap({
+            1: createHashMap({
                 1: 1, // oldNodeType==Element, newNodeType==Element
                 3: 2, // oldNodeType==Element, newNodeType==TextNode
                 8: 3  // oldNodeType==Element, newNodeType==Comment
-            },
-            3: {
+            }),
+            3: createHashMap({
                 1: 4, // oldNodeType==TextNode, newNodeType==Element
                 3: 5, // oldNodeType==TextNode, newNodeType==TextNode
                 8: 6  // oldNodeType==TextNode, newNodeType==Comment
-            },
-            8: {
+            }),
+            8: createHashMap({
                 1: 7, // oldNodeType==Comment, newNodeType==Element
                 3: 8, // oldNodeType==Comment, newNodeType==TextNode
                 8: 9  // oldNodeType==Comment, newNodeType==Comment
-            }
-        },
+            })
+        }),
         /**
          * Object to gain quick access to selector start-tokens.
          *
@@ -11046,12 +11660,12 @@ module.exports = function (window) {
          * @protected
          * @since 0.0.1
          */
-        SELECTOR_IDENTIFIERS = {
+        SELECTOR_IDENTIFIERS = createHashMap({
             '#': 1,
             '.': 2,
             '[': 3,
             ':': 4
-        },
+        }),
         PSEUDO_FIRST_CHILD = ':first-child',
         PSEUDO_FIRST_OF_TYPE = ':first-of-type',
         PSEUDO_LAST_CHILD = ':last-child',
@@ -11082,7 +11696,7 @@ module.exports = function (window) {
          * @protected
          * @since 0.0.1
          */
-        PSEUDO_REQUIRED_CHILDREN = {},
+        PSEUDO_REQUIRED_CHILDREN = createHashMap(),
         _matchesSelectorItem, _matchesOneSelector, _findElementSibling, vNodeProto, _markRemoved,
         _splitSelector, _findNodeSibling, _matchNthChild, _batchEmit, _emitDestroyChildren;
         PSEUDO_REQUIRED_CHILDREN[PSEUDO_FIRST_CHILD] = true;
@@ -12007,7 +12621,7 @@ module.exports = function (window) {
                 (size===instance.vChildNodes.length) || (domNode=instance.vChildNodes[instance.vChildNodes.length-1].domNode);
             }
             if (VNode.nodeType===1) {
-                DOCUMENT._parcelList && VNode.tag.startsWith('I-PARCEL-') && !DOCUMENT._parcelList.contains(domNode) && DOCUMENT._parcelList.push(domNode);
+                DOCUMENT._itagList && VNode.isItag && !DOCUMENT._itagList.contains(domNode) && DOCUMENT._itagList.push(domNode);
                 VNode._emit(EV_INSERTED);
             }
             return domNode;
@@ -12075,16 +12689,16 @@ module.exports = function (window) {
 
                 // mark all its vChildNodes so we can see if the node is in the DOM
                 _markRemoved(instance);
+                // if vnode is part of DOCUMENT._itagList then remove it
+                if (DOCUMENT._itagList && instance.isItag) {
+                    DOCUMENT._itagList.remove(instance.domNode);
+                }
 
                 // The definite cleanup needs to be done after a timeout:
                 // someone might need to handle the Element when removed (fe to cleanup specific things)
                 later(function() {
                     instance._cleanData();
                     if (instance.nodeType===1) {
-                        // if vnode is part of DOCUMENT._parcelList then remove it
-                        if (DOCUMENT._parcelList && instance.tag.startsWith('I-PARCEL-')) {
-                            DOCUMENT._parcelList.remove(instance.domNode);
-                        }
                         // _destroy all its vChildNodes
                         if (vChildNodes) {
                             len = vChildNodes.length;
@@ -12254,7 +12868,7 @@ module.exports = function (window) {
                 instance.domNode._insertBefore(domNode, refVNode.domNode);
                 (newVNode.nodeType===3) && instance._normalize();
                 if (newVNode.nodeType===1) {
-                    DOCUMENT._parcelList && newVNode.tag.startsWith('I-PARCEL-') && !DOCUMENT._parcelList.contains(domNode) && DOCUMENT._parcelList.push(domNode);
+                    DOCUMENT._itagList && newVNode.isItag && !DOCUMENT._itagList.contains(domNode) && DOCUMENT._itagList.push(domNode);
                     newVNode._emit(EV_INSERTED);
                 }
             }
@@ -12375,7 +12989,12 @@ module.exports = function (window) {
         * @since 0.0.1
         */
         _removeAttr: function(attributeName) {
-            var instance = this;
+            var instance = this,
+                attributeNameSplitted, ns;
+            if (instance._unchangableAttrs && instance._unchangableAttrs[attributeName]) {
+                console.warn('Not allowed to remove the attribute '+attributeName);
+                return instance;
+            }
             if (instance.attrs[attributeName]!==undefined) {
                 delete instance.attrs[attributeName];
                 // in case of STYLE attribute --> special treatment
@@ -12386,8 +13005,16 @@ module.exports = function (window) {
                     delete nodeids[instance.id];
                     delete instance.id;
                 }
-                instance.domNode._removeAttribute(attributeName);
                 instance._emit(EV_ATTRIBUTE_REMOVED, attributeName);
+                if (attributeName.indexOf(':')!==-1) {
+                    attributeNameSplitted = attributeName.split(':');
+                    ns = attributeNameSplitted[0];
+                    attributeName = attributeNameSplitted[1];
+                    instance.domNode._removeAttributeNS(xmlNS[ns.toUpperCase()] || ns, attributeName);
+                }
+                else {
+                    instance.domNode._removeAttribute(attributeName);
+                }
             }
             return instance;
         },
@@ -12459,9 +13086,14 @@ module.exports = function (window) {
             var instance = this,
                 extractStyle, extractClass,
                 attrs = instance.attrs,
-                prevVal = attrs[attributeName];
-            // don't check by !== --> value isn't parsed into a String yet
+                prevVal = attrs[attributeName],
+                attributeNameSplitted, ns;
 
+            if (instance._unchangableAttrs && instance._unchangableAttrs[attributeName]) {
+                console.warn('Not allowed to set the attribute '+attributeName);
+                return instance;
+            }
+            // don't check by !== --> value isn't parsed into a String yet
             if (prevVal && ((value===undefined) || (value===null))) {
                 instance._removeAttr(attributeName);
                 return instance;
@@ -12501,9 +13133,20 @@ module.exports = function (window) {
                     instance.id = value;
                     nodeids[value] = instance.domNode;
                 }
-                // when set in the dom --> quotes need to be set as &quot;
-                instance.domNode._setAttribute(attributeName, value.replace(/"/g, '&quot;'));
+
                 instance._emit(prevVal ? EV_ATTRIBUTE_CHANGED : EV_ATTRIBUTE_INSERTED, attributeName, value, prevVal);
+
+                // when set in the dom --> quotes need to be set as &quot;
+                value = value.replace(/"/g, '&quot;');
+                if (attributeName.indexOf(':')!==-1) {
+                    attributeNameSplitted = attributeName.split(':');
+                    ns = attributeNameSplitted[0];
+                    attributeName = attributeNameSplitted[1];
+                    instance.domNode._setAttributeNS(xmlNS[ns.toUpperCase()] || ns, attributeName, value);
+                }
+                else {
+                    instance.domNode._setAttribute(attributeName, value);
+                }
             }
             return instance;
         },
@@ -12615,7 +13258,7 @@ module.exports = function (window) {
                                 newChild._setChildNodes(bkpChildNodes);
                                 newChild.id && (nodeids[newChild.id]=newChild.domNode);
                                 oldChild._replaceAtParent(newChild);
-                                DOCUMENT._parcelList && newChild.tag.startsWith('I-PARCEL-') && !DOCUMENT._parcelList.contains(newChild.domNode) && DOCUMENT._parcelList.push(newChild.domNode);
+                                DOCUMENT._itagList && newChild.isItag && !DOCUMENT._itagList.contains(newChild.domNode) && DOCUMENT._itagList.push(newChild.domNode);
                                 newChild._emit(EV_INSERTED);
                             }
                             else {
@@ -12666,10 +13309,10 @@ module.exports = function (window) {
                             newChild._setAttrs(bkpAttrs);
                             newChild._setChildNodes(bkpChildNodes);
                             newChild.id && (nodeids[newChild.id]=newChild.domNode);
-                            oldChild.isVoid = newChild.isVoid;
-                            delete oldChild.text;
+                            // oldChild.isVoid = newChild.isVoid;
+                            // delete oldChild.text;
                             instance._emit(EV_CONTENT_CHANGE);
-                            DOCUMENT._parcelList && newChild.tag.startsWith('I-PARCEL-') && !DOCUMENT._parcelList.contains(newChild.domNode) && DOCUMENT._parcelList.push(newChild.domNode);
+                            DOCUMENT._itagList && newChild.isItag && !DOCUMENT._itagList.contains(newChild.domNode) && DOCUMENT._itagList.push(newChild.domNode);
                             newChild._emit(EV_INSERTED);
                             break;
                         case 5: // oldNodeType==TextNode, newNodeType==TextNode
@@ -12719,7 +13362,7 @@ module.exports = function (window) {
                         domNode._appendChild(newChild.domNode);
                         newChild._setAttrs(bkpAttrs);
                         newChild._setChildNodes(bkpChildNodes);
-                        DOCUMENT._parcelList && newChild.tag.startsWith('I-PARCEL-') && !DOCUMENT._parcelList.contains(newChild.domNode) && DOCUMENT._parcelList.push(newChild.domNode);
+                        DOCUMENT._itagList && newChild.isItag && !DOCUMENT._itagList.contains(newChild.domNode) && DOCUMENT._itagList.push(newChild.domNode);
                         newChild._emit(EV_INSERTED);
                         break;
                     case 3: // TextNode
@@ -12736,6 +13379,10 @@ module.exports = function (window) {
             instance.vChildNodes = newVChildNodes;
             needNormalize && instance._normalize();
             return instance;
+        },
+
+        _setUnchangableAttrs: function(unchangableObj) {
+            this._unchangableAttrs = unchangableObj;
         }
 
     };
@@ -12862,7 +13509,7 @@ module.exports = function (window) {
                 return html;
             },
             set: function(v) {
-                this._setChildNodes(htmlToVNodes(v, vNodeProto));
+                this._setChildNodes(htmlToVNodes(v, vNodeProto, this.ns));
             }
         },
 
@@ -12915,6 +13562,7 @@ module.exports = function (window) {
                     attrs.each(function(value, key) {
                         html += ' '+key+'="'+value+'"';
                     });
+                    instance.isVoid && (html += '/');
                     html += '>';
                     if (!instance.isVoid) {
                         html += instance.innerHTML + '</' + instance.tag.toLowerCase() + '>';
@@ -12935,7 +13583,7 @@ module.exports = function (window) {
                 index = vChildNodes.indexOf(instance);
                 isLastChildNode = (index===(vChildNodes.length-1));
                 isLastChildNode || (refDomNode=vChildNodes[index+1].domNode);
-                vnodes = htmlToVNodes(v, vNodeProto, vParent);
+                vnodes = htmlToVNodes(v, vNodeProto, vParent.ns, vParent);
                 len = vnodes.length;
                 if (len>0) {
                     // the first vnode will replace the current instance:
@@ -12955,7 +13603,7 @@ module.exports = function (window) {
                             // vnode.vChildNodes = bkpChildNodes;
                             vnode.id && (nodeids[vnode.id]=vnode.domNode);
                             instance._replaceAtParent(vnode);
-                            DOCUMENT._parcelList && vnode.tag.startsWith('I-PARCEL-') && !DOCUMENT._parcelList.contains(vnode.domNode) && DOCUMENT._parcelList.push(vnode.domNode);
+                            DOCUMENT._itagList && vnode.isItag && !DOCUMENT._itagList.contains(vnode.domNode) && DOCUMENT._itagList.push(vnode.domNode);
                             vnode._emit(EV_INSERTED);
                         }
                         else {
@@ -12968,7 +13616,7 @@ module.exports = function (window) {
                         vnode.domNode.nodeValue = vnode.text;
                         vParent.domNode._replaceChild(vnode.domNode, instance.domNode);
                         instance._replaceAtParent(vnode);
-                        DOCUMENT._parcelList && vnode.tag.startsWith('I-PARCEL-') && !DOCUMENT._parcelList.contains(vnode.domNode) && DOCUMENT._parcelList.push(vnode.domNode);
+                        DOCUMENT._itagList && vnode.isItag && !DOCUMENT._itagList.contains(vnode.domNode) && DOCUMENT._itagList.push(vnode.domNode);
                         vnode._emit(EV_INSERTED);
                     }
                 }
@@ -12981,7 +13629,7 @@ module.exports = function (window) {
                             vnode.attrs = {}; // reset, to force defined by `_setAttrs`
                             vnode.vChildNodes = []; // reset to current state, to force defined by `_setAttrs`
                             isLastChildNode ? vParent.domNode._appendChild(vnode.domNode) : vParent.domNode._insertBefore(vnode.domNode, refDomNode);
-                            DOCUMENT._parcelList && vnode.tag.startsWith('I-PARCEL-') && !DOCUMENT._parcelList.contains(vnode.domNode) && DOCUMENT._parcelList.push(vnode.domNode);
+                            DOCUMENT._itagList && vnode.isItag && !DOCUMENT._itagList.contains(vnode.domNode) && DOCUMENT._itagList.push(vnode.domNode);
                             vnode._emit(EV_INSERTED);
                             vnode._setAttrs(bkpAttrs);
                             vnode._setChildNodes(bkpChildNodes);
@@ -13247,14 +13895,16 @@ module.exports = function (window) {
     return vNodeProto;
 
 };
-},{"./attribute-extractor.js":63,"./html-parser.js":68,"./vdom-ns.js":70,"js-ext/extra/lightmap.js":35,"js-ext/lib/array.js":36,"js-ext/lib/object.js":38,"js-ext/lib/string.js":40,"polyfill":50,"utils/lib/timers.js":53}],72:[function(require,module,exports){
+},{"./attribute-extractor.js":68,"./html-parser.js":73,"./vdom-ns.js":75,"js-ext/extra/hashmap.js":38,"js-ext/extra/lightmap.js":39,"js-ext/lib/array.js":40,"js-ext/lib/object.js":41,"js-ext/lib/string.js":43,"polyfill":54,"utils/lib/timers.js":57}],77:[function(require,module,exports){
 "use strict";
 
 require('js-ext/lib/object.js');
 
+var createHashMap = require('js-ext/extra/hashmap.js').createMap;
+
 module.exports = function (window) {
 
-    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', {});
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
 
     if (window._ITSAmodules.VDOM) {
         return window._ITSAmodules.VDOM; // VDOM was already created
@@ -13290,7 +13940,7 @@ module.exports = function (window) {
 
     return vdom;
 };
-},{"./partials/element-plugin.js":65,"./partials/extend-document.js":66,"./partials/extend-element.js":67,"./partials/node-parser.js":69,"js-ext/lib/object.js":38}],73:[function(require,module,exports){
+},{"./partials/element-plugin.js":70,"./partials/extend-document.js":71,"./partials/extend-element.js":72,"./partials/node-parser.js":74,"js-ext/extra/hashmap.js":38,"js-ext/lib/object.js":41}],78:[function(require,module,exports){
 "use strict";
 
 require('js-ext/lib/object.js');
@@ -13310,7 +13960,9 @@ require('polyfill');
 
 var NAME = '[focusmanager]: ',
     async = require('utils').async,
+    createHashMap = require('js-ext/extra/hashmap.js').createMap,
     DEFAULT_SELECTOR = 'input, button, select, textarea, .focusable',
+    // SPECIAL_KEYS needs to be a native Object --> we need .some()
     SPECIAL_KEYS = {
         shift: 'shiftKey',
         ctrl: 'ctrlKey',
@@ -13329,8 +13981,9 @@ module.exports = function (window) {
     var DOCUMENT = window.document,
         nodePlugin, FocusManager, Event, nextFocusNode, searchFocusNode, markAsFocussed, getFocusManagerSelector, setupEvents;
 
-    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', {});
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
 
+    require('window-ext')(window);
 /*jshint boss:true */
     if (FocusManager=window._ITSAmodules.FocusManager) {
 /*jshint boss:false */
@@ -13626,7 +14279,14 @@ module.exports = function (window) {
     */
     Event.defineEvent('UI:manualfocus')
          .defaultFn(function(e) {
-             e.target._focus();
+             var node = e.target,
+                 leftScroll = window.getScrollLeft(),
+                 topScroll = window.getScrollTop();
+             node._focus();
+             // reset winscroll:
+             window.scrollTo(leftScroll, topScroll);
+             // make sure the node is inside the viewport:
+             // node.forceIntoView();
          });
 
     (function(HTMLElementPrototype) {
@@ -13642,256 +14302,709 @@ module.exports = function (window) {
 
     return FocusManager;
 };
-},{"event-dom":74,"js-ext/lib/object.js":141,"polyfill":147,"utils":148,"vdom":192}],74:[function(require,module,exports){
+},{"event-dom":79,"js-ext/extra/hashmap.js":151,"js-ext/lib/object.js":152,"polyfill":158,"utils":159,"vdom":206,"window-ext":207}],79:[function(require,module,exports){
 module.exports=require(6)
-},{"event":78,"js-ext/lib/array.js":87,"js-ext/lib/object.js":88,"js-ext/lib/string.js":89,"polyfill/polyfill-base.js":95,"utils":96,"vdom":140}],75:[function(require,module,exports){
+},{"event":83,"js-ext/extra/hashmap.js":93,"js-ext/lib/array.js":94,"js-ext/lib/object.js":95,"js-ext/lib/string.js":96,"polyfill/polyfill-base.js":102,"utils":103,"vdom":150}],80:[function(require,module,exports){
 module.exports=require(7)
-},{"js-ext/lib/function.js":79,"js-ext/lib/object.js":80,"polyfill/polyfill-base.js":86}],76:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":85,"js-ext/lib/object.js":86,"polyfill/polyfill-base.js":92}],81:[function(require,module,exports){
 module.exports=require(8)
-},{"./index.js":78}],77:[function(require,module,exports){
+},{"./index.js":83}],82:[function(require,module,exports){
 module.exports=require(9)
-},{"./index.js":78}],78:[function(require,module,exports){
+},{"./index.js":83,"js-ext/extra/classes.js":84,"js-ext/lib/object.js":86}],83:[function(require,module,exports){
 module.exports=require(10)
-},{"./event-base.js":75,"./event-emitter.js":76,"./event-listener.js":77}],79:[function(require,module,exports){
+},{"./event-base.js":80,"./event-emitter.js":81,"./event-listener.js":82}],84:[function(require,module,exports){
 module.exports=require(11)
-},{"polyfill/polyfill-base.js":83}],80:[function(require,module,exports){
+},{"../lib/object.js":86,"js-ext/extra/hashmap.js":85,"polyfill/polyfill-base.js":89}],85:[function(require,module,exports){
 module.exports=require(12)
-},{"polyfill/polyfill-base.js":83}],81:[function(require,module,exports){
-module.exports=require(13)
-},{}],82:[function(require,module,exports){
-module.exports=require(14)
-},{}],83:[function(require,module,exports){
-module.exports=require(15)
-},{"./lib/matchesselector.js":81,"./lib/window.console.js":82}],84:[function(require,module,exports){
-module.exports=require(13)
-},{}],85:[function(require,module,exports){
-module.exports=require(14)
 },{}],86:[function(require,module,exports){
-module.exports=require(15)
-},{"./lib/matchesselector.js":84,"./lib/window.console.js":85}],87:[function(require,module,exports){
-module.exports=require(19)
-},{"polyfill/polyfill-base.js":92}],88:[function(require,module,exports){
-module.exports=require(12)
-},{"polyfill/polyfill-base.js":92}],89:[function(require,module,exports){
-module.exports=require(21)
-},{}],90:[function(require,module,exports){
 module.exports=require(13)
+},{"js-ext/extra/hashmap.js":85,"polyfill/polyfill-base.js":89}],87:[function(require,module,exports){
+module.exports=require(14)
+},{}],88:[function(require,module,exports){
+module.exports=require(15)
+},{}],89:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":87,"./lib/window.console.js":88}],90:[function(require,module,exports){
+module.exports=require(14)
 },{}],91:[function(require,module,exports){
-module.exports=require(14)
+module.exports=require(15)
 },{}],92:[function(require,module,exports){
-module.exports=require(15)
+module.exports=require(16)
 },{"./lib/matchesselector.js":90,"./lib/window.console.js":91}],93:[function(require,module,exports){
-module.exports=require(13)
+module.exports=require(12)
 },{}],94:[function(require,module,exports){
-module.exports=require(14)
-},{}],95:[function(require,module,exports){
-module.exports=require(15)
-},{"./lib/matchesselector.js":93,"./lib/window.console.js":94}],96:[function(require,module,exports){
-module.exports=require(28)
-},{"./lib/idgenerator.js":97,"./lib/timers.js":98}],97:[function(require,module,exports){
-module.exports=require(29)
-},{"polyfill/polyfill-base.js":101}],98:[function(require,module,exports){
-module.exports=require(30)
-},{"polyfill/polyfill-base.js":101}],99:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":99}],95:[function(require,module,exports){
 module.exports=require(13)
-},{}],100:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":93,"polyfill/polyfill-base.js":99}],96:[function(require,module,exports){
+module.exports=require(23)
+},{}],97:[function(require,module,exports){
+module.exports=require(14)
+},{}],98:[function(require,module,exports){
+module.exports=require(15)
+},{}],99:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":97,"./lib/window.console.js":98}],100:[function(require,module,exports){
 module.exports=require(14)
 },{}],101:[function(require,module,exports){
 module.exports=require(15)
-},{"./lib/matchesselector.js":99,"./lib/window.console.js":100}],102:[function(require,module,exports){
-module.exports=require(34)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],103:[function(require,module,exports){
-module.exports=require(35)
-},{"../lib/array.js":104,"../lib/function.js":105,"../lib/object.js":106,"polyfill/lib/weakmap.js":110}],104:[function(require,module,exports){
-module.exports=require(19)
-},{"polyfill/polyfill-base.js":112}],105:[function(require,module,exports){
-module.exports=require(11)
-},{"polyfill/polyfill-base.js":112}],106:[function(require,module,exports){
-module.exports=require(12)
-},{"polyfill/polyfill-base.js":112}],107:[function(require,module,exports){
-module.exports=require(39)
-},{"polyfill":112}],108:[function(require,module,exports){
-module.exports=require(21)
-},{}],109:[function(require,module,exports){
-module.exports=require(13)
-},{}],110:[function(require,module,exports){
-module.exports=require(42)
-},{}],111:[function(require,module,exports){
+},{}],102:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":100,"./lib/window.console.js":101}],103:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":104,"./lib/timers.js":105}],104:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":93,"polyfill/polyfill-base.js":108}],105:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":108}],106:[function(require,module,exports){
 module.exports=require(14)
-},{}],112:[function(require,module,exports){
+},{}],107:[function(require,module,exports){
 module.exports=require(15)
-},{"./lib/matchesselector.js":109,"./lib/window.console.js":111}],113:[function(require,module,exports){
-module.exports=require(45)
-},{}],114:[function(require,module,exports){
-module.exports=require(46)
-},{}],115:[function(require,module,exports){
-module.exports=require(47)
-},{}],116:[function(require,module,exports){
+},{}],108:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":106,"./lib/window.console.js":107}],109:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],110:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":114,"js-ext/extra/hashmap.js":111,"polyfill/polyfill-base.js":120}],111:[function(require,module,exports){
+module.exports=require(12)
+},{}],112:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":113,"../lib/object.js":114,"./classes.js":110,"js-ext/extra/hashmap.js":111,"polyfill/lib/weakmap.js":118}],113:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":120}],114:[function(require,module,exports){
 module.exports=require(13)
+},{"js-ext/extra/hashmap.js":111,"polyfill/polyfill-base.js":120}],115:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":120}],116:[function(require,module,exports){
+module.exports=require(23)
 },{}],117:[function(require,module,exports){
 module.exports=require(14)
 },{}],118:[function(require,module,exports){
-module.exports=require(15)
-},{"./lib/matchesselector.js":116,"./lib/window.console.js":117}],119:[function(require,module,exports){
-module.exports=require(28)
-},{"./lib/idgenerator.js":120,"./lib/timers.js":121}],120:[function(require,module,exports){
-module.exports=require(29)
-},{"polyfill/polyfill-base.js":124}],121:[function(require,module,exports){
-module.exports=require(30)
-},{"polyfill/polyfill-base.js":124}],122:[function(require,module,exports){
-module.exports=require(13)
-},{}],123:[function(require,module,exports){
-module.exports=require(14)
-},{}],124:[function(require,module,exports){
-module.exports=require(15)
-},{"./lib/matchesselector.js":122,"./lib/window.console.js":123}],125:[function(require,module,exports){
-module.exports=require(57)
-},{"./lib/sizes.js":126}],126:[function(require,module,exports){
-module.exports=require(58)
-},{"js-ext/lib/object.js":127}],127:[function(require,module,exports){
-module.exports=require(12)
-},{"polyfill/polyfill-base.js":130}],128:[function(require,module,exports){
-module.exports=require(13)
-},{}],129:[function(require,module,exports){
-module.exports=require(14)
-},{}],130:[function(require,module,exports){
-module.exports=require(15)
-},{"./lib/matchesselector.js":128,"./lib/window.console.js":129}],131:[function(require,module,exports){
-module.exports=require(63)
-},{"js-ext/lib/object.js":106,"js-ext/lib/string.js":108,"polyfill":118,"polyfill/extra/transition.js":113,"polyfill/extra/vendorCSS.js":115}],132:[function(require,module,exports){
-module.exports=require(64)
-},{"js-ext/lib/object.js":106,"polyfill":118}],133:[function(require,module,exports){
-module.exports=require(65)
-},{"js-ext/lib/object.js":106,"js-ext/lib/string.js":108,"polyfill":118}],134:[function(require,module,exports){
-module.exports=require(66)
-},{"./vdom-ns.js":138,"js-ext/lib/object.js":106,"js-ext/lib/string.js":108,"polyfill":118}],135:[function(require,module,exports){
-module.exports=require(67)
-},{"../css/element.css":102,"./attribute-extractor.js":131,"./element-array.js":132,"./html-parser.js":136,"./node-parser.js":137,"./vdom-ns.js":138,"./vnode.js":139,"js-ext/lib/object.js":106,"js-ext/lib/promise.js":107,"js-ext/lib/string.js":108,"polyfill":118,"polyfill/extra/transition.js":113,"polyfill/extra/transitionend.js":114,"polyfill/extra/vendorCSS.js":115,"utils":119,"window-ext":125}],136:[function(require,module,exports){
-module.exports=require(68)
-},{"./attribute-extractor.js":131,"./vdom-ns.js":138,"js-ext/lib/object.js":106,"polyfill":118}],137:[function(require,module,exports){
-module.exports=require(69)
-},{"./attribute-extractor.js":131,"./vdom-ns.js":138,"./vnode.js":139,"js-ext/lib/object.js":106,"polyfill":118}],138:[function(require,module,exports){
-module.exports=require(70)
-},{"js-ext/lib/object.js":106,"polyfill":118}],139:[function(require,module,exports){
-module.exports=require(71)
-},{"./attribute-extractor.js":131,"./html-parser.js":136,"./vdom-ns.js":138,"js-ext/extra/lightmap.js":103,"js-ext/lib/array.js":104,"js-ext/lib/object.js":106,"js-ext/lib/string.js":108,"polyfill":118,"utils/lib/timers.js":121}],140:[function(require,module,exports){
-module.exports=require(72)
-},{"./partials/element-plugin.js":133,"./partials/extend-document.js":134,"./partials/extend-element.js":135,"./partials/node-parser.js":137,"js-ext/lib/object.js":106}],141:[function(require,module,exports){
-module.exports=require(12)
-},{"polyfill/polyfill-base.js":144}],142:[function(require,module,exports){
-module.exports=require(13)
-},{}],143:[function(require,module,exports){
-module.exports=require(14)
-},{}],144:[function(require,module,exports){
-module.exports=require(15)
-},{"./lib/matchesselector.js":142,"./lib/window.console.js":143}],145:[function(require,module,exports){
-module.exports=require(13)
-},{}],146:[function(require,module,exports){
-module.exports=require(14)
-},{}],147:[function(require,module,exports){
-module.exports=require(15)
-},{"./lib/matchesselector.js":145,"./lib/window.console.js":146}],148:[function(require,module,exports){
-module.exports=require(28)
-},{"./lib/idgenerator.js":149,"./lib/timers.js":150}],149:[function(require,module,exports){
-module.exports=require(29)
-},{"polyfill/polyfill-base.js":153}],150:[function(require,module,exports){
-module.exports=require(30)
-},{"polyfill/polyfill-base.js":153}],151:[function(require,module,exports){
-module.exports=require(13)
-},{}],152:[function(require,module,exports){
-module.exports=require(14)
-},{}],153:[function(require,module,exports){
-module.exports=require(15)
-},{"./lib/matchesselector.js":151,"./lib/window.console.js":152}],154:[function(require,module,exports){
-module.exports=require(34)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],155:[function(require,module,exports){
-module.exports=require(35)
-},{"../lib/array.js":156,"../lib/function.js":157,"../lib/object.js":158,"polyfill/lib/weakmap.js":162}],156:[function(require,module,exports){
-module.exports=require(19)
-},{"polyfill/polyfill-base.js":164}],157:[function(require,module,exports){
-module.exports=require(11)
-},{"polyfill/polyfill-base.js":164}],158:[function(require,module,exports){
-module.exports=require(12)
-},{"polyfill/polyfill-base.js":164}],159:[function(require,module,exports){
-module.exports=require(39)
-},{"polyfill":164}],160:[function(require,module,exports){
-module.exports=require(21)
-},{}],161:[function(require,module,exports){
-module.exports=require(13)
-},{}],162:[function(require,module,exports){
-module.exports=require(42)
-},{}],163:[function(require,module,exports){
-module.exports=require(14)
-},{}],164:[function(require,module,exports){
-module.exports=require(15)
-},{"./lib/matchesselector.js":161,"./lib/window.console.js":163}],165:[function(require,module,exports){
 module.exports=require(45)
-},{}],166:[function(require,module,exports){
-module.exports=require(46)
-},{}],167:[function(require,module,exports){
-module.exports=require(47)
-},{}],168:[function(require,module,exports){
-module.exports=require(13)
-},{}],169:[function(require,module,exports){
-module.exports=require(14)
-},{}],170:[function(require,module,exports){
+},{}],119:[function(require,module,exports){
 module.exports=require(15)
-},{"./lib/matchesselector.js":168,"./lib/window.console.js":169}],171:[function(require,module,exports){
-module.exports=require(28)
-},{"./lib/idgenerator.js":172,"./lib/timers.js":173}],172:[function(require,module,exports){
-module.exports=require(29)
-},{"polyfill/polyfill-base.js":176}],173:[function(require,module,exports){
+},{}],120:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":117,"./lib/window.console.js":119}],121:[function(require,module,exports){
+module.exports=require(48)
+},{}],122:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":121}],123:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":121}],124:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":121}],125:[function(require,module,exports){
+module.exports=require(14)
+},{}],126:[function(require,module,exports){
+module.exports=require(15)
+},{}],127:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":125,"./lib/window.console.js":126}],128:[function(require,module,exports){
 module.exports=require(30)
-},{"polyfill/polyfill-base.js":176}],174:[function(require,module,exports){
-module.exports=require(13)
-},{}],175:[function(require,module,exports){
+},{"./lib/idgenerator.js":129,"./lib/timers.js":130}],129:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":111,"polyfill/polyfill-base.js":133}],130:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":133}],131:[function(require,module,exports){
 module.exports=require(14)
-},{}],176:[function(require,module,exports){
+},{}],132:[function(require,module,exports){
 module.exports=require(15)
-},{"./lib/matchesselector.js":174,"./lib/window.console.js":175}],177:[function(require,module,exports){
-module.exports=require(57)
-},{"./lib/sizes.js":178}],178:[function(require,module,exports){
-module.exports=require(58)
-},{"js-ext/lib/object.js":179}],179:[function(require,module,exports){
+},{}],133:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":131,"./lib/window.console.js":132}],134:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":135}],135:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":136,"js-ext/lib/object.js":137}],136:[function(require,module,exports){
 module.exports=require(12)
-},{"polyfill/polyfill-base.js":182}],180:[function(require,module,exports){
+},{}],137:[function(require,module,exports){
 module.exports=require(13)
-},{}],181:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":136,"polyfill/polyfill-base.js":140}],138:[function(require,module,exports){
+module.exports=require(14)
+},{}],139:[function(require,module,exports){
+module.exports=require(15)
+},{}],140:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":138,"./lib/window.console.js":139}],141:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":111,"js-ext/lib/object.js":114,"js-ext/lib/string.js":116,"polyfill":127,"polyfill/extra/transition.js":122,"polyfill/extra/vendorCSS.js":124}],142:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":111,"js-ext/lib/object.js":114,"polyfill":127}],143:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":111,"js-ext/lib/object.js":114,"js-ext/lib/string.js":116,"polyfill":127}],144:[function(require,module,exports){
+module.exports=require(71)
+},{"./vdom-ns.js":148,"js-ext/extra/hashmap.js":111,"js-ext/lib/object.js":114,"js-ext/lib/string.js":116,"polyfill":127}],145:[function(require,module,exports){
+module.exports=require(72)
+},{"../css/element.css":109,"./attribute-extractor.js":141,"./element-array.js":142,"./html-parser.js":146,"./node-parser.js":147,"./vdom-ns.js":148,"./vnode.js":149,"js-ext/extra/hashmap.js":111,"js-ext/lib/object.js":114,"js-ext/lib/promise.js":115,"js-ext/lib/string.js":116,"polyfill":127,"polyfill/extra/transition.js":122,"polyfill/extra/transitionend.js":123,"polyfill/extra/vendorCSS.js":124,"utils":128,"window-ext":134}],146:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":141,"./vdom-ns.js":148,"js-ext/extra/hashmap.js":111,"js-ext/lib/object.js":114,"polyfill":127}],147:[function(require,module,exports){
+module.exports=require(74)
+},{"./attribute-extractor.js":141,"./vdom-ns.js":148,"./vnode.js":149,"js-ext/extra/hashmap.js":111,"js-ext/lib/object.js":114,"polyfill":127}],148:[function(require,module,exports){
+module.exports=require(75)
+},{"js-ext/extra/hashmap.js":111,"js-ext/lib/object.js":114,"polyfill":127}],149:[function(require,module,exports){
+module.exports=require(76)
+},{"./attribute-extractor.js":141,"./html-parser.js":146,"./vdom-ns.js":148,"js-ext/extra/hashmap.js":111,"js-ext/extra/lightmap.js":112,"js-ext/lib/array.js":113,"js-ext/lib/object.js":114,"js-ext/lib/string.js":116,"polyfill":127,"utils/lib/timers.js":130}],150:[function(require,module,exports){
+module.exports=require(77)
+},{"./partials/element-plugin.js":143,"./partials/extend-document.js":144,"./partials/extend-element.js":145,"./partials/node-parser.js":147,"js-ext/extra/hashmap.js":111,"js-ext/lib/object.js":114}],151:[function(require,module,exports){
+module.exports=require(12)
+},{}],152:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":151,"polyfill/polyfill-base.js":155}],153:[function(require,module,exports){
+module.exports=require(14)
+},{}],154:[function(require,module,exports){
+module.exports=require(15)
+},{}],155:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":153,"./lib/window.console.js":154}],156:[function(require,module,exports){
+module.exports=require(14)
+},{}],157:[function(require,module,exports){
+module.exports=require(15)
+},{}],158:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":156,"./lib/window.console.js":157}],159:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":160,"./lib/timers.js":161}],160:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":151,"polyfill/polyfill-base.js":164}],161:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":164}],162:[function(require,module,exports){
+module.exports=require(14)
+},{}],163:[function(require,module,exports){
+module.exports=require(15)
+},{}],164:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":162,"./lib/window.console.js":163}],165:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],166:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":170,"js-ext/extra/hashmap.js":167,"polyfill/polyfill-base.js":176}],167:[function(require,module,exports){
+module.exports=require(12)
+},{}],168:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":169,"../lib/object.js":170,"./classes.js":166,"js-ext/extra/hashmap.js":167,"polyfill/lib/weakmap.js":174}],169:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":176}],170:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":167,"polyfill/polyfill-base.js":176}],171:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":176}],172:[function(require,module,exports){
+module.exports=require(23)
+},{}],173:[function(require,module,exports){
+module.exports=require(14)
+},{}],174:[function(require,module,exports){
+module.exports=require(45)
+},{}],175:[function(require,module,exports){
+module.exports=require(15)
+},{}],176:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":173,"./lib/window.console.js":175}],177:[function(require,module,exports){
+module.exports=require(48)
+},{}],178:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":177}],179:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":177}],180:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":177}],181:[function(require,module,exports){
 module.exports=require(14)
 },{}],182:[function(require,module,exports){
 module.exports=require(15)
-},{"./lib/matchesselector.js":180,"./lib/window.console.js":181}],183:[function(require,module,exports){
-module.exports=require(63)
-},{"js-ext/lib/object.js":158,"js-ext/lib/string.js":160,"polyfill":170,"polyfill/extra/transition.js":165,"polyfill/extra/vendorCSS.js":167}],184:[function(require,module,exports){
-module.exports=require(64)
-},{"js-ext/lib/object.js":158,"polyfill":170}],185:[function(require,module,exports){
-module.exports=require(65)
-},{"js-ext/lib/object.js":158,"js-ext/lib/string.js":160,"polyfill":170}],186:[function(require,module,exports){
-module.exports=require(66)
-},{"./vdom-ns.js":190,"js-ext/lib/object.js":158,"js-ext/lib/string.js":160,"polyfill":170}],187:[function(require,module,exports){
-module.exports=require(67)
-},{"../css/element.css":154,"./attribute-extractor.js":183,"./element-array.js":184,"./html-parser.js":188,"./node-parser.js":189,"./vdom-ns.js":190,"./vnode.js":191,"js-ext/lib/object.js":158,"js-ext/lib/promise.js":159,"js-ext/lib/string.js":160,"polyfill":170,"polyfill/extra/transition.js":165,"polyfill/extra/transitionend.js":166,"polyfill/extra/vendorCSS.js":167,"utils":171,"window-ext":177}],188:[function(require,module,exports){
+},{}],183:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":181,"./lib/window.console.js":182}],184:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":185,"./lib/timers.js":186}],185:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":167,"polyfill/polyfill-base.js":189}],186:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":189}],187:[function(require,module,exports){
+module.exports=require(14)
+},{}],188:[function(require,module,exports){
+module.exports=require(15)
+},{}],189:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":187,"./lib/window.console.js":188}],190:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":191}],191:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":192,"js-ext/lib/object.js":193}],192:[function(require,module,exports){
+module.exports=require(12)
+},{}],193:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":192,"polyfill/polyfill-base.js":196}],194:[function(require,module,exports){
+module.exports=require(14)
+},{}],195:[function(require,module,exports){
+module.exports=require(15)
+},{}],196:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":194,"./lib/window.console.js":195}],197:[function(require,module,exports){
 module.exports=require(68)
-},{"./attribute-extractor.js":183,"./vdom-ns.js":190,"js-ext/lib/object.js":158,"polyfill":170}],189:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":167,"js-ext/lib/object.js":170,"js-ext/lib/string.js":172,"polyfill":183,"polyfill/extra/transition.js":178,"polyfill/extra/vendorCSS.js":180}],198:[function(require,module,exports){
 module.exports=require(69)
-},{"./attribute-extractor.js":183,"./vdom-ns.js":190,"./vnode.js":191,"js-ext/lib/object.js":158,"polyfill":170}],190:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":167,"js-ext/lib/object.js":170,"polyfill":183}],199:[function(require,module,exports){
 module.exports=require(70)
-},{"js-ext/lib/object.js":158,"polyfill":170}],191:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":167,"js-ext/lib/object.js":170,"js-ext/lib/string.js":172,"polyfill":183}],200:[function(require,module,exports){
 module.exports=require(71)
-},{"./attribute-extractor.js":183,"./html-parser.js":188,"./vdom-ns.js":190,"js-ext/extra/lightmap.js":155,"js-ext/lib/array.js":156,"js-ext/lib/object.js":158,"js-ext/lib/string.js":160,"polyfill":170,"utils/lib/timers.js":173}],192:[function(require,module,exports){
+},{"./vdom-ns.js":204,"js-ext/extra/hashmap.js":167,"js-ext/lib/object.js":170,"js-ext/lib/string.js":172,"polyfill":183}],201:[function(require,module,exports){
 module.exports=require(72)
-},{"./partials/element-plugin.js":185,"./partials/extend-document.js":186,"./partials/extend-element.js":187,"./partials/node-parser.js":189,"js-ext/lib/object.js":158}],193:[function(require,module,exports){
+},{"../css/element.css":165,"./attribute-extractor.js":197,"./element-array.js":198,"./html-parser.js":202,"./node-parser.js":203,"./vdom-ns.js":204,"./vnode.js":205,"js-ext/extra/hashmap.js":167,"js-ext/lib/object.js":170,"js-ext/lib/promise.js":171,"js-ext/lib/string.js":172,"polyfill":183,"polyfill/extra/transition.js":178,"polyfill/extra/transitionend.js":179,"polyfill/extra/vendorCSS.js":180,"utils":184,"window-ext":190}],202:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":197,"./vdom-ns.js":204,"js-ext/extra/hashmap.js":167,"js-ext/lib/object.js":170,"polyfill":183}],203:[function(require,module,exports){
+module.exports=require(74)
+},{"./attribute-extractor.js":197,"./vdom-ns.js":204,"./vnode.js":205,"js-ext/extra/hashmap.js":167,"js-ext/lib/object.js":170,"polyfill":183}],204:[function(require,module,exports){
+module.exports=require(75)
+},{"js-ext/extra/hashmap.js":167,"js-ext/lib/object.js":170,"polyfill":183}],205:[function(require,module,exports){
+module.exports=require(76)
+},{"./attribute-extractor.js":197,"./html-parser.js":202,"./vdom-ns.js":204,"js-ext/extra/hashmap.js":167,"js-ext/extra/lightmap.js":168,"js-ext/lib/array.js":169,"js-ext/lib/object.js":170,"js-ext/lib/string.js":172,"polyfill":183,"utils/lib/timers.js":186}],206:[function(require,module,exports){
+module.exports=require(77)
+},{"./partials/element-plugin.js":199,"./partials/extend-document.js":200,"./partials/extend-element.js":201,"./partials/node-parser.js":203,"js-ext/extra/hashmap.js":167,"js-ext/lib/object.js":170}],207:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":208}],208:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":209,"js-ext/lib/object.js":210}],209:[function(require,module,exports){
+module.exports=require(12)
+},{}],210:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":209,"polyfill/polyfill-base.js":213}],211:[function(require,module,exports){
+module.exports=require(14)
+},{}],212:[function(require,module,exports){
+module.exports=require(15)
+},{}],213:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":211,"./lib/window.console.js":212}],214:[function(require,module,exports){
+(function (global){
+/**
+ * Provides core IO-functionality.
+ *
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ * @module io
+ * @class IO
+*/
+
+"use strict";
+
+require('polyfill/polyfill-base.js');
+require('js-ext');
+
+var NAME = '[io]: ',
+    GET = 'GET',
+    createHashMap = require('js-ext/extra/hashmap.js').createMap,
+    asyncSilent = require('utils').asyncSilent,
+    DEF_REQ_TIMEOUT = 300000, // don't create an ever-lasting request: always quit after 5 minutes
+    BODY_METHODS = createHashMap({
+        POST: 1,
+        PUT: 1
+    }),
+    CONTENT_TYPE = 'Content-Type',
+    MIME_JSON = 'application/json',
+    DEF_CONTENT_TYPE_POST = 'application/x-www-form-urlencoded; charset=UTF-8',
+    ERROR_NO_XHR = 'no valid xhr transport-mechanism available',
+    REQUEST_TIMEOUT = 'Request-timeout',
+    UNKNOW_ERROR = 'Unknown response-error',
+    XHR_ERROR = 'XHR Error',
+    ABORTED = 'Request aborted',
+    NO_XHR = 'No valid xhr found on this browser';
+
+module.exports = function (window) {
+
+    // to prevent multiple IO instances
+    // (which might happen: http://nodejs.org/docs/latest/api/modules.html#modules_module_caching_caveats)
+    // we make sure IO is defined only once. Therefore we bind it to `window` and return it if created before
+    // We need a singleton IO, because submodules might merge in. You can't have them merging
+    // into some other IO-instance than which is used.
+    var Glob = (typeof global !== 'undefined' ? global : /* istanbul ignore next */ this);
+
+    Glob._ITSAmodules || Object.protectedProp(Glob, '_ITSAmodules', createHashMap());
+
+    if (Glob._ITSAmodules.IO) {
+        return Glob._ITSAmodules.IO;
+    }
+
+    var ENCODE_URI_COMPONENT = encodeURIComponent,
+        IO;
+
+    IO = {
+        config: {},
+
+        //===============================================================================================
+        // private methods:
+        //===============================================================================================
+
+        _xhrList: [],
+
+        /**
+         * Initializes the xhr-instance, based on the config-params.
+         * This method is the standard way of doing xhr-requests without processing streams.
+         *
+         * @method _initXHR
+         * @param xhr {Object} xhr-instance
+         * @param options {Object}
+         *    @param [options.url] {String} The url to which the request is sent.
+         *    @param [options.method='GET'] {String} The HTTP method to use.
+         *    can be ignored, even if streams are used --> the returned Promise will always hold all data
+         *    @param [options.sync=false] {boolean} By default, all requests are sent asynchronously. To send synchronous requests, set to true.
+         *           This feature only works in the browser: nodejs will always perform asynchronous requests.
+         *    @param [options.data] {Object} Data to be sent to the server, either to be used by `query-params` or `body`.
+         *    @param [options.headers] {Object} HTTP request headers.
+         *    @param [options.responseType] {String} Force the response type.
+         *    @param [options.timeout=3000] {number} to timeout the request, leading into a rejected Promise.
+         *    @param [options.withCredentials=false] {boolean} Whether or not to send credentials on the request.
+         * @param fulfill {Function} reference to xhr-promise's fulfill-function
+         * @param reject {Function} reference to xhr-promise's reject-function
+         * @param promise {Promise} the xhr-promise which will be extended with the `abort()`-method
+         * @private
+        */
+        _initXHR: function (xhr, options, promise) {
+            console.log(NAME, '_initXHR');
+            var instance = this,
+                url = options.url,
+                method = options.method || GET,
+                headers = options.headers || {}, // all request will get some headers
+                async = !options.sync,
+                data = options.data,
+                reject = promise.reject;
+            // xhr will be null in case of a CORS-request when no CORS is possible
+            if (!xhr) {
+                console.error(NAME, '_initXHR fails: '+ERROR_NO_XHR);
+                reject(new Error(ERROR_NO_XHR));
+                return;
+            }
+            console.log(NAME, '_initXHR succesfully created '+(xhr._isXHR2 ? 'XMLHttpRequest2' : (xhr._isXDR ? 'XDomainRequest' : 'XMLHttpRequest1'))+'-instance');
+
+            // method-name should be in uppercase:
+            method = method.toUpperCase();
+
+            // in case of BODY-method: eliminate any data behind querystring:
+            // else: append data-object behind querystring
+            if (BODY_METHODS[method]) {
+                url = url.split('?'); // now url is an array
+                url = url[0]; // now url is a String again
+            }
+            else if (data) {
+                url += ((url.indexOf('?') > 0) ? '&' : '?') + instance._toQueryString(data);
+            }
+
+            xhr.open(method, url, async);
+            // xhr.responseType = options.responseType || 'text';
+            options.withCredentials && (xhr.withCredentials=true);
+
+
+            // more initialisation might be needed by extended modules:
+            instance._xhrInitList.each(
+                function(fn) {
+                    fn(xhr, promise, headers, method);
+                }
+            );
+
+            // send the request:
+            xhr.send((BODY_METHODS[method] && data) ? (((headers[CONTENT_TYPE]===MIME_JSON) || xhr._isXDR) ? JSON.stringify(data) : instance._toQueryString(data)) : null);
+
+            console.log(NAME, 'xhr send to '+url+' with method '+method);
+
+            // now add xhr.abort() to the promise, so we can call from within the returned promise-instance
+            promise.abort = function() {
+                console.log(NAME, 'xhr aborted');
+                reject(new Error(ABORTED));
+                xhr._aborted = true; // must be set: IE9 won't allow to read anything on xhr after being aborted
+                xhr.abort();
+            };
+
+            // in case synchronous transfer: force an xhr.onreadystatechange:
+            async || xhr.onreadystatechange();
+        },
+
+        /**
+         * Adds the `headers`-object to `xhr`-headers.
+         *
+         * @method _setHeaders
+         * @param xhr {Object} containing the xhr-instance
+         * @param headers {Object} containing all headers
+         * @param method {String} the request-method used
+         * @private
+        */
+        _setHeaders: function(xhr, promise, headers, method) {
+            // XDR cannot set requestheaders, only XHR:
+            if (!xhr._isXDR) {
+                console.log(NAME, '_setHeaders');
+                var name;
+                if ((method!=='POST') && (method!=='PUT')) {
+                    // force GET-request to make a request instead of using cache (like IE does):
+                    headers['If-Modified-Since'] = 'Wed, 15 Nov 1995 01:00:00 GMT';
+                    // header 'Content-Type' should only be set with POST or PUT requests:
+                    delete headers[CONTENT_TYPE];
+                }
+                // set all headers
+                for (name in headers) {
+                    xhr.setRequestHeader(name, headers[name]);
+                }
+
+                // in case of POST or PUT method: always make sure 'Content-Type' is specified
+                ((method!=='POST') && (method!=='PUT')) || (headers && (CONTENT_TYPE in headers)) || xhr.setRequestHeader(CONTENT_TYPE, DEF_CONTENT_TYPE_POST);
+            }
+        },
+
+        /**
+         * Adds 2 methods on the xhr-instance which are used by xhr when events occur:
+         *
+         * xhr.onreadystatechange()
+         * xhr.ontimeout()  // only XMLHttpRequest2
+         *
+         * These events are responsible for making the Promise resolve.
+         * @method _setReadyHandle
+         * @param xhr {Object} containing the xhr-instance
+         * @param fulfill {Function} reference to the Promise fulfill-function
+         * @param reject {Function} reference to the Promise reject-function
+         * @private
+        */
+        _setReadyHandle: function(xhr, promise) {
+            console.log(NAME, '_setReadyHandle');
+            // for XDomainRequest, we need 'onload' instead of 'onreadystatechange'
+            xhr.onreadystatechange = function() {
+                // CANNOT console xhr.responseText here! IE9 will throw an error:
+                // you can only acces it after (xhr.readyState===4)
+                // also check xhr._aborted --> IE9 comes here after aborted and will throw an error when reading xhr's native properties
+                if (!xhr._aborted && (xhr.readyState===4)) {
+                    clearTimeout(xhr._timer);
+                    if ((xhr.status>=200) && (xhr.status<300)) {
+                        console.log(NAME, 'xhr.onreadystatechange will fulfill xhr-instance: '+xhr.responseText);
+                        // In case streamback function is set, but when no intermediate stream-data was send
+                        // (or in case of XDR: below 2kb it doesn't call onprogress)
+                        // --> we might need to call onprogress ourselve.
+                        if (xhr._isStream && !xhr._gotstreamed) {
+                            xhr.onprogress(xhr.responseText);
+                        }
+                        promise.fulfill(xhr);
+                    }
+                    else {
+                        console.warn(NAME, 'xhr.onreadystatechange will reject xhr-instance: '+xhr.statusText);
+                        promise.reject(new Error(xhr.statusText || UNKNOW_ERROR+' '+xhr.status));
+                    }
+                }
+            };
+            xhr.onerror = function() {
+                clearTimeout(xhr._timer);
+                promise.reject(new Error(XHR_ERROR));
+            };
+        },
+
+        /**
+         * Stringifies an object into one string with every pair separated by `&`
+         *
+         * @method _toQueryString
+         * @param data {Object} containing key-value pairs
+         * @return {String} stringified presentation of the object, with every pair separated by `&`
+         * @private
+        */
+        _toQueryString: function(data) {
+            var paramArray = [],
+                key, value;
+        // TODO: use `object` module
+            for (key in data) {
+                value = data[key];
+                key = ENCODE_URI_COMPONENT(key);
+                paramArray.push((value === null) ? key : (key + '=' + ENCODE_URI_COMPONENT(value)));
+            }
+            console.log(NAME, '_toQueryString --> '+paramArray.join('&'));
+            return paramArray.join('&');
+        },
+
+        /**
+         * Sends a HTTP request to the server and returns a Promise with an additional .abort() method to cancel the request.
+         * This method is the standard way of doing xhr-requests without processing streams.
+         *
+         * @method request
+         * @param options {Object}
+         *    @param [options.url] {String} The url to which the request is sent.
+         *    @param [options.method='GET'] {String} The HTTP method to use.
+         *    can be ignored, even if streams are used --> the returned Promise will always hold all data
+         *    @param [options.sync=false] {boolean} By default, all requests are sent asynchronously. To send synchronous requests, set to true.
+         *    @param [options.data] {Object} Data to be sent to the server, either to be used by `query-params` or `body`.
+         *    @param [options.headers] {Object} HTTP request headers.
+         *    @param [options.responseType] {String} Force the response type.
+         *    @param [options.timeout=3000] {number} to timeout the request, leading into a rejected Promise.
+         *    @param [options.withCredentials=false] {boolean} Whether or not to send credentials on the request.
+         *    @param [options.streamback] {Function} callbackfunction in case you want to process streams (needs io-stream module).
+         * @return {Promise} Promise holding the request. Has an additional .abort() method to cancel the request.
+         * <ul>
+         *     <li>on success: xhr {XMLHttpRequest1|XMLHttpRequest2} xhr-response</li>
+         *     <li>on failure: reason {Error}</li>
+         * </ul>
+        */
+        request: function(options) {
+            console.log(NAME, 'request');
+            var instance = this,
+                props = {},
+                xhr, promise;
+            options || (options={});
+            promise = Promise.manage(options.streamback);
+
+            xhr = new window.XMLHttpRequest();
+            props._isXHR2 = ('withCredentials' in xhr) || (window.navigator.userAgent==='fake');
+            // it could be other modules like io-cors or io-stream have subscribed
+            // xhr might be changed, also private properties might be extended
+            instance._xhrList.each(
+                function(fn) {
+                    xhr = fn(xhr, props, options, promise);
+                }
+            );
+            if (!xhr) {
+                return Promise.reject(NO_XHR);
+            }
+            xhr.merge(props);
+            console.log(NAME, 'request creating xhr of type: '+ (props._isXHR2 ? 'XMLHttpRequest2' : (props._isXDR ? 'XDomainRequest' : 'XMLHttpRequest1')));
+            console.log(NAME, 'CORS-IE: '+ props._CORS_IE + ', canStream: '+props._canStream);
+
+            // Don't use xhr.timeout --> IE<10 throws an error when set xhr.timeout
+            // We use a timer that aborts the request
+            Object.defineProperty(xhr, '_timer', {
+                configurable: false,
+                enumerable: false,
+                writable: false,
+                value: setTimeout(function() {
+                           promise.reject(new Error(REQUEST_TIMEOUT));
+                           xhr._aborted = true; // must be set: IE9 won't allow to read anything on xhr after being aborted
+                           xhr.abort();
+                       }, options.timeout || instance.config.timeout || DEF_REQ_TIMEOUT)
+            });
+
+            instance._initXHR(xhr, options, promise);
+
+            // to make any routine informed for the end of xhr.
+            // to make sure they get informed after aother routines have handled the response,
+            // we go async
+            promise.then(function() {
+                asyncSilent(function() {
+                    instance._final.forEach(function(finallySubscriber) {
+                        finallySubscriber(xhr);
+                    });
+                });
+            });
+
+            return promise;
+        },
+
+        /**
+         * Adds a subscriber to the finalization-cycle, which happens after the xhr finishes.
+         * Only gets invoked on fulfilled io.
+         *
+         * @method finalize
+         * @param finallySubscriber {Function} callback to be invoked
+         *        Function recieves `xhr` as its only argument
+         * @return {Object} handler with a `detach()`-method which can be used to detach the subscriber
+         * @since 0.0.1
+         */
+        finalize: function (finallySubscriber) {
+            console.log(NAME, 'finalize');
+            var finalHash = this._final;
+            finalHash.push(finallySubscriber);
+            return {
+                detach: function() {
+                    console.log(NAME, 'detach finalizer');
+                    var index = finalHash.indexOf(finallySubscriber);
+                    (index===-1) || finalHash.splice(index, 1);
+                }
+            };
+        }
+
+    };
+
+    /**
+     * Internal list of finalize-subscribers which are invoked at the end of a successful xhr,
+     * Is an array of function-references.
+     *
+     * @property _final
+     * @default []
+     * @type Array
+     * @private
+     * @since 0.0.1
+    */
+    Object.protectedProp(IO, '_final', []);
+
+    IO._xhrInitList = [
+        IO._setReadyHandle,
+        IO._setHeaders
+    ];
+
+    Glob._ITSAmodules.IO = IO;
+
+    return IO;
+};
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"js-ext":216,"js-ext/extra/hashmap.js":215,"polyfill/polyfill-base.js":228,"utils":229}],215:[function(require,module,exports){
+module.exports=require(12)
+},{}],216:[function(require,module,exports){
 require('./lib/function.js');
 require('./lib/object.js');
 require('./lib/string.js');
 require('./lib/array.js');
 require('./lib/json.js');
 require('./lib/promise.js');
-},{"./lib/array.js":194,"./lib/function.js":195,"./lib/json.js":196,"./lib/object.js":197,"./lib/promise.js":198,"./lib/string.js":199}],194:[function(require,module,exports){
-module.exports=require(19)
-},{"polyfill/polyfill-base.js":202}],195:[function(require,module,exports){
-module.exports=require(11)
-},{"polyfill/polyfill-base.js":202}],196:[function(require,module,exports){
+},{"./lib/array.js":217,"./lib/function.js":218,"./lib/json.js":219,"./lib/object.js":220,"./lib/promise.js":221,"./lib/string.js":222}],217:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":225}],218:[function(require,module,exports){
+/**
+ *
+ * Pollyfils for often used functionality for Functions
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ * @module js-ext
+ * @submodule lib/function.js
+ * @class Function
+ *
+*/
+
+"use strict";
+
+require('polyfill/polyfill-base.js');
+
+var NAME = '[Function]: ';
+
+(function(FunctionPrototype) {
+	/**
+	 * Sets the context of which the function will be execute. in the
+	 * supplied object's context, optionally adding any additional
+	 * supplied parameters to the end of the arguments the function
+	 * is executed with.
+	 *
+	 * @method rbind
+	 * @param [context] {Object} the execution context.
+	 *        The value is ignored if the bound function is constructed using the new operator.
+	 * @param [args*] {any} args* 0..n arguments to append to the end of
+	 *        arguments collection supplied to the function.
+	 * @return {function} the wrapped function.
+	 */
+	FunctionPrototype.rbind = function (context /*, args* */ ) {
+		console.log(NAME+'rbind');
+		var thisFunction = this,
+			arrayArgs,
+			slice = Array.prototype.slice;
+		context || (context = this);
+		if (arguments.length > 1) {
+			// removing `context` (first item) by slicing it out:
+			arrayArgs = slice.call(arguments, 1);
+		}
+
+		return (arrayArgs ?
+			function () {
+				// over here, `arguments` will be the "new" arguments when the final function is called!
+				return thisFunction.apply(context, slice.call(arguments, 0).concat(arrayArgs));
+			} :
+			function () {
+				// over here, `arguments` will be the "new" arguments when the final function is called!
+				return thisFunction.apply(context, arguments);
+			}
+		);
+	};
+
+}(Function.prototype));
+
+},{"polyfill/polyfill-base.js":225}],219:[function(require,module,exports){
 /**
  *
  * Pollyfils for often used functionality for Arrays
@@ -13914,21 +15027,80 @@ var REVIVER = function(key, value) {
 };
 
 JSON.parseWithDate = function(stringifiedObj) {
-    return this.parse(obj, REVIVER);
+    return this.parse(stringifiedObj, REVIVER);
 };
-},{"polyfill/polyfill-base.js":202}],197:[function(require,module,exports){
-module.exports=require(12)
-},{"polyfill/polyfill-base.js":202}],198:[function(require,module,exports){
-module.exports=require(39)
-},{"polyfill":202}],199:[function(require,module,exports){
-module.exports=require(21)
-},{}],200:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":225}],220:[function(require,module,exports){
 module.exports=require(13)
-},{}],201:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":215,"polyfill/polyfill-base.js":225}],221:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":225}],222:[function(require,module,exports){
+module.exports=require(23)
+},{}],223:[function(require,module,exports){
 module.exports=require(14)
-},{}],202:[function(require,module,exports){
+},{}],224:[function(require,module,exports){
 module.exports=require(15)
-},{"./lib/matchesselector.js":200,"./lib/window.console.js":201}],203:[function(require,module,exports){
+},{}],225:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":223,"./lib/window.console.js":224}],226:[function(require,module,exports){
+module.exports=require(14)
+},{}],227:[function(require,module,exports){
+module.exports=require(15)
+},{}],228:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":226,"./lib/window.console.js":227}],229:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":230,"./lib/timers.js":231}],230:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":215,"polyfill/polyfill-base.js":234}],231:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":234}],232:[function(require,module,exports){
+module.exports=require(14)
+},{}],233:[function(require,module,exports){
+module.exports=require(15)
+},{}],234:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":232,"./lib/window.console.js":233}],235:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":242,"js-ext/extra/hashmap.js":236,"polyfill/polyfill-base.js":248}],236:[function(require,module,exports){
+module.exports=require(12)
+},{}],237:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":239,"../lib/object.js":242,"./classes.js":235,"js-ext/extra/hashmap.js":236,"polyfill/lib/weakmap.js":246}],238:[function(require,module,exports){
+"use strict";
+
+require('./lib/function.js');
+require('./lib/object.js');
+require('./lib/string.js');
+require('./lib/array.js');
+require('./lib/json.js');
+require('./lib/promise.js');
+
+module.exports = {
+    createHashMap: require('./extra/hashmap.js').createMap,
+    Classes: require('./extra/classes.js'),
+    LightMap: require('./extra/lightmap.js')
+};
+},{"./extra/classes.js":235,"./extra/hashmap.js":236,"./extra/lightmap.js":237,"./lib/array.js":239,"./lib/function.js":240,"./lib/json.js":241,"./lib/object.js":242,"./lib/promise.js":243,"./lib/string.js":244}],239:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":248}],240:[function(require,module,exports){
+module.exports=require(218)
+},{"polyfill/polyfill-base.js":248}],241:[function(require,module,exports){
+module.exports=require(219)
+},{"polyfill/polyfill-base.js":248}],242:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":236,"polyfill/polyfill-base.js":248}],243:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":248}],244:[function(require,module,exports){
+module.exports=require(23)
+},{}],245:[function(require,module,exports){
+module.exports=require(14)
+},{}],246:[function(require,module,exports){
+module.exports=require(45)
+},{}],247:[function(require,module,exports){
+module.exports=require(15)
+},{}],248:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":245,"./lib/window.console.js":247}],249:[function(require,module,exports){
 (function (process,Buffer){
 "use strict";
 
@@ -14543,7 +15715,7 @@ exports.XMLHttpRequest = function() {
 };
 
 }).call(this,require('_process'),require("buffer").Buffer)
-},{"_process":281,"buffer":270,"child_process":269,"fs":269,"http":274,"https":278,"url":299,"xmldom":257}],204:[function(require,module,exports){
+},{"_process":329,"buffer":318,"child_process":317,"fs":317,"http":322,"https":326,"url":347,"xmldom":306}],250:[function(require,module,exports){
 "use strict";
 
 /**
@@ -14755,111 +15927,117 @@ reset = function () {
 reset();
 
 module.exports = win;
-},{"./lib/XMLHttpRequest.js":203,"js-ext/lib/array.js":205,"polyfill/lib/window.console.js":210,"url":299,"xmldom":257}],205:[function(require,module,exports){
-module.exports=require(19)
-},{"polyfill/polyfill-base.js":208}],206:[function(require,module,exports){
-module.exports=require(13)
-},{}],207:[function(require,module,exports){
-module.exports=require(14)
-},{}],208:[function(require,module,exports){
-module.exports=require(15)
-},{"./lib/matchesselector.js":206,"./lib/window.console.js":207}],209:[function(require,module,exports){
-module.exports=require(13)
-},{}],210:[function(require,module,exports){
-module.exports=require(14)
-},{}],211:[function(require,module,exports){
-module.exports=require(15)
-},{"./lib/matchesselector.js":209,"./lib/window.console.js":210}],212:[function(require,module,exports){
-module.exports=require(28)
-},{"./lib/idgenerator.js":213,"./lib/timers.js":214}],213:[function(require,module,exports){
-module.exports=require(29)
-},{"polyfill/polyfill-base.js":217}],214:[function(require,module,exports){
-module.exports=require(30)
-},{"polyfill/polyfill-base.js":217}],215:[function(require,module,exports){
-module.exports=require(13)
-},{}],216:[function(require,module,exports){
-module.exports=require(14)
-},{}],217:[function(require,module,exports){
-module.exports=require(15)
-},{"./lib/matchesselector.js":215,"./lib/window.console.js":216}],218:[function(require,module,exports){
-module.exports=require(34)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],219:[function(require,module,exports){
-module.exports=require(35)
-},{"../lib/array.js":220,"../lib/function.js":221,"../lib/object.js":222,"polyfill/lib/weakmap.js":226}],220:[function(require,module,exports){
-module.exports=require(19)
-},{"polyfill/polyfill-base.js":228}],221:[function(require,module,exports){
-module.exports=require(11)
-},{"polyfill/polyfill-base.js":228}],222:[function(require,module,exports){
-module.exports=require(12)
-},{"polyfill/polyfill-base.js":228}],223:[function(require,module,exports){
-module.exports=require(39)
-},{"polyfill":228}],224:[function(require,module,exports){
+},{"./lib/XMLHttpRequest.js":249,"js-ext/lib/array.js":251,"polyfill/lib/window.console.js":256,"url":347,"xmldom":306}],251:[function(require,module,exports){
 module.exports=require(21)
-},{}],225:[function(require,module,exports){
-module.exports=require(13)
-},{}],226:[function(require,module,exports){
-module.exports=require(42)
-},{}],227:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":254}],252:[function(require,module,exports){
 module.exports=require(14)
-},{}],228:[function(require,module,exports){
+},{}],253:[function(require,module,exports){
 module.exports=require(15)
-},{"./lib/matchesselector.js":225,"./lib/window.console.js":227}],229:[function(require,module,exports){
-module.exports=require(45)
-},{}],230:[function(require,module,exports){
-module.exports=require(46)
-},{}],231:[function(require,module,exports){
-module.exports=require(47)
-},{}],232:[function(require,module,exports){
-module.exports=require(13)
-},{}],233:[function(require,module,exports){
+},{}],254:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":252,"./lib/window.console.js":253}],255:[function(require,module,exports){
 module.exports=require(14)
-},{}],234:[function(require,module,exports){
+},{}],256:[function(require,module,exports){
 module.exports=require(15)
-},{"./lib/matchesselector.js":232,"./lib/window.console.js":233}],235:[function(require,module,exports){
-module.exports=require(28)
-},{"./lib/idgenerator.js":236,"./lib/timers.js":237}],236:[function(require,module,exports){
-module.exports=require(29)
-},{"polyfill/polyfill-base.js":240}],237:[function(require,module,exports){
+},{}],257:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":255,"./lib/window.console.js":256}],258:[function(require,module,exports){
 module.exports=require(30)
-},{"polyfill/polyfill-base.js":240}],238:[function(require,module,exports){
-module.exports=require(13)
-},{}],239:[function(require,module,exports){
+},{"./lib/idgenerator.js":259,"./lib/timers.js":260}],259:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":236,"polyfill/polyfill-base.js":263}],260:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":263}],261:[function(require,module,exports){
 module.exports=require(14)
-},{}],240:[function(require,module,exports){
+},{}],262:[function(require,module,exports){
 module.exports=require(15)
-},{"./lib/matchesselector.js":238,"./lib/window.console.js":239}],241:[function(require,module,exports){
-module.exports=require(57)
-},{"./lib/sizes.js":242}],242:[function(require,module,exports){
-module.exports=require(58)
-},{"js-ext/lib/object.js":243}],243:[function(require,module,exports){
+},{}],263:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":261,"./lib/window.console.js":262}],264:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],265:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":269,"js-ext/extra/hashmap.js":266,"polyfill/polyfill-base.js":275}],266:[function(require,module,exports){
 module.exports=require(12)
-},{"polyfill/polyfill-base.js":246}],244:[function(require,module,exports){
+},{}],267:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":268,"../lib/object.js":269,"./classes.js":265,"js-ext/extra/hashmap.js":266,"polyfill/lib/weakmap.js":273}],268:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":275}],269:[function(require,module,exports){
 module.exports=require(13)
-},{}],245:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":266,"polyfill/polyfill-base.js":275}],270:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":275}],271:[function(require,module,exports){
+module.exports=require(23)
+},{}],272:[function(require,module,exports){
 module.exports=require(14)
-},{}],246:[function(require,module,exports){
+},{}],273:[function(require,module,exports){
+module.exports=require(45)
+},{}],274:[function(require,module,exports){
 module.exports=require(15)
-},{"./lib/matchesselector.js":244,"./lib/window.console.js":245}],247:[function(require,module,exports){
-module.exports=require(63)
-},{"js-ext/lib/object.js":222,"js-ext/lib/string.js":224,"polyfill":234,"polyfill/extra/transition.js":229,"polyfill/extra/vendorCSS.js":231}],248:[function(require,module,exports){
-module.exports=require(64)
-},{"js-ext/lib/object.js":222,"polyfill":234}],249:[function(require,module,exports){
-module.exports=require(65)
-},{"js-ext/lib/object.js":222,"js-ext/lib/string.js":224,"polyfill":234}],250:[function(require,module,exports){
-module.exports=require(66)
-},{"./vdom-ns.js":254,"js-ext/lib/object.js":222,"js-ext/lib/string.js":224,"polyfill":234}],251:[function(require,module,exports){
-module.exports=require(67)
-},{"../css/element.css":218,"./attribute-extractor.js":247,"./element-array.js":248,"./html-parser.js":252,"./node-parser.js":253,"./vdom-ns.js":254,"./vnode.js":255,"js-ext/lib/object.js":222,"js-ext/lib/promise.js":223,"js-ext/lib/string.js":224,"polyfill":234,"polyfill/extra/transition.js":229,"polyfill/extra/transitionend.js":230,"polyfill/extra/vendorCSS.js":231,"utils":235,"window-ext":241}],252:[function(require,module,exports){
+},{}],275:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":272,"./lib/window.console.js":274}],276:[function(require,module,exports){
+module.exports=require(48)
+},{}],277:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":276}],278:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":276}],279:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":276}],280:[function(require,module,exports){
+module.exports=require(14)
+},{}],281:[function(require,module,exports){
+module.exports=require(15)
+},{}],282:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":280,"./lib/window.console.js":281}],283:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":284,"./lib/timers.js":285}],284:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":266,"polyfill/polyfill-base.js":288}],285:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":288}],286:[function(require,module,exports){
+module.exports=require(14)
+},{}],287:[function(require,module,exports){
+module.exports=require(15)
+},{}],288:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":286,"./lib/window.console.js":287}],289:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":290}],290:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":291,"js-ext/lib/object.js":292}],291:[function(require,module,exports){
+module.exports=require(12)
+},{}],292:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":291,"polyfill/polyfill-base.js":295}],293:[function(require,module,exports){
+module.exports=require(14)
+},{}],294:[function(require,module,exports){
+module.exports=require(15)
+},{}],295:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":293,"./lib/window.console.js":294}],296:[function(require,module,exports){
 module.exports=require(68)
-},{"./attribute-extractor.js":247,"./vdom-ns.js":254,"js-ext/lib/object.js":222,"polyfill":234}],253:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":266,"js-ext/lib/object.js":269,"js-ext/lib/string.js":271,"polyfill":282,"polyfill/extra/transition.js":277,"polyfill/extra/vendorCSS.js":279}],297:[function(require,module,exports){
 module.exports=require(69)
-},{"./attribute-extractor.js":247,"./vdom-ns.js":254,"./vnode.js":255,"js-ext/lib/object.js":222,"polyfill":234}],254:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":266,"js-ext/lib/object.js":269,"polyfill":282}],298:[function(require,module,exports){
 module.exports=require(70)
-},{"js-ext/lib/object.js":222,"polyfill":234}],255:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":266,"js-ext/lib/object.js":269,"js-ext/lib/string.js":271,"polyfill":282}],299:[function(require,module,exports){
 module.exports=require(71)
-},{"./attribute-extractor.js":247,"./html-parser.js":252,"./vdom-ns.js":254,"js-ext/extra/lightmap.js":219,"js-ext/lib/array.js":220,"js-ext/lib/object.js":222,"js-ext/lib/string.js":224,"polyfill":234,"utils/lib/timers.js":237}],256:[function(require,module,exports){
+},{"./vdom-ns.js":303,"js-ext/extra/hashmap.js":266,"js-ext/lib/object.js":269,"js-ext/lib/string.js":271,"polyfill":282}],300:[function(require,module,exports){
 module.exports=require(72)
-},{"./partials/element-plugin.js":249,"./partials/extend-document.js":250,"./partials/extend-element.js":251,"./partials/node-parser.js":253,"js-ext/lib/object.js":222}],257:[function(require,module,exports){
+},{"../css/element.css":264,"./attribute-extractor.js":296,"./element-array.js":297,"./html-parser.js":301,"./node-parser.js":302,"./vdom-ns.js":303,"./vnode.js":304,"js-ext/extra/hashmap.js":266,"js-ext/lib/object.js":269,"js-ext/lib/promise.js":270,"js-ext/lib/string.js":271,"polyfill":282,"polyfill/extra/transition.js":277,"polyfill/extra/transitionend.js":278,"polyfill/extra/vendorCSS.js":279,"utils":283,"window-ext":289}],301:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":296,"./vdom-ns.js":303,"js-ext/extra/hashmap.js":266,"js-ext/lib/object.js":269,"polyfill":282}],302:[function(require,module,exports){
+module.exports=require(74)
+},{"./attribute-extractor.js":296,"./vdom-ns.js":303,"./vnode.js":304,"js-ext/extra/hashmap.js":266,"js-ext/lib/object.js":269,"polyfill":282}],303:[function(require,module,exports){
+module.exports=require(75)
+},{"js-ext/extra/hashmap.js":266,"js-ext/lib/object.js":269,"polyfill":282}],304:[function(require,module,exports){
+module.exports=require(76)
+},{"./attribute-extractor.js":296,"./html-parser.js":301,"./vdom-ns.js":303,"js-ext/extra/hashmap.js":266,"js-ext/extra/lightmap.js":267,"js-ext/lib/array.js":268,"js-ext/lib/object.js":269,"js-ext/lib/string.js":271,"polyfill":282,"utils/lib/timers.js":285}],305:[function(require,module,exports){
+module.exports=require(77)
+},{"./partials/element-plugin.js":298,"./partials/extend-document.js":299,"./partials/extend-element.js":300,"./partials/node-parser.js":302,"js-ext/extra/hashmap.js":266,"js-ext/lib/object.js":269}],306:[function(require,module,exports){
 function DOMParser(options){
 	this.options = options ||{locator:{}};
 	
@@ -15116,7 +16294,7 @@ if(typeof require == 'function'){
 	exports.DOMParser = DOMParser;
 }
 
-},{"./dom":258,"./sax":259}],258:[function(require,module,exports){
+},{"./dom":307,"./sax":308}],307:[function(require,module,exports){
 /*
  * DOM Level 2
  * Object DOMException
@@ -16256,7 +17434,7 @@ if(typeof require == 'function'){
 	exports.XMLSerializer = XMLSerializer;
 }
 
-},{}],259:[function(require,module,exports){
+},{}],308:[function(require,module,exports){
 //[4]   	NameStartChar	   ::=   	":" | [A-Z] | "_" | [a-z] | [#xC0-#xD6] | [#xD8-#xF6] | [#xF8-#x2FF] | [#x370-#x37D] | [#x37F-#x1FFF] | [#x200C-#x200D] | [#x2070-#x218F] | [#x2C00-#x2FEF] | [#x3001-#xD7FF] | [#xF900-#xFDCF] | [#xFDF0-#xFFFD] | [#x10000-#xEFFFF]
 //[4a]   	NameChar	   ::=   	NameStartChar | "-" | "." | [0-9] | #xB7 | [#x0300-#x036F] | [#x203F-#x2040]
 //[5]   	Name	   ::=   	NameStartChar (NameChar)*
@@ -16842,7 +18020,7 @@ if(typeof require == 'function'){
 }
 
 
-},{}],260:[function(require,module,exports){
+},{}],309:[function(require,module,exports){
 /*
 * attributes:
 * value, expanded, primary-button
@@ -16852,11 +18030,14 @@ require('polyfill/polyfill-base.js');
 module.exports = function (window) {
 
     "use strict";
-    var itagsCore = require('itags.core')(window);
-    itagsCore.defineElement('i-head');
+    require('itags.core')(window);
+
+    var itagName = 'i-head';
+
+    window.ITAGS[itagName] || window.document.createItag(itagName);
 
 };
-},{"itags.core":268,"polyfill/polyfill-base.js":211}],261:[function(require,module,exports){
+},{"itags.core":316,"polyfill/polyfill-base.js":257}],310:[function(require,module,exports){
 /*
 * attributes:
 * value, expanded, primary-button
@@ -16866,49 +18047,16 @@ require('polyfill/polyfill-base.js');
 module.exports = function (window) {
 
     "use strict";
-    var itagsCore = require('itags.core')(window);
-    itagsCore.defineElement('i-item');
+    require('itags.core')(window);
+
+    var itagName = 'i-item';
+
+    window.ITAGS[itagName] || window.document.createItag(itagName);
 
 };
-},{"itags.core":268,"polyfill/polyfill-base.js":211}],262:[function(require,module,exports){
-// See for all prototypes: https://developer.mozilla.org/en-US/docs/Web/API
-require('polyfill/polyfill-base.js');
-
-module.exports = function (window) {
-
-    "use strict";
-    var itagsCore = require('itags.core')(window),
-        Event = require('event-dom')(window);
-
-    Event.after('click', function(e) {
-        e.target.setAttr('value', 'I am clicked i-parcel-userdata!');
-    }, 'i-parcel-userdata');
-
-    itagsCore.defineParcel(
-        'userdata',
-        function() {
-console.info('renderFunc i-parcel');
-            this.setHTML('I am <b>'+this.getTagName()+'</b> '+this.dummy+' modeldata.b: '+this.getData('modeldata').b);
-            this.after('dblclick', this.msg);
-        },
-        {
-            init: function() {
-                console.info('initFunc');
-            },
-            destroy: function() {
-                console.info('destroyFunc');
-            },
-            dummy: 10,
-            msg: function() {
-                this.setAttr('value', 'I am double clicked!');
-            }
-        }
-    );
-
-};
-},{"event-dom":6,"itags.core":268,"polyfill/polyfill-base.js":211}],263:[function(require,module,exports){
-var css = "var css = \"/* ======================================================================= */\\n/* ======================================================================= */\\n/* ======================================================================= */\\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\\n/* will define which itag will be css-shadowed                             /*\\n/* ======================================================================= */\\nitag-css {\\n    i-tag: i-select;  /* set the property-value to the proper itag */\\n}\\n/* ======================================================================= */\\n/* ======================================================================= */\\n/* ======================================================================= */\\n\\n\\n/* ================================= */\\n/* set invisiblity when not rendered */\\n/* ================================= */\\ni-select:not(.itag-rendered) {\\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\\n    opacity: 0 !important;\\n    position: absolute !important;\\n    left: -9999px !important;\\n    top: -9999px !important;\\n    z-index: -1;\\n}\\n\\ni-select:not(.itag-rendered) * {\\n    opacity: 0 !important;\\n}\\n/* ================================= */\\n\\n\\ni-select > div {\\n    position: relative;\\n}\\n\\ni-select > button.pure-button {\\n    -webkit-touch-callout: none;\\n    -webkit-user-select: none;\\n    -khtml-user-select: none;\\n    -moz-user-select: none;\\n    -ms-user-select: none;\\n    user-select: none;\\n    position: relative;\\n    padding-right: 1.45em;\\n    padding-left: 0;\\n    max-width: 6em;\\n}\\n\\ni-select > button div.btntext {\\n    margin: 0 0.25em 0 1em;\\n    white-space: nowrap;\\n    overflow: hidden;\\n    text-overflow: ellipsis;\\n    max-width: 6em;\\n}\\n\\ni-select > button div.pointer {\\n    border-left: 0.4em solid rgba(0, 0, 0, 0);\\n    border-right: 0.4em solid rgba(0, 0, 0, 0);\\n    border-top: 0.5em solid #000;\\n    right: 0.25em;\\n    position: absolute;\\n    bottom: 0.2em;\\n}\\n\\ni-select > div > div {\\n    position: absolute;\\n    z-index: 2;\\n    left: 0;\\n    top: 0;\\n    cursor: pointer;\\n    border-style: solid;\\n    border-width: 0.1em;\\n    -webkit-border-radius: 0 0 0.3em 0.3em;\\n    -moz-border-radius: 0 0 0.3em 0.3em;\\n    border-radius: 0 0 0.3em 0.3em;\\n    -webkit-box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\\n    -moz-box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\\n    box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\\n}\\n\\ni-select ul {\\n    font-size: 1.2em;\\n    padding: 0 0 0.3em;\\n    list-style: none;\\n    margin: 0;\\n}\\n\\ni-select li {\\n    padding: 0.25em 0.7em;\\n}\\n\\ni-select li.focussed {\\n    background-color: #B3D4FF;\\n}\\n\\ni-select li.selected:before {\\n    content: '*';\\n    margin-left: -0.7em;\\n    padding-right: 0.25em;\\n}\\n\\ni-select li:before,\\ni-select li:after {\\n    content: '';\\n    padding: 0;\\n    margin: 0;\\n}\\n\\n/* color specification:; */\\n\\ni-select > div > div {\\n    background-color: #FFF;\\n    border-color: #000;\\n}\\n\\ni-select li:hover {\\n    background-color: #B3D4FF;\\n}\\n\\ni-select > button.pure-button-primary div.pointer {\\n    border-top: 0.5em solid #FEFEFE;\\n}\"; (require(\"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify\"))(css); module.exports = css;"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],264:[function(require,module,exports){
+},{"itags.core":316,"polyfill/polyfill-base.js":257}],311:[function(require,module,exports){
+var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-select;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-select:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-select:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\n\ni-select > div {\n    position: relative;\n    z-index: 2;\n}\n\ni-select > button.pure-button {\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    -khtml-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    position: relative;\n    padding-right: 1.45em;\n    padding-left: 0;\n    max-width: 8em;\n}\n\ni-select > button div.btntext {\n    margin: 0 0.25em 0 1em;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 8em;\n}\n\ni-select > button div.pointer {\n    border-left: 0.4em solid rgba(0, 0, 0, 0);\n    border-right: 0.4em solid rgba(0, 0, 0, 0);\n    border-top: 0.5em solid #000;\n    right: 0.25em;\n    position: absolute;\n    bottom: 0.2em;\n}\n\ni-select > div > div {\n    position: absolute;\n    left: 0;\n    top: 0;\n    cursor: pointer;\n    border-style: solid;\n    border-width: 0.1em;\n    -webkit-border-radius: 0 0 0.3em 0.3em;\n    -moz-border-radius: 0 0 0.3em 0.3em;\n    border-radius: 0 0 0.3em 0.3em;\n    -webkit-box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n    -moz-box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n    box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n}\n\ni-select ul {\n    font-size: 1.2em;\n    padding: 0 0 0.3em;\n    list-style: none;\n    margin: 0;\n}\n\ni-select li {\n    padding: 0.25em 0.7em;\n}\n\ni-select li.focussed {\n    background-color: #B3D4FF;\n}\n\ni-select li.selected:before {\n    content: '*';\n    margin-left: -0.7em;\n    padding-right: 0.25em;\n}\n\ni-select li:before,\ni-select li:after {\n    content: '';\n    padding: 0;\n    margin: 0;\n}\n\n/* color specification:; */\n\ni-select > div > div {\n    background-color: #FFF;\n    border-color: #000;\n}\n\ni-select li:hover {\n    background-color: #B3D4FF;\n}\n\ni-select > button.pure-button-primary div.pointer {\n    border-top: 0.5em solid #FEFEFE;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],312:[function(require,module,exports){
 /*
 * attributes:
 * value, expanded, primary-button
@@ -16920,164 +18068,214 @@ require('./css/i-select.css');
 
 var TRANS_TIME_SHOW = 0.3,
     TRANS_TIME_HIDE = 0.1,
-    CLASS_ITAG_RENDERED = 'itag-rendered';
+    NATIVE_OBJECT_OBSERVE = !!Object.observe,
+    CLASS_ITAG_RENDERED = 'itag-rendered',
+    utils = require('utils'),
+    laterSilent = utils.laterSilent,
+    later = utils.later;
 
 module.exports = function (window) {
-
+NATIVE_OBJECT_OBSERVE=false;
     "use strict";
-    var itagsCore = require('itags.core')(window),
-        Event = require('event-dom')(window),
-        DEFAULT_INVALID_VALUE = 'choose';
 
-    require('focusmanager')(window);
-    require('i-item')(window);
-    require('i-head')(window);
+    require('itags.core')(window);
 
-    Event.before('manualfocus', function(e) {
-        // the i-select itself is unfocussable, but its button is
-        // we need to patch `manualfocus`,
-        // which is emitted on node.focus()
-        // a focus by userinteraction will always appear on the button itself
-        // so we don't bother that
-        var element = e.target;
-        // cautious:  all child-elements that have `manualfocus` event are
-        // subscribed as well: we NEED to inspect e.target and only continue
-        // if e.target===i-select
-        if (e.target.getTagName()==='I-SELECT') {
-            e.preventDefault();
-            element.itagReady().then(
-                function() {
-                    var button = element.getElement('button');
-                    button && button.focus();
-                }
-            );
-        }
-    }, 'i-select');
+    var DEFAULT_INVALID_VALUE = 'choose',
+        itagName = 'i-select',
+        DOCUMENT = window.document,
+        Event;
 
-    Event.after(['click', 'keydown'], function(e) {
-        var element = e.target.getParent(),
-            expanded, value, liNodes, focusNode;
-        if ((e.type==='click') || (e.keyCode===40)) {
-            expanded = element.model.expanded;
-            value = element.model.value;
-            if (!expanded) {
-                liNodes = element.getAll('ul[fm-manage] > li');
-                focusNode = liNodes[value-1];
-                focusNode && focusNode.focus();
+    if (!window.ITAGS[itagName]) {
+        Event = require('event-dom')(window);
+        require('focusmanager')(window);
+        require('i-item')(window);
+        require('i-head')(window);
+
+        Event.before('manualfocus', function(e) {
+            // the i-select itself is unfocussable, but its button is
+            // we need to patch `manualfocus`,
+            // which is emitted on node.focus()
+            // a focus by userinteraction will always appear on the button itself
+            // so we don't bother that
+            var element = e.target;
+            // cautious:  all child-elements that have `manualfocus` event are
+            // subscribed as well: we NEED to inspect e.target and only continue
+            // if e.target===i-select
+            if (element.getTagName()==='I-SELECT') {
+                e.preventDefault();
+                element.itagReady().then(
+                    function() {
+                        var button = element.getElement('button');
+                        button && button.focus();
+                    }
+                );
             }
-            element.setAttr('expanded', expanded ? 'false' : 'true');
-        }
-    }, 'i-select > button');
+        }, 'i-select');
 
-    Event.after(['click', 'keypress'], function(e) {
-        var liNode = e.target,
-            element, index;
-        if ((e.type==='click') || (e.keyCode===13)) {
-            element = liNode.inside('i-select');
-            index = liNode.getParent().getAll('li').indexOf(liNode);
-            element.setAttrs([
-                {name: 'expanded', value: 'false'},
-                {name: 'value', value: index+1}
-            ]);
-            element.getElement('button').focus();
-        }
-    }, 'i-select ul[fm-manage] > li');
-
-    itagsCore.defineItag('i-select', function() {
-        var element = this,
-            model = element.model,
-            items = model.items,
-            buttonTexts = model.buttonTexts,
-            expanded, primaryButton, valueString, value, invalidValue,
-            item, content, buttonText, len, i, markValue,
-            button, container, itemsContainer, renderedBefore;
-
-        // read the current state of the attributes:
-        expanded = (element.getAttr('expanded')==='true');
-        primaryButton = (element.getAttr('primary-button')==='true');
-        valueString = element.getAttr('value');
-        value = valueString.validateNumber() ? Math.max(0, parseInt(valueString, 10)) : 0;
-        invalidValue = (element.getAttr('invalid-value') || DEFAULT_INVALID_VALUE);
-
-        // store the state inside element.model:
-        model.expanded = expanded;
-        model.primaryButton = primaryButton;
-        model.value = value;
-        model.invalidValue = invalidValue;
-
-        len = items.length;
-        (value>len) && (value=0);
-        markValue = value - 1;
-
-        if (value>0) {
-            buttonText = buttonTexts[markValue] || items[markValue];
-        }
-        else {
-            buttonText = invalidValue;
-        }
-
-        // rebuild the button:
-        button = element.getElement('button');
-        button.toggleClass('pure-button-primary', primaryButton);
-        button.getElement('div.btntext').setHTML(buttonText);
-
-        // show or hide the content, note that when not rendered before, you should use transitions
-        renderedBefore = element.hasClass(CLASS_ITAG_RENDERED);
-        container = element.getElement('>div');
-        if (expanded) {
-            container.show(renderedBefore ? TRANS_TIME_SHOW : null);
-        }
-        else {
-            container.hide(renderedBefore ? TRANS_TIME_HIDE : null);
-        }
-
-        itemsContainer = element.getElement('ul[fm-manage]');
-        content = '';
-        for (i=0; i<len; i++) {
-            item = items[i];
-            content += '<li'+((i===markValue) ? ' class="selected"' : '')+'>'+item+'</li>';
-        }
-
-        // set the items:
-        itemsContainer.setHTML(content);
-    }, {
-        init: function() {
-            var element = this,
-                itemNodes = element.getAll('>i-item'),
-                items = [],
-                buttonTexts = [],
-                content;
-
-            itemNodes.forEach(function(node, i) {
-                var header = node.getElement('i-head');
-                if (header) {
-                    buttonTexts[i] = header.getHTML();
-                    header.remove(true);
+        Event.after('xblur', function(e) {
+            // the i-select itself is unfocussable, but its button is
+            // we need to patch `manualfocus`,
+            // which is emitted on node.focus()
+            // a focus by userinteraction will always appear on the button itself
+            // so we don't bother that
+            var element = e.target,
+                model;
+            // cautious:  all child-elements that have `manualfocus` event are
+            // subscribed as well: we NEED to inspect e.target and only continue.
+            //
+            // I didn;t figure out why, but it seems we need 2 different `later`
+            // functions in order to make the i-select prevent from acting
+            // unpredictable:
+            laterSilent(function() {
+                // if e.target===i-select
+                if ((element.getTagName()==='I-SELECT') && !element.hasClass('focussed')) {
+                    model = element.model;
+                    model.expanded = false;
+                    NATIVE_OBJECT_OBSERVE || later(function() {
+                        DOCUMENT.refreshItags();
+                    }, 150);
                 }
-                items[items.length] = node.getHTML();
-            });
-            element.model.items = items;
-            element.model.buttonTexts = buttonTexts;
+            },25);
+        }, 'i-select');
 
-            // building the template of the itag:
-            content = '<button class="pure-button pure-button-bordered"><div class="pointer"></div><div class="btntext"></div></button>';
-            // first: outerdiv which will be relative positioned
-            // next: innerdiv which will be absolute positioned
-            // also: hide the container by default --> updateUI could make it shown
-            content += '<div class="itsa-hidden">' +
-                         '<div>'+
-                           '<ul fm-manage="li" fm-keyup="38" fm-keydown="40" fm-noloop="true"></ul>';
-                         '</div>'+
-                       '</div>';
-            // set the content:
-            element.setHTML(content);
-        }
-    });
+        Event.before('keydown', function(e) {
+            if (e.keyCode===40) {
+                // prevent minus windowscroll:
+                e.preventDefaultContinue();
+            }
+        }, 'i-select > button');
+
+        Event.after(['click', 'keydown'], function(e) {
+            var element = e.target.getParent(),
+                expanded, value, liNodes, focusNode, model;
+            if ((e.type==='click') || (e.keyCode===40)) {
+                (e.keyCode===40) && e.preventDefault();
+                model = element.model;
+                expanded = model.expanded;
+                value = element.model.value;
+                if (!expanded) {
+                    liNodes = element.getAll('ul[fm-manage] > li');
+                    focusNode = liNodes[value-1];
+                    focusNode && focusNode.focus();
+                }
+                model.expanded = !expanded;
+            }
+        }, 'i-select > button');
+
+        Event.after(['click', 'keypress'], function(e) {
+            var liNode = e.target,
+                element, index, model;
+            if ((e.type==='click') || (e.keyCode===13)) {
+                element = liNode.inside('i-select');
+                model = element.model;
+                index = liNode.getParent().getAll('li').indexOf(liNode);
+                model.expanded = false;
+                model.value = index+1;
+                element.getElement('button').focus();
+            }
+        }, 'i-select ul[fm-manage] > li');
+
+        window.document.createItag('i-select', {
+            init: function() {
+                var element = this,
+                    itemNodes = element.getAll('>i-item'),
+                    items = [],
+                    buttonTexts = [],
+                    content;
+
+                itemNodes.forEach(function(node, i) {
+                    var header = node.getElement('i-head');
+                    if (header) {
+                        buttonTexts[i] = header.getHTML();
+                        header.remove(true);
+                    }
+                    items[items.length] = node.getHTML();
+                });
+                element.model.items = items;
+                element.model.buttonTexts = buttonTexts;
+
+                // building the template of the itag:
+                content = '<button class="pure-button pure-button-bordered"><div class="pointer"></div><div class="btntext"></div></button>';
+                // first: outerdiv which will be relative positioned
+                // next: innerdiv which will be absolute positioned
+                // also: hide the container by default --> updateUI could make it shown
+                content += '<div class="itsa-hidden">' +
+                             '<div>'+
+                               '<ul fm-manage="li" fm-keyup="38" fm-keydown="40" fm-noloop="true"></ul>';
+                             '</div>'+
+                           '</div>';
+                // set the content:
+                element.setHTML(content);
+            },
+            args: {
+                expanded: 'boolean',
+                'primary-button': 'boolean',
+                value: 'string',
+                'invalid-value': 'string'
+            },
+            sync: function() {
+console.warn('i-select sync');
+                // inside sync, YOU CANNOT change attributes which are part of `args` !!!
+                // those actions will be ignored.
+
+                // BE CAREFUL to start async actions here:
+                // be aware that before ending, this method can run again
+                // if you do, then make sure to handle possible running
+                // async actions well !!!
+
+                var element = this,
+                    model = element.model,
+                    items = model.items,
+                    buttonTexts = model.buttonTexts,
+                    value = model.value,
+                    item, content, buttonText, len, i, markValue, containerShowing,
+                    button, container, itemsContainer, renderedBefore;
+
+                len = items.length;
+                (value>len) && (value=0);
+                markValue = value - 1;
+
+                if (value>0) {
+                    buttonText = buttonTexts[markValue] || items[markValue];
+                }
+                else {
+                    buttonText = model['invalid-value'] || DEFAULT_INVALID_VALUE;
+                }
+
+                // rebuild the button:
+                button = element.getElement('button');
+                button.toggleClass('pure-button-primary', model['primary-button']);
+                button.getElement('div.btntext').setHTML(buttonText);
+
+                // show or hide the content, note that when not rendered before, you should use transitions
+                renderedBefore = element.hasClass(CLASS_ITAG_RENDERED);
+                container = element.getElement('>div');
+
+                containerShowing = container.getData('nodeShowed');
+                if (model.expanded) {
+                    (containerShowing===true) || container.show(renderedBefore ? TRANS_TIME_SHOW : null);
+                }
+                else {
+                    (containerShowing===false) || container.hide(renderedBefore ? TRANS_TIME_HIDE : null);
+                }
+
+                itemsContainer = element.getElement('ul[fm-manage]');
+                content = '';
+                for (i=0; i<len; i++) {
+                    item = items[i];
+                    content += '<li'+((i===markValue) ? ' class="selected"' : '')+'>'+item+'</li>';
+                }
+
+                // set the items:
+                itemsContainer.setHTML(content);
+            }
+        });
+    }
 
 };
-},{"./css/i-select.css":263,"css":4,"event-dom":6,"focusmanager":73,"i-head":260,"i-item":261,"itags.core":268,"js-ext/lib/string.js":199,"polyfill/polyfill-base.js":211}],265:[function(require,module,exports){
-var css = "var css = \"\"; (require(\"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify\"))(css); module.exports = css;"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],266:[function(require,module,exports){
+},{"./css/i-select.css":311,"css":4,"event-dom":6,"focusmanager":78,"i-head":309,"i-item":310,"itags.core":316,"js-ext/lib/string.js":244,"polyfill/polyfill-base.js":257,"utils":258}],313:[function(require,module,exports){
+var css = ""; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],314:[function(require,module,exports){
 /*
 * attributes:
 * value, expanded, primary-button
@@ -17094,36 +18292,42 @@ var TRANS_TIME_SHOW = 0.3,
 module.exports = function (window) {
 
     "use strict";
-    var itagsCore = require('itags.core')(window),
+    require('itags.core')(window);
+
+    var itagName = 'i-tabpane',
+        Event;
+
+    if (!window.ITAGS[itagName]) {
         Event = require('event-dom')(window);
+        // require('focusmanager')(window);
+        require('i-item')(window);
+        require('i-head')(window);
 
-    // require('focusmanager')(window);
-    require('i-item')(window);
-    require('i-head')(window);
+        window.document.createItag('i-tabpane');
+    }
 
-    window.document.createItag('i-tabpane');
-
-    // window.HTMLElement.prototype.subClass('i-tabpane', function() {
-        // console.warn('constructor itabpane');
-    // });
 
 };
-},{"./css/i-tabpane.css":265,"css":4,"event-dom":6,"i-head":260,"i-item":261,"itags.core":268,"js-ext/lib/string.js":199,"polyfill/polyfill-base.js":211}],267:[function(require,module,exports){
-var css = "var css = \"span.itag-data {\\n    display: none !important;\\n}\"; (require(\"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify\"))(css); module.exports = css;"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],268:[function(require,module,exports){
+},{"./css/i-tabpane.css":313,"css":4,"event-dom":6,"i-head":309,"i-item":310,"itags.core":316,"js-ext/lib/string.js":244,"polyfill/polyfill-base.js":257}],315:[function(require,module,exports){
+var css = "span.itag-data {\n    display: none !important;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],316:[function(require,module,exports){
 (function (global){
 
 /*jshint proto:true */
 
 "use strict";
 
-require('js-ext');
 require('polyfill/polyfill-base.js');
 require('./css/itags.core.css');
 
-var asyncSilent = require('utils').asyncSilent,
+var jsExt = require('js-ext/js-ext.js'), // want the full version: include it at the top, so that object.merge is available
+    createHashMap = require('js-ext/extra/hashmap.js').createMap,
+    asyncSilent = require('utils').asyncSilent,
     laterSilent = require('utils').laterSilent,
     CLASS_ITAG_RENDERED = 'itag-rendered',
+    DEFAULT_CHAIN_INIT = true,
+    DEFAULT_CHAIN_DESTROY = true,
+    Classes = jsExt.Classes,
     NODE = 'node',
     REMOVE = 'remove',
     INSERT = 'insert',
@@ -17135,117 +18339,36 @@ var asyncSilent = require('utils').asyncSilent,
     ATTRIBUTE_REMOVED = ATTRIBUTE+REMOVE,
     ATTRIBUTE_CHANGED = ATTRIBUTE+CHANGE,
     ATTRIBUTE_INSERTED = ATTRIBUTE+INSERT,
-    DELAYED_FINALIZE_EVENTS = {
-        'mousedown': true,
-        'mouseup': true,
-        'mousemove': true,
-        'panmove': true,
-        'panstart': true,
-        'panleft': true,
-        'panright': true,
-        'panup': true,
-        'pandown': true,
-        'pinchmove': true,
-        'rotatemove': true,
-        'focus': true,
-        'blur': true,
-        'keydown': true,
-        'keyup': true,
-        'keypress': true
-    },
     DELAYED_EVT_TIME = 1000,
-    merge = function (sourceObj, targetObj) {
-        var name;
-        for (name in sourceObj) {
-            if (name==='init') {
-                targetObj._initUI = sourceObj.init;
-            }
-            else if (name==='destroy') {
-                targetObj._destroyUI = sourceObj.destroy;
-            }
-            else if (name==='render') {
-/*jshint -W083 */
-                targetObj.renderUI = sourceObj.render;
-            }
-            else {
-                targetObj[name] = sourceObj[name];
-            }
-        }
-    },
-    mergeFlat = function() {
-
-    },
-    NOOP = function() {},
-    // Define configurable, writable and non-enumerable props
-    // if they don't exist.
-    defineUnNumerableProperty = function (object, name, method) {
-        Object.defineProperty(object, name, {
-            configurable: true,
-            enumerable: true,
-            writable: true,
-            value: method
-        });
-    },
-    ITAG_METHODS = {
-        init: true,
-        render: true,
-        destroy: true
-    },
-    ITAG_SPECIAL_METHODS = {
-        init: true,
-        destroy: true
-    },
-    DEFAULT_METHODS = {
-        initUI: function() {
-            var instance = this,
-                vnode = instance.vnode,
-                superInit;
-            if (!vnode.ce_initialized && !vnode.removedFromDOM && !vnode.ce_destroyed) {
-                superInit = function(obj) {
-                    if (obj.$super) {
-                        superInit(obj.$super);
-                    }
-                    obj.hasOwnProperty('_initUI') && obj._initUI.call(instance);
-                };
-                superInit(instance);
-                Object.protectedProp(vnode, 'ce_initialized', true);
-            }
-        },
-        _initUI: NOOP,
-        _destroyUI: NOOP,
-        renderUI: NOOP,
-        destroyUI: function() {
-            var instance = this,
-                vnode = instance.vnode,
-                superDestroy;
-            instance.detachAll();
-            if (vnode.removedFromDOM && vnode.ce_initialized && !vnode.ce_destroyed) {
-                superDestroy = function(obj) {
-                    obj.hasOwnProperty('_destroyUI') && obj._destroyUI.call(instance);
-                    if (obj.$super) {
-                        superDestroy(obj.$super);
-                    }
-                };
-                superDestroy(instance);
-                Object.protectedProp(vnode, 'ce_destroyed', true);
-            }
-        }
-    };
-
-DELAYED_FINALIZE_EVENTS.keys().forEach(function(key) {
-    DELAYED_FINALIZE_EVENTS[key+'outside'] = true;
-});
+    NATIVE_OBJECT_OBSERVE = !!Object.observe,
+    ITAG_METHODS = createHashMap({
+        init: '_initUI',
+        sync: '_syncUI',
+        destroy: '_destroyUI',
+        args: '_args'
+    }),
+    // ITAG_METHOD_VALUES must match previous ITAG_METHODS's values!
+    ITAG_METHOD_VALUES = createHashMap({
+        _initUI: true,
+        _syncUI: true,
+        _destroyUI: true,
+        _args: true
+    }),
+    NOOP = function() {};
 
 module.exports = function (window) {
+NATIVE_OBJECT_OBSERVE=false;
 
     var DOCUMENT = window.document,
         PROTOTYPE_CHAIN_CAN_BE_SET = arguments[1], // hidden feature, used by unit-test
         RUNNING_ON_NODE = (typeof global !== 'undefined') && (global.window!==window),
         PROTO_SUPPORTED = !!Object.__proto__,
-        itagCore, MUTATION_EVENTS, Event, registerDelay, focusManager;
+        itagCore, MUTATION_EVENTS, PROTECTED_MEMBERS, EXTRA_BASE_MEMBERS, Event, IO,
+        ATTRIBUTE_EVENTS, registerDelay, focusManager, mergeFlat;
 
     require('vdom')(window);
     Event = require('event-dom')(window);
+    IO = require('io')(window);
 
 /*jshint boss:true */
     if (itagCore=window._ItagCore) {
@@ -17254,9 +18377,192 @@ module.exports = function (window) {
     }
 
     Object.protectedProp(window, 'ITAGS', {}); // for the ProtoConstructors
-    DEFAULT_METHODS.merge(Event.Listener);
+
+    EXTRA_BASE_MEMBERS = {
+        initUI: function(constructor, reInitialize) {
+            var instance = this,
+                vnode = instance.vnode,
+                superInit;
+            if ((reInitialize || !vnode.ce_initialized) && !vnode.removedFromDOM && !vnode.ce_destroyed) {
+                superInit = function(constructor) {
+                    var classCarierBKP = instance.__classCarier__;
+                    if (constructor.$$chainInited) {
+                        instance.__classCarier__ = constructor.$$super.constructor;
+                        superInit(constructor.$$super.constructor);
+                    }
+                    classCarierBKP = instance.__classCarier__;
+                    // don't call `hasOwnProperty` directly on obj --> it might have been overruled
+                    Object.prototype.hasOwnProperty.call(constructor.prototype, '_initUI') && constructor.prototype._initUI.call(instance);
+                };
+                if (reInitialize) {
+                    instance.setHTML(vnode.ce_initContent);
+                }
+                else {
+                    // already synced on the server:
+                    // bind the stored json-data on the property `model`:
+                    itagCore.retrieveModel(instance);
+                    Object.protectedProp(vnode, 'ce_initContent', instance.getHTML());
+                }
+                superInit(constructor || instance.constructor);
+                Object.protectedProp(vnode, 'ce_initialized', true);
+            }
+            return instance;
+        },
+        destroyUI: function(constructor, reInitialize) {
+            var instance = this,
+                vnode = instance.vnode,
+                superDestroy, observer;
+            if (vnode.ce_initialized && (reInitialize || vnode.removedFromDOM) && !vnode.ce_destroyed) {
+                if (!reInitialize && NATIVE_OBJECT_OBSERVE) {
+                    observer = instance.getData('_observer');
+                    observer && Object.unobserve(instance.model, observer);
+                }
+                superDestroy = function(constructor) {
+                    var classCarierBKP = instance.__classCarier__;
+                    // don't call `hasOwnProperty` directly on obj --> it might have been overruled
+                    Object.prototype.hasOwnProperty.call(constructor.prototype, '_destroyUI') && constructor.prototype._destroyUI.call(instance);
+                    if (constructor.$$chainDestroyed) {
+                        instance.__classCarier__ = constructor.$$super.constructor;
+                        superDestroy(constructor.$$super.constructor);
+                    }
+                    classCarierBKP = instance.__classCarier__;
+                };
+                superDestroy(constructor || instance.constructor);
+                instance.detachAll();
+                reInitialize || Object.protectedProp(vnode, 'ce_destroyed', true);
+            }
+            return instance;
+        },
+        syncUI: function() {
+            var instance = this,
+                args = instance.args,
+                vnode = instance.vnode;
+            if (vnode.ce_initialized && !vnode.removedFromDOM && !vnode.ce_destroyed) {
+                vnode._setUnchangableAttrs(args);
+                instance._syncUI.apply(instance, arguments);
+                vnode._setUnchangableAttrs(null);
+            }
+            return instance;
+        },
+        reInitializeUI: function(constructor) {
+            var instance = this,
+                vnode = instance.vnode;
+            if (vnode.ce_initialized && !vnode.removedFromDOM && !vnode.ce_destroyed) {
+                instance.destroyUI(constructor, true)
+                        .initUI(constructor, true)
+                        .syncUI();
+            }
+            return instance;
+        },
+        bindModel: function(model) {
+            var instance = this,
+                stringifiedData, prevContent, observer;
+            if (NATIVE_OBJECT_OBSERVE) {
+                observer = instance.getData('_observer');
+                observer && Object.unobserve(instance.model, observer);
+            }
+            instance.model = model;
+            if (NATIVE_OBJECT_OBSERVE) {
+                observer = function() {
+                    instance.syncUI();
+                };
+                Object.observe(instance.model, observer);
+                instance.setData('_observer', observer);
+            }
+            instance.syncUI();
+            if (RUNNING_ON_NODE) {
+                // store the modeldata inside an inner div-node
+                try {
+                    stringifiedData = JSON.stringify(model);
+                    prevContent = instance.getElement('span.itag-data');
+                    prevContent && prevContent.remove();
+                    instance.prepend('<span class="itag-data">'+stringifiedData+'</span>');
+                }
+                catch(e) {
+                    console.warn(e);
+                }
+            }
+        },
+        isRendered: function() {
+            return !!this.getData('itagRendered');
+        },
+        _initUI: NOOP,
+        _destroyUI: NOOP,
+        _syncUI: NOOP,
+        _args: {},
+        _modelToAttrs: function() {
+            var instance = this,
+                args = instance._args,
+                model = instance.model,
+                newAttrs = [];
+            args.each(function(value, key) {
+                newAttrs[newAttrs.length] = {name: key, value: model[key]};
+            });
+            (newAttrs.length>0) && instance.setAttrs(newAttrs, true);
+            return instance;
+        },
+        _attrsToModel: function() {
+            var instance = this,
+                args = instance._args,
+                model = instance.model,
+                attrValue;
+            args.each(function(value, key) {
+                attrValue = instance.getAttr(key);
+                switch (value) {
+                    case 'boolean':
+                        attrValue = (attrValue==='true');
+                        break;
+                    case 'number':
+                        attrValue = parseFloat(attrValue);
+                        break;
+                    case 'date':
+                        attrValue = attrValue.toDate();
+                        break;
+                }
+                model[key] = attrValue;
+            });
+            return instance;
+        },
+    };
+
+    EXTRA_BASE_MEMBERS.merge(Event.Listener)
+                      .merge(Event._CE_listener);
+
+    PROTECTED_MEMBERS = createHashMap();
+    EXTRA_BASE_MEMBERS.each(function(value, key) {
+        ITAG_METHOD_VALUES[key] || (PROTECTED_MEMBERS[key] = true);
+    });
 
     MUTATION_EVENTS = [NODE_REMOVED, NODE_INSERTED, NODE_CONTENT_CHANGE, ATTRIBUTE_REMOVED, ATTRIBUTE_CHANGED, ATTRIBUTE_INSERTED];
+    ATTRIBUTE_EVENTS = [ATTRIBUTE_REMOVED, ATTRIBUTE_CHANGED, ATTRIBUTE_INSERTED];
+
+    mergeFlat = function(constructor, domElement) {
+        var prototype = constructor.prototype,
+            keys, i, name, propDescriptor;
+        if (domElement.__addedProps__) {
+            // set before: erase previous properties
+            domElement.__addedProps__.each(function(value, key) {
+                delete domElement[key];
+            });
+        }
+        domElement.__addedProps__ = {};
+        while (prototype !== window.HTMLElement.prototype) {
+            keys = Object.getOwnPropertyNames(prototype);
+/*jshint boss:true */
+            for (i=0; name=keys[i]; i++) {
+/*jshint boss:false */
+                if (!domElement.__addedProps__[name]) {
+                    propDescriptor = Object.getOwnPropertyDescriptor(prototype, name);
+                    propDescriptor.configurable = true;
+                    // needs configurable, otherwise we cannot delete it when refreshing
+                    Object.defineProperty(domElement, name, propDescriptor);
+                    domElement.__addedProps__[name] = true;
+                }
+            }
+            constructor = constructor.$$super.constructor;
+            prototype = constructor.prototype;
+        }
+    };
 
     focusManager = function(element) {
         var focusManagerNode = element.getElement('[focusmanager].focussed');
@@ -17265,144 +18571,206 @@ module.exports = function (window) {
 
     itagCore = {
 
-        itagFilter: function(e) {
-            return !!e.target._updateUI;
+        DELAYED_FINALIZE_EVENTS: {
+            'mousedown': true,
+            'mouseup': true,
+            'mousemove': true,
+            'panmove': true,
+            'panstart': true,
+            'panleft': true,
+            'panright': true,
+            'panup': true,
+            'pandown': true,
+            'pinchmove': true,
+            'rotatemove': true,
+            // 'focus': true, // focus needs immediate response !
+            'manualfocus': true,
+            // 'keydown': true, // keydown needs immediate response !
+            'keyup': true
+            //'keypress': true, // keypress needs immediate response !
+            //'blur': true, // blur needs immediate response !
         },
 
-        _renderDomElements: function(tagName, updateFn, properties, isParcel) {
-            var itagElements = DOCUMENT.getAll(tagName),
+        itagFilter: function(e) {
+            return e.target.vnode.isItag;
+        },
+
+        renderDomElements: function(itagName, domElementConstructor) {
+            var itagElements = DOCUMENT.getAll(itagName),
                 len = itagElements.length,
                 i, itagElement;
             for (i=0; i<len; i++) {
                 itagElement = itagElements[i];
-                this._upgradeElement(itagElement, updateFn, properties, isParcel);
+                this.upgradeElement(itagElement, domElementConstructor);
             }
         },
 
-        defineParcel: function(parcelName, updateFn, properties) {
-            if (parcelName.contains('-')) {
-                console.warn(parcelName+' should not consist of a minus token');
-                return;
+        upgradeElement: function(domElement, domElementConstructor) {
+            var instance = this,
+                proto = domElementConstructor.prototype,
+                observer;
+            domElement.model = {};
+            if (NATIVE_OBJECT_OBSERVE) {
+                observer = function() {
+                    instance.syncUI();
+                };
+                Object.observe(domElement.model, observer);
+                domElement.setData('_observer', observer);
             }
-            this._defineElement('i-parcel-'+parcelName, updateFn, properties, true);
-        },
-
-
-        defineElement: function(itagName) {
-            if (!itagName.contains('-')) {
-                console.warn('defineElement: '+itagName+' should consist of a minus token');
-                return;
-            }
-            window.ITAGS[itagName] = function() {
-                return DOCUMENT._createElement(itagName);
-            };
-        },
-
-        defineItag: function(itagName, updateFn, properties) {
-            if (!itagName.contains('-')) {
-                console.warn('defineItag: '+itagName+' should consist of a minus token');
-                return;
-            }
-            this._defineElement(itagName, updateFn, properties);
-        },
-
-        _defineElement: function(itagName, updateFn, properties, isParcel) {
-            itagName = itagName.toLowerCase();
-            if (window.ITAGS[itagName]) {
-                console.warn(itagName+' already exists and cannot be redefined');
-                return;
-            }
-            (typeof updateFn === 'function') || (updateFn=NOOP);
-            this._renderDomElements(itagName, updateFn, properties, isParcel);
-            window.ITAGS[itagName] = this._createElement(itagName, updateFn, properties, isParcel);
-        },
-
-        _createElement: function(itagName, updateFn, properties, isParcel) {
-            var instance = this;
-            return function() {
-                var element = DOCUMENT._createElement(itagName);
-                instance._upgradeElement(element, updateFn, properties, isParcel);
-                return element;
-            };
-        },
-
-        _upgradeElement: function(element, updateFn, properties, isParcel) {
-            merge(properties, element);
-            merge({
-                _updateUI: isParcel ? function() {
-                        var vnode = element.vnode;
-                        if (vnode._data) {
-                            if (!vnode.ce_initialized) {
-                                if (typeof element._init==='function') {
-                                    element._init();
-                                }
-                                else {
-                                    Object.protectedProp(vnode, 'ce_initialized', true);
-                                }
-                                element._setRendered();
-                            }
-                            updateFn.call(element);
-                        }
-                    } : updateFn,
-                _injectModel: function(model) {
-                    var instance = this,
-                        stringifiedData;
-                    instance.model = model;
-                    instance._updateUI();
-                    if (RUNNING_ON_NODE) {
-                        // store the modeldata inside an inner div-node
-                        try {
-                            stringifiedData = JSON.stringify(model);
-                            instance.prepend('<span class="itag-data">'+stringifiedData+'</span>');
-                        }
-                        catch(e) {
-                            console.warn(e);
-                        }
+            if (!PROTO_SUPPORTED) {
+                mergeFlat(domElementConstructor, domElement);
+                domElement.__proto__ = proto;
+                domElement.__classCarier__ = domElementConstructor;
+                domElement.after('itag:prototypechanged', function(e) {
+                    var prototypes = e.prototypes;
+                    mergeFlat(domElementConstructor, domElement);
+                    if ('init' in prototypes) {
+                        domElement.reInitializeUI(domElement.__proto__.constructor);
                     }
-                },
-                _retrieveModel: function() {
-                    // try to load the model from a stored inner div-node
-                    var instance = this,
-                        dataNode = instance.getElement('span.itag-data'),
-                        stringifiedData;
-                    if (dataNode) {
-                        try {
-                            stringifiedData = dataNode.getHTML();
-                            instance.model = JSON.parseWithDate(stringifiedData);
-                            dataNode.remove(true);
-                        }
-                        catch(e) {
-                            console.warn(e);
-                        }
+                    else if ('sync' in prototypes) {
+                        domElement.syncUI();
                     }
-                    return instance.model;
-                },
-                _setRendered: function() {
-                    var instance = this;
-                    if (instance.hasClass(CLASS_ITAG_RENDERED)) {
-                        // already rendered on the server:
-                        // bin the sored json-data on the property `model`:
-                        instance.retrieveModel();
+                });
+                domElement.after('itag:prototyperemoved', function(e) {
+                    var properties = e.properties;
+                    mergeFlat(domElementConstructor, domElement);
+                    if (properties.contains('init')) {
+                        domElement.reInitializeUI(domElement.__proto__.constructor);
                     }
-                    else {
-                        instance.setClass(CLASS_ITAG_RENDERED, null, null, true);
+                    else if (properties.contains('sync')) {
+                        domElement.syncUI();
                     }
-                    instance._itagReady || (instance._itagReady=window.Promise.manage());
-                    instance._itagReady.fulfill();
-                },
-                model: {}
-            }, element);
-            merge(Event.Listener, element);
-            // render, but do this after the element is created:
+                });
+            }
+            else {
+                domElement.__proto__ = proto;
+                domElement.__classCarier__ = domElementConstructor;
+            }
+            // sync, but do this after the element is created:
             // in the next eventcycle:
-            asyncSilent(function() {
-                (typeof element._init==='function') && element._init();
-                element._updateUI();
-                isParcel || element._setRendered();
-                element.hasClass('focussed') && focusManager(element);
+            asyncSilent(function(){
+                domElement._attrsToModel();
+                domElement.initUI(PROTO_SUPPORTED ? null : domElementConstructor);
+                domElement.syncUI();
+                instance.setRendered(domElement);
             });
-        }
+        },
 
+        retrieveModel: function(domElement) {
+            // try to load the model from a stored inner div-node
+            var dataNode = domElement.getElement('span.itag-data'),
+                stringifiedData;
+            if (dataNode) {
+                try {
+                    stringifiedData = dataNode.getHTML();
+                    domElement.model = JSON.parseWithDate(stringifiedData);
+                    dataNode.remove(true);
+                }
+                catch(e) {
+                    console.warn(e);
+                }
+            }
+            return domElement.model;
+        },
+
+        setRendered: function(domElement) {
+            domElement.setClass(CLASS_ITAG_RENDERED, null, null, true);
+            domElement.setData('itagRendered', true);
+            domElement._itagReady || (domElement._itagReady=window.Promise.manage());
+            domElement._itagReady.fulfill();
+        },
+
+        setupWatchers: function() {
+            Event.after(
+                NODE_REMOVED,
+                function(e) {
+                    var node = e.target;
+                    node.destroyUI(PROTO_SUPPORTED ? null : node.__proto__.constructor);
+                },
+                itagCore.itagFilter
+            );
+
+            // Always watch for attibute change-events:
+            // this way, we make the itags responsive for manual domchanges.
+            Event.after(
+                ATTRIBUTE_EVENTS,
+                function(e) {
+                    var element = e.target;
+                    element._attrsToModel();
+                    NATIVE_OBJECT_OBSERVE || DOCUMENT.refreshItags();
+                    // this affect modeldata, the event.finalizer will sync the UI
+                    // AFTER synced, we might need to refocus --> that's why refocussing
+                    // is done async.
+                    if (element.hasClass('focussed')) {
+                        asyncSilent(function() {
+                            focusManager(element);
+                        });
+                    }
+                },
+                itagCore.itagFilter
+            );
+
+            if (!NATIVE_OBJECT_OBSERVE) {
+                Event.finalize(function(e) {
+                    var type = e.type;
+                    if (!MUTATION_EVENTS[type] && !type.endsWith('outside')) {
+                        if (itagCore.DELAYED_FINALIZE_EVENTS[type]) {
+                            registerDelay || (registerDelay = laterSilent(function() {
+                                DOCUMENT.refreshItags();
+                                registerDelay = null;
+                            }, DELAYED_EVT_TIME));
+                        }
+                        else {
+                            DOCUMENT.refreshItags();
+                        }
+                    }
+                });
+
+                IO.finalize(function() {
+                    DOCUMENT.refreshItags();
+                });
+
+                // we patch the window timer functions in order to run `refreshItags` afterwards:
+                window._setTimeout = window.setTimeout;
+                window._setInterval = window.setInterval;
+
+                window.setTimeout = function() {
+                    var args = arguments;
+                    args[0] = (function(originalFn) {
+                        return function() {
+                            originalFn();
+                            DOCUMENT.refreshItags();
+                        };
+                    })(args[0]);
+                    window._setTimeout.apply(this, arguments);
+                };
+
+                window.setInterval = function() {
+                    var args = arguments;
+                    args[0] = (function(originalFn) {
+                        return function() {
+                            originalFn();
+                            DOCUMENT.refreshItags();
+                        };
+                    })(args[0]);
+                    window._setInterval.apply(this, arguments);
+                };
+
+                if (typeof window.setImmediate !== 'undefined') {
+                    window._setImmediate = window.setImmediate;
+                    window.setImmediate = function() {
+                        var args = arguments;
+                        args[0] = (function(originalFn) {
+                            return function() {
+                                originalFn();
+                                DOCUMENT.refreshItags();
+                            };
+                        })(args[0]);
+                        window._setImmediate.apply(this, arguments);
+                    };
+                }
+            }
+        }
     };
 
     DOCUMENT._createElement = DOCUMENT.createElement;
@@ -17415,81 +18783,171 @@ module.exports = function (window) {
     };
 
 
+    (function(FunctionPrototype) {
+        var originalSubClass = FunctionPrototype.subClass;
 
-
-
-
-
-
-
-
-
-
-    var SubItag = function(itagName, itagPrototypes) {
-    console.info('subItag '+arguments.length);
-        var instance = this,
-            parentProto, proto, domElementConstructor;
-
-        itagName = itagName.toLowerCase();
-        if (window.ITAGS[itagName]) {
-            console.warn(itagName+' already exists and cannot be redefined');
-            return;
-        }
-
-        if (instance.SuperProto) {
-            parentProto = instance.SuperProto;
-            proto = Object.create(parentProto);
-        }
-        else {
-            parentProto = Object.create(window.HTMLElement.prototype);
-            merge(DEFAULT_METHODS, parentProto);
-            proto = Object.create(parentProto);
-        }
-        proto = Object.create(parentProto);
-        merge(itagPrototypes, proto);
-
-        proto.$super = parentProto;
-        proto.$orig = {};
-
-        // merge some system function in case they don't exists
-        domElementConstructor = function() {
-            var domElement = DOCUMENT._createElement(itagName);
-
-            if (PROTO_SUPPORTED) {
-                domElement.__proto__ = proto;
+        FunctionPrototype._mergePrototypes = FunctionPrototype.mergePrototypes;
+        FunctionPrototype.mergePrototypes = function(prototypes, force) {
+            var instance = this,
+                silent;
+            if (!instance.$$itag) {
+                // default mergePrototypes
+                instance._mergePrototypes.apply(instance, arguments);
             }
             else {
-                mergeFlat(itagPrototypes, domElement);
+                instance._mergePrototypes(prototypes, force, ITAG_METHODS, PROTECTED_MEMBERS);
+                silent = arguments[2];
+                silent || Event.emit(instance, 'itag:prototypechanged', {prototypes: prototypes, force: force});
             }
-console.info(parentProto.init);
-            domElement.initUI();
-
-            domElement.$super = proto;
-            domElement.$orig = {};
-            return domElement;
+            return instance;
         };
 
-        domElementConstructor.SuperProto = proto;
-        domElementConstructor.subItag = SubItag;
-        // domElementConstructor.$super = ProtoConstructor.$super;
-        // domElementConstructor.$orig = ProtoConstructor.$orig;
+        FunctionPrototype._removePrototypes = FunctionPrototype.removePrototypes;
+        FunctionPrototype.removePrototypes = function(properties) {
+            var instance = this;
+            if (!instance.$$itag) {
+                // default mergePrototypes
+                instance._removePrototypes.apply(instance, arguments);
+            }
+            else {
+                instance._removePrototypes(properties, ITAG_METHODS);
+                Event.emit(instance, 'itag:prototyperemoved', {properties: properties});
+            }
+            return instance;
+        };
 
-        window.ITAGS[itagName] = domElementConstructor;
-        return domElementConstructor;
+        FunctionPrototype.subClass = function(constructor, prototypes, chainInit, chainDestroy) {
+            var instance = this,
+                baseProt, proto, domElementConstructor, itagName;
+            if (typeof constructor === 'string') {
+                // Itag subclassing
+                if (typeof prototypes === 'boolean') {
+                    chainDestroy = chainInit;
+                    chainInit = prototypes;
+                    prototypes = null;
+                }
+                (typeof chainInit === 'boolean') || (chainInit=DEFAULT_CHAIN_INIT);
+                (typeof chainDestroy === 'boolean') || (chainDestroy=DEFAULT_CHAIN_DESTROY);
+
+                itagName = constructor.toLowerCase();
+                if (window.ITAGS[itagName]) {
+                    console.warn(itagName+' already exists: it will be redefined');
+                }
+
+                // if instance.isItag, then we subclass an existing i-tag
+                baseProt = instance.prototype;
+                proto = Object.create(baseProt);
+
+                // merge some system function in case they don't exists
+                domElementConstructor = function() {
+                    var domElement = DOCUMENT._createElement(itagName);
+                    itagCore.upgradeElement(domElement, domElementConstructor);
+                    return domElement;
+                };
+
+                domElementConstructor.prototype = proto;
+
+                proto.constructor = domElementConstructor;
+                domElementConstructor.$$itag = itagName;
+                domElementConstructor.$$chainInited = chainInit ? true : false;
+                domElementConstructor.$$chainDestroyed = chainDestroy ? true : false;
+                domElementConstructor.$$super = baseProt;
+                domElementConstructor.$$orig = {};
+
+                prototypes && domElementConstructor.mergePrototypes(prototypes, true, true);
+                window.ITAGS[itagName] = domElementConstructor;
+
+                itagCore.renderDomElements(itagName, domElementConstructor);
+
+                return domElementConstructor;
+            }
+            else {
+                // Function subclassing
+                return originalSubClass.apply(instance, arguments);
+            }
+        };
+
+    }(Function.prototype));
+
+
+
+    var createItagBaseClass = function () {
+        return Function.prototype.subClass.apply(window.HTMLElement);
     };
 
+    /**
+     * Returns a base class with the given constructor and prototype methods
+     *
+     * @for Object
+     * @method createClass
+     * @param [constructor] {Function} constructor for the class
+     * @param [prototype] {Object} Hash map of prototype members of the new class
+     * @static
+     * @return {Function} the new class
+    */
+    Object.protectedProp(Classes, 'ItagBaseClass', createItagBaseClass().mergePrototypes(EXTRA_BASE_MEMBERS, true, {}, {}));
 
+    // because `mergePrototypes` cannot merge object-getters, we will add the getter `$super` manually:
+    Object.defineProperties(Classes.ItagBaseClass.prototype, Classes.coreMethods);
 
+    Object.defineProperty(Classes.ItagBaseClass.prototype, '$superProp', {
+        value: function(/* func, *args */) {
+            var instance = this,
+                classCarierReturn = instance.__$superCarierStart__ || instance.__classCarier__ || instance.__methodClassCarier__,
+                currentClassCarier = instance.__classCarier__ || instance.__methodClassCarier__,
+                args = arguments,
+                superClass, superPrototype, firstArg, returnValue;
 
+            instance.__$superCarierStart__ = null;
+            if (args.length === 0) {
+                instance.__classCarier__ = classCarierReturn;
+                return;
+            }
 
+            superClass = currentClassCarier.$$super.constructor,
+            superPrototype = superClass.prototype,
+            firstArg = Array.prototype.shift.apply(args); // will decrease the length of args with one
+            firstArg = ITAG_METHODS[firstArg] || firstArg;
+            (firstArg === '_initUI') && (firstArg='initUI'); // to re-initiate chaining
+            (firstArg === '_destroyUI') && (firstArg='destroyUI'); // to re-initiate chaining
+            if ((firstArg==='initUI') && currentClassCarier.$$chainInited) {
+                console.warn('init cannot be invoked manually, because the Class is `chainInited`');
+                return currentClassCarier;
+            }
 
+            if ((firstArg==='destroyUI') && currentClassCarier.$$chainDestroyed) {
+                console.warn('destroy cannot be invoked manually, because the Class is `chainDestroyed`');
+                return currentClassCarier;
+            }
 
-
-
-
-    Object.protectedProp(DOCUMENT, 'createItag', function (tagName, prototypes) {
-        return new SubItag(tagName, prototypes);
+            if (typeof superPrototype[firstArg] === 'function') {
+                instance.__classCarier__ = superClass;
+                if ((firstArg==='initUI') || (firstArg==='destroyUI')) {
+                    returnValue = superPrototype[firstArg].call(instance, instance.__classCarier__);
+                }
+                else {
+                    returnValue = superPrototype[firstArg].apply(instance, args);
+                }
+            }
+            instance.__classCarier__ = classCarierReturn;
+            return returnValue || superPrototype[firstArg];
+        }
     });
+
+    /**
+     * Returns a base class with the given constructor and prototype methods
+     *
+     * @for Object
+     * @method createClass
+     * @param [constructor] {Function} constructor for the class
+     * @param [prototype] {Object} Hash map of prototype members of the new class
+     * @static
+     * @return {Function} the new class
+    */
+    Object.protectedProp(DOCUMENT, 'createItag', Classes.ItagBaseClass.subClass.bind(Classes.ItagBaseClass));
+
+
+
 
     (function(HTMLElementPrototype) {
         HTMLElementPrototype.isItag = function() {
@@ -17506,90 +18964,126 @@ console.info(parentProto.init);
         };
     }(window.HTMLElement.prototype));
 
-    DOCUMENT.refreshParcels = function() {
-        var list = this.getParcels(),
-            len = list.length,
-            i, parcel;
-        for (i=0; i<len; i++) {
-            parcel = list[i];
-            parcel.renderUI();
-            parcel.hasClass('focussed') && focusManager(parcel);
-        }
-    };
+    (function(ElementPrototype) {
+        var setAttributeBKP = ElementPrototype.setAttribute;
+        var removeAttributeBKP = ElementPrototype.removeAttribute;
 
-    Event.after(
-        [ATTRIBUTE_CHANGED, ATTRIBUTE_INSERTED, ATTRIBUTE_REMOVED],
-        function(e) {
-            var element = e.target;
-            element.renderUI();
-            element.hasClass('focussed') && focusManager(element);
-        },
-        itagCore.itagFilter
-    );
-
-    Event.after(
-        NODE_REMOVED,
-        function(e) {
-            var node = e.target;
-console.info('NODE IS REMOVED');
-            (typeof node.destroyUI==='function') && node.destroyUI();
-            node.detachAll();
-        }
-        // itagCore.itagFilter
-    );
-
-    Event.finalize(function(e) {
-        if (DELAYED_FINALIZE_EVENTS[e.type]) {
-            registerDelay || (registerDelay = laterSilent(function() {
-                DOCUMENT.refreshParcels();
-                registerDelay = null;
-            }, DELAYED_EVT_TIME));
-        }
-        else {
-            DOCUMENT.refreshParcels();
-        }
-    });
-
-    // we patch the window timer functions in order to run `refreshParcels` afterwards:
-    window._setTimeout = window.setTimeout;
-    window._setInterval = window.setInterval;
-
-    window.setTimeout = function() {
-        var args = arguments;
-        args[0] = (function(originalFn) {
-            return function() {
-                console.info('setTimeout');
-                originalFn();
-                DOCUMENT.refreshParcels();
-            };
-        })(args[0]);
-        window._setTimeout.apply(this, arguments);
-    };
-
-    window.setInterval = function() {
-        var args = arguments;
-        args[0] = (function(originalFn) {
-            return function() {
-                originalFn();
-                DOCUMENT.refreshParcels();
-            };
-        })(args[0]);
-        window._setInterval.apply(this, arguments);
-    };
-
-    if (typeof window.setImmediate !== 'undefined') {
-        window._setImmediate = window.setImmediate;
-        window.setImmediate = function() {
-            var args = arguments;
-            args[0] = (function(originalFn) {
-                return function() {
-                    originalFn();
-                    DOCUMENT.refreshParcels();
-                };
-            })(args[0]);
-            window._setImmediate.apply(this, arguments);
+        ElementPrototype.removeAttribute = function(attributeName) {
+            var instance = this;
+            if (!instance.isItag()) {
+                removeAttributeBKP.apply(instance, arguments);
+            }
+            else {
+                if (instance._args[attributeName]) {
+                    delete instance.model[attributeName];
+                }
+                else {
+                    removeAttributeBKP.apply(instance, arguments);
+                }
+            }
         };
+        ElementPrototype.setAttribute = function(attributeName, value, silent) {
+            var instance = this,
+                valueType;
+            if (silent || !instance.isItag()) {
+                setAttributeBKP.apply(instance, arguments);
+            }
+            else {
+/*jshint boss:true */
+                if (valueType=instance._args[attributeName]) {
+/*jshint boss:false */
+                    switch (valueType) {
+                        case 'boolean':
+                            value = (value==='true');
+                            break;
+                        case 'number':
+                            value = parseFloat(value);
+                            break;
+                        case 'date':
+                            value = value.toDate();
+                            break;
+                    }
+                    instance.model[attributeName] = value;
+                }
+                else {
+                    setAttributeBKP.apply(instance, arguments);
+                }
+            }
+        };
+    }(window.Element.prototype));
+
+    DOCUMENT.refreshItags = function() {
+        var list = this.getItags(),
+            len = list.length,
+            i, itagElement;
+        for (i=0; i<len; i++) {
+            itagElement = list[i];
+            if (itagElement.isRendered && itagElement.isRendered()) {
+
+// console.info('refreshItags before: '+JSON.stringify(itagElement.model));
+
+                itagElement._modelToAttrs();
+                itagElement.syncUI();
+
+// console.info('refreshItags after: '+JSON.stringify(itagElement.model));
+                itagElement.hasClass('focussed') && focusManager(itagElement);
+            }
+        }
+    };
+
+
+    if (PROTO_SUPPORTED) {
+        Event.after(
+            'itag:prototypechanged',
+            function(e) {
+                var prototypes = e.prototypes,
+                    ItagClass = e.target,
+                    nodeList, node, i, length;
+                if ('init' in prototypes) {
+                    nodeList = DOCUMENT.getAll(ItagClass.$$itag+'.'+CLASS_ITAG_RENDERED);
+                    length = nodeList.length;
+                    for (i=0; i<length; i++) {
+                        node = nodeList[i];
+                        node.reInitializeUI();
+                    }
+                }
+                else if ('sync' in prototypes) {
+                    nodeList = DOCUMENT.getAll(ItagClass.$$itag+'.'+CLASS_ITAG_RENDERED);
+                    length = nodeList.length;
+                    for (i=0; i<length; i++) {
+                        node = nodeList[i];
+                        node.syncUI();
+                    }
+                }
+            }
+        );
+        Event.after(
+            'itag:prototyperemoved',
+            function(e) {
+                var properties = e.properties,
+                    ItagClass = e.target,
+                    nodeList, node, i, length;
+                if (properties.contains('init')) {
+                    nodeList = DOCUMENT.getAll(ItagClass.$$itag+'.'+CLASS_ITAG_RENDERED);
+                    length = nodeList.length;
+                    for (i=0; i<length; i++) {
+                        node = nodeList[i];
+                        node.reInitializeUI();
+                    }
+                }
+                else if (properties.contains('sync')) {
+                    nodeList = DOCUMENT.getAll(ItagClass.$$itag+'.'+CLASS_ITAG_RENDERED);
+                    length = nodeList.length;
+                    for (i=0; i<length; i++) {
+                        node = nodeList[i];
+                        node.syncUI();
+                    }
+                }
+            }
+        );
     }
+
+    itagCore.setupWatchers();
 
     Object.protectedProp(window, '_ItagCore', itagCore);
 
@@ -17603,9 +19097,9 @@ console.info('NODE IS REMOVED');
 
 };
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./css/itags.core.css":267,"event-dom":6,"js-ext":193,"polyfill/polyfill-base.js":211,"utils":212,"vdom":256}],269:[function(require,module,exports){
+},{"./css/itags.core.css":315,"event-dom":6,"io":214,"js-ext/extra/hashmap.js":236,"js-ext/js-ext.js":238,"polyfill/polyfill-base.js":257,"utils":258,"vdom":305}],317:[function(require,module,exports){
 
-},{}],270:[function(require,module,exports){
+},{}],318:[function(require,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -18776,7 +20270,7 @@ function assert (test, message) {
   if (!test) throw new Error(message || 'Failed assertion')
 }
 
-},{"base64-js":271,"ieee754":272}],271:[function(require,module,exports){
+},{"base64-js":319,"ieee754":320}],319:[function(require,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
@@ -18898,7 +20392,7 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	exports.fromByteArray = uint8ToBase64
 }(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
 
-},{}],272:[function(require,module,exports){
+},{}],320:[function(require,module,exports){
 exports.read = function(buffer, offset, isLE, mLen, nBytes) {
   var e, m,
       eLen = nBytes * 8 - mLen - 1,
@@ -18984,7 +20478,7 @@ exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128;
 };
 
-},{}],273:[function(require,module,exports){
+},{}],321:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -19289,7 +20783,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],274:[function(require,module,exports){
+},{}],322:[function(require,module,exports){
 var http = module.exports;
 var EventEmitter = require('events').EventEmitter;
 var Request = require('./lib/request');
@@ -19428,7 +20922,7 @@ http.STATUS_CODES = {
     510 : 'Not Extended',               // RFC 2774
     511 : 'Network Authentication Required' // RFC 6585
 };
-},{"./lib/request":275,"events":273,"url":299}],275:[function(require,module,exports){
+},{"./lib/request":323,"events":321,"url":347}],323:[function(require,module,exports){
 var Stream = require('stream');
 var Response = require('./response');
 var Base64 = require('Base64');
@@ -19622,7 +21116,7 @@ var indexOf = function (xs, x) {
     return -1;
 };
 
-},{"./response":276,"Base64":277,"inherits":279,"stream":298}],276:[function(require,module,exports){
+},{"./response":324,"Base64":325,"inherits":327,"stream":346}],324:[function(require,module,exports){
 var Stream = require('stream');
 var util = require('util');
 
@@ -19744,7 +21238,7 @@ var isArray = Array.isArray || function (xs) {
     return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{"stream":298,"util":301}],277:[function(require,module,exports){
+},{"stream":346,"util":349}],325:[function(require,module,exports){
 ;(function () {
 
   var object = typeof exports != 'undefined' ? exports : this; // #8: web workers
@@ -19806,7 +21300,7 @@ var isArray = Array.isArray || function (xs) {
 
 }());
 
-},{}],278:[function(require,module,exports){
+},{}],326:[function(require,module,exports){
 var http = require('http');
 
 var https = module.exports;
@@ -19821,7 +21315,7 @@ https.request = function (params, cb) {
     return http.request.call(this, params, cb);
 }
 
-},{"http":274}],279:[function(require,module,exports){
+},{"http":322}],327:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -19846,12 +21340,12 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],280:[function(require,module,exports){
+},{}],328:[function(require,module,exports){
 module.exports = Array.isArray || function (arr) {
   return Object.prototype.toString.call(arr) == '[object Array]';
 };
 
-},{}],281:[function(require,module,exports){
+},{}],329:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -19916,7 +21410,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],282:[function(require,module,exports){
+},{}],330:[function(require,module,exports){
 (function (global){
 /*! http://mths.be/punycode v1.2.4 by @mathias */
 ;(function(root) {
@@ -20427,7 +21921,7 @@ process.chdir = function (dir) {
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],283:[function(require,module,exports){
+},{}],331:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -20513,7 +22007,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],284:[function(require,module,exports){
+},{}],332:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -20600,16 +22094,16 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],285:[function(require,module,exports){
+},{}],333:[function(require,module,exports){
 'use strict';
 
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
-},{"./decode":283,"./encode":284}],286:[function(require,module,exports){
+},{"./decode":331,"./encode":332}],334:[function(require,module,exports){
 module.exports = require("./lib/_stream_duplex.js")
 
-},{"./lib/_stream_duplex.js":287}],287:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":335}],335:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -20702,7 +22196,7 @@ function forEach (xs, f) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_readable":289,"./_stream_writable":291,"_process":281,"core-util-is":292,"inherits":279}],288:[function(require,module,exports){
+},{"./_stream_readable":337,"./_stream_writable":339,"_process":329,"core-util-is":340,"inherits":327}],336:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -20750,7 +22244,7 @@ PassThrough.prototype._transform = function(chunk, encoding, cb) {
   cb(null, chunk);
 };
 
-},{"./_stream_transform":290,"core-util-is":292,"inherits":279}],289:[function(require,module,exports){
+},{"./_stream_transform":338,"core-util-is":340,"inherits":327}],337:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -21713,7 +23207,7 @@ function indexOf (xs, x) {
 }
 
 }).call(this,require('_process'))
-},{"_process":281,"buffer":270,"core-util-is":292,"events":273,"inherits":279,"isarray":280,"stream":298,"string_decoder/":293}],290:[function(require,module,exports){
+},{"_process":329,"buffer":318,"core-util-is":340,"events":321,"inherits":327,"isarray":328,"stream":346,"string_decoder/":341}],338:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -21925,7 +23419,7 @@ function done(stream, er) {
   return stream.push(null);
 }
 
-},{"./_stream_duplex":287,"core-util-is":292,"inherits":279}],291:[function(require,module,exports){
+},{"./_stream_duplex":335,"core-util-is":340,"inherits":327}],339:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -22316,7 +23810,7 @@ function endWritable(stream, state, cb) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_duplex":287,"_process":281,"buffer":270,"core-util-is":292,"inherits":279,"stream":298}],292:[function(require,module,exports){
+},{"./_stream_duplex":335,"_process":329,"buffer":318,"core-util-is":340,"inherits":327,"stream":346}],340:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -22426,7 +23920,7 @@ function objectToString(o) {
   return Object.prototype.toString.call(o);
 }
 }).call(this,require("buffer").Buffer)
-},{"buffer":270}],293:[function(require,module,exports){
+},{"buffer":318}],341:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -22628,10 +24122,10 @@ function base64DetectIncompleteChar(buffer) {
   return incomplete;
 }
 
-},{"buffer":270}],294:[function(require,module,exports){
+},{"buffer":318}],342:[function(require,module,exports){
 module.exports = require("./lib/_stream_passthrough.js")
 
-},{"./lib/_stream_passthrough.js":288}],295:[function(require,module,exports){
+},{"./lib/_stream_passthrough.js":336}],343:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Readable = exports;
 exports.Writable = require('./lib/_stream_writable.js');
@@ -22639,13 +24133,13 @@ exports.Duplex = require('./lib/_stream_duplex.js');
 exports.Transform = require('./lib/_stream_transform.js');
 exports.PassThrough = require('./lib/_stream_passthrough.js');
 
-},{"./lib/_stream_duplex.js":287,"./lib/_stream_passthrough.js":288,"./lib/_stream_readable.js":289,"./lib/_stream_transform.js":290,"./lib/_stream_writable.js":291}],296:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":335,"./lib/_stream_passthrough.js":336,"./lib/_stream_readable.js":337,"./lib/_stream_transform.js":338,"./lib/_stream_writable.js":339}],344:[function(require,module,exports){
 module.exports = require("./lib/_stream_transform.js")
 
-},{"./lib/_stream_transform.js":290}],297:[function(require,module,exports){
+},{"./lib/_stream_transform.js":338}],345:[function(require,module,exports){
 module.exports = require("./lib/_stream_writable.js")
 
-},{"./lib/_stream_writable.js":291}],298:[function(require,module,exports){
+},{"./lib/_stream_writable.js":339}],346:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -22774,7 +24268,7 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"events":273,"inherits":279,"readable-stream/duplex.js":286,"readable-stream/passthrough.js":294,"readable-stream/readable.js":295,"readable-stream/transform.js":296,"readable-stream/writable.js":297}],299:[function(require,module,exports){
+},{"events":321,"inherits":327,"readable-stream/duplex.js":334,"readable-stream/passthrough.js":342,"readable-stream/readable.js":343,"readable-stream/transform.js":344,"readable-stream/writable.js":345}],347:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -23483,14 +24977,14 @@ function isNullOrUndefined(arg) {
   return  arg == null;
 }
 
-},{"punycode":282,"querystring":285}],300:[function(require,module,exports){
+},{"punycode":330,"querystring":333}],348:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],301:[function(require,module,exports){
+},{}],349:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -24080,7 +25574,7 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":300,"_process":281,"inherits":279}],"itags":[function(require,module,exports){
+},{"./support/isBuffer":348,"_process":329,"inherits":327}],"itags":[function(require,module,exports){
 (function (global){
 /**
  * The ITSA module is an aggregator for all the individual modules that the library uses.
@@ -24102,10 +25596,10 @@ function hasOwnProperty(obj, prop) {
     "use strict";
     require('i-tabpane')(window);
     require('i-select')(window);
-    require('i-parcel')(window);
+    // require('i-parcel')(window);
     require('i-head')(window);
     require('i-item')(window);
 
 })(global.window || require('node-win'));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"i-head":260,"i-item":261,"i-parcel":262,"i-select":264,"i-tabpane":266,"node-win":204}]},{},[]);
+},{"i-head":309,"i-item":310,"i-select":312,"i-tabpane":314,"node-win":250}]},{},[]);
