@@ -248,7 +248,7 @@ module.exports = function (window) {
         subscribers.forEach(
             function(subscriber) {
                 console.log(NAME, '_findCurrentTargets for single subscriber. nId: '+subscriber.nId);
-                subscriber.nId && (subscriber.n=DOCUMENT.getElementById(subscriber.nId));
+                subscriber.nId && (subscriber.n=DOCUMENT.getElementById(subscriber.nId, true));
             }
         );
     };
@@ -1507,7 +1507,7 @@ var createHashMap = require('js-ext/extra/hashmap.js').createMap;
                 allCustomEvents = instance._ce,
                 allSubscribers = instance._subs,
                 customEventDefinition, extract, emitterName, eventName, subs, wildcard_named_subs,
-                named_wildcard_subs, wildcard_wildcard_subs, e, invokeSubs, key;
+                named_wildcard_subs, wildcard_wildcard_subs, e, invokeSubs, key, subscribedSize;
 
             (customEvent.indexOf(':') !== -1) || (customEvent = emitter._emitterName+':'+customEvent);
             console.log(NAME, 'customEvent.emit: '+customEvent);
@@ -1585,14 +1585,25 @@ var createHashMap = require('js-ext/extra/hashmap.js').createMap;
                     // in case any subscriber changed e.target inside its filter (event-dom does this),
                     // then we reset e.target to its original:
                     e.sourceTarget && (e.target=e.sourceTarget);
-                    noFinalize || instance._final.some(function(finallySubscriber) {
-                        !e.silent && !e._noRender && !e.status.renderPrevented  && finallySubscriber(e);
-                        if (e.status.unSilencable && e.silent) {
-                            console.warn(NAME, ' event '+e.emitter+':'+e.type+' cannot made silent: this customEvent is defined as unSilencable');
-                            e.silent = false;
+                    if (!noFinalize) {
+                        subscribedSize = 0;
+                        beforeSubscribers && (subscribedSize+=beforeSubscribers.size());
+                        afterSubscribers && (subscribedSize+=afterSubscribers.size());
+                        if (!beforeSubscribers || !afterSubscribers) {
+                            subs && (subscribedSize += subs.size());
+                            named_wildcard_subs && (subscribedSize += named_wildcard_subs.size());
+                            wildcard_named_subs && (subscribedSize += wildcard_named_subs.size());
+                            wildcard_wildcard_subs && (subscribedSize += wildcard_wildcard_subs.size());
                         }
-                        return e.silent;
-                    });
+                        (subscribedSize>0) && instance._final.some(function(finallySubscriber) {
+                            !e.silent && !e._noRender && !e.status.renderPrevented  && finallySubscriber(e);
+                            if (e.status.unSilencable && e.silent) {
+                                console.warn(NAME, ' event '+e.emitter+':'+e.type+' cannot made silent: this customEvent is defined as unSilencable');
+                                e.silent = false;
+                            }
+                            return e.silent;
+                        });
+                    }
                 }
             }
             return e;
@@ -2463,7 +2474,7 @@ require('../lib/object.js');
          * @chainable
          */
         mergePrototypes: function (prototypes, force) {
-            var instance, proto, names, l, i, replaceMap, protectedMap, name, nameInProto, finalName, propDescriptor;
+            var instance, proto, names, l, i, replaceMap, protectedMap, name, nameInProto, finalName, propDescriptor, extraInfo;
             if (!prototypes) {
                 return;
             }
@@ -2524,7 +2535,11 @@ require('../lib/object.js');
                     }
                 }
                 else {
-                    console.warn(NAME+'mergePrototypes is not allowed to set the property: '+name);
+                    extraInfo = '';
+                    nameInProto && (extraInfo = 'property is already available (you might force it to be set)');
+                    PROTO_RESERVED_NAMES[finalName] && (extraInfo = 'property is a protected property');
+                    protectedMap[finalName] && (extraInfo = 'property is a private property');
+                    console.warn(NAME+'mergePrototypes is not allowed to set the property: '+name+' --> '+extraInfo);
                 }
             }
             return instance;
@@ -3846,6 +3861,11 @@ module.exports.idGenerator = function(namespace, start) {
 
 	var NAME = '[utils-timers]: ',
 	    _asynchronizer, _async, _asynchronizerSilent, _later;
+
+    // make _setTimeout and _setInterval available, so the code always works
+    // both methods may be overruled by itags
+    global._setTimeout = global.setTimeout;
+    global._setInterval = global.setInterval;
 
 	/**
 	 * Forces a function to be run asynchronously, but as fast as possible. In Node.js
@@ -7554,13 +7574,14 @@ module.exports = function (window) {
          *
          * @method contains
          * @param otherElement {Element}
+         * @param [insideItags=false] {Boolean} no deepsearch in iTags --> by default, these elements should be hidden
          * @return {Boolean} whether this Element contains OR equals otherElement.
          */
-        ElementPrototype.contains = function(otherElement) {
+        ElementPrototype.contains = function(otherElement, insideItags) {
             if (otherElement===this) {
                 return true;
             }
-            return this.vnode.contains(otherElement.vnode);
+            return this.vnode.contains(otherElement.vnode, !insideItags);
         };
 
         /**
@@ -7793,11 +7814,12 @@ module.exports = function (window) {
          *
          * @method getAll
          * @param cssSelector {String} css-selector to match
+         * @param [insideItags=false] {Boolean} no deepsearch in iTags --> by default, these elements should be hidden
          * @return {ElementArray} ElementArray of Elements that match the css-selector
          * @since 0.0.1
          */
-        ElementPrototype.getAll = function(cssSelector) {
-            return this.querySelectorAll(cssSelector);
+        ElementPrototype.getAll = function(cssSelector, insideItags) {
+            return this.querySelectorAll(cssSelector, insideItags);
         };
 
        /**
@@ -7897,11 +7919,12 @@ module.exports = function (window) {
         *
         * @method getElement
         * @param cssSelector {String} css-selector to match
+         * @param [insideItags=false] {Boolean} no deepsearch in iTags --> by default, these elements should be hidden
         * @return {Element|null} the Element that was search for
         * @since 0.0.1
         */
-        ElementPrototype.getElement = function(cssSelector) {
-            return ((cssSelector[0]==='#') && (cssSelector.indexOf(' ')===-1)) ? this.getElementById(cssSelector.substr(1)) : this.querySelector(cssSelector);
+        ElementPrototype.getElement = function(cssSelector, insideItags) {
+            return ((cssSelector[0]==='#') && (cssSelector.indexOf(' ')===-1)) ? this.getElementById(cssSelector.substr(1)) : this.querySelector(cssSelector, insideItags);
         };
 
         /**
@@ -7909,12 +7932,13 @@ module.exports = function (window) {
          *
          * @method getElementById
          * @param id {String} id of the Element
+         * @param [insideItags=false] {Boolean} no deepsearch in iTags --> by default, these elements should be hidden
          * @return {Element|null}
          *
          */
-        ElementPrototype.getElementById = function(id) {
+        ElementPrototype.getElementById = function(id, insideItags) {
             var element = nodeids[id];
-            if (element && !this.contains(element)) {
+            if (element && !this.contains(element, insideItags)) {
                 // outside itself
                 return null;
             }
@@ -8344,6 +8368,7 @@ module.exports = function (window) {
                 hidePromise = instance.getData('_hideNodeBusy'),
                 originalOpacity, hasOriginalOpacity, promise, freezedOpacity, fromOpacity;
 
+            instance.setData('nodeShowed', false); // for any routine who wants to know
             originalOpacity = instance.getData('_showNodeOpacity');
             if (!originalOpacity && !showPromise && !hidePromise) {
                 originalOpacity = parseFloat(instance.getInlineStyle('opacity'));
@@ -8352,6 +8377,10 @@ module.exports = function (window) {
             hasOriginalOpacity = !!originalOpacity;
 
             showPromise && showPromise.freeze();
+            if (showPromise) {
+                showPromise.freeze();
+                instance.removeData('_showNodeBusy');
+            }
             hidePromise && hidePromise.freeze();
 
             if (duration) {
@@ -8650,9 +8679,10 @@ module.exports = function (window) {
          *
          * @method querySelector
          * @param selectors {String} CSS-selector(s) that should match
+         * @param [insideItags=false] {Boolean} no deepsearch in iTags --> by default, these elements should be hidden
          * @return {Element}
          */
-        ElementPrototype.querySelector = function(selectors) {
+        ElementPrototype.querySelector = function(selectors, insideItags) {
             var found,
                 i = -1,
                 len = selectors.length,
@@ -8665,7 +8695,7 @@ module.exports = function (window) {
                     for (j=0; (j<len2) && !found; j++) {
                         vChildNode = vChildren[j];
                         vChildNode.matchesSelector(selectors, thisvnode) && (found=vChildNode.domNode);
-                        found || inspectChildren(vChildNode);
+                        found || (!insideItags && vChildNode.isItag) || inspectChildren(vChildNode); // not dive into itags
                     }
                 };
             while (!firstCharacter && (++i<len)) {
@@ -8685,9 +8715,10 @@ module.exports = function (window) {
          *
          * @method querySelectorAll
          * @param selectors {String} CSS-selector(s) that should match
+         * @param [insideItags=false] {Boolean} no deepsearch in iTags --> by default, these elements should be hidden
          * @return {ElementArray} non-life Array (snapshot) with Elements
          */
-        ElementPrototype.querySelectorAll = function(selectors) {
+        ElementPrototype.querySelectorAll = function(selectors, insideItags) {
             var found = ElementArray.createArray(),
                 i = -1,
                 len = selectors.length,
@@ -8700,7 +8731,7 @@ module.exports = function (window) {
                     for (j=0; j<len2; j++) {
                         vChildNode = vChildren[j];
                         vChildNode.matchesSelector(selectors, thisvnode) && (found[found.length]=vChildNode.domNode);
-                        inspectChildren(vChildNode);
+                        (!insideItags && vChildNode.isItag) || inspectChildren(vChildNode); // not dive into itags
                     }
                 };
             while (!firstCharacter && (++i<len)) {
@@ -9975,6 +10006,7 @@ module.exports = function (window) {
                 hidePromise = instance.getData('_hideNodeBusy'),
                 originalOpacity, hasOriginalOpacity, promise, freezedOpacity, finalValue;
 
+            instance.setData('nodeShowed', true); // for any routine who wants to know
             originalOpacity = instance.getData('_showNodeOpacity');
             if (!originalOpacity && !showPromise && !hidePromise) {
                 originalOpacity = instance.getInlineStyle('opacity');
@@ -9983,7 +10015,10 @@ module.exports = function (window) {
             hasOriginalOpacity = !!originalOpacity;
 
             showPromise && showPromise.freeze();
-            hidePromise && hidePromise.freeze();
+            if (hidePromise) {
+                hidePromise.freeze();
+                instance.removeData('_hideNodeBusy');
+            }
 
             if (duration) {
 
@@ -11034,7 +11069,8 @@ module.exports = function (window) {
                 vnodes = [],
                 parentVNode = arguments[3], // private pass through-argument, only available when internal looped
                 insideTagDefinition, insideComment, innerText, endTagCount, stringMarker, attributeisString, attribute, attributeValue,
-                j, character, character2, vnode, tag, isBeginTag, isEndTag, scriptVNode, extractClass, extractStyle;
+                j, character, character2, vnode, tag, isBeginTag, isEndTag, scriptVNode, extractClass, extractStyle, tagdefinition, is;
+
             while (i<len) {
                 character = htmlString[i];
                 character2 = htmlString[i+1];
@@ -11074,6 +11110,8 @@ module.exports = function (window) {
                                 else {
                                     attributeValue = "";
                                 }
+                                // always store the `is` attribute in lowercase:
+                                (attribute.length===2) && (attribute.toLowerCase()==='is') && (attribute='is');
                                 vnode.attrs[attribute] = attributeValue;
                             }
                         }
@@ -11144,6 +11182,16 @@ module.exports = function (window) {
                     else {
                         i++; // compensate for the '>'
                     }
+
+                    //vnode.domNode can only be set after inspecting the attributes --> there might be an `is` attribute
+                    tagdefinition = tag.toLowerCase();
+                    if ((is=vnode.attrs.is) && !is.contains('-')) {
+                        tagdefinition = tag + ':' + is;
+                    }
+                    vnode.domNode = vnode.ns ? DOCUMENT.createElementNS(vnode.ns, tagdefinition) : DOCUMENT.createElement(tagdefinition);
+                    // create circular reference:
+                    vnode.domNode._vnode = vnode;
+
                     vnodes[vnodes.length] = vnode;
                     // reset vnode to force create a new one
                     vnode = null;
@@ -11195,10 +11243,9 @@ module.exports = function (window) {
                         tag = vnode.tag;
                         vnode.isItag = ((tag[0]==='I') && (tag[1]==='-'));
                         vnode.ns = xmlNS[tag] || nameSpace;
-                        vnode.domNode = vnode.ns ? DOCUMENT.createElementNS(vnode.ns, tag.toLowerCase()) : DOCUMENT.createElement(tag);
 
-                        // create circular reference:
-                        vnode.domNode._vnode = vnode;
+                        //vnode.domNode can only be set after inspecting the attributes --> there might be an `is` attribute
+
                         // check if it is a void-tag, but only need to do the regexp once per tag-element:
                         if (voidElements[tag]) {
                             vnode.isVoid = true;
@@ -11301,7 +11348,8 @@ module.exports = function (window) {
          */
         domNodeToVNode = window._ITSAmodules.NodeParser = function(domNode, parentVNode) {
             var nodeType = domNode.nodeType,
-                vnode, attributes, attr, i, len, childNodes, domChildNode, vChildNodes, tag, childVNode, extractClass, extractStyle;
+                vnode, attributes, attr, i, len, childNodes, domChildNode, vChildNodes, tag,
+                childVNode, extractClass, extractStyle, attributeName;
             if (!NS.VALID_NODE_TYPES[nodeType]) {
                 // only process ElementNodes, TextNodes and CommentNodes
                 return;
@@ -11329,7 +11377,9 @@ module.exports = function (window) {
                 len = attributes.length;
                 for (i=0; i<len; i++) {
                     attr = attributes[i];
-                    vnode.attrs[attr.name] = String(attr.value);
+                    // always store the `is` attribute in lowercase:
+                    attributeName = ((attr.name.length===2) && (attr.name.toLowerCase()==='is')) ? 'is' : attr.name;
+                    vnode.attrs[attributeName] = String(attr.value);
                 }
 
                 vnode.id = vnode.attrs.id;
@@ -12380,11 +12430,11 @@ module.exports = function (window) {
         * @return {Boolean} whether the vnode's domNode is equal, or contains the specified Element.
         * @since 0.0.1
         */
-        contains: function(otherVNode) {
+        contains: function(otherVNode, noItagSearch) {
             if (otherVNode && otherVNode.destroyed) {
                 return false;
             }
-            while (otherVNode && (otherVNode!==this)) {
+            while (otherVNode && (otherVNode!==this) && (!noItagSearch || !otherVNode.isItag)) {
                 otherVNode = otherVNode.vParent;
             }
             return (otherVNode===this);
@@ -12991,7 +13041,7 @@ module.exports = function (window) {
         _removeAttr: function(attributeName) {
             var instance = this,
                 attributeNameSplitted, ns;
-            if (instance._unchangableAttrs && instance._unchangableAttrs[attributeName]) {
+            if ((instance._unchangableAttrs && instance._unchangableAttrs[attributeName]) || ((attributeName.length===2) && (attributeName.toLowerCase()==='is'))) {
                 console.warn('Not allowed to remove the attribute '+attributeName);
                 return instance;
             }
@@ -13078,18 +13128,19 @@ module.exports = function (window) {
         * @method _setAttr
         * @param attributeName {String}
         * @param value {String} the value for the attributeName
+        * @param [force=false] {Boolean} force the attribute to be set, even if restrictions would deny it
         * @private
         * @chainable
         * @since 0.0.1
         */
-        _setAttr: function(attributeName, value) {
+        _setAttr: function(attributeName, value, force) {
             var instance = this,
                 extractStyle, extractClass,
                 attrs = instance.attrs,
                 prevVal = attrs[attributeName],
                 attributeNameSplitted, ns;
 
-            if (instance._unchangableAttrs && instance._unchangableAttrs[attributeName]) {
+            if (!force && ((instance._unchangableAttrs && instance._unchangableAttrs[attributeName]) || ((attributeName.length===2) && (attributeName.toLowerCase()==='is')))) {
                 console.warn('Not allowed to set the attribute '+attributeName);
                 return instance;
             }
@@ -13154,6 +13205,7 @@ module.exports = function (window) {
        /**
         * Redefines the attributes of both the vnode as well as its related dom-node. The new
         * definition replaces any previous attributes (without touching unmodified attributes).
+        * the `is` attribute cannot be changed.
         *
         * Syncs the new vnode's attributes with the dom.
         *
@@ -13184,6 +13236,16 @@ module.exports = function (window) {
                     attr = newAttrs[i];
                     attrsObj[attr.name] = attr.value;
                 }
+            }
+
+            if (attrs.is) {
+                attrsObj.is = attrs.is;
+            }
+            else {
+                delete attrsObj.is;
+                delete attrsObj.Is;
+                delete attrsObj.iS;
+                delete attrsObj.IS;
             }
 
             // first _remove the attributes that are no longer needed.
@@ -13245,7 +13307,9 @@ module.exports = function (window) {
                     switch (nodeswitch=NODESWITCH[oldChild.nodeType][newChild.nodeType]) {
 /*jshint boss:false */
                         case 1: // oldNodeType==Element, newNodeType==Element
-                            if ((oldChild.tag!==newChild.tag) || ((oldChild.tag==='SCRIPT') && (oldChild.text!==newChild.text))) {
+                            if ((oldChild.tag!==newChild.tag) ||
+                                ((oldChild.tag===newChild.tag) && oldChild.isItag && (oldChild.attrs.is!==newChild.attrs.is)) ||
+                                ((oldChild.tag==='SCRIPT') && (oldChild.text!==newChild.text))) {
                                 // new tag --> completely replace
                                 bkpAttrs = newChild.attrs;
                                 bkpChildNodes = newChild.vChildNodes;
@@ -13263,29 +13327,33 @@ module.exports = function (window) {
                             }
                             else {
                                 // same tag --> only update what is needed
-                                // first: we might need to set the class `focussed` when the attributeData says so:
-                                // this happens when an itag gets rerendered: its renderFn doesn't know if any elements
-                                // were focussed
-                                if (oldChild._data && oldChild._data.focussed && !newChild.hasClass('focussed')) {
-                                    newChild.classNames.focussed = true;
-                                    if (newChild.attrs[CLASS]) {
-                                        newChild.attrs[CLASS] = newChild.attrs[CLASS] + ' focussed';
+                                // NOTE: when this._unchangableAttrs exists, an itag-element syncs its UI -->
+                                // In those cases we shouldn't refresh any descendent itag-elements, for they rerender by themselves
+                                if (!oldChild.isItag || !this._unchangableAttrs) {
+                                    // first: we might need to set the class `focussed` when the attributeData says so:
+                                    // this happens when an itag gets rerendered: its renderFn doesn't know if any elements
+                                    // were focussed
+                                    if (oldChild._data && oldChild._data.focussed && !newChild.hasClass('focussed')) {
+                                        newChild.classNames.focussed = true;
+                                        if (newChild.attrs[CLASS]) {
+                                            newChild.attrs[CLASS] = newChild.attrs[CLASS] + ' focussed';
+                                        }
+                                        else {
+                                            newChild.attrs[CLASS] = 'focussed';
+                                        }
                                     }
-                                    else {
-                                        newChild.attrs[CLASS] = 'focussed';
+                                    if (oldChild._data && oldChild._data['fm-tabindex']) {
+                                        // node has the tabindex set by the focusmanager,
+                                        // but that info might got lost with re-rendering of the new element
+                                        newChild.attrs.tabindex = '0';
                                     }
+                                    oldChild._setAttrs(newChild.attrs);
+                                    // next: sync the vChildNodes:
+                                    oldChild._setChildNodes(newChild.vChildNodes);
+                                    // reset ref. to the domNode, for it might have been changed by newChild:
+                                    oldChild.id && (nodeids[oldChild.id]=childDomNode);
+                                    newVChildNodes[i] = oldChild;
                                 }
-                                if (oldChild._data && oldChild._data['fm-tabindex']) {
-                                    // node has the tabindex set by the focusmanager,
-                                    // but that info might got lost with re-rendering of the new element
-                                    newChild.attrs.tabindex = '0';
-                                }
-                                oldChild._setAttrs(newChild.attrs);
-                                // next: sync the vChildNodes:
-                                oldChild._setChildNodes(newChild.vChildNodes);
-                                // reset ref. to the domNode, for it might have been changed by newChild:
-                                oldChild.id && (nodeids[oldChild.id]=childDomNode);
-                                newVChildNodes[i] = oldChild;
                             }
                             break;
                         case 2: // oldNodeType==Element, newNodeType==TextNode
@@ -18066,8 +18134,8 @@ require('js-ext/lib/string.js');
 require('css');
 require('./css/i-select.css');
 
-var TRANS_TIME_SHOW = 0.3,
-    TRANS_TIME_HIDE = 0.1,
+var TRANS_TIME_SHOW = 3,
+    TRANS_TIME_HIDE = 1,
     NATIVE_OBJECT_OBSERVE = !!Object.observe,
     CLASS_ITAG_RENDERED = 'itag-rendered',
     utils = require('utils'),
@@ -18075,7 +18143,6 @@ var TRANS_TIME_SHOW = 0.3,
     later = utils.later;
 
 module.exports = function (window) {
-NATIVE_OBJECT_OBSERVE=false;
     "use strict";
 
     require('itags.core')(window);
@@ -18112,7 +18179,7 @@ NATIVE_OBJECT_OBSERVE=false;
             }
         }, 'i-select');
 
-        Event.after('xblur', function(e) {
+        Event.after('blur', function(e) {
             // the i-select itself is unfocussable, but its button is
             // we need to patch `manualfocus`,
             // which is emitted on node.focus()
@@ -18120,22 +18187,21 @@ NATIVE_OBJECT_OBSERVE=false;
             // so we don't bother that
             var element = e.target,
                 model;
+            e.preventRender();
             // cautious:  all child-elements that have `manualfocus` event are
             // subscribed as well: we NEED to inspect e.target and only continue.
             //
-            // I didn;t figure out why, but it seems we need 2 different `later`
-            // functions in order to make the i-select prevent from acting
-            // unpredictable:
+            // I didn;t figure out why, but it seems we need `later`
+            // in order to make the i-select prevent from acting unpredictable.
+            // maybe because of the responsetime of the click-event
             laterSilent(function() {
                 // if e.target===i-select
                 if ((element.getTagName()==='I-SELECT') && !element.hasClass('focussed')) {
                     model = element.model;
                     model.expanded = false;
-                    NATIVE_OBJECT_OBSERVE || later(function() {
-                        DOCUMENT.refreshItags();
-                    }, 150);
+                    NATIVE_OBJECT_OBSERVE || DOCUMENT.refreshItags();
                 }
-            },25);
+            },350);
         }, 'i-select');
 
         Event.before('keydown', function(e) {
@@ -18145,6 +18211,8 @@ NATIVE_OBJECT_OBSERVE=false;
             }
         }, 'i-select > button');
 
+        // CAUTIOUS: it seems `tap` will be subscribed 8 times!!!
+        // TODO: figure out why not once
         Event.after(['click', 'keydown'], function(e) {
             var element = e.target.getParent(),
                 expanded, value, liNodes, focusNode, model;
@@ -18162,6 +18230,8 @@ NATIVE_OBJECT_OBSERVE=false;
             }
         }, 'i-select > button');
 
+        // CAUTIOUS: it seems `tap` will be subscribed 8 times!!!
+        // TODO: figure out why not once
         Event.after(['click', 'keypress'], function(e) {
             var liNode = e.target,
                 element, index, model;
@@ -18214,7 +18284,7 @@ NATIVE_OBJECT_OBSERVE=false;
                 'invalid-value': 'string'
             },
             sync: function() {
-console.warn('i-select sync');
+console.warn('sybcing');
                 // inside sync, YOU CANNOT change attributes which are part of `args` !!!
                 // those actions will be ignored.
 
@@ -18251,12 +18321,17 @@ console.warn('i-select sync');
                 renderedBefore = element.hasClass(CLASS_ITAG_RENDERED);
                 container = element.getElement('>div');
 
-                containerShowing = container.getData('nodeShowed');
+                // NOTE: we can't get showing transitioned work well at the moment.
+                // therefore show and hide imemdiatelyt for now
+                // TODO: fix transition
+                // containerShowing = container.getData('nodeShowed');
                 if (model.expanded) {
-                    (containerShowing===true) || container.show(renderedBefore ? TRANS_TIME_SHOW : null);
+                    container.show();
+                    // (containerShowing===true) || container.show(renderedBefore ? TRANS_TIME_SHOW : null);
                 }
                 else {
-                    (containerShowing===false) || container.hide(renderedBefore ? TRANS_TIME_HIDE : null);
+                    container.hide();
+                    // (containerShowing===false) || container.hide(renderedBefore ? TRANS_TIME_HIDE : null);
                 }
 
                 itemsContainer = element.getElement('ul[fm-manage]');
@@ -18271,6 +18346,8 @@ console.warn('i-select sync');
             }
         });
     }
+
+    return window.ITAGS[itagName];
 
 };
 },{"./css/i-select.css":311,"css":4,"event-dom":6,"focusmanager":78,"i-head":309,"i-item":310,"itags.core":316,"js-ext/lib/string.js":244,"polyfill/polyfill-base.js":257,"utils":258}],313:[function(require,module,exports){
@@ -18294,8 +18371,8 @@ module.exports = function (window) {
     "use strict";
     require('itags.core')(window);
 
-    var itagName = 'i-tabpane',
-        Event;
+    var itagName = 'i-select:dummy',
+        Event, ISelectClass;
 
     if (!window.ITAGS[itagName]) {
         Event = require('event-dom')(window);
@@ -18303,12 +18380,34 @@ module.exports = function (window) {
         require('i-item')(window);
         require('i-head')(window);
 
-        window.document.createItag('i-tabpane');
+        // window.document.createItag('i-tabpane');
+
+
+        ISelectClass = require('i-select')(window);
+
+
+        ISelectClass.pseudoClass('dummy', {
+            args: {
+                expanded: 'boolean',
+                'primary-button': 'boolean',
+                value: 'string',
+                'invalid-value': 'string',
+                dummyarg: 'string'
+            },
+            sync: function() {
+console.warn('sync subclassed Itag');
+                this.$superProp('sync');
+                this.model.dummyarg = 'myarg';
+            }
+        });
+
+
     }
 
+    return window.ITAGS[itagName];
 
 };
-},{"./css/i-tabpane.css":313,"css":4,"event-dom":6,"i-head":309,"i-item":310,"itags.core":316,"js-ext/lib/string.js":244,"polyfill/polyfill-base.js":257}],315:[function(require,module,exports){
+},{"./css/i-tabpane.css":313,"css":4,"event-dom":6,"i-head":309,"i-item":310,"i-select":312,"itags.core":316,"js-ext/lib/string.js":244,"polyfill/polyfill-base.js":257}],315:[function(require,module,exports){
 var css = "span.itag-data {\n    display: none !important;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
 },{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],316:[function(require,module,exports){
 (function (global){
@@ -18320,7 +18419,8 @@ var css = "span.itag-data {\n    display: none !important;\n}"; (require("/Volum
 require('polyfill/polyfill-base.js');
 require('./css/itags.core.css');
 
-var jsExt = require('js-ext/js-ext.js'), // want the full version: include it at the top, so that object.merge is available
+var NAME = '[itags.core]: ',
+    jsExt = require('js-ext/js-ext.js'), // want the full version: include it at the top, so that object.merge is available
     createHashMap = require('js-ext/extra/hashmap.js').createMap,
     asyncSilent = require('utils').asyncSilent,
     laterSilent = require('utils').laterSilent,
@@ -18357,13 +18457,15 @@ var jsExt = require('js-ext/js-ext.js'), // want the full version: include it at
     NOOP = function() {};
 
 module.exports = function (window) {
-NATIVE_OBJECT_OBSERVE=false;
+// NATIVE_OBJECT_OBSERVE=false;
 
     var DOCUMENT = window.document,
         PROTOTYPE_CHAIN_CAN_BE_SET = arguments[1], // hidden feature, used by unit-test
         RUNNING_ON_NODE = (typeof global !== 'undefined') && (global.window!==window),
         PROTO_SUPPORTED = !!Object.__proto__,
+        allowedToRefreshItags = true,
         itagCore, MUTATION_EVENTS, PROTECTED_MEMBERS, EXTRA_BASE_MEMBERS, Event, IO,
+        setTimeoutBKP, setIntervalBKP, setImmediateBKP,
         ATTRIBUTE_EVENTS, registerDelay, focusManager, mergeFlat;
 
     require('vdom')(window);
@@ -18464,6 +18566,7 @@ NATIVE_OBJECT_OBSERVE=false;
             instance.model = model;
             if (NATIVE_OBJECT_OBSERVE) {
                 observer = function() {
+                    itagCore.modelToAttrs(instance);
                     instance.syncUI();
                 };
                 Object.observe(instance.model, observer);
@@ -18489,40 +18592,7 @@ NATIVE_OBJECT_OBSERVE=false;
         _initUI: NOOP,
         _destroyUI: NOOP,
         _syncUI: NOOP,
-        _args: {},
-        _modelToAttrs: function() {
-            var instance = this,
-                args = instance._args,
-                model = instance.model,
-                newAttrs = [];
-            args.each(function(value, key) {
-                newAttrs[newAttrs.length] = {name: key, value: model[key]};
-            });
-            (newAttrs.length>0) && instance.setAttrs(newAttrs, true);
-            return instance;
-        },
-        _attrsToModel: function() {
-            var instance = this,
-                args = instance._args,
-                model = instance.model,
-                attrValue;
-            args.each(function(value, key) {
-                attrValue = instance.getAttr(key);
-                switch (value) {
-                    case 'boolean':
-                        attrValue = (attrValue==='true');
-                        break;
-                    case 'number':
-                        attrValue = parseFloat(attrValue);
-                        break;
-                    case 'date':
-                        attrValue = attrValue.toDate();
-                        break;
-                }
-                model[key] = attrValue;
-            });
-            return instance;
-        },
+        _args: {}
     };
 
     EXTRA_BASE_MEMBERS.merge(Event.Listener)
@@ -18596,7 +18666,8 @@ NATIVE_OBJECT_OBSERVE=false;
         },
 
         renderDomElements: function(itagName, domElementConstructor) {
-            var itagElements = DOCUMENT.getAll(itagName),
+            var pseudo = domElementConstructor.$$pseudo,
+                itagElements = pseudo ? DOCUMENT.getAll(itagName+'[is="'+pseudo+'"]') : DOCUMENT.getAll(itagName+':not([is])'),
                 len = itagElements.length,
                 i, itagElement;
             for (i=0; i<len; i++) {
@@ -18610,13 +18681,6 @@ NATIVE_OBJECT_OBSERVE=false;
                 proto = domElementConstructor.prototype,
                 observer;
             domElement.model = {};
-            if (NATIVE_OBJECT_OBSERVE) {
-                observer = function() {
-                    instance.syncUI();
-                };
-                Object.observe(domElement.model, observer);
-                domElement.setData('_observer', observer);
-            }
             if (!PROTO_SUPPORTED) {
                 mergeFlat(domElementConstructor, domElement);
                 domElement.__proto__ = proto;
@@ -18649,9 +18713,17 @@ NATIVE_OBJECT_OBSERVE=false;
             // sync, but do this after the element is created:
             // in the next eventcycle:
             asyncSilent(function(){
-                domElement._attrsToModel();
+                instance.attrsToModel(domElement);
                 domElement.initUI(PROTO_SUPPORTED ? null : domElementConstructor);
                 domElement.syncUI();
+                if (NATIVE_OBJECT_OBSERVE) {
+                    observer = function() {
+                        instance.modelToAttrs(domElement);
+                        domElement.syncUI();
+                    };
+                    Object.observe(domElement.model, observer);
+                    domElement.setData('_observer', observer);
+                }
                 instance.setRendered(domElement);
             });
         },
@@ -18681,6 +18753,8 @@ NATIVE_OBJECT_OBSERVE=false;
         },
 
         setupWatchers: function() {
+            var instance = this;
+
             Event.after(
                 NODE_REMOVED,
                 function(e) {
@@ -18696,7 +18770,7 @@ NATIVE_OBJECT_OBSERVE=false;
                 ATTRIBUTE_EVENTS,
                 function(e) {
                     var element = e.target;
-                    element._attrsToModel();
+                    instance.attrsToModel(element);
                     NATIVE_OBJECT_OBSERVE || DOCUMENT.refreshItags();
                     // this affect modeldata, the event.finalizer will sync the UI
                     // AFTER synced, we might need to refocus --> that's why refocussing
@@ -18713,63 +18787,111 @@ NATIVE_OBJECT_OBSERVE=false;
             if (!NATIVE_OBJECT_OBSERVE) {
                 Event.finalize(function(e) {
                     var type = e.type;
-                    if (!MUTATION_EVENTS[type] && !type.endsWith('outside')) {
-                        if (itagCore.DELAYED_FINALIZE_EVENTS[type]) {
-                            registerDelay || (registerDelay = laterSilent(function() {
+                    if (allowedToRefreshItags) {
+                        if (!MUTATION_EVENTS[type] && !type.endsWith('outside')) {
+                            if (itagCore.DELAYED_FINALIZE_EVENTS[type]) {
+                                registerDelay || (registerDelay = laterSilent(function() {
+                                    DOCUMENT.refreshItags();
+                                    registerDelay = null;
+                                }, DELAYED_EVT_TIME));
+                            }
+                            else {
                                 DOCUMENT.refreshItags();
-                                registerDelay = null;
-                            }, DELAYED_EVT_TIME));
-                        }
-                        else {
-                            DOCUMENT.refreshItags();
+                            }
                         }
                     }
                 });
 
                 IO.finalize(function() {
-                    DOCUMENT.refreshItags();
+                    allowedToRefreshItags && DOCUMENT.refreshItags();
                 });
 
                 // we patch the window timer functions in order to run `refreshItags` afterwards:
-                window._setTimeout = window.setTimeout;
-                window._setInterval = window.setInterval;
+                setTimeoutBKP = window.setTimeout;
+                setIntervalBKP = window.setInterval;
 
                 window.setTimeout = function() {
                     var args = arguments;
-                    args[0] = (function(originalFn) {
-                        return function() {
-                            originalFn();
-                            DOCUMENT.refreshItags();
-                        };
-                    })(args[0]);
-                    window._setTimeout.apply(this, arguments);
-                };
-
-                window.setInterval = function() {
-                    var args = arguments;
-                    args[0] = (function(originalFn) {
-                        return function() {
-                            originalFn();
-                            DOCUMENT.refreshItags();
-                        };
-                    })(args[0]);
-                    window._setInterval.apply(this, arguments);
-                };
-
-                if (typeof window.setImmediate !== 'undefined') {
-                    window._setImmediate = window.setImmediate;
-                    window.setImmediate = function() {
-                        var args = arguments;
+                    if (allowedToRefreshItags) {
                         args[0] = (function(originalFn) {
                             return function() {
                                 originalFn();
                                 DOCUMENT.refreshItags();
                             };
                         })(args[0]);
-                        window._setImmediate.apply(this, arguments);
+                    }
+                    setTimeoutBKP.apply(this, arguments);
+                };
+
+                window.setInterval = function() {
+                    var args = arguments;
+                    if (allowedToRefreshItags) {
+                        args[0] = (function(originalFn) {
+                            return function() {
+                                originalFn();
+                                DOCUMENT.refreshItags();
+                            };
+                        })(args[0]);
+                    }
+                    setIntervalBKP.apply(this, arguments);
+                };
+
+                if (typeof window.setImmediate !== 'undefined') {
+                    setImmediateBKP = window.setInterval;
+                    window.setImmediate = function() {
+                        var args = arguments;
+                        if (allowedToRefreshItags) {
+                            args[0] = (function(originalFn) {
+                                return function() {
+                                    originalFn();
+                                    DOCUMENT.refreshItags();
+                                };
+                            })(args[0]);
+                        }
+                        setImmediateBKP.apply(this, arguments);
                     };
                 }
             }
+        },
+
+        setupEmitters: function() {
+            Event.defineEvent('itag:changed')
+                 .unPreventable()
+                 .noRender();
+            Event.after(NODE_CONTENT_CHANGE, function(e) {
+                Event.emit(e.target, 'itag:changed');
+            }, this.itagFilter);
+        },
+
+        modelToAttrs: function(domElement) {
+            var args = domElement._args,
+                model = domElement.model,
+                newAttrs = [];
+            args.each(function(value, key) {
+                newAttrs[newAttrs.length] = {name: key, value: model[key]};
+            });
+            (newAttrs.length>0) && domElement.setAttrs(newAttrs, true);
+        },
+
+        attrsToModel: function(domElement) {
+            var args = domElement._args,
+                model = domElement.model,
+                attrValue;
+            args.each(function(value, key) {
+                attrValue = domElement.getAttr(key);
+                switch (value) {
+                    case 'boolean':
+                        attrValue = (attrValue==='true');
+                        break;
+                    case 'number':
+                        attrValue = parseFloat(attrValue);
+                        break;
+                    case 'date':
+                        attrValue = attrValue.toDate();
+                        break;
+                }
+                model[key] = attrValue;
+            });
         }
     };
 
@@ -18816,9 +18938,26 @@ NATIVE_OBJECT_OBSERVE=false;
             return instance;
         };
 
+        FunctionPrototype.pseudoClass = function(pseudo , prototypes, chainInit, chainDestroy) {
+            var instance = this;
+            if (!instance.$$itag) {
+                console.warn(NAME, 'cannot pseudoClass '+pseudo+' for its Parent is no Itag-Class');
+                return instance;
+            }
+            if (typeof pseudo !== 'string') {
+                console.warn(NAME, 'cannot pseudoClass --> first argument needs to be s String');
+                return instance;
+            }
+            if (pseudo.contains('-')) {
+                console.warn(NAME, 'cannot pseudoClass '+pseudo+' --> name cannot consist a minus-token');
+                return instance;
+            }
+            return instance.subClass(instance.$$itag+':'+pseudo , prototypes, chainInit, chainDestroy);
+        };
+
         FunctionPrototype.subClass = function(constructor, prototypes, chainInit, chainDestroy) {
             var instance = this,
-                baseProt, proto, domElementConstructor, itagName;
+                baseProt, proto, domElementConstructor, itagName, pseudo, registerName, itagNameSplit;
             if (typeof constructor === 'string') {
                 // Itag subclassing
                 if (typeof prototypes === 'boolean') {
@@ -18830,9 +18969,17 @@ NATIVE_OBJECT_OBSERVE=false;
                 (typeof chainDestroy === 'boolean') || (chainDestroy=DEFAULT_CHAIN_DESTROY);
 
                 itagName = constructor.toLowerCase();
+                if (!itagName.startsWith('i-')) {
+                    console.warn(NAME, 'invalid itagname '+itagName+' --> name should start with i-');
+                    return instance;
+                }
                 if (window.ITAGS[itagName]) {
                     console.warn(itagName+' already exists: it will be redefined');
                 }
+                registerName = itagName;
+                itagNameSplit = itagName.split(':');
+                itagName = itagNameSplit[0];
+                pseudo = itagNameSplit[1]; // may be undefined
 
                 // if instance.isItag, then we subclass an existing i-tag
                 baseProt = instance.prototype;
@@ -18841,6 +18988,7 @@ NATIVE_OBJECT_OBSERVE=false;
                 // merge some system function in case they don't exists
                 domElementConstructor = function() {
                     var domElement = DOCUMENT._createElement(itagName);
+                    pseudo && domElement.vnode._setAttr('is', pseudo, true);
                     itagCore.upgradeElement(domElement, domElementConstructor);
                     return domElement;
                 };
@@ -18849,13 +18997,14 @@ NATIVE_OBJECT_OBSERVE=false;
 
                 proto.constructor = domElementConstructor;
                 domElementConstructor.$$itag = itagName;
+                domElementConstructor.$$pseudo = pseudo;
                 domElementConstructor.$$chainInited = chainInit ? true : false;
                 domElementConstructor.$$chainDestroyed = chainDestroy ? true : false;
                 domElementConstructor.$$super = baseProt;
                 domElementConstructor.$$orig = {};
 
                 prototypes && domElementConstructor.mergePrototypes(prototypes, true, true);
-                window.ITAGS[itagName] = domElementConstructor;
+                window.ITAGS[registerName] = domElementConstructor;
 
                 itagCore.renderDomElements(itagName, domElementConstructor);
 
@@ -19016,19 +19165,16 @@ NATIVE_OBJECT_OBSERVE=false;
         var list = this.getItags(),
             len = list.length,
             i, itagElement;
+        allowedToRefreshItags = false; // prevent setTimeout to fall into loop
         for (i=0; i<len; i++) {
             itagElement = list[i];
             if (itagElement.isRendered && itagElement.isRendered()) {
-
-// console.info('refreshItags before: '+JSON.stringify(itagElement.model));
-
-                itagElement._modelToAttrs();
+                itagCore.modelToAttrs(itagElement);
                 itagElement.syncUI();
-
-// console.info('refreshItags after: '+JSON.stringify(itagElement.model));
                 itagElement.hasClass('focussed') && focusManager(itagElement);
             }
         }
+        allowedToRefreshItags = true;
     };
 
 
@@ -19084,6 +19230,8 @@ NATIVE_OBJECT_OBSERVE=false;
     }
 
     itagCore.setupWatchers();
+
+    itagCore.setupEmitters();
 
     Object.protectedProp(window, '_ItagCore', itagCore);
 
