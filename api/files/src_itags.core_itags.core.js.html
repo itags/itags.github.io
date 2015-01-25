@@ -43,6 +43,8 @@
             
                 <li><a href="../classes/Array.html">Array</a></li>
             
+                <li><a href="../classes/Classes.html">Classes</a></li>
+            
                 <li><a href="../classes/document.html">document</a></li>
             
                 <li><a href="../classes/Element.html">Element</a></li>
@@ -59,7 +61,13 @@
             
                 <li><a href="../classes/Function.html">Function</a></li>
             
+                <li><a href="../classes/HTMLElement.html">HTMLElement</a></li>
+            
                 <li><a href="../classes/IO.html">IO</a></li>
+            
+                <li><a href="../classes/ItagBaseClass.html">ItagBaseClass</a></li>
+            
+                <li><a href="../classes/itagCore.html">itagCore</a></li>
             
                 <li><a href="../classes/Node.html">Node</a></li>
             
@@ -106,6 +114,8 @@
                 <li><a href="../modules/html-parser.html">html-parser</a></li>
             
                 <li><a href="../modules/io.html">io</a></li>
+            
+                <li><a href="../modules/itags.core.html">itags.core</a></li>
             
                 <li><a href="../modules/itsa.build.html">itsa.build</a></li>
             
@@ -172,8 +182,21 @@
 
 <div class="file">
     <pre class="code prettyprint linenums">
-
 /*jshint proto:true */
+
+/**
+ * Provides several methods that override native Element-methods to work with the vdom.
+ *
+ *
+ * &lt;i&gt;Copyright (c) 2015 ITSA - https://github.com/itags&lt;/i&gt;
+ * &lt;br&gt;
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ * @module itags.core
+ * @class itagCore
+ * @since 0.0.1
+*/
+
 
 &quot;use strict&quot;;
 
@@ -194,40 +217,49 @@ var NAME = &#x27;[itags.core]: &#x27;,
     INSERT = &#x27;insert&#x27;,
     CHANGE = &#x27;change&#x27;,
     ATTRIBUTE = &#x27;attribute&#x27;,
-    NODE_REMOVED = NODE+REMOVE,
-    NODE_INSERTED = NODE+INSERT,
+    NODE_REMOVE = NODE+REMOVE,
+    NODE_INSERT = NODE+INSERT,
     NODE_CONTENT_CHANGE = NODE+&#x27;content&#x27;+CHANGE,
-    ATTRIBUTE_REMOVED = ATTRIBUTE+REMOVE,
-    ATTRIBUTE_CHANGED = ATTRIBUTE+CHANGE,
-    ATTRIBUTE_INSERTED = ATTRIBUTE+INSERT,
+    ATTRIBUTE_REMOVE = ATTRIBUTE+REMOVE,
+    ATTRIBUTE_CHANGE = ATTRIBUTE+CHANGE,
+    ATTRIBUTE_INSERT = ATTRIBUTE+INSERT,
     DELAYED_EVT_TIME = 1000,
     NATIVE_OBJECT_OBSERVE = !!Object.observe,
+    /**
+     * Internal hash containing the names of members which names should be transformed
+     *
+     * @property ITAG_METHODS
+     * @default {init: &#x27;_initUI&#x27;, sync: &#x27;_syncUI&#x27;, destroy: &#x27;_destroyUI&#x27;, attrs: &#x27;_attrs&#x27;}
+     * @type Object
+     * @protected
+     * @since 0.0.1
+    */
     ITAG_METHODS = createHashMap({
         init: &#x27;_initUI&#x27;,
         sync: &#x27;_syncUI&#x27;,
         destroy: &#x27;_destroyUI&#x27;,
-        args: &#x27;_args&#x27;
+        attrs: &#x27;_attrs&#x27;
     }),
     // ITAG_METHOD_VALUES must match previous ITAG_METHODS&#x27;s values!
     ITAG_METHOD_VALUES = createHashMap({
         _initUI: true,
         _syncUI: true,
         _destroyUI: true,
-        _args: true
+        _attrs: true
     }),
     NOOP = function() {};
 
 module.exports = function (window) {
-// NATIVE_OBJECT_OBSERVE=false;
 
     var DOCUMENT = window.document,
         PROTOTYPE_CHAIN_CAN_BE_SET = arguments[1], // hidden feature, used by unit-test
         RUNNING_ON_NODE = (typeof global !== &#x27;undefined&#x27;) &amp;&amp; (global.window!==window),
         PROTO_SUPPORTED = !!Object.__proto__,
         allowedToRefreshItags = true,
+        itagsThatNeedsEvent = {},
         itagCore, MUTATION_EVENTS, PROTECTED_MEMBERS, EXTRA_BASE_MEMBERS, Event, IO,
-        setTimeoutBKP, setIntervalBKP, setImmediateBKP,
-        ATTRIBUTE_EVENTS, registerDelay, focusManager, mergeFlat;
+        setTimeoutBKP, setIntervalBKP, setImmediateBKP, DEFAULT_DELAYED_FINALIZE_EVENTS,
+        ATTRIBUTE_EVENTS, registerDelay, manageFocus, mergeFlat,  DELAYED_FINALIZE_EVENTS;
 
     require(&#x27;vdom&#x27;)(window);
     Event = require(&#x27;event-dom&#x27;)(window);
@@ -239,84 +271,38 @@ module.exports = function (window) {
         return itagCore; // itagCore was already defined
     }
 
+    /**
+     * Internal hash containing all ITAG-Class definitions.
+     *
+     * @property ITAGS
+     * @type Object
+     * @for window
+     * @since 0.0.1
+    */
     Object.protectedProp(window, &#x27;ITAGS&#x27;, {}); // for the ProtoConstructors
 
+    /**
+     * Base properties for every Itag-class
+     *
+     *
+     * @property EXTRA_BASE_MEMBERS
+     * @type Object
+     * @protected
+     * @for ItagBaseClass
+     * @since 0.0.1
+    */
     EXTRA_BASE_MEMBERS = {
-        initUI: function(constructor, reInitialize) {
-            var instance = this,
-                vnode = instance.vnode,
-                superInit;
-            if ((reInitialize || !vnode.ce_initialized) &amp;&amp; !vnode.removedFromDOM &amp;&amp; !vnode.ce_destroyed) {
-                superInit = function(constructor) {
-                    var classCarierBKP = instance.__classCarier__;
-                    if (constructor.$$chainInited) {
-                        instance.__classCarier__ = constructor.$$super.constructor;
-                        superInit(constructor.$$super.constructor);
-                    }
-                    classCarierBKP = instance.__classCarier__;
-                    // don&#x27;t call &#x60;hasOwnProperty&#x60; directly on obj --&gt; it might have been overruled
-                    Object.prototype.hasOwnProperty.call(constructor.prototype, &#x27;_initUI&#x27;) &amp;&amp; constructor.prototype._initUI.call(instance);
-                };
-                if (reInitialize) {
-                    instance.setHTML(vnode.ce_initContent);
-                }
-                else {
-                    // already synced on the server:
-                    // bind the stored json-data on the property &#x60;model&#x60;:
-                    itagCore.retrieveModel(instance);
-                    Object.protectedProp(vnode, &#x27;ce_initContent&#x27;, instance.getHTML());
-                }
-                superInit(constructor || instance.constructor);
-                Object.protectedProp(vnode, &#x27;ce_initialized&#x27;, true);
-            }
-            return instance;
-        },
-        destroyUI: function(constructor, reInitialize) {
-            var instance = this,
-                vnode = instance.vnode,
-                superDestroy, observer;
-            if (vnode.ce_initialized &amp;&amp; (reInitialize || vnode.removedFromDOM) &amp;&amp; !vnode.ce_destroyed) {
-                if (!reInitialize &amp;&amp; NATIVE_OBJECT_OBSERVE) {
-                    observer = instance.getData(&#x27;_observer&#x27;);
-                    observer &amp;&amp; Object.unobserve(instance.model, observer);
-                }
-                superDestroy = function(constructor) {
-                    var classCarierBKP = instance.__classCarier__;
-                    // don&#x27;t call &#x60;hasOwnProperty&#x60; directly on obj --&gt; it might have been overruled
-                    Object.prototype.hasOwnProperty.call(constructor.prototype, &#x27;_destroyUI&#x27;) &amp;&amp; constructor.prototype._destroyUI.call(instance);
-                    if (constructor.$$chainDestroyed) {
-                        instance.__classCarier__ = constructor.$$super.constructor;
-                        superDestroy(constructor.$$super.constructor);
-                    }
-                    classCarierBKP = instance.__classCarier__;
-                };
-                superDestroy(constructor || instance.constructor);
-                instance.detachAll();
-                reInitialize || Object.protectedProp(vnode, &#x27;ce_destroyed&#x27;, true);
-            }
-            return instance;
-        },
-        syncUI: function() {
-            var instance = this,
-                args = instance.args,
-                vnode = instance.vnode;
-            if (vnode.ce_initialized &amp;&amp; !vnode.removedFromDOM &amp;&amp; !vnode.ce_destroyed) {
-                vnode._setUnchangableAttrs(args);
-                instance._syncUI.apply(instance, arguments);
-                vnode._setUnchangableAttrs(null);
-            }
-            return instance;
-        },
-        reInitializeUI: function(constructor) {
-            var instance = this,
-                vnode = instance.vnode;
-            if (vnode.ce_initialized &amp;&amp; !vnode.removedFromDOM &amp;&amp; !vnode.ce_destroyed) {
-                instance.destroyUI(constructor, true)
-                        .initUI(constructor, true)
-                        .syncUI();
-            }
-            return instance;
-        },
+       /**
+        * Binds a model to the itag-element, making element.model equals the bound model.
+        * Immediately syncs the itag with the new model-data.
+        *
+        * Syncs the new vnode&#x27;s childNodes with the dom.
+        *
+        * @method bindModel
+        * @param model {Object} the model to bind to the itag-element
+        * @chainable
+        * @since 0.0.1
+        */
         bindModel: function(model) {
             var instance = this,
                 stringifiedData, prevContent, observer;
@@ -346,27 +332,345 @@ module.exports = function (window) {
                     console.warn(e);
                 }
             }
+            return instance;
         },
+
+       /**
+        * Calls &#x60;_destroyUI&#x60; on through the class-chain on every level (bottom-up).
+        * _destroyUI gets defined when the itag defines &#x60;destroy&#x60; --&gt; transformation under the hood.
+        *
+        * Syncs the new vnode&#x27;s childNodes with the dom.
+        *
+        * @method destroyUI
+        * @param constructor {Class} the Class which belongs with the itag
+        * @param [reInitialize=false] {Boolean} whether the destruction comes from a &#x60;re-initialize&#x60;-call. For internal usage.
+        * @chainable
+        * @since 0.0.1
+        */
+        destroyUI: function(constructor, reInitialize) {
+            var instance = this,
+                vnode = instance.vnode,
+                superDestroy, observer;
+            if (vnode.ce_initialized &amp;&amp; (reInitialize || vnode.removedFromDOM) &amp;&amp; !vnode.ce_destroyed) {
+                if (!reInitialize &amp;&amp; NATIVE_OBJECT_OBSERVE) {
+                    observer = instance.getData(&#x27;_observer&#x27;);
+                    observer &amp;&amp; Object.unobserve(instance.model, observer);
+                }
+                superDestroy = function(constructor) {
+                    var classCarierBKP = instance.__classCarier__;
+                    // don&#x27;t call &#x60;hasOwnProperty&#x60; directly on obj --&gt; it might have been overruled
+                    Object.prototype.hasOwnProperty.call(constructor.prototype, &#x27;_destroyUI&#x27;) &amp;&amp; constructor.prototype._destroyUI.call(instance);
+                    if (constructor.$$chainDestroyed) {
+                        instance.__classCarier__ = constructor.$$super.constructor;
+                        superDestroy(constructor.$$super.constructor);
+                    }
+                    classCarierBKP = instance.__classCarier__;
+                };
+                superDestroy(constructor || instance.constructor);
+                instance.detachAll();
+                reInitialize || Object.protectedProp(vnode, &#x27;ce_destroyed&#x27;, true);
+            }
+            return instance;
+        },
+
+       /**
+        * Unitializer for itags. Calls the &#x60;_init&#x60;-method through the whole chain (top-bottom).
+        * _initUI() is set for each &#x60;init&#x60;-member --&gt; transformed under the hood.
+        *
+        * @method initUI
+        * @param constructor {Class} the Class which belongs with the itag
+        * @param [reInitialize=false] {Boolean} whether the destruction comes from a &#x60;re-initialize&#x60;-call. For internal usage.
+        * @chainable
+        * @since 0.0.1
+        */
+        initUI: function(constructor, reInitialize) {
+            var instance = this,
+                vnode = instance.vnode,
+                superInit;
+            if ((reInitialize || !vnode.ce_initialized) &amp;&amp; !vnode.removedFromDOM &amp;&amp; !vnode.ce_destroyed) {
+                superInit = function(constructor) {
+                    var classCarierBKP = instance.__classCarier__;
+                    if (constructor.$$chainInited) {
+                        instance.__classCarier__ = constructor.$$super.constructor;
+                        superInit(constructor.$$super.constructor);
+                    }
+                    classCarierBKP = instance.__classCarier__;
+                    // don&#x27;t call &#x60;hasOwnProperty&#x60; directly on obj --&gt; it might have been overruled
+                    Object.prototype.hasOwnProperty.call(constructor.prototype, &#x27;_initUI&#x27;) &amp;&amp; constructor.prototype._initUI.call(instance);
+                };
+                if (reInitialize) {
+                    instance.setHTML(vnode.ce_initContent);
+                }
+                else {
+                    // already synced on the server:
+                    // bind the stored json-data on the property &#x60;model&#x60;:
+                    itagCore.retrieveModel(instance);
+                    Object.protectedProp(vnode, &#x27;ce_initContent&#x27;, instance.getHTML());
+                }
+                superInit(constructor || instance.constructor);
+                Object.protectedProp(vnode, &#x27;ce_initialized&#x27;, true);
+            }
+            return instance;
+        },
+
+       /**
+        * Flag that tells wether the itag is rendered. If you need to wait for rendering (to continue processing),
+        * then use &#x60;itagReady()&#x60;
+        *
+        * Syncs the new vnode&#x27;s childNodes with the dom.
+        *
+        * @method isRendered
+        * @return {Boolean} whether the itag is rendered.
+        * @since 0.0.1
+        */
         isRendered: function() {
             return !!this.getData(&#x27;itagRendered&#x27;);
         },
-        _initUI: NOOP,
+
+       /**
+        * Promise that gets fulfilled as soon as the itag is rendered.
+        *
+        * @method itagReady
+        * @return {Promise} fulfilled when rendered for the first time.
+        * @since 0.0.1
+        */
+        itagReady: function() {
+            var instance = this;
+            if (!instance.isItag()) {
+                console.warn(&#x27;itagReady() invoked on a non-itag element&#x27;);
+                return window.Promise.reject(&#x27;Element is no itag&#x27;);
+            }
+            instance._itagReady || (instance._itagReady=window.Promise.manage());
+            return instance._itagReady;
+        },
+
+       /**
+        * Destroys and reinitialises the itag-element.
+        * No need to use directly, only internal.
+        *
+        * @method reInitializeUI
+        * @param constructor {Class} the Class which belongs with the itag
+        * @chainable
+        * @since 0.0.1
+        */
+        reInitializeUI: function(constructor) {
+            var instance = this,
+                vnode = instance.vnode;
+            if (vnode.ce_initialized &amp;&amp; !vnode.removedFromDOM &amp;&amp; !vnode.ce_destroyed) {
+                instance.destroyUI(constructor, true)
+                        .initUI(constructor, true)
+                        .syncUI();
+            }
+            return instance;
+        },
+
+       /**
+        * Syncs the itag, by calling &#x60;_syncUI&#x60;: the transformed &#x60;sync()&#x60;-method.
+        *
+        * Syncs the new vnode&#x27;s childNodes with the dom.
+        *
+        * @method syncUI
+        * @chainable
+        * @since 0.0.1
+        */
+        syncUI: function() {
+            var instance = this,
+                attrs = instance._attrs,
+                vnode = instance.vnode;
+            if (vnode.ce_initialized &amp;&amp; !vnode.removedFromDOM &amp;&amp; !vnode.ce_destroyed) {
+                vnode._setUnchangableAttrs(attrs);
+                instance._syncUI.apply(instance, arguments);
+                vnode._setUnchangableAttrs(null);
+            }
+            return instance;
+        },
+
+        /**
+         * Internal hash containing the &#x60;attrs&#x60;-definition which can be set by the itag-declaration.
+         * This hash is used to determine which properties of &#x60;model&#x60; need to sync as an attribute.
+         *
+         * @property _attrs
+         * @default {}
+         * @type Object
+         * @private
+         * @since 0.0.1
+        */
+        _attrs: {},
+
+       /**
+        * Transformed from &#x60;destroy&#x60; --&gt; when &#x60;destroy&#x60; gets invoked, the instance will invoke &#x60;_destroyUI&#x60; through the whole chain.
+        * Defaults to &#x60;NOOP&#x60;, so that it can be always be invoked.
+        *
+        * @method _destroyUI
+        * @private
+        * @chainable
+        * @since 0.0.1
+        */
         _destroyUI: NOOP,
-        _syncUI: NOOP,
-        _args: {}
+
+       /**
+        * Transformed from &#x60;init&#x60; --&gt; when the instance gets created, the instance will invoke &#x60;_initUI&#x60; through the whole chain.
+        * Defaults to &#x60;NOOP&#x60;, so that it can be always be invoked.
+        *
+        * Syncs the new vnode&#x27;s childNodes with the dom.
+        *
+        * @method NOOP
+        * @private
+        * @since 0.0.1
+        */
+        _initUI: NOOP,
+
+       /**
+        * Transformed from &#x60;sync&#x60; --&gt; when &#x60;sync&#x60; gets invoked, the instance will invoke &#x60;_syncUI&#x60;.
+        * Defaults to &#x60;NOOP&#x60;, so that it can be always be invoked.
+        *
+        * @method _syncUI
+        * @private
+        * @since 0.0.1
+        */
+        _syncUI: NOOP
     };
 
     EXTRA_BASE_MEMBERS.merge(Event.Listener)
                       .merge(Event._CE_listener);
 
+    /**
+     * Internal hash holding all attribute-mutation events
+     *
+     * @property ATTRIBUTE_EVENTS
+     * @default [&#x27;attributeremove&#x27;, &#x27;attributechange&#x27;, &#x27;attributeinsert&#x27;]
+     * @type Array
+     * @protected
+     * @since 0.0.1
+    */
+    ATTRIBUTE_EVENTS = [ATTRIBUTE_REMOVE, ATTRIBUTE_CHANGE, ATTRIBUTE_INSERT];
+
+    /**
+     * Internal hash holding all mutation events
+     *
+     * @property MUTATION_EVENTS
+     * @default [&#x27;noderemove&#x27;, &#x27;nodeinsert&#x27;, &#x27;nodecontentchange&#x27;, &#x27;attributeremove&#x27;, &#x27;attributechange&#x27;, &#x27;attributeinsert&#x27;]
+     * @type Array
+     * @protected
+     * @since 0.0.1
+    */
+    MUTATION_EVENTS = [NODE_REMOVE, NODE_INSERT, NODE_CONTENT_CHANGE, ATTRIBUTE_REMOVE, ATTRIBUTE_CHANGE, ATTRIBUTE_INSERT];
+
+    /**
+     * Internal hash containing all &#x60;protected members&#x60; --&gt; the properties that CANNOT be set at the prototype of ItagClasses.
+     *
+     * @property PROTECTED_MEMBERS
+     * @default {
+     *    bindModel: true,
+     *    destroyUI: true,
+     *    initUI: true,
+     *    isRendered: true,
+     *    reInitializeUI: true,
+     *    syncUI: true
+     * }
+     * @type Object
+     * @private
+     * @since 0.0.1
+    */
     PROTECTED_MEMBERS = createHashMap();
     EXTRA_BASE_MEMBERS.each(function(value, key) {
         ITAG_METHOD_VALUES[key] || (PROTECTED_MEMBERS[key] = true);
     });
 
-    MUTATION_EVENTS = [NODE_REMOVED, NODE_INSERTED, NODE_CONTENT_CHANGE, ATTRIBUTE_REMOVED, ATTRIBUTE_CHANGED, ATTRIBUTE_INSERTED];
-    ATTRIBUTE_EVENTS = [ATTRIBUTE_REMOVED, ATTRIBUTE_CHANGED, ATTRIBUTE_INSERTED];
+    /**
+     * Default internal hash containing all DOM-events that will not directly call &#x60;event-finalize&#x60;
+     * but after a delay of 1 second
+     *
+     * @property DEFAULT_DELAYED_FINALIZE_EVENTS
+     * @default {
+     *    mousedown: true,
+     *    mouseup: true,
+     *    mousemove: true,
+     *    panmove: true,
+     *    panstart: true,
+     *    panleft: true,
+     *    panright: true,
+     *    panup: true,
+     *    pandown: true,
+     *    pinchmove: true,
+     *    rotatemove: true,
+     *    focus: true,
+     *    manualfocus: true,
+     *    keydown: true,
+     *    keyup: true,
+     *    keypress: true,
+     *    blur: true,
+     *    resize: true,
+     *    scroll: true
+     * }
+     * @type Object
+     * @private
+     * @since 0.0.1
+    */
+    DEFAULT_DELAYED_FINALIZE_EVENTS = {
+        mousedown: true,
+        mouseup: true,
+        mousemove: true,
+        panmove: true,
+        panstart: true,
+        panleft: true,
+        panright: true,
+        panup: true,
+        pandown: true,
+        pinchmove: true,
+        rotatemove: true,
+        focus: true,
+        manualfocus: true,
+        keydown: true,
+        keyup: true,
+        keypress: true,
+        blur: true,
+        resize: true,
+        scroll: true
+    };
 
+    /**
+     * Internal hash containing all DOM-events that will not directly call &#x60;event-finalize&#x60;
+     * but after a delay of 1 second
+     *
+     * @property DELAYED_FINALIZE_EVENTS
+     * @default {
+     *    mousedown: true,
+     *    mouseup: true,
+     *    mousemove: true,
+     *    panmove: true,
+     *    panstart: true,
+     *    panleft: true,
+     *    panright: true,
+     *    panup: true,
+     *    pandown: true,
+     *    pinchmove: true,
+     *    rotatemove: true,
+     *    focus: true,
+     *    manualfocus: true,
+     *    keydown: true,
+     *    keyup: true,
+     *    keypress: true,
+     *    blur: true,
+     *    resize: true,
+     *    scroll: true
+     * }
+     * @type Object
+     * @private
+     * @since 0.0.1
+    */
+    DELAYED_FINALIZE_EVENTS = DEFAULT_DELAYED_FINALIZE_EVENTS.shallowClone();
+
+   /**
+    * Merges all prototype-members of every level in the chain directly on the domElement.
+    * This needs to be done for browsers which don&#x27;t support changing __proto__ (like &lt;IE11)
+    *
+    * @method mergeFlat
+    * @param constructor {Class} the Class which belongs with the itag, holding all the members
+    * @param domElement {HTMLElement} the Element that recieves the members
+    * @private
+    * @since 0.0.1
+    */
     mergeFlat = function(constructor, domElement) {
         var prototype = constructor.prototype,
             keys, i, name, propDescriptor;
@@ -395,39 +699,79 @@ module.exports = function (window) {
         }
     };
 
-    focusManager = function(element) {
-        var focusManagerNode = element.getElement(&#x27;[focusmanager].focussed&#x27;);
-        focusManagerNode &amp;&amp; focusManagerNode.focus();
-    };
-
     itagCore = {
-
-        DELAYED_FINALIZE_EVENTS: {
-            &#x27;mousedown&#x27;: true,
-            &#x27;mouseup&#x27;: true,
-            &#x27;mousemove&#x27;: true,
-            &#x27;panmove&#x27;: true,
-            &#x27;panstart&#x27;: true,
-            &#x27;panleft&#x27;: true,
-            &#x27;panright&#x27;: true,
-            &#x27;panup&#x27;: true,
-            &#x27;pandown&#x27;: true,
-            &#x27;pinchmove&#x27;: true,
-            &#x27;rotatemove&#x27;: true,
-            // &#x27;focus&#x27;: true, // focus needs immediate response !
-            &#x27;manualfocus&#x27;: true,
-            // &#x27;keydown&#x27;: true, // keydown needs immediate response !
-            &#x27;keyup&#x27;: true
-            //&#x27;keypress&#x27;: true, // keypress needs immediate response !
-            //&#x27;blur&#x27;: true, // blur needs immediate response !
+       /**
+        * Copies the attibute-values into element.model.
+        * Only processes the attributes that are defined through the Itag-class its &#x60;attrs&#x60;-property.
+        *
+        * @method attrsToModel
+        * @param domElement {HTMLElement} the itag that should be processed.
+        * @for itagCore
+        * @since 0.0.1
+        */
+        attrsToModel: function(domElement) {
+            var attrs = domElement._attrs,
+                model = domElement.model,
+                attrValue;
+            attrs.each(function(value, key) {
+                attrValue = domElement.getAttr(key);
+                switch (value) {
+                    case &#x27;boolean&#x27;:
+                        attrValue = (attrValue===&#x27;true&#x27;);
+                        break;
+                    case &#x27;number&#x27;:
+                        attrValue = parseFloat(attrValue);
+                        break;
+                    case &#x27;date&#x27;:
+                        attrValue = attrValue.toDate();
+                        break;
+                }
+                model[key] = attrValue;
+            });
         },
 
+       /**
+        * Function that can be used ad the &#x60;filterFn&#x60; of event-listeners.
+        * Returns true for any HTML-element that is a rendered itag.
+        *
+        * @method itagFilter
+        * @param e {Object} the event-object passed by Event
+        * @return {Boolean} whether the HTML-element that is a rendered itag
+        * @since 0.0.1
+        */
         itagFilter: function(e) {
-            return e.target.vnode.isItag;
+            var node = e.target;
+            return node.vnode.isItag &amp;&amp; node.getData(&#x27;itagRendered&#x27;);
         },
 
-        renderDomElements: function(itagName, domElementConstructor) {
-            var pseudo = domElementConstructor.$$pseudo,
+       /**
+        * Copies elemtn.model values into the attibute-values of the element.
+        * Only processes the attributes that are defined through the Itag-class its &#x60;attrs&#x60;-property.
+        *
+        * @method modelToAttrs
+        * @param domElement {HTMLElement} the itag that should be processed.
+        * @since 0.0.1
+        */
+        modelToAttrs: function(domElement) {
+            var attrs = domElement._attrs,
+                model = domElement.model,
+                newAttrs = [];
+            attrs.each(function(value, key) {
+                newAttrs[newAttrs.length] = {name: key, value: model[key]};
+            });
+            (newAttrs.length&gt;0) &amp;&amp; domElement.setAttrs(newAttrs, true);
+        },
+
+       /**
+        * Searches through the dom for the specified itags and upgrades its HTMLElement.
+        *
+        * @method renderDomElements
+        * @param domElementConstructor {Class} the Class which belongs with the itag
+        * @since 0.0.1
+        */
+        renderDomElements: function(domElementConstructor) {
+            var itagName = domElementConstructor.$$itag,
+                pseudo = domElementConstructor.$$pseudo,
                 itagElements = pseudo ? DOCUMENT.getAll(itagName+&#x27;[is=&quot;&#x27;+pseudo+&#x27;&quot;]&#x27;) : DOCUMENT.getAll(itagName+&#x27;:not([is])&#x27;),
                 len = itagElements.length,
                 i, itagElement;
@@ -437,58 +781,14 @@ module.exports = function (window) {
             }
         },
 
-        upgradeElement: function(domElement, domElementConstructor) {
-            var instance = this,
-                proto = domElementConstructor.prototype,
-                observer;
-            domElement.model = {};
-            if (!PROTO_SUPPORTED) {
-                mergeFlat(domElementConstructor, domElement);
-                domElement.__proto__ = proto;
-                domElement.__classCarier__ = domElementConstructor;
-                domElement.after(&#x27;itag:prototypechanged&#x27;, function(e) {
-                    var prototypes = e.prototypes;
-                    mergeFlat(domElementConstructor, domElement);
-                    if (&#x27;init&#x27; in prototypes) {
-                        domElement.reInitializeUI(domElement.__proto__.constructor);
-                    }
-                    else if (&#x27;sync&#x27; in prototypes) {
-                        domElement.syncUI();
-                    }
-                });
-                domElement.after(&#x27;itag:prototyperemoved&#x27;, function(e) {
-                    var properties = e.properties;
-                    mergeFlat(domElementConstructor, domElement);
-                    if (properties.contains(&#x27;init&#x27;)) {
-                        domElement.reInitializeUI(domElement.__proto__.constructor);
-                    }
-                    else if (properties.contains(&#x27;sync&#x27;)) {
-                        domElement.syncUI();
-                    }
-                });
-            }
-            else {
-                domElement.__proto__ = proto;
-                domElement.__classCarier__ = domElementConstructor;
-            }
-            // sync, but do this after the element is created:
-            // in the next eventcycle:
-            asyncSilent(function(){
-                instance.attrsToModel(domElement);
-                domElement.initUI(PROTO_SUPPORTED ? null : domElementConstructor);
-                domElement.syncUI();
-                if (NATIVE_OBJECT_OBSERVE) {
-                    observer = function() {
-                        instance.modelToAttrs(domElement);
-                        domElement.syncUI();
-                    };
-                    Object.observe(domElement.model, observer);
-                    domElement.setData(&#x27;_observer&#x27;, observer);
-                }
-                instance.setRendered(domElement);
-            });
-        },
-
+       /**
+        * Retrieves modeldata set by the server inside the itag-element and binds this data into element.model
+        *
+        * @method retrieveModel
+        * @param domElement {HTMLElement} the itag that should be processed.
+        * @return {Object}
+        * @since 0.0.1
+        */
         retrieveModel: function(domElement) {
             // try to load the model from a stored inner div-node
             var dataNode = domElement.getElement(&#x27;span.itag-data&#x27;),
@@ -506,6 +806,13 @@ module.exports = function (window) {
             return domElement.model;
         },
 
+       /**
+        * Defines the itag-element as being rendered.
+        *
+        * @method setRendered
+        * @param domElement {HTMLElement} the itag that should be processed.
+        * @since 0.0.1
+        */
         setRendered: function(domElement) {
             domElement.setClass(CLASS_ITAG_RENDERED, null, null, true);
             domElement.setData(&#x27;itagRendered&#x27;, true);
@@ -513,11 +820,40 @@ module.exports = function (window) {
             domElement._itagReady.fulfill();
         },
 
+       /**
+        * Sets up all general itag-emitters.
+        *
+        * @method setupEmitters
+        * @since 0.0.1
+        */
+        setupEmitters: function() {
+            Event.defineEvent(&#x27;itag:change&#x27;)
+                 .unPreventable()
+                 .noRender();
+            Event.after(NODE_CONTENT_CHANGE, function(e) {
+                /**
+                * Emitted when a draggable gets dropped inside a dropzone.
+                *
+                * @event *:dropzone-drop
+                * @param e {Object} eventobject including:
+                * @param e.target {HtmlElement} the dropzone
+                * @since 0.1
+                */
+                Event.emit(e.target, &#x27;itag:change&#x27;, {model: e.target.model});
+            }, this.itagFilter);
+        },
+
+       /**
+        * Sets up all itag-watchers, giving itags its life behaviour.
+        *
+        * @method setupWatchers
+        * @since 0.0.1
+        */
         setupWatchers: function() {
             var instance = this;
 
             Event.after(
-                NODE_REMOVED,
+                NODE_REMOVE,
                 function(e) {
                     var node = e.target;
                     node.destroyUI(PROTO_SUPPORTED ? null : node.__proto__.constructor);
@@ -538,7 +874,7 @@ module.exports = function (window) {
                     // is done async.
                     if (element.hasClass(&#x27;focussed&#x27;)) {
                         asyncSilent(function() {
-                            focusManager(element);
+                            manageFocus(element);
                         });
                     }
                 },
@@ -550,7 +886,7 @@ module.exports = function (window) {
                     var type = e.type;
                     if (allowedToRefreshItags) {
                         if (!MUTATION_EVENTS[type] &amp;&amp; !type.endsWith(&#x27;outside&#x27;)) {
-                            if (itagCore.DELAYED_FINALIZE_EVENTS[type]) {
+                            if (DELAYED_FINALIZE_EVENTS[type]) {
                                 registerDelay || (registerDelay = laterSilent(function() {
                                     DOCUMENT.refreshItags();
                                     registerDelay = null;
@@ -613,50 +949,154 @@ module.exports = function (window) {
                     };
                 }
             }
+
+            if (PROTO_SUPPORTED) {
+                Event.after(
+                    &#x27;itag:prototypechange&#x27;,
+                    function(e) {
+                        var prototypes = e.prototypes,
+                            ItagClass = e.target,
+                            nodeList, node, i, length;
+                        if (&#x27;init&#x27; in prototypes) {
+                            nodeList = DOCUMENT.getAll(ItagClass.$$itag+&#x27;.&#x27;+CLASS_ITAG_RENDERED, true);
+                            length = nodeList.length;
+                            for (i=0; i&lt;length; i++) {
+                                node = nodeList[i];
+                                node.reInitializeUI();
+                            }
+                        }
+                        else if (&#x27;sync&#x27; in prototypes) {
+                            nodeList = DOCUMENT.getAll(ItagClass.$$itag+&#x27;.&#x27;+CLASS_ITAG_RENDERED, true);
+                            length = nodeList.length;
+                            for (i=0; i&lt;length; i++) {
+                                node = nodeList[i];
+                                node.syncUI();
+                            }
+                        }
+                    }
+                );
+                Event.after(
+                    &#x27;itag:prototyperemove&#x27;,
+                    function(e) {
+                        var properties = e.properties,
+                            ItagClass = e.target,
+                            nodeList, node, i, length;
+                        if (properties.contains(&#x27;init&#x27;)) {
+                            nodeList = DOCUMENT.getAll(ItagClass.$$itag+&#x27;.&#x27;+CLASS_ITAG_RENDERED, true);
+                            length = nodeList.length;
+                            for (i=0; i&lt;length; i++) {
+                                node = nodeList[i];
+                                node.reInitializeUI();
+                            }
+                        }
+                        else if (properties.contains(&#x27;sync&#x27;)) {
+                            nodeList = DOCUMENT.getAll(ItagClass.$$itag+&#x27;.&#x27;+CLASS_ITAG_RENDERED, true);
+                            length = nodeList.length;
+                            for (i=0; i&lt;length; i++) {
+                                node = nodeList[i];
+                                node.syncUI();
+                            }
+                        }
+                    }
+                );
+            }
         },
 
-        setupEmitters: function() {
-            Event.defineEvent(&#x27;itag:changed&#x27;)
-                 .unPreventable()
-                 .noRender();
-            Event.after(NODE_CONTENT_CHANGE, function(e) {
-                Event.emit(e.target, &#x27;itag:changed&#x27;);
-            }, this.itagFilter);
-        },
-
-        modelToAttrs: function(domElement) {
-            var args = domElement._args,
-                model = domElement.model,
-                newAttrs = [];
-            args.each(function(value, key) {
-                newAttrs[newAttrs.length] = {name: key, value: model[key]};
-            });
-            (newAttrs.length&gt;0) &amp;&amp; domElement.setAttrs(newAttrs, true);
-        },
-
-        attrsToModel: function(domElement) {
-            var args = domElement._args,
-                model = domElement.model,
-                attrValue;
-            args.each(function(value, key) {
-                attrValue = domElement.getAttr(key);
-                switch (value) {
-                    case &#x27;boolean&#x27;:
-                        attrValue = (attrValue===&#x27;true&#x27;);
-                        break;
-                    case &#x27;number&#x27;:
-                        attrValue = parseFloat(attrValue);
-                        break;
-                    case &#x27;date&#x27;:
-                        attrValue = attrValue.toDate();
-                        break;
+       /**
+        * Upgrades the HTMLElement into an itag defined by domElementConstructor.
+        *
+        * @method upgradeElement
+        * @param domElement {HTMLElement} the itag that should be processed.
+        * @param domElementConstructor {Class} the Class which belongs with the itag
+        * @since 0.0.1
+        */
+        upgradeElement: function(domElement, domElementConstructor) {
+            var instance = this,
+                proto = domElementConstructor.prototype,
+                observer;
+            domElement.model = {};
+            if (!PROTO_SUPPORTED) {
+                mergeFlat(domElementConstructor, domElement);
+                domElement.__proto__ = proto;
+                domElement.__classCarier__ = domElementConstructor;
+                domElement.after(&#x27;itag:prototypechange&#x27;, function(e) {
+                    var prototypes = e.prototypes;
+                    mergeFlat(domElementConstructor, domElement);
+                    if (&#x27;init&#x27; in prototypes) {
+                        domElement.reInitializeUI(domElement.__proto__.constructor);
+                    }
+                    else if (&#x27;sync&#x27; in prototypes) {
+                        domElement.syncUI();
+                    }
+                });
+                domElement.after(&#x27;itag:prototyperemove&#x27;, function(e) {
+                    var properties = e.properties;
+                    mergeFlat(domElementConstructor, domElement);
+                    if (properties.contains(&#x27;init&#x27;)) {
+                        domElement.reInitializeUI(domElement.__proto__.constructor);
+                    }
+                    else if (properties.contains(&#x27;sync&#x27;)) {
+                        domElement.syncUI();
+                    }
+                });
+            }
+            else {
+                domElement.__proto__ = proto;
+                domElement.__classCarier__ = domElementConstructor;
+            }
+            // sync, but do this after the element is created:
+            // in the next eventcycle:
+            asyncSilent(function(){
+                instance.attrsToModel(domElement);
+                domElement.initUI(PROTO_SUPPORTED ? null : domElementConstructor);
+                domElement.syncUI();
+                if (NATIVE_OBJECT_OBSERVE) {
+                    observer = function() {
+                        instance.modelToAttrs(domElement);
+                        domElement.syncUI();
+                    };
+                    Object.observe(domElement.model, observer);
+                    domElement.setData(&#x27;_observer&#x27;, observer);
                 }
-                model[key] = attrValue;
+                instance.setRendered(domElement);
             });
         }
     };
 
+   /**
+    * Resets the focus on the right element inside an itag-instance after syncing.
+    * Only when a focusmanager is active and has focus.
+    *
+    * @method manageFocus
+    * @param domElement {Element} The itag to be inspected
+    * @private
+    * @since 0.0.1
+    */
+    manageFocus = function(domElement) {
+        var focusManagerNode = domElement.getElement(&#x27;[focusmanager].focussed&#x27;);
+        focusManagerNode &amp;&amp; focusManagerNode.focus();
+    };
+
+   /**
+    * Reference to the original document.createElement.
+    *
+    * @method _createElement
+    * @param tag {String} tagname to be created
+    * @private
+    * @return {HTMLElement}
+    * @for document
+    * @since 0.0.1
+    */
     DOCUMENT._createElement = DOCUMENT.createElement;
+
+   /**
+    * Redefinition of document.createElement, enabling creation of itags.
+    *
+    * @method createElement
+    * @param tag {String} tagname to be created
+    * @return {HTMLElement}
+    * @since 0.0.1
+    */
     DOCUMENT.createElement = function(tag) {
         var ItagClass = window.ITAGS[tag.toLowerCase()];
         if (ItagClass) {
@@ -665,12 +1105,115 @@ module.exports = function (window) {
         return this._createElement(tag);
     };
 
-
+    //===============================================================================
+    //== patching native prototypes =================================================
     (function(FunctionPrototype) {
         var originalSubClass = FunctionPrototype.subClass;
 
+       /**
+        * Defines which domevents should lead to a direct sync by the Event-finalizer.
+        * Only needed for events that are in the list set by DEFAULT_DELAYED_FINALIZE_EVENTS:
+        *
+        * &lt;ul&gt;
+        *     &lt;li&gt;mousedown&lt;/li&gt;
+        *     &lt;li&gt;mouseup&lt;/li&gt;
+        *     &lt;li&gt;mousemove&lt;/li&gt;
+        *     &lt;li&gt;panmove&lt;/li&gt;
+        *     &lt;li&gt;panstart&lt;/li&gt;
+        *     &lt;li&gt;panleft&lt;/li&gt;
+        *     &lt;li&gt;panright&lt;/li&gt;
+        *     &lt;li&gt;panup&lt;/li&gt;
+        *     &lt;li&gt;pandown&lt;/li&gt;
+        *     &lt;li&gt;pinchmove&lt;/li&gt;
+        *     &lt;li&gt;rotatemove&lt;/li&gt;
+        *     &lt;li&gt;focus&lt;/li&gt;
+        *     &lt;li&gt;manualfocus&lt;/li&gt;
+        *     &lt;li&gt;keydown&lt;/li&gt;
+        *     &lt;li&gt;keyup&lt;/li&gt;
+        *     &lt;li&gt;keypress&lt;/li&gt;
+        *     &lt;li&gt;blur&lt;/li&gt;
+        *     &lt;li&gt;resize&lt;/li&gt;
+        *     &lt;li&gt;scroll&lt;/li&gt;
+        * &lt;/ul&gt;
+        *
+        * Events that are not in this list don;t need to be set: they always go through the finalizer immediatly.
+        *
+        * You need to set this if the itag-definition its &#x60;sync&#x60;-method should be updated after one of the events in the list.
+        *
+        * @method setItagDirectEventResponse
+        * @param domEvents {Array|String} the domevents that should directly make the itag sync
+        * @chainable
+        * @for Function
+        * @since 0.0.1
+        */
+        FunctionPrototype.setItagDirectEventResponse = function(domEvents) {
+            var instance = this,
+                itag = instance.$$itag;
+            if (!NATIVE_OBJECT_OBSERVE &amp;&amp; itag) {
+                Array.isArray(domEvents) || (domEvents=[domEvents]);
+                domEvents.forEach(function(domEvent) {
+                    domEvent.endsWith(&#x27;outside&#x27;) &amp;&amp; (domEvent=domEvent.substr(0, domEvent.length-7));
+                    if (DEFAULT_DELAYED_FINALIZE_EVENTS[domEvent]) {
+                        itagsThatNeedsEvent[domEvent] || (itagsThatNeedsEvent[domEvent]=[]);
+                        itagsThatNeedsEvent[domEvent].push(itag);
+                        // remove from list in case at least one itag is in the dom:
+                        if (DOCUMENT.getElement(itag, true)) {
+                            delete DELAYED_FINALIZE_EVENTS[domEvent];
+                        }
+                        // add to the list whenever elements are removed and no itag is in the dom anymore:
+                        Event.after(NODE_REMOVE, function() {
+                            var elementThatNeedsEvent;
+                            itagsThatNeedsEvent[domEvent].some(function(oneItag) {
+                                DOCUMENT.getElement(oneItag, true) &amp;&amp; (elementThatNeedsEvent=true);
+                                return elementThatNeedsEvent;
+                            });
+                            elementThatNeedsEvent || (DELAYED_FINALIZE_EVENTS[domEvent]=true);
+                        }, itag);
+
+                        // remove from the list whenever itag is added in the dom:
+                        Event.after(NODE_INSERT, function() {
+                            delete DELAYED_FINALIZE_EVENTS[domEvent];
+                        }, itag);
+                    }
+                });
+            }
+            return instance;
+        };
+
+       /**
+         * Backup of the original &#x60;mergePrototypes&#x60;-method.
+         *
+         * @method mergePrototypes
+         * @param prototypes {Object} Hash prototypes of properties to add to the prototype of this object
+         * @param force {Boolean}  If true, existing members will be overwritten
+         * @private
+         * @chainable
+         * @since 0.0.1
+        */
         FunctionPrototype._mergePrototypes = FunctionPrototype.mergePrototypes;
-        FunctionPrototype.mergePrototypes = function(prototypes, force) {
+
+       /**
+         * Merges the given prototypes of properties into the &#x60;prototype&#x60; of the Class.
+         *
+         * **Note1 ** to be used on instances --&gt; ONLY on Classes
+         * **Note2 ** properties with getters and/or unwritable will NOT be merged
+         *
+         * The members in the hash prototypes will become members with
+         * instances of the merged class.
+         *
+         * By default, this method will not override existing prototype members,
+         * unless the second argument &#x60;force&#x60; is true.
+         *
+         * In case of merging properties into an itag, a &#x60;itag:prototypechange&#x60;-event gets emitted
+         *
+         * @method mergePrototypes
+         * @param prototypes {Object} Hash prototypes of properties to add to the prototype of this object
+         * @param [force=false] {Boolean}  If true, existing members will be overwritten
+         * @param [silent=false] {Boolean}  If true, no &#x60;itag:prototypechange&#x60; event will get emitted
+         * @chainable
+         * @since 0.0.1
+        */
+        FunctionPrototype.mergePrototypes = function(prototypes, force, silent) {
             var instance = this,
                 silent;
             if (!instance.$$itag) {
@@ -679,27 +1222,36 @@ module.exports = function (window) {
             }
             else {
                 instance._mergePrototypes(prototypes, force, ITAG_METHODS, PROTECTED_MEMBERS);
-                silent = arguments[2];
-                silent || Event.emit(instance, &#x27;itag:prototypechanged&#x27;, {prototypes: prototypes, force: force});
+                /**
+                * Emitted when prototypes are set on an existing itag-definition.
+                *
+                * @event itag:prototypechange
+                * @param e {Object} eventobject including:
+                * @param e.prototypes {Object} Hash prototypes of properties to add to the prototype of this object
+                * @param e.force {Boolean} whether existing members are overwritten
+                * @since 0.1
+                */
+                silent || Event.emit(instance, &#x27;itag:prototypechange&#x27;, {prototypes: prototypes, force: !!force});
             }
             return instance;
         };
 
-        FunctionPrototype._removePrototypes = FunctionPrototype.removePrototypes;
-        FunctionPrototype.removePrototypes = function(properties) {
-            var instance = this;
-            if (!instance.$$itag) {
-                // default mergePrototypes
-                instance._removePrototypes.apply(instance, arguments);
-            }
-            else {
-                instance._removePrototypes(properties, ITAG_METHODS);
-                Event.emit(instance, &#x27;itag:prototyperemoved&#x27;, {properties: properties});
-            }
-            return instance;
-        };
-
-        FunctionPrototype.pseudoClass = function(pseudo , prototypes, chainInit, chainDestroy) {
+       /**
+        * Subclasses in Itag-Class into a pseudo-class: retaining its tagname, yet still subclassing.
+        * The pseudoclass gets identified by &#x60;i-parentclass:pseudo&#x60; and once rendered it has the signature of:
+        * &amp;lt;i-parentclass&amp;gt; is=&quot;pseudo&quot; &amp;lt;/i-parentclass&amp;gt;
+        *
+        * Syncs the new vnode&#x27;s childNodes with the dom.
+        *
+        * @method pseudoClass
+        * @param pseudo
+        * @param prototypes
+        * @param chainInit
+        * @param chainDestroy
+        * @return {Class}
+        * @since 0.0.1
+        */
+        FunctionPrototype.pseudoClass = function(pseudo, prototypes, chainInit, chainDestroy) {
             var instance = this;
             if (!instance.$$itag) {
                 console.warn(NAME, &#x27;cannot pseudoClass &#x27;+pseudo+&#x27; for its Parent is no Itag-Class&#x27;);
@@ -716,20 +1268,85 @@ module.exports = function (window) {
             return instance.subClass(instance.$$itag+&#x27;:&#x27;+pseudo , prototypes, chainInit, chainDestroy);
         };
 
-        FunctionPrototype.subClass = function(constructor, prototypes, chainInit, chainDestroy) {
+       /**
+        * Redefines the childNodes of both the vnode as well as its related dom-node. The new
+        * definition replaces any previous nodes. (without touching unmodified nodes).
+        *
+        * Syncs the new vnode&#x27;s childNodes with the dom.
+        *
+        * @method _removePrototypes
+        * @param properties
+        * @private
+        * @chainable
+        * @since 0.0.1
+        */
+        FunctionPrototype._removePrototypes = FunctionPrototype.removePrototypes;
+
+       /**
+        * Redefines the childNodes of both the vnode as well as its related dom-node. The new
+        * definition replaces any previous nodes. (without touching unmodified nodes).
+        *
+        * Syncs the new vnode&#x27;s childNodes with the dom.
+        *
+        * @method removePrototypes
+        * @param properties
+        * @chainable
+        * @since 0.0.1
+        */
+        FunctionPrototype.removePrototypes = function(properties) {
+            var instance = this;
+            if (!instance.$$itag) {
+                // default mergePrototypes
+                instance._removePrototypes.apply(instance, arguments);
+            }
+            else {
+                instance._removePrototypes(properties, ITAG_METHODS);
+                /**
+                * Emitted when a draggable gets dropped inside a dropzone.
+                *
+                * @event *:dropzone-drop
+                * @param e {Object} eventobject including:
+                * @param e.target {HtmlElement} the dropzone
+                * @since 0.1
+                */
+                Event.emit(instance, &#x27;itag:prototyperemove&#x27;, {properties: properties});
+            }
+            return instance;
+        };
+
+       /**
+        * Redefines the childNodes of both the vnode as well as its related dom-node. The new
+        * definition replaces any previous nodes. (without touching unmodified nodes).
+        *
+        * Syncs the new vnode&#x27;s childNodes with the dom.
+        *
+        * @method subClass
+        * @param [constructorOrItagname] {Function|String} The function that will serve as constructor for the new class.
+        *        If &#x60;undefined&#x60; defaults to &#x60;NOOP&#x60;
+        *        When subClassing an ItagClass, a String should be passed as first argument
+        * @param [prototypes] {Object} Hash map of properties to be added to the prototype of the new class.
+        * @param [chainInit=true] {Boolean} Whether -during instance creation- to automaticly construct in the complete hierarchy with the given constructor arguments.
+        * @param [chainDestroy=true] {Boolean} Whether -when the Element gets out if the DOM- to automaticly destroy in the complete hierarchy.
+        * @param [subClassable=true] {Boolean} whether the Class is subclassable. Can only be set to false on ItagClasses
+        * @return {Class}
+        * @since 0.0.1
+        */
+        FunctionPrototype.subClass = function(constructorOrItagname, prototypes, chainInit, chainDestroy, subClassable) {
             var instance = this,
                 baseProt, proto, domElementConstructor, itagName, pseudo, registerName, itagNameSplit;
-            if (typeof constructor === &#x27;string&#x27;) {
+            if (typeof constructorOrItagname === &#x27;string&#x27;) {
                 // Itag subclassing
                 if (typeof prototypes === &#x27;boolean&#x27;) {
+                    subClassable = chainDestroy;
                     chainDestroy = chainInit;
                     chainInit = prototypes;
                     prototypes = null;
                 }
                 (typeof chainInit === &#x27;boolean&#x27;) || (chainInit=DEFAULT_CHAIN_INIT);
                 (typeof chainDestroy === &#x27;boolean&#x27;) || (chainDestroy=DEFAULT_CHAIN_DESTROY);
+                (typeof subClassable === &#x27;boolean&#x27;) || (subClassable=true);
 
-                itagName = constructor.toLowerCase();
+                itagName = constructorOrItagname.toLowerCase();
                 if (!itagName.startsWith(&#x27;i-&#x27;)) {
                     console.warn(NAME, &#x27;invalid itagname &#x27;+itagName+&#x27; --&gt; name should start with i-&#x27;);
                     return instance;
@@ -741,6 +1358,11 @@ module.exports = function (window) {
                 itagNameSplit = itagName.split(&#x27;:&#x27;);
                 itagName = itagNameSplit[0];
                 pseudo = itagNameSplit[1]; // may be undefined
+
+                if (instance.$$itag &amp;&amp; !instance.$$subClassable &amp;&amp; !pseudo) {
+                    console.warn(NAME, instance.$$itag+&#x27; cannot be sub-classed&#x27;);
+                    return instance;
+                }
 
                 // if instance.isItag, then we subclass an existing i-tag
                 baseProt = instance.prototype;
@@ -756,52 +1378,163 @@ module.exports = function (window) {
 
                 domElementConstructor.prototype = proto;
 
-                proto.constructor = domElementConstructor;
+                // webkit doesn&#x27;t let all objects to have their constructorOrItagname redefined
+                // when directly assigned. Using &#x60;defineProperty will work:
+                Object.defineProperty(proto, &#x27;constructorOrItagname&#x27;, {value: domElementConstructor});
+
                 domElementConstructor.$$itag = itagName;
                 domElementConstructor.$$pseudo = pseudo;
                 domElementConstructor.$$chainInited = chainInit ? true : false;
                 domElementConstructor.$$chainDestroyed = chainDestroy ? true : false;
                 domElementConstructor.$$super = baseProt;
                 domElementConstructor.$$orig = {};
+                domElementConstructor.$$subClassable = subClassable;
 
                 prototypes &amp;&amp; domElementConstructor.mergePrototypes(prototypes, true, true);
                 window.ITAGS[registerName] = domElementConstructor;
 
-                itagCore.renderDomElements(itagName, domElementConstructor);
+                itagCore.renderDomElements(domElementConstructor);
 
                 return domElementConstructor;
             }
             else {
                 // Function subclassing
+                if (instance.$$itag) {
+                    console.warn(NAME, &#x27;subClassing &#x27;+instance.$$itag+&#x27; needs a &quot;String&quot; as first argument&#x27;);
+                    return instance;
+                }
                 return originalSubClass.apply(instance, arguments);
             }
         };
 
     }(Function.prototype));
 
+    (function(ElementPrototype) {
+        var setAttributeBKP = ElementPrototype.setAttribute,
+            removeAttributeBKP = ElementPrototype.removeAttribute;
 
+       /**
+        * Removes the attribute from the Element.
+        * In case of an Itag --&gt; will remove the property of element.model
+        *
+        * Use removeAttr() to be able to chain.
+        *
+        * @method removeAttr
+        * @param attributeName {String}
+        * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
+        * @since 0.0.1
+        */
+        ElementPrototype.removeAttribute = function(attributeName) {
+            var instance = this;
+            if (!instance.isItag()) {
+                removeAttributeBKP.apply(instance, arguments);
+            }
+            else {
+                if (instance._attrs[attributeName]) {
+                    delete instance.model[attributeName];
+                }
+                else {
+                    removeAttributeBKP.apply(instance, arguments);
+                }
+            }
+        };
 
+       /**
+         * Sets the attribute on the Element with the specified value.
+        * In case of an Itag --&gt; will remove the property of element.model
+         *
+         * Alias for setAttr(), BUT differs in a way that setAttr is chainable, setAttribute is not.
+         *
+         * @method setAttribute
+         * @param attributeName {String}
+         * @param value {String} the value for the attributeName
+         * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
+         * @since 0.0.1
+        */
+        ElementPrototype.setAttribute = function(attributeName, value, silent) {
+            var instance = this,
+                valueType;
+            if (silent || !instance.isItag()) {
+                setAttributeBKP.apply(instance, arguments);
+            }
+            else {
+/*jshint boss:true */
+                if (valueType=instance._attrs[attributeName]) {
+/*jshint boss:false */
+                    switch (valueType) {
+                        case &#x27;boolean&#x27;:
+                            value = (value===&#x27;true&#x27;);
+                            break;
+                        case &#x27;number&#x27;:
+                            value = parseFloat(value);
+                            break;
+                        case &#x27;date&#x27;:
+                            value = value.toDate();
+                            break;
+                    }
+                    instance.model[attributeName] = value;
+                }
+                else {
+                    setAttributeBKP.apply(instance, arguments);
+                }
+            }
+        };
+    }(window.Element.prototype));
+
+    (function(HTMLElementPrototype) {
+       /**
+        * Flag that tells whether the HTMLElement is an Itag
+        *
+        * @method isItag
+        * @return {Boolean}
+        * @for HTMLElement
+        * @since 0.0.1
+        */
+        HTMLElementPrototype.isItag = function() {
+            return this.vnode.isItag;
+        };
+
+    }(window.HTMLElement.prototype));
+
+    //===============================================================================
+
+   /**
+    * Creates the base ItagClass: the highest Class in the hierarchy of all ItagClasses.
+    * Will get extra properties merge into its prototype, which leads into the formation of &#x60;ItagBaseClass&#x60;.
+    *
+    * @method createItagBaseClass
+    * @protected
+    * @return {Class}
+    * @for itagCore
+    * @since 0.0.1
+    */
     var createItagBaseClass = function () {
         return Function.prototype.subClass.apply(window.HTMLElement);
     };
 
     /**
-     * Returns a base class with the given constructor and prototype methods
+     * The base ItagClass: the highest Class in the hierarchy of all ItagClasses.
      *
-     * @for Object
-     * @method createClass
-     * @param [constructor] {Function} constructor for the class
-     * @param [prototype] {Object} Hash map of prototype members of the new class
-     * @static
-     * @return {Function} the new class
+     * @property ItagBaseClass
+     * @type Class
+     * @for Classes
+     * @since 0.0.1
     */
     Object.protectedProp(Classes, &#x27;ItagBaseClass&#x27;, createItagBaseClass().mergePrototypes(EXTRA_BASE_MEMBERS, true, {}, {}));
 
     // because &#x60;mergePrototypes&#x60; cannot merge object-getters, we will add the getter &#x60;$super&#x60; manually:
     Object.defineProperties(Classes.ItagBaseClass.prototype, Classes.coreMethods);
 
+    /**
+     * Calculated value of the specified member at the parent-Class.
+     *
+     * @method $superProp
+     * @return {Any}
+     * @for ItagBaseClass
+     * @since 0.0.1
+    */
     Object.defineProperty(Classes.ItagBaseClass.prototype, &#x27;$superProp&#x27;, {
-        value: function(/* func, *args */) {
+        value: function(/* member, *args */) {
             var instance = this,
                 classCarierReturn = instance.__$superCarierStart__ || instance.__classCarier__ || instance.__methodClassCarier__,
                 currentClassCarier = instance.__classCarier__ || instance.__methodClassCarier__,
@@ -845,83 +1578,23 @@ module.exports = function (window) {
     });
 
     /**
-     * Returns a base class with the given constructor and prototype methods
+     * Internal hash containing all DOM-events that are listened for (at &#x60;document&#x60;).
      *
-     * @for Object
-     * @method createClass
-     * @param [constructor] {Function} constructor for the class
-     * @param [prototype] {Object} Hash map of prototype members of the new class
-     * @static
-     * @return {Function} the new class
+     *
+     * @property createItag
+     * @type Class
+     * @for document
+     * @since 0.0.1
     */
     Object.protectedProp(DOCUMENT, &#x27;createItag&#x27;, Classes.ItagBaseClass.subClass.bind(Classes.ItagBaseClass));
 
-
-
-
-    (function(HTMLElementPrototype) {
-        HTMLElementPrototype.isItag = function() {
-            return !!this.vnode.tag.startsWith(&#x27;I-&#x27;);
-        };
-        HTMLElementPrototype.itagReady = function() {
-            var instance = this;
-            if (!instance.isItag()) {
-                console.warn(&#x27;itagReady() invoked on a non-itag element&#x27;);
-                return window.Promise.reject(&#x27;Element is no itag&#x27;);
-            }
-            instance._itagReady || (instance._itagReady=window.Promise.manage());
-            return instance._itagReady;
-        };
-    }(window.HTMLElement.prototype));
-
-    (function(ElementPrototype) {
-        var setAttributeBKP = ElementPrototype.setAttribute;
-        var removeAttributeBKP = ElementPrototype.removeAttribute;
-
-        ElementPrototype.removeAttribute = function(attributeName) {
-            var instance = this;
-            if (!instance.isItag()) {
-                removeAttributeBKP.apply(instance, arguments);
-            }
-            else {
-                if (instance._args[attributeName]) {
-                    delete instance.model[attributeName];
-                }
-                else {
-                    removeAttributeBKP.apply(instance, arguments);
-                }
-            }
-        };
-        ElementPrototype.setAttribute = function(attributeName, value, silent) {
-            var instance = this,
-                valueType;
-            if (silent || !instance.isItag()) {
-                setAttributeBKP.apply(instance, arguments);
-            }
-            else {
-/*jshint boss:true */
-                if (valueType=instance._args[attributeName]) {
-/*jshint boss:false */
-                    switch (valueType) {
-                        case &#x27;boolean&#x27;:
-                            value = (value===&#x27;true&#x27;);
-                            break;
-                        case &#x27;number&#x27;:
-                            value = parseFloat(value);
-                            break;
-                        case &#x27;date&#x27;:
-                            value = value.toDate();
-                            break;
-                    }
-                    instance.model[attributeName] = value;
-                }
-                else {
-                    setAttributeBKP.apply(instance, arguments);
-                }
-            }
-        };
-    }(window.Element.prototype));
-
+   /**
+    * Refreshes all Itag-elements in the dom by syncing their element.model onto the attributes and calling their &#x60;sync&#x60;-method.
+    *
+    * @method refreshItags
+    * @chainable
+    * @since 0.0.1
+    */
     DOCUMENT.refreshItags = function() {
         var list = this.getItags(),
             len = list.length,
@@ -932,78 +1605,34 @@ module.exports = function (window) {
             if (itagElement.isRendered &amp;&amp; itagElement.isRendered()) {
                 itagCore.modelToAttrs(itagElement);
                 itagElement.syncUI();
-                itagElement.hasClass(&#x27;focussed&#x27;) &amp;&amp; focusManager(itagElement);
+                itagElement.hasClass(&#x27;focussed&#x27;) &amp;&amp; manageFocus(itagElement);
             }
         }
         allowedToRefreshItags = true;
+        return this;
     };
 
-
-    if (PROTO_SUPPORTED) {
-        Event.after(
-            &#x27;itag:prototypechanged&#x27;,
-            function(e) {
-                var prototypes = e.prototypes,
-                    ItagClass = e.target,
-                    nodeList, node, i, length;
-                if (&#x27;init&#x27; in prototypes) {
-                    nodeList = DOCUMENT.getAll(ItagClass.$$itag+&#x27;.&#x27;+CLASS_ITAG_RENDERED);
-                    length = nodeList.length;
-                    for (i=0; i&lt;length; i++) {
-                        node = nodeList[i];
-                        node.reInitializeUI();
-                    }
-                }
-                else if (&#x27;sync&#x27; in prototypes) {
-                    nodeList = DOCUMENT.getAll(ItagClass.$$itag+&#x27;.&#x27;+CLASS_ITAG_RENDERED);
-                    length = nodeList.length;
-                    for (i=0; i&lt;length; i++) {
-                        node = nodeList[i];
-                        node.syncUI();
-                    }
-                }
-            }
-        );
-        Event.after(
-            &#x27;itag:prototyperemoved&#x27;,
-            function(e) {
-                var properties = e.properties,
-                    ItagClass = e.target,
-                    nodeList, node, i, length;
-                if (properties.contains(&#x27;init&#x27;)) {
-                    nodeList = DOCUMENT.getAll(ItagClass.$$itag+&#x27;.&#x27;+CLASS_ITAG_RENDERED);
-                    length = nodeList.length;
-                    for (i=0; i&lt;length; i++) {
-                        node = nodeList[i];
-                        node.reInitializeUI();
-                    }
-                }
-                else if (properties.contains(&#x27;sync&#x27;)) {
-                    nodeList = DOCUMENT.getAll(ItagClass.$$itag+&#x27;.&#x27;+CLASS_ITAG_RENDERED);
-                    length = nodeList.length;
-                    for (i=0; i&lt;length; i++) {
-                        node = nodeList[i];
-                        node.syncUI();
-                    }
-                }
-            }
-        );
-    }
-
     itagCore.setupWatchers();
-
     itagCore.setupEmitters();
 
     Object.protectedProp(window, &#x27;_ItagCore&#x27;, itagCore);
 
     if (PROTOTYPE_CHAIN_CAN_BE_SET) {
+       /*
+        * Only for usage during testing --&gt; can deactivate the usage of __proto__ making the itags
+        * upgraded my merging all ItagClass-members to the domElement-instance.
+        *
+        * @method setPrototypeChain
+        * @param activate
+        * @for itagCore
+        * @since 0.0.1
+        */
         itagCore.setPrototypeChain = function(activate) {
             PROTO_SUPPORTED = activate ? !!Object.__proto__ : false;
         };
     }
 
     return itagCore;
-
 };
     </pre>
 </div>

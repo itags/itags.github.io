@@ -70,6 +70,7 @@ intro: ""
     // document.getElement('i-select').focus();
     document.getElement('#test').setHTML('<i-select value="1" primary-button="true"><i-item>item1</i-item><i-item>item2</i-item></i-select>');
     document.getElement('#test2').setHTML('<i-select is="dummy" value="1" primary-button="true"><i-item>item1</i-item><i-item>item2</i-item></i-select>');
+
     document.getElement('#test3').setHTML('<i-s></i-s>');
     // setTimeout(function() {
         // document.getElement('i-select').setAttr('value', 3);

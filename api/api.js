@@ -2,6 +2,7 @@ YUI.add("yuidoc-meta", function(Y) {
    Y.YUIDoc = { meta: {
     "classes": [
         "Array",
+        "Classes",
         "Element",
         "ElementArray",
         "Event",
@@ -9,7 +10,9 @@ YUI.add("yuidoc-meta", function(Y) {
         "Event.Listener",
         "FocusManager",
         "Function",
+        "HTMLElement",
         "IO",
+        "ItagBaseClass",
         "NS-vdom",
         "Node",
         "Object",
@@ -18,6 +21,7 @@ YUI.add("yuidoc-meta", function(Y) {
         "String",
         "Utils",
         "document",
+        "itagCore",
         "vnode",
         "window"
     ],
@@ -31,12 +35,14 @@ YUI.add("yuidoc-meta", function(Y) {
         "event-listener",
         "extend-document",
         "extend-element",
+        "extend-element",
+        "extend-element",
         "focusmanager",
         "html-parser",
         "io",
+        "itags.core",
         "itsa.build",
         "js-ext",
-        "lib/array.js",
         "lib/array.js",
         "lib/function.js",
         "lib/object.js",
@@ -109,6 +115,11 @@ YUI.add("yuidoc-meta", function(Y) {
             "displayName": "io",
             "name": "io",
             "description": "Provides core IO-functionality.\n\n\n<i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>\nNew BSD License - http://choosealicense.com/licenses/bsd-3-clause/"
+        },
+        {
+            "displayName": "itags.core",
+            "name": "itags.core",
+            "description": "Provides several methods that override native Element-methods to work with the vdom.\n\n\n<i>Copyright (c) 2015 ITSA - https://github.com/itags</i>\n<br>\nNew BSD License - http://choosealicense.com/licenses/bsd-3-clause/"
         },
         {
             "displayName": "itsa.build",
