@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>FocusManager - Itsa</title>
+    <title>BaseClass - Itsa</title>
     <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -182,22 +182,18 @@
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-                        <h1>FocusManager Class</h1>
+                        <h1>BaseClass Class</h1>
 <div class="box meta">
     
 
     
 
     
-        <div class="foundat">
-            Defined in: <a href="../files/site-preview_dist_itagsbuild.js.html#l14254"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:14254</code></a>
-        </div>
-    
 
     
         
-            Module: <a href="../modules/vdom-ns.html">vdom-ns</a><br>
-            Parent Module: <a href="../modules/vdom.html">vdom</a>
+            Module: <a href="../modules/extra_classes.js.html">extra/classes.js</a><br>
+            Parent Module: <a href="../modules/js-ext.html">js-ext</a>
         
     
 
@@ -207,9 +203,7 @@
 
 
 <div class="box intro">
-    <p><i>Copyright (c) 2014 ITSA - <a href="https://github.com/itsa">https://github.com/itsa</a></i>
- New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">http://choosealicense.com/licenses/bsd-3-clause/</a></p>
-
+    
 </div>
 
 
@@ -219,10 +213,12 @@
         <li class="api-class-tab index"><a href="#index">Index</a></li>
 
         
+            <li class="api-class-tab methods"><a href="#methods">Methods</a></li>
         
         
+            <li class="api-class-tab properties"><a href="#properties">Properties</a></li>
         
-            <li class="api-class-tab events"><a href="#events">Events</a></li>
+        
         
     </ul>
 
@@ -231,26 +227,34 @@
             <h2 class="off-left">Item Index</h2>
 
             
+                <div class="index-section methods">
+                    <h3>Methods</h3>
 
-            
-
-            
-
-            
-                <div class="index-section events">
-                    <h3>Events</h3>
-
-                    <ul class="index-list events">
+                    <ul class="index-list methods">
                         
-                            <li class="index-item event">
-                                <a href="#event_manualfocus">manualfocus</a>
+                            <li class="index-item method">
+                                <a href="#method_$orig">$orig</a>
 
                                 
                                 
                             </li>
                         
-                            <li class="index-item event">
-                                <a href="#event_manualfocus">manualfocus</a>
+                            <li class="index-item method">
+                                <a href="#method_$orig">$orig</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
+                                <a href="#method_$superProp">$superProp</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
+                                <a href="#method_$superProp">$superProp</a>
 
                                 
                                 
@@ -259,22 +263,57 @@
                     </ul>
                 </div>
             
+
+            
+                <div class="index-section properties">
+                    <h3>Properties</h3>
+
+                    <ul class="index-list properties">
+                        
+                            <li class="index-item property">
+                                <a href="#property_$super">$super</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item property">
+                                <a href="#property_$super">$super</a>
+
+                                
+                                
+                            </li>
+                        
+                    </ul>
+                </div>
+            
+
+            
+
+            
         </div>
 
         
-
-        
-
-        
-
-        
-            <div id="events" class="api-class-tabpanel">
-                <h2 class="off-left">Events</h2>
+            <div id="methods" class="api-class-tabpanel">
+                <h2 class="off-left">Methods</h2>
 
                 
-                    <div id="event_manualfocus" class="events item">
-    <h3 class="name"><code>manualfocus</code></h3>
-    <span class="type"></span>
+                    <div id="method_$orig" class="method item">
+    <h3 class="name"><code>$orig</code></h3>
+
+    
+        <span class="paren">()</span>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type">Any</span>
+        </span>
+    
+
+    
+
+    
 
     
 
@@ -288,8 +327,6 @@
         
             
                 
-                    <p>Provided by the <a href="../modules/focusmanager.html">focusmanager</a> module.</p>
-                
                 <p>
                 
                 Defined in
@@ -297,31 +334,60 @@
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l14599"><code>site&#x2F;dist&#x2F;itagsbuild.js:14599</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l2907"><code>site&#x2F;dist&#x2F;itagsbuild.js:2907</code></a>
         
         </p>
 
+
         
 
+        
+            <p>Available since 0.0.1</p>
         
     </div>
 
     <div class="description">
-        <p>In case of a manual focus (node.focus()) the node will fire an <code>manualfocus</code>-event
-which can be prevented.</p>
+        <p>Invokes the original method (from inside where $orig is invoked).
+Any arguments will be passed through to the original method.</p>
 
     </div>
 
     
 
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">Any</span>:
+                    
+                
+            </div>
+        </div>
+    
 
     
 </div>
 
                 
-                    <div id="event_manualfocus" class="events item">
-    <h3 class="name"><code>manualfocus</code></h3>
-    <span class="type"></span>
+                    <div id="method_$orig" class="method item">
+    <h3 class="name"><code>$orig</code></h3>
+
+    
+        <span class="paren">()</span>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type">Any</span>
+        </span>
+    
+
+    
+
+    
 
     
 
@@ -335,7 +401,79 @@ which can be prevented.</p>
         
             
                 
-                    <p>Provided by the <a href="../modules/focusmanager.html">focusmanager</a> module.</p>
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l2907"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:2907</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Invokes the original method (from inside where $orig is invoked).
+Any arguments will be passed through to the original method.</p>
+
+    </div>
+
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">Any</span>:
+                    
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_$superProp" class="method item">
+    <h3 class="name"><code>$superProp</code></h3>
+
+    
+        <span class="paren">()</span>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type">Any</span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
                 
                 <p>
                 
@@ -344,29 +482,223 @@ which can be prevented.</p>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l14599"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:14599</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l2868"><code>site&#x2F;dist&#x2F;itagsbuild.js:2868</code></a>
         
         </p>
 
+
         
 
+        
+            <p>Available since 0.0.1</p>
         
     </div>
 
     <div class="description">
-        <p>In case of a manual focus (node.focus()) the node will fire an <code>manualfocus</code>-event
-which can be prevented.</p>
+        <p>Calculated value of the specified member at the parent-Class.</p>
 
     </div>
 
     
 
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">Any</span>:
+                    
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_$superProp" class="method item">
+    <h3 class="name"><code>$superProp</code></h3>
+
+    
+        <span class="paren">()</span>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type">Any</span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l2868"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:2868</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Calculated value of the specified member at the parent-Class.</p>
+
+    </div>
+
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">Any</span>:
+                    
+                
+            </div>
+        </div>
+    
 
     
 </div>
 
                 
             </div>
+        
+
+        
+            <div id="properties" class="api-class-tabpanel">
+                <h2 class="off-left">Properties</h2>
+
+                
+                    <div id="property_$super" class="property item">
+    <h3 class="name"><code>$super</code></h3>
+    <span class="type">Unknown</span>
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site_dist_itagsbuild.js.html#l2850"><code>site&#x2F;dist&#x2F;itagsbuild.js:2850</code></a>
+        
+        </p>
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Returns the instance, yet sets an internal flag to a higher Class (1 level up)</p>
+
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="property_$super" class="property item">
+    <h3 class="name"><code>$super</code></h3>
+    <span class="type">Unknown</span>
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l2850"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:2850</code></a>
+        
+        </p>
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Returns the instance, yet sets an internal flag to a higher Class (1 level up)</p>
+
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+                
+            </div>
+        
+
+        
+
         
     </div>
 </div>

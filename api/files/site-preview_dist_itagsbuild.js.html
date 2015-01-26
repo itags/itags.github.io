@@ -43,6 +43,8 @@
             
                 <li><a href="../classes/Array.html">Array</a></li>
             
+                <li><a href="../classes/BaseClass.html">BaseClass</a></li>
+            
                 <li><a href="../classes/Classes.html">Classes</a></li>
             
                 <li><a href="../classes/document.html">document</a></li>
@@ -108,6 +110,8 @@
                 <li><a href="../modules/extend-document.html">extend-document</a></li>
             
                 <li><a href="../modules/extend-element.html">extend-element</a></li>
+            
+                <li><a href="../modules/extra_classes.js.html">extra/classes.js</a></li>
             
                 <li><a href="../modules/focusmanager.html">focusmanager</a></li>
             
@@ -807,6 +811,17 @@ module.exports = function (window) {
          ._setEventObjProperty(&#x27;stopPropagation&#x27;, function() {this.status.ok || (this.status.propagationStopped = this.target);})
          ._setEventObjProperty(&#x27;stopImmediatePropagation&#x27;, function() {this.status.ok || (this.status.immediatePropagationStopped = this.target);});
 
+    // Notify when someone subscribes to any event at all --&gt; we might need to transform the filterFn from a selector into a true fnction
+    // this is already done automaticly by _setupDomListener fo UI:* events
+    Event.notify(&#x27;*:*&#x27;, function(customEvent, subscriber) {
+        var eventSplitted = customEvent.split(&#x27;:&#x27;),
+            emitterName = eventSplitted[0];
+        if ((emitterName!==&#x27;UI&#x27;) &amp;&amp; (typeof subscriber.f===&#x27;string&#x27;)) {
+            // now transform the subscriber&#x27;s filter from css-string into a filterfunction
+            _selToFunc(customEvent, subscriber);
+        }
+    }, Event);
+
     // Notify when someone detaches an UI:* event
     // if so: then we might need to detach the native listener on &#x60;document&#x60;
     Event.notifyDetach(UI+&#x27;*&#x27;, _teardownDomListener, Event);
@@ -899,8 +914,9 @@ var createHashMap = require(&#x27;js-ext/extra/hashmap.js&#x27;).createMap;
     &quot;use strict&quot;;
 
     var NAME = &#x27;[core-event]: &#x27;,
-        REGEXP_CUSTOMEVENT = /^((?:\w|-)+):((?:\w|-)+)$/,
-        REGEXP_WILDCARD_CUSTOMEVENT = /^(?:((?:(?:\w|-)+)|\*):)?((?:(?:\w|-)+)|\*)$/,
+        REGEXP_CUSTOMEVENT = /^((?:\w|-|#)+):((?:\w|-|#)+)$/,
+        WILDCARD_WILDCARD = &#x27;*:*&#x27;,
+        REGEXP_WILDCARD_CUSTOMEVENT = /^(?:((?:(?:\w|-|#)+)|\*):)?((?:(?:\w|-|#)+)|\*)$/,
         /* REGEXP_WILDCARD_CUSTOMEVENT :
          *
          * valid:
@@ -919,7 +935,8 @@ var createHashMap = require(&#x27;js-ext/extra/hashmap.js&#x27;).createMap;
          * &#x27;red:save*&#x27;
          * &#x27;:save&#x27;
          */
-        REGEXP_EVENTNAME_WITH_SEMICOLON = /:((?:\w|-)+)$/,
+        REGEXP_EMITTERNAME_WITH_SEMICOLON = /^((?:\w|-|#)+):/,
+        REGEXP_EVENTNAME_WITH_SEMICOLON = /:((?:\w|-|#)+)$/,
         Event;
 
     Event = {
@@ -1227,8 +1244,7 @@ var createHashMap = require(&#x27;js-ext/extra/hashmap.js&#x27;).createMap;
          * You can use this to create delayed &#x60;defineEvents&#x60;. When the customEvent is called, the callback gets invoked
          * (even before the subsrcibers). Use this callback for delayed customEvent-definitions.
          *
-         * Use **no** wildcards for the emitterName. You might use wildcards for the eventName. Without wildcards, the
-         * notification will be unNotified (callback automaticly detached) on the first time the event occurs.
+         * You may use wildcards for both emitterName and eventName.
 
          * You **must** specify the full &#x60;emitterName:eventName&#x60; syntax.
          * The module &#x60;core-event-dom&#x60; uses &#x60;notify&#x60; to auto-define DOM-events (UI:*).
@@ -1569,7 +1585,7 @@ var createHashMap = require(&#x27;js-ext/extra/hashmap.js&#x27;).createMap;
             var instance = this,
                 allSubscribers = instance._subs,
                 extract = customEvent.match(REGEXP_WILDCARD_CUSTOMEVENT),
-                hashtable, item, notifier, customEventWildcardEventName;
+                hashtable, item, notifier, customEventWildcardEventName, customEventWildcardEmitterName;
 
             if (!extract) {
                 console.error(NAME, &#x27;subscribe-error: eventname does not match pattern&#x27;);
@@ -1622,6 +1638,21 @@ var createHashMap = require(&#x27;js-ext/extra/hashmap.js&#x27;).createMap;
                 // check the same for wildcard eventName:
                 customEventWildcardEventName = customEvent.replace(REGEXP_EVENTNAME_WITH_SEMICOLON, &#x27;:*&#x27;);
                 if ((customEventWildcardEventName !== customEvent) &amp;&amp; (notifier=instance._notifiers[customEventWildcardEventName])) {
+                    notifier.cb.call(notifier.o, customEvent, item);
+                    if (notifier.r) {
+                        delete instance._notifiers[customEvent];
+                    }
+                }
+                // check the same for wildcard emitterName:
+                customEventWildcardEmitterName = customEvent.replace(REGEXP_EMITTERNAME_WITH_SEMICOLON, &#x27;*:&#x27;);
+                if ((customEventWildcardEmitterName !== customEvent) &amp;&amp; (notifier=instance._notifiers[customEventWildcardEmitterName])) {
+                    notifier.cb.call(notifier.o, customEvent, item);
+                    if (notifier.r) {
+                        delete instance._notifiers[customEvent];
+                    }
+                }
+                // check the same for wildcard emitterName and eventName:
+                if ((WILDCARD_WILDCARD !== customEvent) &amp;&amp; (notifier=instance._notifiers[WILDCARD_WILDCARD])) {
                     notifier.cb.call(notifier.o, customEvent, item);
                     if (notifier.r) {
                         delete instance._notifiers[customEvent];
@@ -2197,7 +2228,7 @@ var createHashMap = require(&#x27;js-ext/extra/hashmap.js&#x27;).createMap;
 */
 
 var NAME = &#x27;[event-emitter]: &#x27;,
-    REGEXP_EMITTER = /^(\w|-)+$/,
+    REGEXP_EMITTER = /^(\w|-|#)+$/,
     Event = require(&#x27;./index.js&#x27;);
 
 Event.Emitter = function(emitterName) {
@@ -2572,8 +2603,8 @@ require(&#x27;./event-listener.js&#x27;);
  * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
  *
  * @module js-ext
- * @submodule lib/function.js
- * @class Function
+ * @submodule extra/classes.js
+ * @class Classes
  *
 */
 
@@ -2599,10 +2630,28 @@ require(&#x27;../lib/object.js&#x27;);
         return;
     }
 
-    // Define configurable, writable and non-enumerable props
-    // if they don&#x27;t exist.
-
+    /**
+     * Defines whether Classes should call their constructor in a chained way top-down.
+     *
+     * @property DEFAULT_CHAIN_CONSTRUCT
+     * @default true
+     * @type Boolean
+     * @protected
+     * @since 0.0.1
+    */
     DEFAULT_CHAIN_CONSTRUCT = true;
+
+    /**
+     * Sugarmethod for Object.defineProperty creating an unenumerable property
+     *
+     * @method defineProperty
+     * @param [object] {Object} The object to define the property to
+     * @param [name] {String} name of the property
+     * @param [method] {Any} value of the property
+     * @param [force=false] {Boolean} to force assignment when the property already exists
+     * @protected
+     * @since 0.0.1
+    */
     defineProperty = function (object, name, method, force) {
         if (!force &amp;&amp; (name in object)) {
             return;
@@ -2614,6 +2663,16 @@ require(&#x27;../lib/object.js&#x27;);
             value: method
         });
     };
+    /**
+     * Sugarmethod for using defineProperty for multiple properties at once.
+     *
+     * @method defineProperties
+     * @param [object] {Object} The object to define the property to
+     * @param [map] {Object} object to be set
+     * @param [force=false] {Boolean} to force assignment when the property already exists
+     * @protected
+     * @since 0.0.1
+    */
     defineProperties = function (object, map, force) {
         var names = Object.keys(map),
             l = names.length,
@@ -2624,17 +2683,58 @@ require(&#x27;../lib/object.js&#x27;);
             defineProperty(object, name, map[name], force);
         }
     };
+
+    /**
+     * Empty function
+     *
+     * @method NOOP
+     * @protected
+     * @since 0.0.1
+    */
     NOOP = function () {};
+
+    /**
+     * Internal hash containing the names of members which names should be transformed
+     *
+     * @property REPLACE_CLASS_METHODS
+     * @default {destroy: &#x27;_destroy&#x27;}
+     * @type Object
+     * @protected
+     * @since 0.0.1
+    */
     REPLACE_CLASS_METHODS = createHashMap({
         destroy: &#x27;_destroy&#x27;
     });
+
+    /**
+     * Internal hash containing protected members: those who cannot be merged into a Class
+     *
+     *
+     * @property PROTECTED_CLASS_METHODS
+     * @default {$super: true, $superProp: true, $orig: true}
+     * @type Object
+     * @protected
+     * @since 0.0.1
+    */
     PROTECTED_CLASS_METHODS = createHashMap({
         $super: true,
         $superProp: true,
         $orig: true
     });
+
 /*jshint proto:true */
 /* jshint -W001 */
+    /*
+     * Internal hash containing protected members: those who cannot be merged into a Class
+     *
+     * @property PROTO_RESERVED_NAMES
+     * @default {constructor: true, prototype: true, hasOwnProperty: true, isPrototypeOf: true,
+     *           propertyIsEnumerable: true, __defineGetter__: true, __defineSetter__: true,
+     *           __lookupGetter__: true, __lookupSetter__: true, __proto__: true}
+     * @type Object
+     * @protected
+     * @since 0.0.1
+    */
     PROTO_RESERVED_NAMES = createHashMap({
         constructor: true,
         prototype: true,
@@ -2649,11 +2749,6 @@ require(&#x27;../lib/object.js&#x27;);
     });
 /* jshint +W001 */
 /*jshint proto:false */
-
-    /**
-     * Pollyfils for often used functionality for Function
-     * @class Function
-    */
 
     defineProperties(Function.prototype, {
 
@@ -2695,7 +2790,7 @@ require(&#x27;../lib/object.js&#x27;);
                     // if nameInProto: set the property, but also backup for chaining using $$orig
                     propDescriptor = Object.getOwnPropertyDescriptor(prototypes, name);
                     if (!propDescriptor.writable) {
-                        console.warn(NAME+&#x27;mergePrototypes will set property of &#x27;+name+&#x27;without its property-descriptor: for it is an unwritable property.&#x27;);
+                        console.warn(NAME+&#x27;mergePrototypes will set property of &#x27;+name+&#x27; without its property-descriptor: for it is an unwritable property.&#x27;);
                         proto[finalName] = prototypes[name];
                     }
                     else {
@@ -2889,8 +2984,36 @@ require(&#x27;../lib/object.js&#x27;);
 
     global._ITSAmodules.Classes = Classes = {};
 
+    /**
+     * Base properties for every Class
+     *
+     *
+     * @property BASE_MEMBERS
+     * @type Object
+     * @protected
+     * @since 0.0.1
+    */
     BASE_MEMBERS = {
+       /**
+        * Transformed from &#x60;destroy&#x60; --&gt; when &#x60;destroy&#x60; gets invoked, the instance will invoke &#x60;_destroy&#x60; through the whole chain.
+        * Defaults to &#x60;NOOP&#x60;, so that it can be always be invoked.
+        *
+        * @method _destroy
+        * @private
+        * @chainable
+        * @since 0.0.1
+        */
         _destroy: NOOP,
+
+       /**
+        * Calls &#x60;_destroy&#x60; on through the class-chain on every level (bottom-up).
+        * _destroy gets defined when the itag defines &#x60;destroy&#x60; --&gt; transformation under the hood.
+        *
+        * @method destroy
+        * @param [notChained=false] {Boolean} set this &#x60;true&#x60; to prevent calling &#x60;destroy&#x60; up through the chain
+        * @chainable
+        * @since 0.0.1
+        */
         destroy: function(notChained) {
             var instance = this,
                 superDestroy;
@@ -2907,10 +3030,19 @@ require(&#x27;../lib/object.js&#x27;);
                 superDestroy(instance.constructor);
                 Object.protectedProp(instance, &#x27;_destroyed&#x27;, true);
             }
+            return instance;
         }
     };
 
     coreMethods = Classes.coreMethods = {
+        /**
+         * Returns the instance, yet sets an internal flag to a higher Class (1 level up)
+         *
+         * @property $super
+         * @chainable
+         * @for BaseClass
+         * @since 0.0.1
+        */
         $super: {
             get: function() {
                 var instance = this;
@@ -2920,10 +3052,18 @@ require(&#x27;../lib/object.js&#x27;);
                 return instance;
             }
         },
+
+        /**
+         * Calculated value of the specified member at the parent-Class.
+         *
+         * @method $superProp
+         * @return {Any}
+         * @since 0.0.1
+        */
         $superProp: {
             configurable: true,
             writable: true,
-            value: function(/* func, *args */) {
+            value: function(/* member, *args */) {
                 var instance = this,
                     classCarierReturn = instance.__$superCarierStart__ || instance.__classCarier__ || instance.__methodClassCarier__,
                     currentClassCarier = instance.__classCarier__ || instance.__methodClassCarier__,
@@ -2951,6 +3091,15 @@ require(&#x27;../lib/object.js&#x27;);
                 return returnValue || superPrototype[firstArg];
             }
         },
+
+        /**
+         * Invokes the original method (from inside where $orig is invoked).
+         * Any arguments will be passed through to the original method.
+         *
+         * @method $orig
+         * @return {Any}
+         * @since 0.0.1
+        */
         $orig: {
             configurable: true,
             writable: true,
@@ -3003,20 +3152,27 @@ require(&#x27;../lib/object.js&#x27;);
         }
     };
 
+   /**
+    * Creates the base Class: the highest Class in the hierarchy of all Classes.
+    * Will get extra properties merge into its prototype, which leads into the formation of &#x60;BaseClass&#x60;.
+    *
+    * @method createBaseClass
+    * @protected
+    * @return {Class}
+    * @for Classes
+    * @since 0.0.1
+    */
     createBaseClass = function () {
         var InitClass = function() {};
         return Function.prototype.subClass.apply(InitClass, arguments);
     };
 
     /**
-     * Returns a base class with the given constructor and prototype methods
+     * The base BaseClass: the highest Class in the hierarchy of all Classes.
      *
-     * @for Object
-     * @method createClass
-     * @param [constructor] {Function} constructor for the class
-     * @param [prototype] {Object} Hash map of prototype members of the new class
-     * @static
-     * @return {Function} the new class
+     * @property BaseClass
+     * @type Class
+     * @since 0.0.1
     */
     Object.protectedProp(Classes, &#x27;BaseClass&#x27;, createBaseClass().mergePrototypes(BASE_MEMBERS, true, {}, {}));
 
@@ -3026,12 +3182,10 @@ require(&#x27;../lib/object.js&#x27;);
     /**
      * Returns a base class with the given constructor and prototype methods
      *
-     * @for Object
      * @method createClass
      * @param [constructor] {Function} constructor for the class
      * @param [prototype] {Object} Hash map of prototype members of the new class
-     * @static
-     * @return {Function} the new class
+     * @return {Class} the new class
     */
     Object.protectedProp(Classes, &#x27;createClass&#x27;, Classes.BaseClass.subClass.bind(Classes.BaseClass));
 
@@ -11392,7 +11546,7 @@ module.exports = function (window) {
                     //vnode.domNode can only be set after inspecting the attributes --&gt; there might be an &#x60;is&#x60; attribute
                     tagdefinition = tag.toLowerCase();
                     if ((is=vnode.attrs.is) &amp;&amp; !is.contains(&#x27;-&#x27;)) {
-                        tagdefinition = tag + &#x27;:&#x27; + is;
+                        tagdefinition = tag + &#x27;#&#x27; + is;
                     }
                     vnode.domNode = vnode.ns ? DOCUMENT.createElementNS(vnode.ns, tagdefinition) : DOCUMENT.createElement(tagdefinition);
                     // create circular reference:
@@ -11538,6 +11692,7 @@ module.exports = function (window) {
     }
 
     var NS = require(&#x27;./vdom-ns.js&#x27;)(window),
+        escapeEntities = NS.EscapeEntities,
         extractor = require(&#x27;./attribute-extractor.js&#x27;)(window),
         xmlNS = NS.xmlNS,
         voidElements = NS.voidElements,
@@ -11627,7 +11782,7 @@ module.exports = function (window) {
             }
             else {
                 // TextNode or CommentNode
-                vnode.text = domNode.nodeValue;
+                vnode.text = escapeEntities(domNode.nodeValue);
             }
             // store vnode&#x27;s id:
             vnode.storeId();
@@ -11658,7 +11813,50 @@ module.exports = function (window) {
 require(&#x27;js-ext/lib/object.js&#x27;);
 require(&#x27;polyfill&#x27;);
 
-var createHashMap = require(&#x27;js-ext/extra/hashmap.js&#x27;).createMap;
+var createHashMap = require(&#x27;js-ext/extra/hashmap.js&#x27;).createMap,
+    // for escaping entoties inside domNode.nodeValue, we need this trick: https://code.google.com/p/jslibs/wiki/JavascriptTips
+/*jshint proto:true */
+    ENTITY_TO_CODE = { __proto__: null,
+        apos:0x0027,quot:0x0022,amp:0x0026,lt:0x003C,gt:0x003E,nbsp:0x00A0,iexcl:0x00A1,cent:0x00A2,pound:0x00A3,
+        curren:0x00A4,yen:0x00A5,brvbar:0x00A6,sect:0x00A7,uml:0x00A8,copy:0x00A9,ordf:0x00AA,laquo:0x00AB,
+        not:0x00AC,shy:0x00AD,reg:0x00AE,macr:0x00AF,deg:0x00B0,plusmn:0x00B1,sup2:0x00B2,sup3:0x00B3,
+        acute:0x00B4,micro:0x00B5,para:0x00B6,middot:0x00B7,cedil:0x00B8,sup1:0x00B9,ordm:0x00BA,raquo:0x00BB,
+        frac14:0x00BC,frac12:0x00BD,frac34:0x00BE,iquest:0x00BF,Agrave:0x00C0,Aacute:0x00C1,Acirc:0x00C2,Atilde:0x00C3,
+        Auml:0x00C4,Aring:0x00C5,AElig:0x00C6,Ccedil:0x00C7,Egrave:0x00C8,Eacute:0x00C9,Ecirc:0x00CA,Euml:0x00CB,
+        Igrave:0x00CC,Iacute:0x00CD,Icirc:0x00CE,Iuml:0x00CF,ETH:0x00D0,Ntilde:0x00D1,Ograve:0x00D2,Oacute:0x00D3,
+        Ocirc:0x00D4,Otilde:0x00D5,Ouml:0x00D6,times:0x00D7,Oslash:0x00D8,Ugrave:0x00D9,Uacute:0x00DA,Ucirc:0x00DB,
+        Uuml:0x00DC,Yacute:0x00DD,THORN:0x00DE,szlig:0x00DF,agrave:0x00E0,aacute:0x00E1,acirc:0x00E2,atilde:0x00E3,
+        auml:0x00E4,aring:0x00E5,aelig:0x00E6,ccedil:0x00E7,egrave:0x00E8,eacute:0x00E9,ecirc:0x00EA,euml:0x00EB,
+        igrave:0x00EC,iacute:0x00ED,icirc:0x00EE,iuml:0x00EF,eth:0x00F0,ntilde:0x00F1,ograve:0x00F2,oacute:0x00F3,
+        ocirc:0x00F4,otilde:0x00F5,ouml:0x00F6,divide:0x00F7,oslash:0x00F8,ugrave:0x00F9,uacute:0x00FA,ucirc:0x00FB,
+        uuml:0x00FC,yacute:0x00FD,thorn:0x00FE,yuml:0x00FF,OElig:0x0152,oelig:0x0153,Scaron:0x0160,scaron:0x0161,
+        Yuml:0x0178,fnof:0x0192,circ:0x02C6,tilde:0x02DC,Alpha:0x0391,Beta:0x0392,Gamma:0x0393,Delta:0x0394,
+        Epsilon:0x0395,Zeta:0x0396,Eta:0x0397,Theta:0x0398,Iota:0x0399,Kappa:0x039A,Lambda:0x039B,Mu:0x039C,
+        Nu:0x039D,Xi:0x039E,Omicron:0x039F,Pi:0x03A0,Rho:0x03A1,Sigma:0x03A3,Tau:0x03A4,Upsilon:0x03A5,
+        Phi:0x03A6,Chi:0x03A7,Psi:0x03A8,Omega:0x03A9,alpha:0x03B1,beta:0x03B2,gamma:0x03B3,delta:0x03B4,
+        epsilon:0x03B5,zeta:0x03B6,eta:0x03B7,theta:0x03B8,iota:0x03B9,kappa:0x03BA,lambda:0x03BB,mu:0x03BC,
+        nu:0x03BD,xi:0x03BE,omicron:0x03BF,pi:0x03C0,rho:0x03C1,sigmaf:0x03C2,sigma:0x03C3,tau:0x03C4,
+        upsilon:0x03C5,phi:0x03C6,chi:0x03C7,psi:0x03C8,omega:0x03C9,thetasym:0x03D1,upsih:0x03D2,piv:0x03D6,
+        ensp:0x2002,emsp:0x2003,thinsp:0x2009,zwnj:0x200C,zwj:0x200D,lrm:0x200E,rlm:0x200F,ndash:0x2013,
+        mdash:0x2014,lsquo:0x2018,rsquo:0x2019,sbquo:0x201A,ldquo:0x201C,rdquo:0x201D,bdquo:0x201E,dagger:0x2020,
+        Dagger:0x2021,bull:0x2022,hellip:0x2026,permil:0x2030,prime:0x2032,Prime:0x2033,lsaquo:0x2039,rsaquo:0x203A,
+        oline:0x203E,frasl:0x2044,euro:0x20AC,image:0x2111,weierp:0x2118,real:0x211C,trade:0x2122,alefsym:0x2135,
+        larr:0x2190,uarr:0x2191,rarr:0x2192,darr:0x2193,harr:0x2194,crarr:0x21B5,lArr:0x21D0,uArr:0x21D1,
+        rArr:0x21D2,dArr:0x21D3,hArr:0x21D4,forall:0x2200,part:0x2202,exist:0x2203,empty:0x2205,nabla:0x2207,
+        isin:0x2208,notin:0x2209,ni:0x220B,prod:0x220F,sum:0x2211,minus:0x2212,lowast:0x2217,radic:0x221A,
+        prop:0x221D,infin:0x221E,ang:0x2220,and:0x2227,or:0x2228,cap:0x2229,cup:0x222A,int:0x222B,
+        there4:0x2234,sim:0x223C,cong:0x2245,asymp:0x2248,ne:0x2260,equiv:0x2261,le:0x2264,ge:0x2265,
+        sub:0x2282,sup:0x2283,nsub:0x2284,sube:0x2286,supe:0x2287,oplus:0x2295,otimes:0x2297,perp:0x22A5,
+        sdot:0x22C5,lceil:0x2308,rceil:0x2309,lfloor:0x230A,rfloor:0x230B,lang:0x2329,rang:0x232A,loz:0x25CA,
+        spades:0x2660,clubs:0x2663,hearts:0x2665,diams:0x2666
+    },
+/*jshint proto:false */
+    charToEntity = {},
+    entityName;
+
+for (entityName in ENTITY_TO_CODE) {
+    charToEntity[String.fromCharCode(ENTITY_TO_CODE[entityName])] = entityName;
+}
 
 module.exports = function (window) {
     var NS;
@@ -11746,6 +11944,24 @@ module.exports = function (window) {
      */
     NS.voidElements || (NS.voidElements=createHashMap());
 
+    NS.UnescapeEntities = function(str) {
+        return str.replace(
+            /&amp;(.+?);/g,
+            function(str, ent) {
+                return String.fromCharCode( (ent[0]!==&#x27;#&#x27; ? ENTITY_TO_CODE[ent] : ent[1]===&#x27;x&#x27;) ? parseInt(ent.substr(2),16) : parseInt(ent.substr(1)) );
+            }
+        );
+    };
+
+    NS.EscapeEntities = function(str) {
+        return str.replace(
+            /[^\x20-\x7E]/g,
+            function(str) {
+                return charToEntity[str] ? &#x27;&amp;&#x27;+charToEntity[str]+&#x27;;&#x27; : str;
+            }
+        );
+    };
+
     return NS;
 };
 },{&quot;js-ext/extra/hashmap.js&quot;:38,&quot;js-ext/lib/object.js&quot;:41,&quot;polyfill&quot;:54}],76:[function(require,module,exports){
@@ -11802,6 +12018,7 @@ module.exports = function (window) {
         // because vnode would be recalculated and might be different from before
         DESTROY_DELAY = 60000,
 
+        unescapeEntities = NS.UnescapeEntities,
         NTH_CHILD_REGEXP = /^(?:(\d*)[n|N])([\+|\-](\d+))?$/, // an+b
         STRING = &#x27;string&#x27;,
         CLASS = &#x27;class&#x27;,
@@ -12583,18 +12800,19 @@ module.exports = function (window) {
     };
 
     _batchEmit = function() {
+        // we will exactly define the &#x27;UI:&#x27;-event --&gt; Itags will have another emitterName
         MUTATION_EVENTS.each(function (mutationEvents, vnode) {
             var domNode = vnode.domNode;
             if (mutationEvents[EV_REMOVED]) {
-                domNode.emit(EV_REMOVED);
+                domNode.emit(&#x27;UI:&#x27;+EV_REMOVED);
             }
             else if (mutationEvents[EV_INSERTED]) {
-                domNode.emit(EV_INSERTED);
+                domNode.emit(&#x27;UI:&#x27;+EV_INSERTED);
             }
             else {
                 // contentchange and attributechanges can go hand in hand
                 mutationEvents.each(function(value, evt) {
-                    domNode.emit(evt, (evt===EV_CONTENT_CHANGE) ? null : {changed: value});
+                    domNode.emit(&#x27;UI:&#x27;+evt, (evt===EV_CONTENT_CHANGE) ? null : {changed: value});
                 });
             }
         });
@@ -13185,7 +13403,7 @@ module.exports = function (window) {
                         }
                         else if (preChildNode &amp;&amp; preChildNode.nodeType===3) {
                             preChildNode.text += vChildNode.text;
-                            preChildNode.domNode.nodeValue = preChildNode.text;
+                            preChildNode.domNode.nodeValue = unescapeEntities(preChildNode.text);
                             domNode._removeChild(vChildNode.domNode);
                             vChildNode._destroy();
                             changed = true;
@@ -13566,7 +13784,7 @@ module.exports = function (window) {
                                 // case2 and case3 should be treated the same
                         case 3: // oldNodeType==Element, newNodeType==Comment
                             oldChild.attrs.id &amp;&amp; (delete nodeids[oldChild.attrs.id]);
-                            newChild.domNode.nodeValue = newChild.text;
+                            newChild.domNode.nodeValue = unescapeEntities(newChild.text);
                             domNode._replaceChild(newChild.domNode, childDomNode);
                             newChild.vParent = instance;
                             oldChild._replaceAtParent(newChild);
@@ -13593,7 +13811,8 @@ module.exports = function (window) {
                                 // case5 and case9 should be treated the same
                         case 9: // oldNodeType==Comment, newNodeType==Comment
                             if (oldChild.text!==newChild.text) {
-                                oldChild.domNode.nodeValue = oldChild.text = newChild.text;
+                                oldChild.text = newChild.text;
+                                oldChild.domNode.nodeValue = unescapeEntities(newChild.text);
                                 instance._emit(EV_CONTENT_CHANGE);
                             }
                             newVChildNodes[i] = oldChild;
@@ -13601,7 +13820,7 @@ module.exports = function (window) {
                         case 6: // oldNodeType==TextNode, newNodeType==Comment
                                 // case6 and case8 should be treated the same
                         case 8: // oldNodeType==Comment, newNodeType==TextNode
-                            newChild.domNode.nodeValue = newChild.text;
+                            newChild.domNode.nodeValue = unescapeEntities(newChild.text);
                             domNode._replaceChild(newChild.domNode, childDomNode);
                             newChild.vParent = oldChild.vParent;
                             instance._emit(EV_CONTENT_CHANGE);
@@ -13644,7 +13863,7 @@ module.exports = function (window) {
                         // we need to break through --&gt; no &#x60;break&#x60;
                         /* falls through */
                     default: // TextNode or CommentNode
-                        newChild.domNode.nodeValue = newChild.text;
+                        newChild.domNode.nodeValue = unescapeEntities(newChild.text);
                         domNode._appendChild(newChild.domNode);
                         instance._emit(EV_CONTENT_CHANGE);
                 }
@@ -13887,7 +14106,7 @@ module.exports = function (window) {
                     }
                     else {
                         id &amp;&amp; (delete nodeids[id]);
-                        vnode.domNode.nodeValue = vnode.text;
+                        vnode.domNode.nodeValue = unescapeEntities(vnode.text);
                         vParent.domNode._replaceChild(vnode.domNode, instance.domNode);
                         instance._replaceAtParent(vnode);
                         DOCUMENT._itagList &amp;&amp; vnode.isItag &amp;&amp; !DOCUMENT._itagList.contains(vnode.domNode) &amp;&amp; DOCUMENT._itagList.push(vnode.domNode);
@@ -13909,7 +14128,7 @@ module.exports = function (window) {
                             vnode._setChildNodes(bkpChildNodes);
                             break;
                         default: // TextNode or CommentNode
-                            vnode.domNode.nodeValue = vnode.text;
+                            vnode.domNode.nodeValue = unescapeEntities(vnode.text);
                             isLastChildNode ? vParent.domNode._appendChild(vnode.domNode) : vParent.domNode._appendChild(vnode.domNode, refDomNode);
                     }
                     vnode.storeId();
@@ -14253,7 +14472,7 @@ var NAME = &#x27;[focusmanager]: &#x27;,
 module.exports = function (window) {
 
     var DOCUMENT = window.document,
-        nodePlugin, FocusManager, Event, nextFocusNode, searchFocusNode, markAsFocussed, getFocusManagerSelector, setupEvents;
+        nodePlugin, FocusManager, Event, nextFocusNode, searchFocusNode, markAsFocussed, getFocusManagerSelector, setupEvents, defineFocusEvent;
 
     window._ITSAmodules || Object.protectedProp(window, &#x27;_ITSAmodules&#x27;, createHashMap());
 
@@ -14546,29 +14765,36 @@ module.exports = function (window) {
 
     window._ITSAmodules.FocusManager = FocusManager = nodePlugin.definePlugin(&#x27;fm&#x27;, {manage: &#x27;true&#x27;});
 
-    /**
-     * In case of a manual focus (node.focus()) the node will fire an &#x60;manualfocus&#x60;-event
-     * which can be prevented.
-     * @event manualfocus
-    */
-    Event.defineEvent(&#x27;UI:manualfocus&#x27;)
-         .defaultFn(function(e) {
-             var node = e.target,
-                 leftScroll = window.getScrollLeft(),
-                 topScroll = window.getScrollTop();
-             node._focus();
-             // reset winscroll:
-             window.scrollTo(leftScroll, topScroll);
-             // make sure the node is inside the viewport:
-             // node.forceIntoView();
-         });
+    defineFocusEvent = function(customevent) {
+        Event.defineEvent(customevent)
+             .defaultFn(function(e) {
+                 var node = e.target,
+                     leftScroll = window.getScrollLeft(),
+                     topScroll = window.getScrollTop();
+                 node._focus();
+                 // reset winscroll:
+                 window.scrollTo(leftScroll, topScroll);
+                 // make sure the node is inside the viewport:
+                 // node.forceIntoView();
+             });
+    };
 
     (function(HTMLElementPrototype) {
 
         HTMLElementPrototype._focus = HTMLElementPrototype.focus;
         HTMLElementPrototype.focus = function() {
             console.log(NAME+&#x27;focus&#x27;);
-            searchFocusNode(this).emit(&#x27;manualfocus&#x27;);
+            /**
+             * In case of a manual focus (node.focus()) the node will fire an &#x60;manualfocus&#x60;-event
+             * which can be prevented.
+             * @event manualfocus
+            */
+            var focusNode = searchFocusNode(this),
+                emitterName = focusNode._emitterName,
+                customevent = emitterName+&#x27;:manualfocus&#x27;;
+
+            Event._ce[customevent] || defineFocusEvent(customevent);
+            focusNode.emit(&#x27;manualfocus&#x27;);
         };
 
     }(window.HTMLElement.prototype));
@@ -14709,17 +14935,187 @@ module.exports=require(70)
 },{&quot;js-ext/extra/hashmap.js&quot;:111,&quot;js-ext/lib/object.js&quot;:114,&quot;js-ext/lib/string.js&quot;:116,&quot;polyfill&quot;:127}],144:[function(require,module,exports){
 module.exports=require(71)
 },{&quot;js-ext/extra/hashmap.js&quot;:111,&quot;js-ext/lib/object.js&quot;:114,&quot;js-ext/lib/string.js&quot;:116,&quot;polyfill&quot;:127}],145:[function(require,module,exports){
-module.exports=require(72)
+arguments[4][72][0].apply(exports,arguments)
 },{&quot;../css/element.css&quot;:109,&quot;./attribute-extractor.js&quot;:141,&quot;./element-array.js&quot;:142,&quot;./html-parser.js&quot;:146,&quot;./node-parser.js&quot;:147,&quot;./vdom-ns.js&quot;:148,&quot;./vnode.js&quot;:149,&quot;js-ext/extra/hashmap.js&quot;:111,&quot;js-ext/lib/object.js&quot;:114,&quot;js-ext/lib/promise.js&quot;:115,&quot;js-ext/lib/string.js&quot;:116,&quot;polyfill&quot;:127,&quot;polyfill/extra/transition.js&quot;:122,&quot;polyfill/extra/transitionend.js&quot;:123,&quot;polyfill/extra/vendorCSS.js&quot;:124,&quot;utils&quot;:128,&quot;window-ext&quot;:134}],146:[function(require,module,exports){
-module.exports=require(73)
+arguments[4][73][0].apply(exports,arguments)
 },{&quot;./attribute-extractor.js&quot;:141,&quot;./vdom-ns.js&quot;:148,&quot;js-ext/extra/hashmap.js&quot;:111,&quot;js-ext/lib/object.js&quot;:114,&quot;polyfill&quot;:127}],147:[function(require,module,exports){
-module.exports=require(74)
+arguments[4][74][0].apply(exports,arguments)
 },{&quot;./attribute-extractor.js&quot;:141,&quot;./vdom-ns.js&quot;:148,&quot;./vnode.js&quot;:149,&quot;js-ext/extra/hashmap.js&quot;:111,&quot;js-ext/lib/object.js&quot;:114,&quot;polyfill&quot;:127}],148:[function(require,module,exports){
-module.exports=require(75)
+/**
+ * Creates a Namespace that can be used accros multiple vdom-modules to share information.
+ *
+ *
+ * &lt;i&gt;Copyright (c) 2014 ITSA - https://github.com/itsa&lt;/i&gt;
+ * &lt;br&gt;
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ *
+ * @module vdom
+ * @submodule vdom-ns
+ * @class NS-vdom
+ * @since 0.0.1
+*/
+
+&quot;use strict&quot;;
+
+require(&#x27;js-ext/lib/object.js&#x27;);
+require(&#x27;polyfill&#x27;);
+
+var createHashMap = require(&#x27;js-ext/extra/hashmap.js&#x27;).createMap,
+    // for escaping entoties inside domNode.nodeValue, we need this trick: https://code.google.com/p/jslibs/wiki/JavascriptTips
+/*jshint proto:true */
+    ENTITY_TO_CODE = { __proto__: null,
+        apos:0x0027,quot:0x0022,amp:0x0026,lt:0x003C,gt:0x003E,nbsp:0x00A0,iexcl:0x00A1,cent:0x00A2,pound:0x00A3,
+        curren:0x00A4,yen:0x00A5,brvbar:0x00A6,sect:0x00A7,uml:0x00A8,copy:0x00A9,ordf:0x00AA,laquo:0x00AB,
+        not:0x00AC,shy:0x00AD,reg:0x00AE,macr:0x00AF,deg:0x00B0,plusmn:0x00B1,sup2:0x00B2,sup3:0x00B3,
+        acute:0x00B4,micro:0x00B5,para:0x00B6,middot:0x00B7,cedil:0x00B8,sup1:0x00B9,ordm:0x00BA,raquo:0x00BB,
+        frac14:0x00BC,frac12:0x00BD,frac34:0x00BE,iquest:0x00BF,Agrave:0x00C0,Aacute:0x00C1,Acirc:0x00C2,Atilde:0x00C3,
+        Auml:0x00C4,Aring:0x00C5,AElig:0x00C6,Ccedil:0x00C7,Egrave:0x00C8,Eacute:0x00C9,Ecirc:0x00CA,Euml:0x00CB,
+        Igrave:0x00CC,Iacute:0x00CD,Icirc:0x00CE,Iuml:0x00CF,ETH:0x00D0,Ntilde:0x00D1,Ograve:0x00D2,Oacute:0x00D3,
+        Ocirc:0x00D4,Otilde:0x00D5,Ouml:0x00D6,times:0x00D7,Oslash:0x00D8,Ugrave:0x00D9,Uacute:0x00DA,Ucirc:0x00DB,
+        Uuml:0x00DC,Yacute:0x00DD,THORN:0x00DE,szlig:0x00DF,agrave:0x00E0,aacute:0x00E1,acirc:0x00E2,atilde:0x00E3,
+        auml:0x00E4,aring:0x00E5,aelig:0x00E6,ccedil:0x00E7,egrave:0x00E8,eacute:0x00E9,ecirc:0x00EA,euml:0x00EB,
+        igrave:0x00EC,iacute:0x00ED,icirc:0x00EE,iuml:0x00EF,eth:0x00F0,ntilde:0x00F1,ograve:0x00F2,oacute:0x00F3,
+        ocirc:0x00F4,otilde:0x00F5,ouml:0x00F6,divide:0x00F7,oslash:0x00F8,ugrave:0x00F9,uacute:0x00FA,ucirc:0x00FB,
+        uuml:0x00FC,yacute:0x00FD,thorn:0x00FE,yuml:0x00FF,OElig:0x0152,oelig:0x0153,Scaron:0x0160,scaron:0x0161,
+        Yuml:0x0178,fnof:0x0192,circ:0x02C6,tilde:0x02DC,Alpha:0x0391,Beta:0x0392,Gamma:0x0393,Delta:0x0394,
+        Epsilon:0x0395,Zeta:0x0396,Eta:0x0397,Theta:0x0398,Iota:0x0399,Kappa:0x039A,Lambda:0x039B,Mu:0x039C,
+        Nu:0x039D,Xi:0x039E,Omicron:0x039F,Pi:0x03A0,Rho:0x03A1,Sigma:0x03A3,Tau:0x03A4,Upsilon:0x03A5,
+        Phi:0x03A6,Chi:0x03A7,Psi:0x03A8,Omega:0x03A9,alpha:0x03B1,beta:0x03B2,gamma:0x03B3,delta:0x03B4,
+        epsilon:0x03B5,zeta:0x03B6,eta:0x03B7,theta:0x03B8,iota:0x03B9,kappa:0x03BA,lambda:0x03BB,mu:0x03BC,
+        nu:0x03BD,xi:0x03BE,omicron:0x03BF,pi:0x03C0,rho:0x03C1,sigmaf:0x03C2,sigma:0x03C3,tau:0x03C4,
+        upsilon:0x03C5,phi:0x03C6,chi:0x03C7,psi:0x03C8,omega:0x03C9,thetasym:0x03D1,upsih:0x03D2,piv:0x03D6,
+        ensp:0x2002,emsp:0x2003,thinsp:0x2009,zwnj:0x200C,zwj:0x200D,lrm:0x200E,rlm:0x200F,ndash:0x2013,
+        mdash:0x2014,lsquo:0x2018,rsquo:0x2019,sbquo:0x201A,ldquo:0x201C,rdquo:0x201D,bdquo:0x201E,dagger:0x2020,
+        Dagger:0x2021,bull:0x2022,hellip:0x2026,permil:0x2030,prime:0x2032,Prime:0x2033,lsaquo:0x2039,rsaquo:0x203A,
+        oline:0x203E,frasl:0x2044,euro:0x20AC,image:0x2111,weierp:0x2118,real:0x211C,trade:0x2122,alefsym:0x2135,
+        larr:0x2190,uarr:0x2191,rarr:0x2192,darr:0x2193,harr:0x2194,crarr:0x21B5,lArr:0x21D0,uArr:0x21D1,
+        rArr:0x21D2,dArr:0x21D3,hArr:0x21D4,forall:0x2200,part:0x2202,exist:0x2203,empty:0x2205,nabla:0x2207,
+        isin:0x2208,notin:0x2209,ni:0x220B,prod:0x220F,sum:0x2211,minus:0x2212,lowast:0x2217,radic:0x221A,
+        prop:0x221D,infin:0x221E,ang:0x2220,and:0x2227,or:0x2228,cap:0x2229,cup:0x222A,int:0x222B,
+        there4:0x2234,sim:0x223C,cong:0x2245,asymp:0x2248,ne:0x2260,equiv:0x2261,le:0x2264,ge:0x2265,
+        sub:0x2282,sup:0x2283,nsub:0x2284,sube:0x2286,supe:0x2287,oplus:0x2295,otimes:0x2297,perp:0x22A5,
+        sdot:0x22C5,lceil:0x2308,rceil:0x2309,lfloor:0x230A,rfloor:0x230B,lang:0x2329,rang:0x232A,loz:0x25CA,
+        spades:0x2660,clubs:0x2663,hearts:0x2665,diams:0x2666
+    },
+/*jshint proto:false */
+    charToEntity = {},
+    entityName;
+
+for (entityName in ENTITY_TO_CODE) {
+    charToEntity[String.fromCharCode(ENTITY_TO_CODE[entityName])] = entityName;
+}
+
+module.exports = function (window) {
+    var NS;
+
+    window._ITSAmodules || Object.protectedProp(window, &#x27;_ITSAmodules&#x27;, createHashMap());
+
+    if (window._ITSAmodules.VDOM_NS) {
+        return window._ITSAmodules.VDOM_NS; // VDOM_NS was already created
+    }
+
+    NS = window._ITSAmodules.VDOM_NS = createHashMap();
+
+    /**
+     * Reference to the VElement of document.body (gets its value as soon as it gets refered to)
+     *
+     * @property body
+     * @default null
+     * @type VElement
+     * @since 0.0.1
+     */
+    NS.body = null;
+
+    NS.xmlNS = createHashMap({
+        SVG: &#x27;http://www.w3.org/2000/svg&#x27;,
+        XBL: &#x27;http://www.mozilla.org/xbl&#x27;,
+        XUL: &#x27;http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul&#x27;,
+        MATH: &#x27;http://www.w3.org/1998/Math/MathML&#x27;,
+        XLINK: &#x27;http://www.w3.org/1999/xlink&#x27;
+    });
+
+    /**
+     * A hash with all node&#x27;ids (of all the domnodes that have an id). The value is a reference to an VElement.
+     *
+     * @property nodeids
+     * @default {}
+     * @type Object
+     * @since 0.0.1
+     */
+    NS.nodeids || (NS.nodeids=createHashMap());
+
+    /**
+     * A hash with all encountered non-void Elements
+     *
+     * @property nonVoidElements
+     * @default {}
+     * @type Object
+     * @since 0.0.1
+     */
+    NS.nonVoidElements || (NS.nonVoidElements=createHashMap());
+
+    /**
+     * A hash to identify what tagNames are equal to &#x60;SCRIPT&#x60; or &#x60;STYLE&#x60;.
+     *
+     * @property SCRIPT_OR_STYLE_TAG
+     * @default {SCRIPT: true, STYLE: true}
+     * @type Object
+     * @since 0.0.1
+     */
+    NS.SCRIPT_OR_STYLE_TAG = createHashMap({
+        SCRIPT: true,
+        STYLE: true
+    });
+
+    /**
+     * A hash with all nodeTypes that should be captured by the vDOM.
+     *
+     * @property VALID_NODE_TYPES
+     * @default {1: true, 3: true, 8: true}
+     * @type Object
+     * @since 0.0.1
+     */
+    NS.VALID_NODE_TYPES = createHashMap({
+        1: true,
+        3: true,
+        8: true
+    });
+
+    /**
+     * A hash with all encountered void Elements
+     *
+     * @property voidElements
+     * @default {}
+     * @type Object
+     * @since 0.0.1
+     */
+    NS.voidElements || (NS.voidElements=createHashMap());
+
+    NS.UnescapeEntities = function(str) {
+        return str.replace(
+            /&amp;(.+?);/g,
+            function(str, ent) {
+                return String.fromCharCode( ent[0]!==&#x27;#&#x27; ? ENTITY_TO_CODE[ent] : (ent[1]===&#x27;x&#x27; ? parseInt(ent.substr(2),16) : parseInt(ent.substr(1)) ) );
+            }
+        );
+    };
+
+    NS.EscapeEntities = function(str) {
+        return str.replace(
+            /[^\x20-\x7E]/g,
+            function(str) {
+                return charToEntity[str] ? &#x27;&amp;&#x27;+charToEntity[str]+&#x27;;&#x27; : str;
+            }
+        );
+    };
+
+    return NS;
+};
 },{&quot;js-ext/extra/hashmap.js&quot;:111,&quot;js-ext/lib/object.js&quot;:114,&quot;polyfill&quot;:127}],149:[function(require,module,exports){
-module.exports=require(76)
+arguments[4][76][0].apply(exports,arguments)
 },{&quot;./attribute-extractor.js&quot;:141,&quot;./html-parser.js&quot;:146,&quot;./vdom-ns.js&quot;:148,&quot;js-ext/extra/hashmap.js&quot;:111,&quot;js-ext/extra/lightmap.js&quot;:112,&quot;js-ext/lib/array.js&quot;:113,&quot;js-ext/lib/object.js&quot;:114,&quot;js-ext/lib/string.js&quot;:116,&quot;polyfill&quot;:127,&quot;utils/lib/timers.js&quot;:130}],150:[function(require,module,exports){
-module.exports=require(77)
+arguments[4][77][0].apply(exports,arguments)
 },{&quot;./partials/element-plugin.js&quot;:143,&quot;./partials/extend-document.js&quot;:144,&quot;./partials/extend-element.js&quot;:145,&quot;./partials/node-parser.js&quot;:147,&quot;js-ext/extra/hashmap.js&quot;:111,&quot;js-ext/lib/object.js&quot;:114}],151:[function(require,module,exports){
 module.exports=require(12)
 },{}],152:[function(require,module,exports){
@@ -14821,17 +15217,17 @@ module.exports=require(70)
 },{&quot;js-ext/extra/hashmap.js&quot;:167,&quot;js-ext/lib/object.js&quot;:170,&quot;js-ext/lib/string.js&quot;:172,&quot;polyfill&quot;:183}],200:[function(require,module,exports){
 module.exports=require(71)
 },{&quot;js-ext/extra/hashmap.js&quot;:167,&quot;js-ext/lib/object.js&quot;:170,&quot;js-ext/lib/string.js&quot;:172,&quot;polyfill&quot;:183}],201:[function(require,module,exports){
-module.exports=require(72)
+arguments[4][72][0].apply(exports,arguments)
 },{&quot;../css/element.css&quot;:165,&quot;./attribute-extractor.js&quot;:197,&quot;./element-array.js&quot;:198,&quot;./html-parser.js&quot;:202,&quot;./node-parser.js&quot;:203,&quot;./vdom-ns.js&quot;:204,&quot;./vnode.js&quot;:205,&quot;js-ext/extra/hashmap.js&quot;:167,&quot;js-ext/lib/object.js&quot;:170,&quot;js-ext/lib/promise.js&quot;:171,&quot;js-ext/lib/string.js&quot;:172,&quot;polyfill&quot;:183,&quot;polyfill/extra/transition.js&quot;:178,&quot;polyfill/extra/transitionend.js&quot;:179,&quot;polyfill/extra/vendorCSS.js&quot;:180,&quot;utils&quot;:184,&quot;window-ext&quot;:190}],202:[function(require,module,exports){
-module.exports=require(73)
+arguments[4][73][0].apply(exports,arguments)
 },{&quot;./attribute-extractor.js&quot;:197,&quot;./vdom-ns.js&quot;:204,&quot;js-ext/extra/hashmap.js&quot;:167,&quot;js-ext/lib/object.js&quot;:170,&quot;polyfill&quot;:183}],203:[function(require,module,exports){
-module.exports=require(74)
+arguments[4][74][0].apply(exports,arguments)
 },{&quot;./attribute-extractor.js&quot;:197,&quot;./vdom-ns.js&quot;:204,&quot;./vnode.js&quot;:205,&quot;js-ext/extra/hashmap.js&quot;:167,&quot;js-ext/lib/object.js&quot;:170,&quot;polyfill&quot;:183}],204:[function(require,module,exports){
-module.exports=require(75)
+module.exports=require(148)
 },{&quot;js-ext/extra/hashmap.js&quot;:167,&quot;js-ext/lib/object.js&quot;:170,&quot;polyfill&quot;:183}],205:[function(require,module,exports){
-module.exports=require(76)
+arguments[4][76][0].apply(exports,arguments)
 },{&quot;./attribute-extractor.js&quot;:197,&quot;./html-parser.js&quot;:202,&quot;./vdom-ns.js&quot;:204,&quot;js-ext/extra/hashmap.js&quot;:167,&quot;js-ext/extra/lightmap.js&quot;:168,&quot;js-ext/lib/array.js&quot;:169,&quot;js-ext/lib/object.js&quot;:170,&quot;js-ext/lib/string.js&quot;:172,&quot;polyfill&quot;:183,&quot;utils/lib/timers.js&quot;:186}],206:[function(require,module,exports){
-module.exports=require(77)
+arguments[4][77][0].apply(exports,arguments)
 },{&quot;./partials/element-plugin.js&quot;:199,&quot;./partials/extend-document.js&quot;:200,&quot;./partials/extend-element.js&quot;:201,&quot;./partials/node-parser.js&quot;:203,&quot;js-ext/extra/hashmap.js&quot;:167,&quot;js-ext/lib/object.js&quot;:170}],207:[function(require,module,exports){
 module.exports=require(61)
 },{&quot;./lib/sizes.js&quot;:208}],208:[function(require,module,exports){
@@ -16300,17 +16696,17 @@ module.exports=require(70)
 },{&quot;js-ext/extra/hashmap.js&quot;:266,&quot;js-ext/lib/object.js&quot;:269,&quot;js-ext/lib/string.js&quot;:271,&quot;polyfill&quot;:282}],299:[function(require,module,exports){
 module.exports=require(71)
 },{&quot;js-ext/extra/hashmap.js&quot;:266,&quot;js-ext/lib/object.js&quot;:269,&quot;js-ext/lib/string.js&quot;:271,&quot;polyfill&quot;:282}],300:[function(require,module,exports){
-module.exports=require(72)
+arguments[4][72][0].apply(exports,arguments)
 },{&quot;../css/element.css&quot;:264,&quot;./attribute-extractor.js&quot;:296,&quot;./element-array.js&quot;:297,&quot;./html-parser.js&quot;:301,&quot;./node-parser.js&quot;:302,&quot;./vdom-ns.js&quot;:303,&quot;./vnode.js&quot;:304,&quot;js-ext/extra/hashmap.js&quot;:266,&quot;js-ext/lib/object.js&quot;:269,&quot;js-ext/lib/promise.js&quot;:270,&quot;js-ext/lib/string.js&quot;:271,&quot;polyfill&quot;:282,&quot;polyfill/extra/transition.js&quot;:277,&quot;polyfill/extra/transitionend.js&quot;:278,&quot;polyfill/extra/vendorCSS.js&quot;:279,&quot;utils&quot;:283,&quot;window-ext&quot;:289}],301:[function(require,module,exports){
-module.exports=require(73)
+arguments[4][73][0].apply(exports,arguments)
 },{&quot;./attribute-extractor.js&quot;:296,&quot;./vdom-ns.js&quot;:303,&quot;js-ext/extra/hashmap.js&quot;:266,&quot;js-ext/lib/object.js&quot;:269,&quot;polyfill&quot;:282}],302:[function(require,module,exports){
-module.exports=require(74)
+arguments[4][74][0].apply(exports,arguments)
 },{&quot;./attribute-extractor.js&quot;:296,&quot;./vdom-ns.js&quot;:303,&quot;./vnode.js&quot;:304,&quot;js-ext/extra/hashmap.js&quot;:266,&quot;js-ext/lib/object.js&quot;:269,&quot;polyfill&quot;:282}],303:[function(require,module,exports){
-module.exports=require(75)
+module.exports=require(148)
 },{&quot;js-ext/extra/hashmap.js&quot;:266,&quot;js-ext/lib/object.js&quot;:269,&quot;polyfill&quot;:282}],304:[function(require,module,exports){
-module.exports=require(76)
+arguments[4][76][0].apply(exports,arguments)
 },{&quot;./attribute-extractor.js&quot;:296,&quot;./html-parser.js&quot;:301,&quot;./vdom-ns.js&quot;:303,&quot;js-ext/extra/hashmap.js&quot;:266,&quot;js-ext/extra/lightmap.js&quot;:267,&quot;js-ext/lib/array.js&quot;:268,&quot;js-ext/lib/object.js&quot;:269,&quot;js-ext/lib/string.js&quot;:271,&quot;polyfill&quot;:282,&quot;utils/lib/timers.js&quot;:285}],305:[function(require,module,exports){
-module.exports=require(77)
+arguments[4][77][0].apply(exports,arguments)
 },{&quot;./partials/element-plugin.js&quot;:298,&quot;./partials/extend-document.js&quot;:299,&quot;./partials/extend-element.js&quot;:300,&quot;./partials/node-parser.js&quot;:302,&quot;js-ext/extra/hashmap.js&quot;:266,&quot;js-ext/lib/object.js&quot;:269}],306:[function(require,module,exports){
 function DOMParser(options){
     this.options = options ||{locator:{}};
@@ -18357,7 +18753,6 @@ require(&#x27;css&#x27;);
 require(&#x27;./css/i-select.css&#x27;);
 
 var NATIVE_OBJECT_OBSERVE = !!Object.observe,
-    CLASS_ITAG_RENDERED = &#x27;itag-rendered&#x27;,
     utils = require(&#x27;utils&#x27;),
     laterSilent = utils.laterSilent;
 
@@ -18366,7 +18761,7 @@ module.exports = function (window) {
 
 
     var DEFAULT_INVALID_VALUE = &#x27;choose&#x27;,
-       itagCore =  require(&#x27;itags.core&#x27;)(window),
+        itagCore =  require(&#x27;itags.core&#x27;)(window),
         itagName = &#x27;i-select&#x27;,
         DOCUMENT = window.document,
         HIDDEN = &#x27;itsa-hidden&#x27;,
@@ -18379,26 +18774,25 @@ module.exports = function (window) {
         require(&#x27;i-item&#x27;)(window);
         require(&#x27;i-head&#x27;)(window);
 
-        Event.before(&#x27;manualfocus&#x27;, function(e) {
+        Event.before(itagName+&#x27;:manualfocus&#x27;, function(e) {
             // the i-select itself is unfocussable, but its button is
             // we need to patch &#x60;manualfocus&#x60;,
             // which is emitted on node.focus()
             // a focus by userinteraction will always appear on the button itself
             // so we don&#x27;t bother that
             var element = e.target;
+            e.preventDefault();
             // cautious:  all child-elements that have &#x60;manualfocus&#x60; event are
             // subscribed as well: we NEED to inspect e.target and only continue
             // if e.target===i-select
-            if (element.getTagName()===&#x27;I-SELECT&#x27;) {
-                e.preventDefault();
-                element.itagReady().then(
-                    function() {
-                        var button = element.getElement(&#x27;button&#x27;);
-                        button &amp;&amp; button.focus();
-                    }
-                );
-            }
-        }, &#x27;i-select&#x27;);
+            e.preventDefault();
+            element.itagReady().then(
+                function() {
+                    var button = element.getElement(&#x27;button&#x27;);
+                    button &amp;&amp; button.focus();
+                }
+            );
+        });
 
         Event.after(&#x27;blur&#x27;, function(e) {
             // the i-select itself is unfocussable, but its button is
@@ -18466,11 +18860,11 @@ module.exports = function (window) {
             }
         }, &#x27;i-select ul[fm-manage] &gt; li&#x27;);
 
-        Event.defineEvent(&#x27;i-select:valuechange&#x27;)
+        Event.defineEvent(itagName+&#x27;:valuechange&#x27;)
              .unPreventable()
              .noRender();
 
-        Event.after(&#x27;itag:change&#x27;, function(e) {
+        Event.after(&#x27;*:change&#x27;, function(e) {
             var element = e.target,
                 prevValue = element.getData(&#x27;i-select-value&#x27;),
                 model = element.model,
@@ -18478,15 +18872,20 @@ module.exports = function (window) {
                 markValue;
             if (prevValue!==newValue) {
                 markValue = newValue - 1;
+
                 /**
-                * Emitted when a draggable gets dropped inside a dropzone.
+                * Emitted when a the i-select changes its value
                 *
-                * @event *:dropzone-drop
+                * @event i-select:valuechange
                 * @param e {Object} eventobject including:
-                * @param e.target {HtmlElement} the dropzone
+                * @param e.target {HtmlElement} the i-select element
+                * @param e.prevValue {Number} the selected item, starting with 1
+                * @param e.newValue {Number} the selected item, starting with 1
+                * @param e.buttonText {String} the text that will appear on the button
+                * @param e.listText {String} the text as it is in the list
                 * @since 0.1
                 */
-                Event.emit(e.target, &#x27;i-select:valuechange&#x27;, {
+                element.emit(&#x27;valuechange&#x27;, {
                     prevValue: prevValue,
                     newValue: newValue,
                     buttonText: model.buttonTexts[markValue] || model.items[markValue],
@@ -18496,55 +18895,7 @@ module.exports = function (window) {
             element.setData(&#x27;i-select-value&#x27;, newValue);
         }, itagCore.itagFilter);
 
-        Itag = DOCUMENT.createItag(&#x27;i-select&#x27;, {
-           /**
-            * Redefines the childNodes of both the vnode as well as its related dom-node. The new
-            * definition replaces any previous nodes. (without touching unmodified nodes).
-            *
-            * Syncs the new vnode&#x27;s childNodes with the dom.
-            *
-            * @method _setChildNodes
-            * @param newVChildNodes {Array} array with vnodes which represent the new childNodes
-            * @private
-            * @chainable
-            * @since 0.0.1
-            */
-            init: function() {
-                var element = this,
-                    itemNodes = element.getAll(&#x27;&gt;i-item&#x27;),
-                    items = [],
-                    buttonTexts = [],
-                    content;
-
-                itemNodes.forEach(function(node, i) {
-                    var header = node.getElement(&#x27;i-head&#x27;);
-                    if (header) {
-                        buttonTexts[i] = header.getHTML();
-                        header.remove(true);
-                    }
-                    items[items.length] = node.getHTML();
-                });
-
-                element.model.items = items;
-                element.model.buttonTexts = buttonTexts;
-
-                // store its current value, so that valueChange-event can fire:
-                element.setData(&#x27;i-select-value&#x27;, element.model.value);
-
-                // building the template of the itag:
-                content = &#x27;&lt;button class=&quot;pure-button pure-button-bordered&quot;&gt;&lt;div class=&quot;pointer&quot;&gt;&lt;/div&gt;&lt;div class=&quot;btntext&quot;&gt;&lt;/div&gt;&lt;/button&gt;&#x27;;
-                // first: outerdiv which will be relative positioned
-                // next: innerdiv which will be absolute positioned
-                // also: hide the container by default --&gt; updateUI could make it shown
-                content += &#x27;&lt;div class=&quot;itsa-hidden&quot;&gt;&#x27; +
-                             &#x27;&lt;div&gt;&#x27;+
-                               &#x27;&lt;ul fm-manage=&quot;li&quot; fm-keyup=&quot;38&quot; fm-keydown=&quot;40&quot; fm-noloop=&quot;true&quot;&gt;&lt;/ul&gt;&#x27;;
-                             &#x27;&lt;/div&gt;&#x27;+
-                           &#x27;&lt;/div&gt;&#x27;;
-                // set the content:
-                element.setHTML(content);
-            },
-
+        Itag = DOCUMENT.createItag(itagName, {
             /*
              * Internal hash containing all DOM-events that are listened for (at &#x60;document&#x60;).
              *
@@ -18579,6 +18930,53 @@ module.exports = function (window) {
             * @chainable
             * @since 0.0.1
             */
+            init: function() {
+                var element = this,
+                    itemNodes = element.getAll(&#x27;&gt;i-item&#x27;),
+                    items = [],
+                    buttonTexts = [],
+                    content;
+                itemNodes.forEach(function(node, i) {
+                    var header = node.getElement(&#x27;i-head&#x27;);
+                    if (header) {
+                        buttonTexts[i] = header.getHTML();
+                        header.remove(true);
+                    }
+                    items[items.length] = node.getHTML();
+                });
+
+                element.model.items = items;
+                element.model.buttonTexts = buttonTexts;
+
+                // store its current value, so that valueChange-event can fire:
+                element.setData(&#x27;i-select-value&#x27;, element.model.value);
+
+                // building the template of the itag:
+                content = &#x27;&lt;button class=&quot;pure-button pure-button-bordered&quot;&gt;&lt;div class=&quot;pointer&quot;&gt;&lt;/div&gt;&lt;div class=&quot;btntext&quot;&gt;&lt;/div&gt;&lt;/button&gt;&#x27;;
+                // first: outerdiv which will be relative positioned
+                // next: innerdiv which will be absolute positioned
+                // also: hide the container by default --&gt; updateUI could make it shown
+                content += &#x27;&lt;div class=&quot;itsa-hidden&quot;&gt;&#x27; +
+                             &#x27;&lt;div&gt;&#x27;+
+                               &#x27;&lt;ul fm-manage=&quot;li&quot; fm-keyup=&quot;38&quot; fm-keydown=&quot;40&quot; fm-noloop=&quot;true&quot;&gt;&lt;/ul&gt;&#x27;;
+                             &#x27;&lt;/div&gt;&#x27;+
+                           &#x27;&lt;/div&gt;&#x27;;
+                // set the content:
+                element.setHTML(content);
+            },
+
+           /**
+            * Redefines the childNodes of both the vnode as well as its related dom-node. The new
+            * definition replaces any previous nodes. (without touching unmodified nodes).
+            *
+            * Syncs the new vnode&#x27;s childNodes with the dom.
+            *
+            * @method _setChildNodes
+            * @param newVChildNodes {Array} array with vnodes which represent the new childNodes
+            * @private
+            * @chainable
+            * @since 0.0.1
+            */
             sync: function() {
                 // inside sync, YOU CANNOT change attributes which are part of &#x60;attrs&#x60; !!!
                 // those actions will be ignored.
@@ -18594,7 +18992,7 @@ module.exports = function (window) {
                     buttonTexts = model.buttonTexts,
                     value = model.value,
                     item, content, buttonText, len, i, markValue,
-                    button, container, itemsContainer, renderedBefore, hiddenTimer;
+                    button, container, itemsContainer, hiddenTimer;
 
                 len = items.length;
                 (value&gt;len) &amp;&amp; (value=0);
@@ -18612,8 +19010,6 @@ module.exports = function (window) {
                 button.toggleClass(&#x27;pure-button-primary&#x27;, model[&#x27;primary-button&#x27;]);
                 button.getElement(&#x27;div.btntext&#x27;).setHTML(buttonText);
 
-                // show or hide the content, note that when not rendered before, you should use transitions
-                renderedBefore = element.hasClass(CLASS_ITAG_RENDERED);
                 container = element.getElement(&#x27;&gt;div&#x27;);
 
                 if (model.expanded) {
@@ -18644,14 +19040,12 @@ module.exports = function (window) {
         });
 
         Itag.setItagDirectEventResponse([&#x27;blur&#x27;, &#x27;keypress&#x27;]);
-
-        window.ITAGS[itagName] = Itag;
     }
 
     return window.ITAGS[itagName];
 };
 },{&quot;./css/i-select.css&quot;:311,&quot;css&quot;:4,&quot;event-dom&quot;:6,&quot;focusmanager&quot;:78,&quot;i-head&quot;:309,&quot;i-item&quot;:310,&quot;itags.core&quot;:316,&quot;js-ext/lib/string.js&quot;:244,&quot;polyfill/polyfill-base.js&quot;:257,&quot;utils&quot;:258}],313:[function(require,module,exports){
-var css = &quot;&quot;; (require(&quot;/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify&quot;))(css); module.exports = css;
+var css = &quot;/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a &#x60;dummy&#x60; css-rule    */\n/* for the dummy-element: &#x60;itag-css&#x60; --&gt; its property (also dummy) &#x60;i-tag&#x60; /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-tabpane;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-tabpane:not(.itag-rendered) {\n    /* don&#x27;t set visibility to hidden --&gt; you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-tabpane:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\ni-tabpane &gt;ul {\n    margin:0;\n    padding:0;\n    list-style:none;\n    border-bottom: 3px solid #2647a0;\n}\n\ni-tabpane &gt;ul li {\n    display: inline-block;\n    *display: inline; /* IE */\n    *zoom: 1; /* IE */\n    margin-right: 0.25em;\n}\n\ni-tabpane &gt;ul li.pure-button {\n    display: inline-block;\n    *display: inline; /* IE */\n    *zoom: 1; /* IE */\n    margin-right: 0.25em;\n    border-radius: 2px 2px 0 0;\n}\n\ni-tabpane &gt;div {\n    border: 1px solid #2647a0;\n}\n&quot;; (require(&quot;/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify&quot;))(css); module.exports = css;
 },{&quot;/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify&quot;:5}],314:[function(require,module,exports){
 /*
 * attributes:
@@ -18662,17 +19056,14 @@ require(&#x27;js-ext/lib/string.js&#x27;);
 require(&#x27;css&#x27;);
 require(&#x27;./css/i-tabpane.css&#x27;);
 
-var TRANS_TIME_SHOW = 0.3,
-    TRANS_TIME_HIDE = 0.1,
-    CLASS_ITAG_RENDERED = &#x27;itag-rendered&#x27;;
-
 module.exports = function (window) {
 
     &quot;use strict&quot;;
     require(&#x27;itags.core&#x27;)(window);
 
-    var itagName = &#x27;i-select:dummy&#x27;,
-        Event, ISelectClass;
+    var itagName = &#x27;i-tabpane&#x27;,
+        DOCUMENT = window.document,
+        Event;
 
     if (!window.ITAGS[itagName]) {
         Event = require(&#x27;event-dom&#x27;)(window);
@@ -18680,23 +19071,112 @@ module.exports = function (window) {
         require(&#x27;i-item&#x27;)(window);
         require(&#x27;i-head&#x27;)(window);
 
-        // window.document.createItag(&#x27;i-tabpane&#x27;);
+        Event.after(&#x27;xfocus&#x27;, function(e) {
+            var element = e.target,
+                model = element.model,
+                liNodes;
+            liNodes = element.getParent().getAll(&#x27;li&#x27;);
+            model.pane = liNodes.indexOf(element) + 1;
+        }, &#x27;i-tabpane &gt; ul li&#x27;);
 
-
-        ISelectClass = require(&#x27;i-select&#x27;)(window);
-
-
-        ISelectClass.pseudoClass(&#x27;dummy&#x27;, {
-            args: {
-                expanded: &#x27;boolean&#x27;,
-                &#x27;primary-button&#x27;: &#x27;boolean&#x27;,
-                value: &#x27;string&#x27;,
-                &#x27;invalid-value&#x27;: &#x27;string&#x27;,
-                dummyarg: &#x27;string&#x27;
+        DOCUMENT.createItag(itagName, {
+            /*
+             * Internal hash containing all DOM-events that are listened for (at &#x60;document&#x60;).
+             *
+             * @property DOMEvents
+             * @default {}
+             * @type Object
+             * @private
+             * @since 0.0.1
+            */
+            attrs: {
+                pane: &#x27;number&#x27;
             },
+
+           /**
+            * Redefines the childNodes of both the vnode as well as its related dom-node. The new
+            * definition replaces any previous nodes. (without touching unmodified nodes).
+            *
+            * Syncs the new vnode&#x27;s childNodes with the dom.
+            *
+            * @method _setChildNodes
+            * @param newVChildNodes {Array} array with vnodes which represent the new childNodes
+            * @private
+            * @chainable
+            * @since 0.0.1
+            */
+            init: function() {
+                var element = this,
+                    itemNodes = element.getAll(&#x27;&gt;i-item&#x27;),
+                    panes = [],
+                    tabs = [],
+                    content;
+                itemNodes.forEach(function(node, i) {
+                    var header = node.getElement(&#x27;i-head&#x27;);
+                    if (header) {
+                        tabs[i] = header.getHTML();
+                        header.remove(true);
+                    }
+                    else {
+                        tabs[i] = &#x27;&amp;laquo;&#x27;;
+                    }
+                    panes[panes.length] = node.getHTML();
+                });
+
+                element.model.panes = panes;
+                element.model.tabs = tabs;
+
+                // store its current value, so that valueChange-event can fire:
+                element.setData(&#x27;i-select-pane&#x27;, element.model.pane);
+
+                content = &#x27;&lt;ul fm-manage=&quot;li&quot; fm-keyup=&quot;37&quot; fm-keydown=&quot;39&quot; fm-noloop=&quot;true&quot;&gt;&lt;/ul&gt;&lt;div&gt;&lt;/div&gt;&#x27;;
+                // set the content:
+                element.setHTML(content);
+            },
+
+           /**
+            * Redefines the childNodes of both the vnode as well as its related dom-node. The new
+            * definition replaces any previous nodes. (without touching unmodified nodes).
+            *
+            * Syncs the new vnode&#x27;s childNodes with the dom.
+            *
+            * @method _setChildNodes
+            * @param newVChildNodes {Array} array with vnodes which represent the new childNodes
+            * @private
+            * @chainable
+            * @since 0.0.1
+            */
             sync: function() {
-                this.$superProp(&#x27;sync&#x27;);
-                this.model.dummyarg = &#x27;myarg&#x27;;
+                // inside sync, YOU CANNOT change attributes which are part of &#x60;attrs&#x60; !!!
+                // those actions will be ignored.
+
+                // BE CAREFUL to start async actions here:
+                // be aware that before ending, this method can run again
+                // if you do, then make sure to handle possible running
+                // async actions well !!!
+
+                var element = this,
+                    model = element.model,
+                    panes = model.panes,
+                    pane = model.pane,
+                    tabs = model.tabs,
+                    len = tabs.length,
+                    navContainer = element.getElement(&#x27;&gt;ul&#x27;),
+                    container = element.getElement(&#x27;&gt;div&#x27;),
+                    content = &#x27;&#x27;,
+                    i, tabItem, index;
+
+                index = pane - 1;
+                for (i=0; i&lt;len; i++) {
+                    tabItem = tabs[i];
+                    content += &#x27;&lt;li class=&quot;pure-button&#x27;+((i===index) ? &#x27; pure-button-active&#x27; : &#x27;&#x27;)+&#x27;&quot;&gt;&#x27;+tabItem+&#x27;&lt;/li&gt;&#x27;;
+                }
+
+                // set the tabs:
+                navContainer.setHTML(content);
+
+                // set the content:
+                container.setHTML(panes[index]);
             }
         });
 
@@ -18706,7 +19186,7 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 
 };
-},{&quot;./css/i-tabpane.css&quot;:313,&quot;css&quot;:4,&quot;event-dom&quot;:6,&quot;i-head&quot;:309,&quot;i-item&quot;:310,&quot;i-select&quot;:312,&quot;itags.core&quot;:316,&quot;js-ext/lib/string.js&quot;:244,&quot;polyfill/polyfill-base.js&quot;:257}],315:[function(require,module,exports){
+},{&quot;./css/i-tabpane.css&quot;:313,&quot;css&quot;:4,&quot;event-dom&quot;:6,&quot;i-head&quot;:309,&quot;i-item&quot;:310,&quot;itags.core&quot;:316,&quot;js-ext/lib/string.js&quot;:244,&quot;polyfill/polyfill-base.js&quot;:257}],315:[function(require,module,exports){
 var css = &quot;span.itag-data {\n    display: none !important;\n}&quot;; (require(&quot;/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify&quot;))(css); module.exports = css;
 },{&quot;/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify&quot;:5}],316:[function(require,module,exports){
 (function (global){
@@ -18753,6 +19233,15 @@ var NAME = &#x27;[itags.core]: &#x27;,
     ATTRIBUTE_INSERT = ATTRIBUTE+INSERT,
     DELAYED_EVT_TIME = 1000,
     NATIVE_OBJECT_OBSERVE = !!Object.observe,
+    /**
+     * Internal hash containing the names of members which names should be transformed
+     *
+     * @property ITAG_METHODS
+     * @default {init: &#x27;_initUI&#x27;, sync: &#x27;_syncUI&#x27;, destroy: &#x27;_destroyUI&#x27;, attrs: &#x27;_attrs&#x27;}
+     * @type Object
+     * @protected
+     * @since 0.0.1
+    */
     ITAG_METHODS = createHashMap({
         init: &#x27;_initUI&#x27;,
         sync: &#x27;_syncUI&#x27;,
@@ -19234,7 +19723,7 @@ module.exports = function (window) {
                 attrValue;
             attrs.each(function(value, key) {
                 attrValue = domElement.getAttr(key);
-                switch (value) {
+                switch (value.toLowerCase()) {
                     case &#x27;boolean&#x27;:
                         attrValue = (attrValue===&#x27;true&#x27;);
                         break;
@@ -19346,19 +19835,17 @@ module.exports = function (window) {
         * @since 0.0.1
         */
         setupEmitters: function() {
-            Event.defineEvent(&#x27;itag:change&#x27;)
-                 .unPreventable()
-                 .noRender();
-            Event.after(NODE_CONTENT_CHANGE, function(e) {
+            Event.after(&#x27;*:&#x27;+NODE_CONTENT_CHANGE, function(e) {
+                var element = e.target;
                 /**
-                * Emitted when a draggable gets dropped inside a dropzone.
+                * Emitted when an itag changed its content
                 *
-                * @event *:dropzone-drop
+                * @event *:change
                 * @param e {Object} eventobject including:
                 * @param e.target {HtmlElement} the dropzone
                 * @since 0.1
                 */
-                Event.emit(e.target, &#x27;itag:change&#x27;, {model: e.target.model});
+                element.emit(&#x27;change&#x27;, {model: element.model});
             }, this.itagFilter);
         },
 
@@ -19471,7 +19958,7 @@ module.exports = function (window) {
 
             if (PROTO_SUPPORTED) {
                 Event.after(
-                    &#x27;itag:prototypechange&#x27;,
+                    &#x27;*:prototypechange&#x27;,
                     function(e) {
                         var prototypes = e.prototypes,
                             ItagClass = e.target,
@@ -19492,10 +19979,11 @@ module.exports = function (window) {
                                 node.syncUI();
                             }
                         }
-                    }
+                    },
+                    instance.itagFilter
                 );
                 Event.after(
-                    &#x27;itag:prototyperemove&#x27;,
+                    &#x27;*:prototyperemove&#x27;,
                     function(e) {
                         var properties = e.properties,
                             ItagClass = e.target,
@@ -19516,7 +20004,8 @@ module.exports = function (window) {
                                 node.syncUI();
                             }
                         }
-                    }
+                    },
+                    instance.itagFilter
                 );
             }
         },
@@ -19538,26 +20027,34 @@ module.exports = function (window) {
                 mergeFlat(domElementConstructor, domElement);
                 domElement.__proto__ = proto;
                 domElement.__classCarier__ = domElementConstructor;
-                domElement.after(&#x27;itag:prototypechange&#x27;, function(e) {
-                    var prototypes = e.prototypes;
-                    mergeFlat(domElementConstructor, domElement);
-                    if (&#x27;init&#x27; in prototypes) {
-                        domElement.reInitializeUI(domElement.__proto__.constructor);
-                    }
-                    else if (&#x27;sync&#x27; in prototypes) {
-                        domElement.syncUI();
-                    }
-                });
-                domElement.after(&#x27;itag:prototyperemove&#x27;, function(e) {
-                    var properties = e.properties;
-                    mergeFlat(domElementConstructor, domElement);
-                    if (properties.contains(&#x27;init&#x27;)) {
-                        domElement.reInitializeUI(domElement.__proto__.constructor);
-                    }
-                    else if (properties.contains(&#x27;sync&#x27;)) {
-                        domElement.syncUI();
-                    }
-                });
+                domElement.after(
+                    &#x27;*:prototypechange&#x27;,
+                    function(e) {
+                        var prototypes = e.prototypes;
+                        mergeFlat(domElementConstructor, domElement);
+                        if (&#x27;init&#x27; in prototypes) {
+                            domElement.reInitializeUI(domElement.__proto__.constructor);
+                        }
+                        else if (&#x27;sync&#x27; in prototypes) {
+                            domElement.syncUI();
+                        }
+                    },
+                    instance.itagFilter
+                );
+                domElement.after(
+                    &#x27;*:prototyperemove&#x27;,
+                    function(e) {
+                        var properties = e.properties;
+                        mergeFlat(domElementConstructor, domElement);
+                        if (properties.contains(&#x27;init&#x27;)) {
+                            domElement.reInitializeUI(domElement.__proto__.constructor);
+                        }
+                        else if (properties.contains(&#x27;sync&#x27;)) {
+                            domElement.syncUI();
+                        }
+                    },
+                    instance.itagFilter
+                );
             }
             else {
                 domElement.__proto__ = proto;
@@ -19655,7 +20152,7 @@ module.exports = function (window) {
         *     &lt;li&gt;scroll&lt;/li&gt;
         * &lt;/ul&gt;
         *
-        * Events that are not in this list don;t need to be set: they always go through the finalizer immediatly.
+        * Events that are not in this list don&#x27;t need to be set: they always go through the finalizer immediatly.
         *
         * You need to set this if the itag-definition its &#x60;sync&#x60;-method should be updated after one of the events in the list.
         *
@@ -19723,18 +20220,17 @@ module.exports = function (window) {
          * By default, this method will not override existing prototype members,
          * unless the second argument &#x60;force&#x60; is true.
          *
-         * In case of merging properties into an itag, a &#x60;itag:prototypechange&#x60;-event gets emitted
+         * In case of merging properties into an itag, a &#x60;*:prototypechange&#x60;-event gets emitted
          *
          * @method mergePrototypes
          * @param prototypes {Object} Hash prototypes of properties to add to the prototype of this object
          * @param [force=false] {Boolean}  If true, existing members will be overwritten
-         * @param [silent=false] {Boolean}  If true, no &#x60;itag:prototypechange&#x60; event will get emitted
+         * @param [silent=false] {Boolean}  If true, no &#x60;*:prototypechange&#x60; event will get emitted
          * @chainable
          * @since 0.0.1
         */
         FunctionPrototype.mergePrototypes = function(prototypes, force, silent) {
-            var instance = this,
-                silent;
+            var instance = this;
             if (!instance.$$itag) {
                 // default mergePrototypes
                 instance._mergePrototypes.apply(instance, arguments);
@@ -19742,35 +20238,36 @@ module.exports = function (window) {
             else {
                 instance._mergePrototypes(prototypes, force, ITAG_METHODS, PROTECTED_MEMBERS);
                 /**
-                * Emitted when prototypes are set on an existing itag-definition.
+                * Emitted when prototypes are set on an existing Itag-Class.
                 *
-                * @event itag:prototypechange
+                * @event *:prototypechange
                 * @param e {Object} eventobject including:
                 * @param e.prototypes {Object} Hash prototypes of properties to add to the prototype of this object
                 * @param e.force {Boolean} whether existing members are overwritten
                 * @since 0.1
                 */
-                silent || Event.emit(instance, &#x27;itag:prototypechange&#x27;, {prototypes: prototypes, force: !!force});
+                silent || instance.emit(&#x27;prototypechange&#x27;, {prototypes: prototypes, force: !!force});
             }
             return instance;
         };
 
        /**
         * Subclasses in Itag-Class into a pseudo-class: retaining its tagname, yet still subclassing.
-        * The pseudoclass gets identified by &#x60;i-parentclass:pseudo&#x60; and once rendered it has the signature of:
+        * The pseudoclass gets identified by &#x60;i-parentclass#pseudo&#x60; and once rendered it has the signature of:
         * &amp;lt;i-parentclass&amp;gt; is=&quot;pseudo&quot; &amp;lt;/i-parentclass&amp;gt;
         *
         * Syncs the new vnode&#x27;s childNodes with the dom.
         *
         * @method pseudoClass
-        * @param pseudo
-        * @param prototypes
-        * @param chainInit
-        * @param chainDestroy
+        * @param pseudo {String} The pseudoname (without a minustoken), leading into the definition of &#x60;i-parent:pseudo&#x60;
+        * @param [prototypes] {Object} Hash map of properties to be added to the prototype of the new class.
+        * @param [chainInit=true] {Boolean} Whether -during instance creation- to automaticly construct in the complete hierarchy with the given constructor arguments.
+        * @param [chainDestroy=true] {Boolean} Whether -when the Element gets out if the DOM- to automaticly destroy in the complete hierarchy.
+        * @param [subClassable=true] {Boolean} whether the Class is subclassable. Can only be set to false on ItagClasses
         * @return {Class}
         * @since 0.0.1
         */
-        FunctionPrototype.pseudoClass = function(pseudo, prototypes, chainInit, chainDestroy) {
+        FunctionPrototype.pseudoClass = function(pseudo, prototypes, chainInit, chainDestroy, subClassable) {
             var instance = this;
             if (!instance.$$itag) {
                 console.warn(NAME, &#x27;cannot pseudoClass &#x27;+pseudo+&#x27; for its Parent is no Itag-Class&#x27;);
@@ -19784,14 +20281,11 @@ module.exports = function (window) {
                 console.warn(NAME, &#x27;cannot pseudoClass &#x27;+pseudo+&#x27; --&gt; name cannot consist a minus-token&#x27;);
                 return instance;
             }
-            return instance.subClass(instance.$$itag+&#x27;:&#x27;+pseudo , prototypes, chainInit, chainDestroy);
+            return instance.subClass(instance.$$itag+&#x27;#&#x27;+pseudo , prototypes, chainInit, chainDestroy, subClassable);
         };
 
        /**
-        * Redefines the childNodes of both the vnode as well as its related dom-node. The new
-        * definition replaces any previous nodes. (without touching unmodified nodes).
-        *
-        * Syncs the new vnode&#x27;s childNodes with the dom.
+        * Backup of the original &#x60;removePrototypes&#x60;-method.
         *
         * @method _removePrototypes
         * @param properties
@@ -19821,16 +20315,49 @@ module.exports = function (window) {
             else {
                 instance._removePrototypes(properties, ITAG_METHODS);
                 /**
-                * Emitted when a draggable gets dropped inside a dropzone.
+                * Emitted when prototypes are removed off an existing Itag-Class.
                 *
-                * @event *:dropzone-drop
+                * @event *:prototyperemove
                 * @param e {Object} eventobject including:
-                * @param e.target {HtmlElement} the dropzone
+                * @param e.prototypes {Object} Hash prototypes of properties to add to the prototype of this object
                 * @since 0.1
                 */
-                Event.emit(instance, &#x27;itag:prototyperemove&#x27;, {properties: properties});
+                instance.emit(&#x27;prototyperemove&#x27;, {properties: properties});
             }
             return instance;
+        };
+
+
+       /**
+        * Backup of the original &#x60;setConstructor&#x60;-method.
+        *
+        * @method _setConstructor
+        * @param [constructorFn] {Function} The function that will serve as the new constructor for the class.
+        *        If &#x60;undefined&#x60; defaults to &#x60;NOOP&#x60;
+        * @param [prototypes] {Object} Hash map of properties to be added to the prototype of the new class.
+        * @param [chainConstruct=true] {Boolean} Whether -during instance creation- to automaticly construct in the complete hierarchy with the given constructor arguments.
+        * @chainable
+        * @since 0.0.1
+        */
+        FunctionPrototype._setConstructor = FunctionPrototype.setConstructor;
+
+        /**
+         * Redefines the constructor fo the Class
+         *
+         * @method setConstructor
+         * @param [constructorFn] {Function} The function that will serve as the new constructor for the class.
+         *        If &#x60;undefined&#x60; defaults to &#x60;NOOP&#x60;
+         * @param [prototypes] {Object} Hash map of properties to be added to the prototype of the new class.
+         * @param [chainConstruct=true] {Boolean} Whether -during instance creation- to automaticly construct in the complete hierarchy with the given constructor arguments.
+         * @chainable
+         */
+        FunctionPrototype.setConstructor = function(/* constructorFn, chainConstruct */) {
+            var instance = this;
+            if (instance.$$itag) {
+                console.warn(NAME, &#x27;Itags don\t have a constructor --&gt; you need to redefine &quot;init()&quot; by using mergePrototypes()&#x27;);
+                return instance;
+            }
+            return instance._setConstructor.apply(instance, arguments);
         };
 
        /**
@@ -19852,7 +20379,7 @@ module.exports = function (window) {
         */
         FunctionPrototype.subClass = function(constructorOrItagname, prototypes, chainInit, chainDestroy, subClassable) {
             var instance = this,
-                baseProt, proto, domElementConstructor, itagName, pseudo, registerName, itagNameSplit;
+                baseProt, proto, domElementConstructor, itagName, pseudo, registerName, itagNameSplit, itagEmitterName;
             if (typeof constructorOrItagname === &#x27;string&#x27;) {
                 // Itag subclassing
                 if (typeof prototypes === &#x27;boolean&#x27;) {
@@ -19874,7 +20401,7 @@ module.exports = function (window) {
                     console.warn(itagName+&#x27; already exists: it will be redefined&#x27;);
                 }
                 registerName = itagName;
-                itagNameSplit = itagName.split(&#x27;:&#x27;);
+                itagNameSplit = itagName.split(&#x27;#&#x27;);
                 itagName = itagNameSplit[0];
                 pseudo = itagNameSplit[1]; // may be undefined
 
@@ -19897,9 +20424,9 @@ module.exports = function (window) {
 
                 domElementConstructor.prototype = proto;
 
-                // webkit doesn&#x27;t let all objects to have their constructorOrItagname redefined
+                // webkit doesn&#x27;t let all objects to have their constructor redefined
                 // when directly assigned. Using &#x60;defineProperty will work:
-                Object.defineProperty(proto, &#x27;constructorOrItagname&#x27;, {value: domElementConstructor});
+                Object.defineProperty(proto, &#x27;constructor&#x27;, {value: domElementConstructor});
 
                 domElementConstructor.$$itag = itagName;
                 domElementConstructor.$$pseudo = pseudo;
@@ -19909,7 +20436,20 @@ module.exports = function (window) {
                 domElementConstructor.$$orig = {};
                 domElementConstructor.$$subClassable = subClassable;
 
+                itagEmitterName = itagName + (pseudo ? &#x27;#&#x27;+pseudo : &#x27;&#x27;);
+                domElementConstructor.mergePrototypes(Event.Emitter(itagEmitterName), true, true);
                 prototypes &amp;&amp; domElementConstructor.mergePrototypes(prototypes, true, true);
+                // make emitting change-events unpreventable and unrenderable:
+                Event.defineEvent(itagEmitterName+&#x27;:change&#x27;)
+                     .unPreventable()
+                     .noRender();
+                Event.defineEvent(itagEmitterName+&#x27;:prototypechange&#x27;)
+                     .unPreventable()
+                     .noRender();
+                Event.defineEvent(itagEmitterName+&#x27;:prototyperemove&#x27;)
+                     .unPreventable()
+                     .noRender();
+
                 window.ITAGS[registerName] = domElementConstructor;
 
                 itagCore.renderDomElements(domElementConstructor);
@@ -19943,9 +20483,9 @@ module.exports = function (window) {
         * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
         * @since 0.0.1
         */
-        ElementPrototype.removeAttribute = function(attributeName) {
+        ElementPrototype.removeAttribute = function(attributeName, silent) {
             var instance = this;
-            if (!instance.isItag()) {
+            if (!instance.isItag() || silent) {
                 removeAttributeBKP.apply(instance, arguments);
             }
             else {
@@ -19973,14 +20513,14 @@ module.exports = function (window) {
         ElementPrototype.setAttribute = function(attributeName, value, silent) {
             var instance = this,
                 valueType;
-            if (silent || !instance.isItag()) {
+            if (!instance.isItag() || silent) {
                 setAttributeBKP.apply(instance, arguments);
             }
             else {
 /*jshint boss:true */
                 if (valueType=instance._attrs[attributeName]) {
 /*jshint boss:false */
-                    switch (valueType) {
+                    switch (valueType.toLowerCase()) {
                         case &#x27;boolean&#x27;:
                             value = (value===&#x27;true&#x27;);
                             break;
@@ -20101,11 +20641,16 @@ module.exports = function (window) {
      *
      *
      * @property createItag
+     * @param itagName {String} The name of the itag-element, starting with &#x60;i-&#x60;
+     * @param [prototypes] {Object} Hash map of properties to be added to the prototype of the new class.
+     * @param [subClassable=true] {Boolean} whether the Class is subclassable. Can only be set to false on ItagClasses
      * @type Class
      * @for document
      * @since 0.0.1
     */
-    Object.protectedProp(DOCUMENT, &#x27;createItag&#x27;, Classes.ItagBaseClass.subClass.bind(Classes.ItagBaseClass));
+    Object.protectedProp(DOCUMENT, &#x27;createItag&#x27;, function(itagName, prototypes, subClassable) {
+        return Classes.ItagBaseClass.subClass.call(Classes.ItagBaseClass, itagName, prototypes, null, null, subClassable);
+    });
 
    /**
     * Refreshes all Itag-elements in the dom by syncing their element.model onto the attributes and calling their &#x60;sync&#x60;-method.

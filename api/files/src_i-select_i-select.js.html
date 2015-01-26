@@ -43,6 +43,8 @@
             
                 <li><a href="../classes/Array.html">Array</a></li>
             
+                <li><a href="../classes/BaseClass.html">BaseClass</a></li>
+            
                 <li><a href="../classes/Classes.html">Classes</a></li>
             
                 <li><a href="../classes/document.html">document</a></li>
@@ -108,6 +110,8 @@
                 <li><a href="../modules/extend-document.html">extend-document</a></li>
             
                 <li><a href="../modules/extend-element.html">extend-element</a></li>
+            
+                <li><a href="../modules/extra_classes.js.html">extra/classes.js</a></li>
             
                 <li><a href="../modules/focusmanager.html">focusmanager</a></li>
             
@@ -208,7 +212,6 @@ require(&#x27;css&#x27;);
 require(&#x27;./css/i-select.css&#x27;);
 
 var NATIVE_OBJECT_OBSERVE = !!Object.observe,
-    CLASS_ITAG_RENDERED = &#x27;itag-rendered&#x27;,
     utils = require(&#x27;utils&#x27;),
     laterSilent = utils.laterSilent;
 
@@ -230,26 +233,25 @@ module.exports = function (window) {
         require(&#x27;i-item&#x27;)(window);
         require(&#x27;i-head&#x27;)(window);
 
-        Event.before(&#x27;manualfocus&#x27;, function(e) {
+        Event.before(itagName+&#x27;:manualfocus&#x27;, function(e) {
             // the i-select itself is unfocussable, but its button is
             // we need to patch &#x60;manualfocus&#x60;,
             // which is emitted on node.focus()
             // a focus by userinteraction will always appear on the button itself
             // so we don&#x27;t bother that
             var element = e.target;
+            e.preventDefault();
             // cautious:  all child-elements that have &#x60;manualfocus&#x60; event are
             // subscribed as well: we NEED to inspect e.target and only continue
             // if e.target===i-select
-            if (element.getTagName()===&#x27;I-SELECT&#x27;) {
-                e.preventDefault();
-                element.itagReady().then(
-                    function() {
-                        var button = element.getElement(&#x27;button&#x27;);
-                        button &amp;&amp; button.focus();
-                    }
-                );
-            }
-        }, &#x27;i-select&#x27;);
+            e.preventDefault();
+            element.itagReady().then(
+                function() {
+                    var button = element.getElement(&#x27;button&#x27;);
+                    button &amp;&amp; button.focus();
+                }
+            );
+        });
 
         Event.after(&#x27;blur&#x27;, function(e) {
             // the i-select itself is unfocussable, but its button is
@@ -317,11 +319,11 @@ module.exports = function (window) {
             }
         }, &#x27;i-select ul[fm-manage] &gt; li&#x27;);
 
-        Event.defineEvent(&#x27;i-select:valuechange&#x27;)
+        Event.defineEvent(itagName+&#x27;:valuechange&#x27;)
              .unPreventable()
              .noRender();
 
-        Event.after(&#x27;itag:change&#x27;, function(e) {
+        Event.after(&#x27;*:change&#x27;, function(e) {
             var element = e.target,
                 prevValue = element.getData(&#x27;i-select-value&#x27;),
                 model = element.model,
@@ -329,15 +331,20 @@ module.exports = function (window) {
                 markValue;
             if (prevValue!==newValue) {
                 markValue = newValue - 1;
+
                 /**
-                * Emitted when a draggable gets dropped inside a dropzone.
+                * Emitted when a the i-select changes its value
                 *
-                * @event *:dropzone-drop
+                * @event i-select:valuechange
                 * @param e {Object} eventobject including:
-                * @param e.target {HtmlElement} the dropzone
+                * @param e.target {HtmlElement} the i-select element
+                * @param e.prevValue {Number} the selected item, starting with 1
+                * @param e.newValue {Number} the selected item, starting with 1
+                * @param e.buttonText {String} the text that will appear on the button
+                * @param e.listText {String} the text as it is in the list
                 * @since 0.1
                 */
-                Event.emit(e.target, &#x27;i-select:valuechange&#x27;, {
+                element.emit(&#x27;valuechange&#x27;, {
                     prevValue: prevValue,
                     newValue: newValue,
                     buttonText: model.buttonTexts[markValue] || model.items[markValue],
@@ -348,54 +355,6 @@ module.exports = function (window) {
         }, itagCore.itagFilter);
 
         Itag = DOCUMENT.createItag(itagName, {
-           /**
-            * Redefines the childNodes of both the vnode as well as its related dom-node. The new
-            * definition replaces any previous nodes. (without touching unmodified nodes).
-            *
-            * Syncs the new vnode&#x27;s childNodes with the dom.
-            *
-            * @method _setChildNodes
-            * @param newVChildNodes {Array} array with vnodes which represent the new childNodes
-            * @private
-            * @chainable
-            * @since 0.0.1
-            */
-            init: function() {
-                var element = this,
-                    itemNodes = element.getAll(&#x27;&gt;i-item&#x27;),
-                    items = [],
-                    buttonTexts = [],
-                    content;
-
-                itemNodes.forEach(function(node, i) {
-                    var header = node.getElement(&#x27;i-head&#x27;);
-                    if (header) {
-                        buttonTexts[i] = header.getHTML();
-                        header.remove(true);
-                    }
-                    items[items.length] = node.getHTML();
-                });
-
-                element.model.items = items;
-                element.model.buttonTexts = buttonTexts;
-
-                // store its current value, so that valueChange-event can fire:
-                element.setData(&#x27;i-select-value&#x27;, element.model.value);
-
-                // building the template of the itag:
-                content = &#x27;&lt;button class=&quot;pure-button pure-button-bordered&quot;&gt;&lt;div class=&quot;pointer&quot;&gt;&lt;/div&gt;&lt;div class=&quot;btntext&quot;&gt;&lt;/div&gt;&lt;/button&gt;&#x27;;
-                // first: outerdiv which will be relative positioned
-                // next: innerdiv which will be absolute positioned
-                // also: hide the container by default --&gt; updateUI could make it shown
-                content += &#x27;&lt;div class=&quot;itsa-hidden&quot;&gt;&#x27; +
-                             &#x27;&lt;div&gt;&#x27;+
-                               &#x27;&lt;ul fm-manage=&quot;li&quot; fm-keyup=&quot;38&quot; fm-keydown=&quot;40&quot; fm-noloop=&quot;true&quot;&gt;&lt;/ul&gt;&#x27;;
-                             &#x27;&lt;/div&gt;&#x27;+
-                           &#x27;&lt;/div&gt;&#x27;;
-                // set the content:
-                element.setHTML(content);
-            },
-
             /*
              * Internal hash containing all DOM-events that are listened for (at &#x60;document&#x60;).
              *
@@ -430,6 +389,53 @@ module.exports = function (window) {
             * @chainable
             * @since 0.0.1
             */
+            init: function() {
+                var element = this,
+                    itemNodes = element.getAll(&#x27;&gt;i-item&#x27;),
+                    items = [],
+                    buttonTexts = [],
+                    content;
+                itemNodes.forEach(function(node, i) {
+                    var header = node.getElement(&#x27;i-head&#x27;);
+                    if (header) {
+                        buttonTexts[i] = header.getHTML();
+                        header.remove(true);
+                    }
+                    items[items.length] = node.getHTML();
+                });
+
+                element.model.items = items;
+                element.model.buttonTexts = buttonTexts;
+
+                // store its current value, so that valueChange-event can fire:
+                element.setData(&#x27;i-select-value&#x27;, element.model.value);
+
+                // building the template of the itag:
+                content = &#x27;&lt;button class=&quot;pure-button pure-button-bordered&quot;&gt;&lt;div class=&quot;pointer&quot;&gt;&lt;/div&gt;&lt;div class=&quot;btntext&quot;&gt;&lt;/div&gt;&lt;/button&gt;&#x27;;
+                // first: outerdiv which will be relative positioned
+                // next: innerdiv which will be absolute positioned
+                // also: hide the container by default --&gt; updateUI could make it shown
+                content += &#x27;&lt;div class=&quot;itsa-hidden&quot;&gt;&#x27; +
+                             &#x27;&lt;div&gt;&#x27;+
+                               &#x27;&lt;ul fm-manage=&quot;li&quot; fm-keyup=&quot;38&quot; fm-keydown=&quot;40&quot; fm-noloop=&quot;true&quot;&gt;&lt;/ul&gt;&#x27;;
+                             &#x27;&lt;/div&gt;&#x27;+
+                           &#x27;&lt;/div&gt;&#x27;;
+                // set the content:
+                element.setHTML(content);
+            },
+
+           /**
+            * Redefines the childNodes of both the vnode as well as its related dom-node. The new
+            * definition replaces any previous nodes. (without touching unmodified nodes).
+            *
+            * Syncs the new vnode&#x27;s childNodes with the dom.
+            *
+            * @method _setChildNodes
+            * @param newVChildNodes {Array} array with vnodes which represent the new childNodes
+            * @private
+            * @chainable
+            * @since 0.0.1
+            */
             sync: function() {
                 // inside sync, YOU CANNOT change attributes which are part of &#x60;attrs&#x60; !!!
                 // those actions will be ignored.
@@ -445,7 +451,7 @@ module.exports = function (window) {
                     buttonTexts = model.buttonTexts,
                     value = model.value,
                     item, content, buttonText, len, i, markValue,
-                    button, container, itemsContainer, renderedBefore, hiddenTimer;
+                    button, container, itemsContainer, hiddenTimer;
 
                 len = items.length;
                 (value&gt;len) &amp;&amp; (value=0);
@@ -463,8 +469,6 @@ module.exports = function (window) {
                 button.toggleClass(&#x27;pure-button-primary&#x27;, model[&#x27;primary-button&#x27;]);
                 button.getElement(&#x27;div.btntext&#x27;).setHTML(buttonText);
 
-                // show or hide the content, note that when not rendered before, you should use transitions
-                renderedBefore = element.hasClass(CLASS_ITAG_RENDERED);
                 container = element.getElement(&#x27;&gt;div&#x27;);
 
                 if (model.expanded) {
@@ -495,8 +499,6 @@ module.exports = function (window) {
         });
 
         Itag.setItagDirectEventResponse([&#x27;blur&#x27;, &#x27;keypress&#x27;]);
-
-        window.ITAGS[itagName] = Itag;
     }
 
     return window.ITAGS[itagName];

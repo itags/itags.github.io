@@ -623,6 +623,17 @@ module.exports = function (window) {
          ._setEventObjProperty('stopPropagation', function() {this.status.ok || (this.status.propagationStopped = this.target);})
          ._setEventObjProperty('stopImmediatePropagation', function() {this.status.ok || (this.status.immediatePropagationStopped = this.target);});
 
+    // Notify when someone subscribes to any event at all --> we might need to transform the filterFn from a selector into a true fnction
+    // this is already done automaticly by _setupDomListener fo UI:* events
+    Event.notify('*:*', function(customEvent, subscriber) {
+        var eventSplitted = customEvent.split(':'),
+            emitterName = eventSplitted[0];
+        if ((emitterName!=='UI') && (typeof subscriber.f==='string')) {
+            // now transform the subscriber's filter from css-string into a filterfunction
+            _selToFunc(customEvent, subscriber);
+        }
+    }, Event);
+
     // Notify when someone detaches an UI:* event
     // if so: then we might need to detach the native listener on `document`
     Event.notifyDetach(UI+'*', _teardownDomListener, Event);
@@ -715,8 +726,9 @@ var createHashMap = require('js-ext/extra/hashmap.js').createMap;
     "use strict";
 
     var NAME = '[core-event]: ',
-        REGEXP_CUSTOMEVENT = /^((?:\w|-)+):((?:\w|-)+)$/,
-        REGEXP_WILDCARD_CUSTOMEVENT = /^(?:((?:(?:\w|-)+)|\*):)?((?:(?:\w|-)+)|\*)$/,
+        REGEXP_CUSTOMEVENT = /^((?:\w|-|#)+):((?:\w|-|#)+)$/,
+        WILDCARD_WILDCARD = '*:*',
+        REGEXP_WILDCARD_CUSTOMEVENT = /^(?:((?:(?:\w|-|#)+)|\*):)?((?:(?:\w|-|#)+)|\*)$/,
         /* REGEXP_WILDCARD_CUSTOMEVENT :
          *
          * valid:
@@ -735,7 +747,8 @@ var createHashMap = require('js-ext/extra/hashmap.js').createMap;
          * 'red:save*'
          * ':save'
          */
-        REGEXP_EVENTNAME_WITH_SEMICOLON = /:((?:\w|-)+)$/,
+        REGEXP_EMITTERNAME_WITH_SEMICOLON = /^((?:\w|-|#)+):/,
+        REGEXP_EVENTNAME_WITH_SEMICOLON = /:((?:\w|-|#)+)$/,
         Event;
 
     Event = {
@@ -1043,8 +1056,7 @@ var createHashMap = require('js-ext/extra/hashmap.js').createMap;
          * You can use this to create delayed `defineEvents`. When the customEvent is called, the callback gets invoked
          * (even before the subsrcibers). Use this callback for delayed customEvent-definitions.
          *
-         * Use **no** wildcards for the emitterName. You might use wildcards for the eventName. Without wildcards, the
-         * notification will be unNotified (callback automaticly detached) on the first time the event occurs.
+         * You may use wildcards for both emitterName and eventName.
 
          * You **must** specify the full `emitterName:eventName` syntax.
          * The module `core-event-dom` uses `notify` to auto-define DOM-events (UI:*).
@@ -1385,7 +1397,7 @@ var createHashMap = require('js-ext/extra/hashmap.js').createMap;
             var instance = this,
                 allSubscribers = instance._subs,
                 extract = customEvent.match(REGEXP_WILDCARD_CUSTOMEVENT),
-                hashtable, item, notifier, customEventWildcardEventName;
+                hashtable, item, notifier, customEventWildcardEventName, customEventWildcardEmitterName;
 
             if (!extract) {
                 console.error(NAME, 'subscribe-error: eventname does not match pattern');
@@ -1438,6 +1450,21 @@ var createHashMap = require('js-ext/extra/hashmap.js').createMap;
                 // check the same for wildcard eventName:
                 customEventWildcardEventName = customEvent.replace(REGEXP_EVENTNAME_WITH_SEMICOLON, ':*');
                 if ((customEventWildcardEventName !== customEvent) && (notifier=instance._notifiers[customEventWildcardEventName])) {
+                    notifier.cb.call(notifier.o, customEvent, item);
+                    if (notifier.r) {
+                        delete instance._notifiers[customEvent];
+                    }
+                }
+                // check the same for wildcard emitterName:
+                customEventWildcardEmitterName = customEvent.replace(REGEXP_EMITTERNAME_WITH_SEMICOLON, '*:');
+                if ((customEventWildcardEmitterName !== customEvent) && (notifier=instance._notifiers[customEventWildcardEmitterName])) {
+                    notifier.cb.call(notifier.o, customEvent, item);
+                    if (notifier.r) {
+                        delete instance._notifiers[customEvent];
+                    }
+                }
+                // check the same for wildcard emitterName and eventName:
+                if ((WILDCARD_WILDCARD !== customEvent) && (notifier=instance._notifiers[WILDCARD_WILDCARD])) {
                     notifier.cb.call(notifier.o, customEvent, item);
                     if (notifier.r) {
                         delete instance._notifiers[customEvent];
@@ -2013,7 +2040,7 @@ var createHashMap = require('js-ext/extra/hashmap.js').createMap;
 */
 
 var NAME = '[event-emitter]: ',
-    REGEXP_EMITTER = /^(\w|-)+$/,
+    REGEXP_EMITTER = /^(\w|-|#)+$/,
     Event = require('./index.js');
 
 Event.Emitter = function(emitterName) {
@@ -2388,8 +2415,8 @@ require('./event-listener.js');
  * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
  *
  * @module js-ext
- * @submodule lib/function.js
- * @class Function
+ * @submodule extra/classes.js
+ * @class Classes
  *
 */
 
@@ -2415,10 +2442,28 @@ require('../lib/object.js');
         return;
     }
 
-    // Define configurable, writable and non-enumerable props
-    // if they don't exist.
-
+    /**
+     * Defines whether Classes should call their constructor in a chained way top-down.
+     *
+     * @property DEFAULT_CHAIN_CONSTRUCT
+     * @default true
+     * @type Boolean
+     * @protected
+     * @since 0.0.1
+    */
     DEFAULT_CHAIN_CONSTRUCT = true;
+
+    /**
+     * Sugarmethod for Object.defineProperty creating an unenumerable property
+     *
+     * @method defineProperty
+     * @param [object] {Object} The object to define the property to
+     * @param [name] {String} name of the property
+     * @param [method] {Any} value of the property
+     * @param [force=false] {Boolean} to force assignment when the property already exists
+     * @protected
+     * @since 0.0.1
+    */
     defineProperty = function (object, name, method, force) {
         if (!force && (name in object)) {
             return;
@@ -2430,6 +2475,16 @@ require('../lib/object.js');
             value: method
         });
     };
+    /**
+     * Sugarmethod for using defineProperty for multiple properties at once.
+     *
+     * @method defineProperties
+     * @param [object] {Object} The object to define the property to
+     * @param [map] {Object} object to be set
+     * @param [force=false] {Boolean} to force assignment when the property already exists
+     * @protected
+     * @since 0.0.1
+    */
     defineProperties = function (object, map, force) {
         var names = Object.keys(map),
             l = names.length,
@@ -2440,17 +2495,58 @@ require('../lib/object.js');
             defineProperty(object, name, map[name], force);
         }
     };
+
+    /**
+     * Empty function
+     *
+     * @method NOOP
+     * @protected
+     * @since 0.0.1
+    */
     NOOP = function () {};
+
+    /**
+     * Internal hash containing the names of members which names should be transformed
+     *
+     * @property REPLACE_CLASS_METHODS
+     * @default {destroy: '_destroy'}
+     * @type Object
+     * @protected
+     * @since 0.0.1
+    */
     REPLACE_CLASS_METHODS = createHashMap({
         destroy: '_destroy'
     });
+
+    /**
+     * Internal hash containing protected members: those who cannot be merged into a Class
+     *
+     *
+     * @property PROTECTED_CLASS_METHODS
+     * @default {$super: true, $superProp: true, $orig: true}
+     * @type Object
+     * @protected
+     * @since 0.0.1
+    */
     PROTECTED_CLASS_METHODS = createHashMap({
         $super: true,
         $superProp: true,
         $orig: true
     });
+
 /*jshint proto:true */
 /* jshint -W001 */
+    /*
+     * Internal hash containing protected members: those who cannot be merged into a Class
+     *
+     * @property PROTO_RESERVED_NAMES
+     * @default {constructor: true, prototype: true, hasOwnProperty: true, isPrototypeOf: true,
+     *           propertyIsEnumerable: true, __defineGetter__: true, __defineSetter__: true,
+     *           __lookupGetter__: true, __lookupSetter__: true, __proto__: true}
+     * @type Object
+     * @protected
+     * @since 0.0.1
+    */
     PROTO_RESERVED_NAMES = createHashMap({
         constructor: true,
         prototype: true,
@@ -2465,11 +2561,6 @@ require('../lib/object.js');
     });
 /* jshint +W001 */
 /*jshint proto:false */
-
-    /**
-     * Pollyfils for often used functionality for Function
-     * @class Function
-    */
 
     defineProperties(Function.prototype, {
 
@@ -2511,7 +2602,7 @@ require('../lib/object.js');
                     // if nameInProto: set the property, but also backup for chaining using $$orig
                     propDescriptor = Object.getOwnPropertyDescriptor(prototypes, name);
                     if (!propDescriptor.writable) {
-                        console.warn(NAME+'mergePrototypes will set property of '+name+'without its property-descriptor: for it is an unwritable property.');
+                        console.warn(NAME+'mergePrototypes will set property of '+name+' without its property-descriptor: for it is an unwritable property.');
                         proto[finalName] = prototypes[name];
                     }
                     else {
@@ -2705,8 +2796,36 @@ require('../lib/object.js');
 
     global._ITSAmodules.Classes = Classes = {};
 
+    /**
+     * Base properties for every Class
+     *
+     *
+     * @property BASE_MEMBERS
+     * @type Object
+     * @protected
+     * @since 0.0.1
+    */
     BASE_MEMBERS = {
+       /**
+        * Transformed from `destroy` --> when `destroy` gets invoked, the instance will invoke `_destroy` through the whole chain.
+        * Defaults to `NOOP`, so that it can be always be invoked.
+        *
+        * @method _destroy
+        * @private
+        * @chainable
+        * @since 0.0.1
+        */
         _destroy: NOOP,
+
+       /**
+        * Calls `_destroy` on through the class-chain on every level (bottom-up).
+        * _destroy gets defined when the itag defines `destroy` --> transformation under the hood.
+        *
+        * @method destroy
+        * @param [notChained=false] {Boolean} set this `true` to prevent calling `destroy` up through the chain
+        * @chainable
+        * @since 0.0.1
+        */
         destroy: function(notChained) {
             var instance = this,
                 superDestroy;
@@ -2723,10 +2842,19 @@ require('../lib/object.js');
                 superDestroy(instance.constructor);
                 Object.protectedProp(instance, '_destroyed', true);
             }
+            return instance;
         }
     };
 
     coreMethods = Classes.coreMethods = {
+        /**
+         * Returns the instance, yet sets an internal flag to a higher Class (1 level up)
+         *
+         * @property $super
+         * @chainable
+         * @for BaseClass
+         * @since 0.0.1
+        */
         $super: {
             get: function() {
                 var instance = this;
@@ -2736,10 +2864,18 @@ require('../lib/object.js');
                 return instance;
             }
         },
+
+        /**
+         * Calculated value of the specified member at the parent-Class.
+         *
+         * @method $superProp
+         * @return {Any}
+         * @since 0.0.1
+        */
         $superProp: {
             configurable: true,
             writable: true,
-            value: function(/* func, *args */) {
+            value: function(/* member, *args */) {
                 var instance = this,
                     classCarierReturn = instance.__$superCarierStart__ || instance.__classCarier__ || instance.__methodClassCarier__,
                     currentClassCarier = instance.__classCarier__ || instance.__methodClassCarier__,
@@ -2767,6 +2903,15 @@ require('../lib/object.js');
                 return returnValue || superPrototype[firstArg];
             }
         },
+
+        /**
+         * Invokes the original method (from inside where $orig is invoked).
+         * Any arguments will be passed through to the original method.
+         *
+         * @method $orig
+         * @return {Any}
+         * @since 0.0.1
+        */
         $orig: {
             configurable: true,
             writable: true,
@@ -2819,20 +2964,27 @@ require('../lib/object.js');
         }
     };
 
+   /**
+    * Creates the base Class: the highest Class in the hierarchy of all Classes.
+    * Will get extra properties merge into its prototype, which leads into the formation of `BaseClass`.
+    *
+    * @method createBaseClass
+    * @protected
+    * @return {Class}
+    * @for Classes
+    * @since 0.0.1
+    */
     createBaseClass = function () {
         var InitClass = function() {};
         return Function.prototype.subClass.apply(InitClass, arguments);
     };
 
     /**
-     * Returns a base class with the given constructor and prototype methods
+     * The base BaseClass: the highest Class in the hierarchy of all Classes.
      *
-     * @for Object
-     * @method createClass
-     * @param [constructor] {Function} constructor for the class
-     * @param [prototype] {Object} Hash map of prototype members of the new class
-     * @static
-     * @return {Function} the new class
+     * @property BaseClass
+     * @type Class
+     * @since 0.0.1
     */
     Object.protectedProp(Classes, 'BaseClass', createBaseClass().mergePrototypes(BASE_MEMBERS, true, {}, {}));
 
@@ -2842,12 +2994,10 @@ require('../lib/object.js');
     /**
      * Returns a base class with the given constructor and prototype methods
      *
-     * @for Object
      * @method createClass
      * @param [constructor] {Function} constructor for the class
      * @param [prototype] {Object} Hash map of prototype members of the new class
-     * @static
-     * @return {Function} the new class
+     * @return {Class} the new class
     */
     Object.protectedProp(Classes, 'createClass', Classes.BaseClass.subClass.bind(Classes.BaseClass));
 
@@ -11208,7 +11358,7 @@ module.exports = function (window) {
                     //vnode.domNode can only be set after inspecting the attributes --> there might be an `is` attribute
                     tagdefinition = tag.toLowerCase();
                     if ((is=vnode.attrs.is) && !is.contains('-')) {
-                        tagdefinition = tag + ':' + is;
+                        tagdefinition = tag + '#' + is;
                     }
                     vnode.domNode = vnode.ns ? DOCUMENT.createElementNS(vnode.ns, tagdefinition) : DOCUMENT.createElement(tagdefinition);
                     // create circular reference:
@@ -11354,6 +11504,7 @@ module.exports = function (window) {
     }
 
     var NS = require('./vdom-ns.js')(window),
+        escapeEntities = NS.EscapeEntities,
         extractor = require('./attribute-extractor.js')(window),
         xmlNS = NS.xmlNS,
         voidElements = NS.voidElements,
@@ -11443,7 +11594,7 @@ module.exports = function (window) {
             }
             else {
                 // TextNode or CommentNode
-                vnode.text = domNode.nodeValue;
+                vnode.text = escapeEntities(domNode.nodeValue);
             }
             // store vnode's id:
             vnode.storeId();
@@ -11474,7 +11625,50 @@ module.exports = function (window) {
 require('js-ext/lib/object.js');
 require('polyfill');
 
-var createHashMap = require('js-ext/extra/hashmap.js').createMap;
+var createHashMap = require('js-ext/extra/hashmap.js').createMap,
+    // for escaping entoties inside domNode.nodeValue, we need this trick: https://code.google.com/p/jslibs/wiki/JavascriptTips
+/*jshint proto:true */
+    ENTITY_TO_CODE = { __proto__: null,
+        apos:0x0027,quot:0x0022,amp:0x0026,lt:0x003C,gt:0x003E,nbsp:0x00A0,iexcl:0x00A1,cent:0x00A2,pound:0x00A3,
+        curren:0x00A4,yen:0x00A5,brvbar:0x00A6,sect:0x00A7,uml:0x00A8,copy:0x00A9,ordf:0x00AA,laquo:0x00AB,
+        not:0x00AC,shy:0x00AD,reg:0x00AE,macr:0x00AF,deg:0x00B0,plusmn:0x00B1,sup2:0x00B2,sup3:0x00B3,
+        acute:0x00B4,micro:0x00B5,para:0x00B6,middot:0x00B7,cedil:0x00B8,sup1:0x00B9,ordm:0x00BA,raquo:0x00BB,
+        frac14:0x00BC,frac12:0x00BD,frac34:0x00BE,iquest:0x00BF,Agrave:0x00C0,Aacute:0x00C1,Acirc:0x00C2,Atilde:0x00C3,
+        Auml:0x00C4,Aring:0x00C5,AElig:0x00C6,Ccedil:0x00C7,Egrave:0x00C8,Eacute:0x00C9,Ecirc:0x00CA,Euml:0x00CB,
+        Igrave:0x00CC,Iacute:0x00CD,Icirc:0x00CE,Iuml:0x00CF,ETH:0x00D0,Ntilde:0x00D1,Ograve:0x00D2,Oacute:0x00D3,
+        Ocirc:0x00D4,Otilde:0x00D5,Ouml:0x00D6,times:0x00D7,Oslash:0x00D8,Ugrave:0x00D9,Uacute:0x00DA,Ucirc:0x00DB,
+        Uuml:0x00DC,Yacute:0x00DD,THORN:0x00DE,szlig:0x00DF,agrave:0x00E0,aacute:0x00E1,acirc:0x00E2,atilde:0x00E3,
+        auml:0x00E4,aring:0x00E5,aelig:0x00E6,ccedil:0x00E7,egrave:0x00E8,eacute:0x00E9,ecirc:0x00EA,euml:0x00EB,
+        igrave:0x00EC,iacute:0x00ED,icirc:0x00EE,iuml:0x00EF,eth:0x00F0,ntilde:0x00F1,ograve:0x00F2,oacute:0x00F3,
+        ocirc:0x00F4,otilde:0x00F5,ouml:0x00F6,divide:0x00F7,oslash:0x00F8,ugrave:0x00F9,uacute:0x00FA,ucirc:0x00FB,
+        uuml:0x00FC,yacute:0x00FD,thorn:0x00FE,yuml:0x00FF,OElig:0x0152,oelig:0x0153,Scaron:0x0160,scaron:0x0161,
+        Yuml:0x0178,fnof:0x0192,circ:0x02C6,tilde:0x02DC,Alpha:0x0391,Beta:0x0392,Gamma:0x0393,Delta:0x0394,
+        Epsilon:0x0395,Zeta:0x0396,Eta:0x0397,Theta:0x0398,Iota:0x0399,Kappa:0x039A,Lambda:0x039B,Mu:0x039C,
+        Nu:0x039D,Xi:0x039E,Omicron:0x039F,Pi:0x03A0,Rho:0x03A1,Sigma:0x03A3,Tau:0x03A4,Upsilon:0x03A5,
+        Phi:0x03A6,Chi:0x03A7,Psi:0x03A8,Omega:0x03A9,alpha:0x03B1,beta:0x03B2,gamma:0x03B3,delta:0x03B4,
+        epsilon:0x03B5,zeta:0x03B6,eta:0x03B7,theta:0x03B8,iota:0x03B9,kappa:0x03BA,lambda:0x03BB,mu:0x03BC,
+        nu:0x03BD,xi:0x03BE,omicron:0x03BF,pi:0x03C0,rho:0x03C1,sigmaf:0x03C2,sigma:0x03C3,tau:0x03C4,
+        upsilon:0x03C5,phi:0x03C6,chi:0x03C7,psi:0x03C8,omega:0x03C9,thetasym:0x03D1,upsih:0x03D2,piv:0x03D6,
+        ensp:0x2002,emsp:0x2003,thinsp:0x2009,zwnj:0x200C,zwj:0x200D,lrm:0x200E,rlm:0x200F,ndash:0x2013,
+        mdash:0x2014,lsquo:0x2018,rsquo:0x2019,sbquo:0x201A,ldquo:0x201C,rdquo:0x201D,bdquo:0x201E,dagger:0x2020,
+        Dagger:0x2021,bull:0x2022,hellip:0x2026,permil:0x2030,prime:0x2032,Prime:0x2033,lsaquo:0x2039,rsaquo:0x203A,
+        oline:0x203E,frasl:0x2044,euro:0x20AC,image:0x2111,weierp:0x2118,real:0x211C,trade:0x2122,alefsym:0x2135,
+        larr:0x2190,uarr:0x2191,rarr:0x2192,darr:0x2193,harr:0x2194,crarr:0x21B5,lArr:0x21D0,uArr:0x21D1,
+        rArr:0x21D2,dArr:0x21D3,hArr:0x21D4,forall:0x2200,part:0x2202,exist:0x2203,empty:0x2205,nabla:0x2207,
+        isin:0x2208,notin:0x2209,ni:0x220B,prod:0x220F,sum:0x2211,minus:0x2212,lowast:0x2217,radic:0x221A,
+        prop:0x221D,infin:0x221E,ang:0x2220,and:0x2227,or:0x2228,cap:0x2229,cup:0x222A,int:0x222B,
+        there4:0x2234,sim:0x223C,cong:0x2245,asymp:0x2248,ne:0x2260,equiv:0x2261,le:0x2264,ge:0x2265,
+        sub:0x2282,sup:0x2283,nsub:0x2284,sube:0x2286,supe:0x2287,oplus:0x2295,otimes:0x2297,perp:0x22A5,
+        sdot:0x22C5,lceil:0x2308,rceil:0x2309,lfloor:0x230A,rfloor:0x230B,lang:0x2329,rang:0x232A,loz:0x25CA,
+        spades:0x2660,clubs:0x2663,hearts:0x2665,diams:0x2666
+    },
+/*jshint proto:false */
+    charToEntity = {},
+    entityName;
+
+for (entityName in ENTITY_TO_CODE) {
+    charToEntity[String.fromCharCode(ENTITY_TO_CODE[entityName])] = entityName;
+}
 
 module.exports = function (window) {
     var NS;
@@ -11562,6 +11756,24 @@ module.exports = function (window) {
      */
     NS.voidElements || (NS.voidElements=createHashMap());
 
+    NS.UnescapeEntities = function(str) {
+        return str.replace(
+            /&(.+?);/g,
+            function(str, ent) {
+                return String.fromCharCode( (ent[0]!=='#' ? ENTITY_TO_CODE[ent] : ent[1]==='x') ? parseInt(ent.substr(2),16) : parseInt(ent.substr(1)) );
+            }
+        );
+    };
+
+    NS.EscapeEntities = function(str) {
+        return str.replace(
+            /[^\x20-\x7E]/g,
+            function(str) {
+                return charToEntity[str] ? '&'+charToEntity[str]+';' : str;
+            }
+        );
+    };
+
     return NS;
 };
 },{"js-ext/extra/hashmap.js":38,"js-ext/lib/object.js":41,"polyfill":54}],76:[function(require,module,exports){
@@ -11618,6 +11830,7 @@ module.exports = function (window) {
         // because vnode would be recalculated and might be different from before
         DESTROY_DELAY = 60000,
 
+        unescapeEntities = NS.UnescapeEntities,
         NTH_CHILD_REGEXP = /^(?:(\d*)[n|N])([\+|\-](\d+))?$/, // an+b
         STRING = 'string',
         CLASS = 'class',
@@ -12399,18 +12612,19 @@ module.exports = function (window) {
     };
 
     _batchEmit = function() {
+        // we will exactly define the 'UI:'-event --> Itags will have another emitterName
         MUTATION_EVENTS.each(function (mutationEvents, vnode) {
             var domNode = vnode.domNode;
             if (mutationEvents[EV_REMOVED]) {
-                domNode.emit(EV_REMOVED);
+                domNode.emit('UI:'+EV_REMOVED);
             }
             else if (mutationEvents[EV_INSERTED]) {
-                domNode.emit(EV_INSERTED);
+                domNode.emit('UI:'+EV_INSERTED);
             }
             else {
                 // contentchange and attributechanges can go hand in hand
                 mutationEvents.each(function(value, evt) {
-                    domNode.emit(evt, (evt===EV_CONTENT_CHANGE) ? null : {changed: value});
+                    domNode.emit('UI:'+evt, (evt===EV_CONTENT_CHANGE) ? null : {changed: value});
                 });
             }
         });
@@ -13001,7 +13215,7 @@ module.exports = function (window) {
                         }
                         else if (preChildNode && preChildNode.nodeType===3) {
                             preChildNode.text += vChildNode.text;
-                            preChildNode.domNode.nodeValue = preChildNode.text;
+                            preChildNode.domNode.nodeValue = unescapeEntities(preChildNode.text);
                             domNode._removeChild(vChildNode.domNode);
                             vChildNode._destroy();
                             changed = true;
@@ -13382,7 +13596,7 @@ module.exports = function (window) {
                                 // case2 and case3 should be treated the same
                         case 3: // oldNodeType==Element, newNodeType==Comment
                             oldChild.attrs.id && (delete nodeids[oldChild.attrs.id]);
-                            newChild.domNode.nodeValue = newChild.text;
+                            newChild.domNode.nodeValue = unescapeEntities(newChild.text);
                             domNode._replaceChild(newChild.domNode, childDomNode);
                             newChild.vParent = instance;
                             oldChild._replaceAtParent(newChild);
@@ -13409,7 +13623,8 @@ module.exports = function (window) {
                                 // case5 and case9 should be treated the same
                         case 9: // oldNodeType==Comment, newNodeType==Comment
                             if (oldChild.text!==newChild.text) {
-                                oldChild.domNode.nodeValue = oldChild.text = newChild.text;
+                                oldChild.text = newChild.text;
+                                oldChild.domNode.nodeValue = unescapeEntities(newChild.text);
                                 instance._emit(EV_CONTENT_CHANGE);
                             }
                             newVChildNodes[i] = oldChild;
@@ -13417,7 +13632,7 @@ module.exports = function (window) {
                         case 6: // oldNodeType==TextNode, newNodeType==Comment
                                 // case6 and case8 should be treated the same
                         case 8: // oldNodeType==Comment, newNodeType==TextNode
-                            newChild.domNode.nodeValue = newChild.text;
+                            newChild.domNode.nodeValue = unescapeEntities(newChild.text);
                             domNode._replaceChild(newChild.domNode, childDomNode);
                             newChild.vParent = oldChild.vParent;
                             instance._emit(EV_CONTENT_CHANGE);
@@ -13460,7 +13675,7 @@ module.exports = function (window) {
                         // we need to break through --> no `break`
                         /* falls through */
                     default: // TextNode or CommentNode
-                        newChild.domNode.nodeValue = newChild.text;
+                        newChild.domNode.nodeValue = unescapeEntities(newChild.text);
                         domNode._appendChild(newChild.domNode);
                         instance._emit(EV_CONTENT_CHANGE);
                 }
@@ -13703,7 +13918,7 @@ module.exports = function (window) {
                     }
                     else {
                         id && (delete nodeids[id]);
-                        vnode.domNode.nodeValue = vnode.text;
+                        vnode.domNode.nodeValue = unescapeEntities(vnode.text);
                         vParent.domNode._replaceChild(vnode.domNode, instance.domNode);
                         instance._replaceAtParent(vnode);
                         DOCUMENT._itagList && vnode.isItag && !DOCUMENT._itagList.contains(vnode.domNode) && DOCUMENT._itagList.push(vnode.domNode);
@@ -13725,7 +13940,7 @@ module.exports = function (window) {
                             vnode._setChildNodes(bkpChildNodes);
                             break;
                         default: // TextNode or CommentNode
-                            vnode.domNode.nodeValue = vnode.text;
+                            vnode.domNode.nodeValue = unescapeEntities(vnode.text);
                             isLastChildNode ? vParent.domNode._appendChild(vnode.domNode) : vParent.domNode._appendChild(vnode.domNode, refDomNode);
                     }
                     vnode.storeId();
@@ -14069,7 +14284,7 @@ var NAME = '[focusmanager]: ',
 module.exports = function (window) {
 
     var DOCUMENT = window.document,
-        nodePlugin, FocusManager, Event, nextFocusNode, searchFocusNode, markAsFocussed, getFocusManagerSelector, setupEvents;
+        nodePlugin, FocusManager, Event, nextFocusNode, searchFocusNode, markAsFocussed, getFocusManagerSelector, setupEvents, defineFocusEvent;
 
     window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
 
@@ -14362,29 +14577,36 @@ module.exports = function (window) {
 
     window._ITSAmodules.FocusManager = FocusManager = nodePlugin.definePlugin('fm', {manage: 'true'});
 
-    /**
-     * In case of a manual focus (node.focus()) the node will fire an `manualfocus`-event
-     * which can be prevented.
-     * @event manualfocus
-    */
-    Event.defineEvent('UI:manualfocus')
-         .defaultFn(function(e) {
-             var node = e.target,
-                 leftScroll = window.getScrollLeft(),
-                 topScroll = window.getScrollTop();
-             node._focus();
-             // reset winscroll:
-             window.scrollTo(leftScroll, topScroll);
-             // make sure the node is inside the viewport:
-             // node.forceIntoView();
-         });
+    defineFocusEvent = function(customevent) {
+        Event.defineEvent(customevent)
+             .defaultFn(function(e) {
+                 var node = e.target,
+                     leftScroll = window.getScrollLeft(),
+                     topScroll = window.getScrollTop();
+                 node._focus();
+                 // reset winscroll:
+                 window.scrollTo(leftScroll, topScroll);
+                 // make sure the node is inside the viewport:
+                 // node.forceIntoView();
+             });
+    };
 
     (function(HTMLElementPrototype) {
 
         HTMLElementPrototype._focus = HTMLElementPrototype.focus;
         HTMLElementPrototype.focus = function() {
             console.log(NAME+'focus');
-            searchFocusNode(this).emit('manualfocus');
+            /**
+             * In case of a manual focus (node.focus()) the node will fire an `manualfocus`-event
+             * which can be prevented.
+             * @event manualfocus
+            */
+            var focusNode = searchFocusNode(this),
+                emitterName = focusNode._emitterName,
+                customevent = emitterName+':manualfocus';
+
+            Event._ce[customevent] || defineFocusEvent(customevent);
+            focusNode.emit('manualfocus');
         };
 
     }(window.HTMLElement.prototype));
@@ -14525,17 +14747,187 @@ module.exports=require(70)
 },{"js-ext/extra/hashmap.js":111,"js-ext/lib/object.js":114,"js-ext/lib/string.js":116,"polyfill":127}],144:[function(require,module,exports){
 module.exports=require(71)
 },{"js-ext/extra/hashmap.js":111,"js-ext/lib/object.js":114,"js-ext/lib/string.js":116,"polyfill":127}],145:[function(require,module,exports){
-module.exports=require(72)
+arguments[4][72][0].apply(exports,arguments)
 },{"../css/element.css":109,"./attribute-extractor.js":141,"./element-array.js":142,"./html-parser.js":146,"./node-parser.js":147,"./vdom-ns.js":148,"./vnode.js":149,"js-ext/extra/hashmap.js":111,"js-ext/lib/object.js":114,"js-ext/lib/promise.js":115,"js-ext/lib/string.js":116,"polyfill":127,"polyfill/extra/transition.js":122,"polyfill/extra/transitionend.js":123,"polyfill/extra/vendorCSS.js":124,"utils":128,"window-ext":134}],146:[function(require,module,exports){
-module.exports=require(73)
+arguments[4][73][0].apply(exports,arguments)
 },{"./attribute-extractor.js":141,"./vdom-ns.js":148,"js-ext/extra/hashmap.js":111,"js-ext/lib/object.js":114,"polyfill":127}],147:[function(require,module,exports){
-module.exports=require(74)
+arguments[4][74][0].apply(exports,arguments)
 },{"./attribute-extractor.js":141,"./vdom-ns.js":148,"./vnode.js":149,"js-ext/extra/hashmap.js":111,"js-ext/lib/object.js":114,"polyfill":127}],148:[function(require,module,exports){
-module.exports=require(75)
+/**
+ * Creates a Namespace that can be used accros multiple vdom-modules to share information.
+ *
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+ * <br>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ *
+ * @module vdom
+ * @submodule vdom-ns
+ * @class NS-vdom
+ * @since 0.0.1
+*/
+
+"use strict";
+
+require('js-ext/lib/object.js');
+require('polyfill');
+
+var createHashMap = require('js-ext/extra/hashmap.js').createMap,
+    // for escaping entoties inside domNode.nodeValue, we need this trick: https://code.google.com/p/jslibs/wiki/JavascriptTips
+/*jshint proto:true */
+    ENTITY_TO_CODE = { __proto__: null,
+        apos:0x0027,quot:0x0022,amp:0x0026,lt:0x003C,gt:0x003E,nbsp:0x00A0,iexcl:0x00A1,cent:0x00A2,pound:0x00A3,
+        curren:0x00A4,yen:0x00A5,brvbar:0x00A6,sect:0x00A7,uml:0x00A8,copy:0x00A9,ordf:0x00AA,laquo:0x00AB,
+        not:0x00AC,shy:0x00AD,reg:0x00AE,macr:0x00AF,deg:0x00B0,plusmn:0x00B1,sup2:0x00B2,sup3:0x00B3,
+        acute:0x00B4,micro:0x00B5,para:0x00B6,middot:0x00B7,cedil:0x00B8,sup1:0x00B9,ordm:0x00BA,raquo:0x00BB,
+        frac14:0x00BC,frac12:0x00BD,frac34:0x00BE,iquest:0x00BF,Agrave:0x00C0,Aacute:0x00C1,Acirc:0x00C2,Atilde:0x00C3,
+        Auml:0x00C4,Aring:0x00C5,AElig:0x00C6,Ccedil:0x00C7,Egrave:0x00C8,Eacute:0x00C9,Ecirc:0x00CA,Euml:0x00CB,
+        Igrave:0x00CC,Iacute:0x00CD,Icirc:0x00CE,Iuml:0x00CF,ETH:0x00D0,Ntilde:0x00D1,Ograve:0x00D2,Oacute:0x00D3,
+        Ocirc:0x00D4,Otilde:0x00D5,Ouml:0x00D6,times:0x00D7,Oslash:0x00D8,Ugrave:0x00D9,Uacute:0x00DA,Ucirc:0x00DB,
+        Uuml:0x00DC,Yacute:0x00DD,THORN:0x00DE,szlig:0x00DF,agrave:0x00E0,aacute:0x00E1,acirc:0x00E2,atilde:0x00E3,
+        auml:0x00E4,aring:0x00E5,aelig:0x00E6,ccedil:0x00E7,egrave:0x00E8,eacute:0x00E9,ecirc:0x00EA,euml:0x00EB,
+        igrave:0x00EC,iacute:0x00ED,icirc:0x00EE,iuml:0x00EF,eth:0x00F0,ntilde:0x00F1,ograve:0x00F2,oacute:0x00F3,
+        ocirc:0x00F4,otilde:0x00F5,ouml:0x00F6,divide:0x00F7,oslash:0x00F8,ugrave:0x00F9,uacute:0x00FA,ucirc:0x00FB,
+        uuml:0x00FC,yacute:0x00FD,thorn:0x00FE,yuml:0x00FF,OElig:0x0152,oelig:0x0153,Scaron:0x0160,scaron:0x0161,
+        Yuml:0x0178,fnof:0x0192,circ:0x02C6,tilde:0x02DC,Alpha:0x0391,Beta:0x0392,Gamma:0x0393,Delta:0x0394,
+        Epsilon:0x0395,Zeta:0x0396,Eta:0x0397,Theta:0x0398,Iota:0x0399,Kappa:0x039A,Lambda:0x039B,Mu:0x039C,
+        Nu:0x039D,Xi:0x039E,Omicron:0x039F,Pi:0x03A0,Rho:0x03A1,Sigma:0x03A3,Tau:0x03A4,Upsilon:0x03A5,
+        Phi:0x03A6,Chi:0x03A7,Psi:0x03A8,Omega:0x03A9,alpha:0x03B1,beta:0x03B2,gamma:0x03B3,delta:0x03B4,
+        epsilon:0x03B5,zeta:0x03B6,eta:0x03B7,theta:0x03B8,iota:0x03B9,kappa:0x03BA,lambda:0x03BB,mu:0x03BC,
+        nu:0x03BD,xi:0x03BE,omicron:0x03BF,pi:0x03C0,rho:0x03C1,sigmaf:0x03C2,sigma:0x03C3,tau:0x03C4,
+        upsilon:0x03C5,phi:0x03C6,chi:0x03C7,psi:0x03C8,omega:0x03C9,thetasym:0x03D1,upsih:0x03D2,piv:0x03D6,
+        ensp:0x2002,emsp:0x2003,thinsp:0x2009,zwnj:0x200C,zwj:0x200D,lrm:0x200E,rlm:0x200F,ndash:0x2013,
+        mdash:0x2014,lsquo:0x2018,rsquo:0x2019,sbquo:0x201A,ldquo:0x201C,rdquo:0x201D,bdquo:0x201E,dagger:0x2020,
+        Dagger:0x2021,bull:0x2022,hellip:0x2026,permil:0x2030,prime:0x2032,Prime:0x2033,lsaquo:0x2039,rsaquo:0x203A,
+        oline:0x203E,frasl:0x2044,euro:0x20AC,image:0x2111,weierp:0x2118,real:0x211C,trade:0x2122,alefsym:0x2135,
+        larr:0x2190,uarr:0x2191,rarr:0x2192,darr:0x2193,harr:0x2194,crarr:0x21B5,lArr:0x21D0,uArr:0x21D1,
+        rArr:0x21D2,dArr:0x21D3,hArr:0x21D4,forall:0x2200,part:0x2202,exist:0x2203,empty:0x2205,nabla:0x2207,
+        isin:0x2208,notin:0x2209,ni:0x220B,prod:0x220F,sum:0x2211,minus:0x2212,lowast:0x2217,radic:0x221A,
+        prop:0x221D,infin:0x221E,ang:0x2220,and:0x2227,or:0x2228,cap:0x2229,cup:0x222A,int:0x222B,
+        there4:0x2234,sim:0x223C,cong:0x2245,asymp:0x2248,ne:0x2260,equiv:0x2261,le:0x2264,ge:0x2265,
+        sub:0x2282,sup:0x2283,nsub:0x2284,sube:0x2286,supe:0x2287,oplus:0x2295,otimes:0x2297,perp:0x22A5,
+        sdot:0x22C5,lceil:0x2308,rceil:0x2309,lfloor:0x230A,rfloor:0x230B,lang:0x2329,rang:0x232A,loz:0x25CA,
+        spades:0x2660,clubs:0x2663,hearts:0x2665,diams:0x2666
+    },
+/*jshint proto:false */
+    charToEntity = {},
+    entityName;
+
+for (entityName in ENTITY_TO_CODE) {
+    charToEntity[String.fromCharCode(ENTITY_TO_CODE[entityName])] = entityName;
+}
+
+module.exports = function (window) {
+    var NS;
+
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
+
+    if (window._ITSAmodules.VDOM_NS) {
+        return window._ITSAmodules.VDOM_NS; // VDOM_NS was already created
+    }
+
+    NS = window._ITSAmodules.VDOM_NS = createHashMap();
+
+    /**
+     * Reference to the VElement of document.body (gets its value as soon as it gets refered to)
+     *
+     * @property body
+     * @default null
+     * @type VElement
+     * @since 0.0.1
+     */
+    NS.body = null;
+
+    NS.xmlNS = createHashMap({
+        SVG: 'http://www.w3.org/2000/svg',
+        XBL: 'http://www.mozilla.org/xbl',
+        XUL: 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul',
+        MATH: 'http://www.w3.org/1998/Math/MathML',
+        XLINK: 'http://www.w3.org/1999/xlink'
+    });
+
+    /**
+     * A hash with all node'ids (of all the domnodes that have an id). The value is a reference to an VElement.
+     *
+     * @property nodeids
+     * @default {}
+     * @type Object
+     * @since 0.0.1
+     */
+    NS.nodeids || (NS.nodeids=createHashMap());
+
+    /**
+     * A hash with all encountered non-void Elements
+     *
+     * @property nonVoidElements
+     * @default {}
+     * @type Object
+     * @since 0.0.1
+     */
+    NS.nonVoidElements || (NS.nonVoidElements=createHashMap());
+
+    /**
+     * A hash to identify what tagNames are equal to `SCRIPT` or `STYLE`.
+     *
+     * @property SCRIPT_OR_STYLE_TAG
+     * @default {SCRIPT: true, STYLE: true}
+     * @type Object
+     * @since 0.0.1
+     */
+    NS.SCRIPT_OR_STYLE_TAG = createHashMap({
+        SCRIPT: true,
+        STYLE: true
+    });
+
+    /**
+     * A hash with all nodeTypes that should be captured by the vDOM.
+     *
+     * @property VALID_NODE_TYPES
+     * @default {1: true, 3: true, 8: true}
+     * @type Object
+     * @since 0.0.1
+     */
+    NS.VALID_NODE_TYPES = createHashMap({
+        1: true,
+        3: true,
+        8: true
+    });
+
+    /**
+     * A hash with all encountered void Elements
+     *
+     * @property voidElements
+     * @default {}
+     * @type Object
+     * @since 0.0.1
+     */
+    NS.voidElements || (NS.voidElements=createHashMap());
+
+    NS.UnescapeEntities = function(str) {
+        return str.replace(
+            /&(.+?);/g,
+            function(str, ent) {
+                return String.fromCharCode( ent[0]!=='#' ? ENTITY_TO_CODE[ent] : (ent[1]==='x' ? parseInt(ent.substr(2),16) : parseInt(ent.substr(1)) ) );
+            }
+        );
+    };
+
+    NS.EscapeEntities = function(str) {
+        return str.replace(
+            /[^\x20-\x7E]/g,
+            function(str) {
+                return charToEntity[str] ? '&'+charToEntity[str]+';' : str;
+            }
+        );
+    };
+
+    return NS;
+};
 },{"js-ext/extra/hashmap.js":111,"js-ext/lib/object.js":114,"polyfill":127}],149:[function(require,module,exports){
-module.exports=require(76)
+arguments[4][76][0].apply(exports,arguments)
 },{"./attribute-extractor.js":141,"./html-parser.js":146,"./vdom-ns.js":148,"js-ext/extra/hashmap.js":111,"js-ext/extra/lightmap.js":112,"js-ext/lib/array.js":113,"js-ext/lib/object.js":114,"js-ext/lib/string.js":116,"polyfill":127,"utils/lib/timers.js":130}],150:[function(require,module,exports){
-module.exports=require(77)
+arguments[4][77][0].apply(exports,arguments)
 },{"./partials/element-plugin.js":143,"./partials/extend-document.js":144,"./partials/extend-element.js":145,"./partials/node-parser.js":147,"js-ext/extra/hashmap.js":111,"js-ext/lib/object.js":114}],151:[function(require,module,exports){
 module.exports=require(12)
 },{}],152:[function(require,module,exports){
@@ -14637,17 +15029,17 @@ module.exports=require(70)
 },{"js-ext/extra/hashmap.js":167,"js-ext/lib/object.js":170,"js-ext/lib/string.js":172,"polyfill":183}],200:[function(require,module,exports){
 module.exports=require(71)
 },{"js-ext/extra/hashmap.js":167,"js-ext/lib/object.js":170,"js-ext/lib/string.js":172,"polyfill":183}],201:[function(require,module,exports){
-module.exports=require(72)
+arguments[4][72][0].apply(exports,arguments)
 },{"../css/element.css":165,"./attribute-extractor.js":197,"./element-array.js":198,"./html-parser.js":202,"./node-parser.js":203,"./vdom-ns.js":204,"./vnode.js":205,"js-ext/extra/hashmap.js":167,"js-ext/lib/object.js":170,"js-ext/lib/promise.js":171,"js-ext/lib/string.js":172,"polyfill":183,"polyfill/extra/transition.js":178,"polyfill/extra/transitionend.js":179,"polyfill/extra/vendorCSS.js":180,"utils":184,"window-ext":190}],202:[function(require,module,exports){
-module.exports=require(73)
+arguments[4][73][0].apply(exports,arguments)
 },{"./attribute-extractor.js":197,"./vdom-ns.js":204,"js-ext/extra/hashmap.js":167,"js-ext/lib/object.js":170,"polyfill":183}],203:[function(require,module,exports){
-module.exports=require(74)
+arguments[4][74][0].apply(exports,arguments)
 },{"./attribute-extractor.js":197,"./vdom-ns.js":204,"./vnode.js":205,"js-ext/extra/hashmap.js":167,"js-ext/lib/object.js":170,"polyfill":183}],204:[function(require,module,exports){
-module.exports=require(75)
+module.exports=require(148)
 },{"js-ext/extra/hashmap.js":167,"js-ext/lib/object.js":170,"polyfill":183}],205:[function(require,module,exports){
-module.exports=require(76)
+arguments[4][76][0].apply(exports,arguments)
 },{"./attribute-extractor.js":197,"./html-parser.js":202,"./vdom-ns.js":204,"js-ext/extra/hashmap.js":167,"js-ext/extra/lightmap.js":168,"js-ext/lib/array.js":169,"js-ext/lib/object.js":170,"js-ext/lib/string.js":172,"polyfill":183,"utils/lib/timers.js":186}],206:[function(require,module,exports){
-module.exports=require(77)
+arguments[4][77][0].apply(exports,arguments)
 },{"./partials/element-plugin.js":199,"./partials/extend-document.js":200,"./partials/extend-element.js":201,"./partials/node-parser.js":203,"js-ext/extra/hashmap.js":167,"js-ext/lib/object.js":170}],207:[function(require,module,exports){
 module.exports=require(61)
 },{"./lib/sizes.js":208}],208:[function(require,module,exports){
@@ -16116,17 +16508,17 @@ module.exports=require(70)
 },{"js-ext/extra/hashmap.js":266,"js-ext/lib/object.js":269,"js-ext/lib/string.js":271,"polyfill":282}],299:[function(require,module,exports){
 module.exports=require(71)
 },{"js-ext/extra/hashmap.js":266,"js-ext/lib/object.js":269,"js-ext/lib/string.js":271,"polyfill":282}],300:[function(require,module,exports){
-module.exports=require(72)
+arguments[4][72][0].apply(exports,arguments)
 },{"../css/element.css":264,"./attribute-extractor.js":296,"./element-array.js":297,"./html-parser.js":301,"./node-parser.js":302,"./vdom-ns.js":303,"./vnode.js":304,"js-ext/extra/hashmap.js":266,"js-ext/lib/object.js":269,"js-ext/lib/promise.js":270,"js-ext/lib/string.js":271,"polyfill":282,"polyfill/extra/transition.js":277,"polyfill/extra/transitionend.js":278,"polyfill/extra/vendorCSS.js":279,"utils":283,"window-ext":289}],301:[function(require,module,exports){
-module.exports=require(73)
+arguments[4][73][0].apply(exports,arguments)
 },{"./attribute-extractor.js":296,"./vdom-ns.js":303,"js-ext/extra/hashmap.js":266,"js-ext/lib/object.js":269,"polyfill":282}],302:[function(require,module,exports){
-module.exports=require(74)
+arguments[4][74][0].apply(exports,arguments)
 },{"./attribute-extractor.js":296,"./vdom-ns.js":303,"./vnode.js":304,"js-ext/extra/hashmap.js":266,"js-ext/lib/object.js":269,"polyfill":282}],303:[function(require,module,exports){
-module.exports=require(75)
+module.exports=require(148)
 },{"js-ext/extra/hashmap.js":266,"js-ext/lib/object.js":269,"polyfill":282}],304:[function(require,module,exports){
-module.exports=require(76)
+arguments[4][76][0].apply(exports,arguments)
 },{"./attribute-extractor.js":296,"./html-parser.js":301,"./vdom-ns.js":303,"js-ext/extra/hashmap.js":266,"js-ext/extra/lightmap.js":267,"js-ext/lib/array.js":268,"js-ext/lib/object.js":269,"js-ext/lib/string.js":271,"polyfill":282,"utils/lib/timers.js":285}],305:[function(require,module,exports){
-module.exports=require(77)
+arguments[4][77][0].apply(exports,arguments)
 },{"./partials/element-plugin.js":298,"./partials/extend-document.js":299,"./partials/extend-element.js":300,"./partials/node-parser.js":302,"js-ext/extra/hashmap.js":266,"js-ext/lib/object.js":269}],306:[function(require,module,exports){
 function DOMParser(options){
 	this.options = options ||{locator:{}};
@@ -18173,7 +18565,6 @@ require('css');
 require('./css/i-select.css');
 
 var NATIVE_OBJECT_OBSERVE = !!Object.observe,
-    CLASS_ITAG_RENDERED = 'itag-rendered',
     utils = require('utils'),
     laterSilent = utils.laterSilent;
 
@@ -18195,26 +18586,25 @@ module.exports = function (window) {
         require('i-item')(window);
         require('i-head')(window);
 
-        Event.before('manualfocus', function(e) {
+        Event.before(itagName+':manualfocus', function(e) {
             // the i-select itself is unfocussable, but its button is
             // we need to patch `manualfocus`,
             // which is emitted on node.focus()
             // a focus by userinteraction will always appear on the button itself
             // so we don't bother that
             var element = e.target;
+            e.preventDefault();
             // cautious:  all child-elements that have `manualfocus` event are
             // subscribed as well: we NEED to inspect e.target and only continue
             // if e.target===i-select
-            if (element.getTagName()==='I-SELECT') {
-                e.preventDefault();
-                element.itagReady().then(
-                    function() {
-                        var button = element.getElement('button');
-                        button && button.focus();
-                    }
-                );
-            }
-        }, 'i-select');
+            e.preventDefault();
+            element.itagReady().then(
+                function() {
+                    var button = element.getElement('button');
+                    button && button.focus();
+                }
+            );
+        });
 
         Event.after('blur', function(e) {
             // the i-select itself is unfocussable, but its button is
@@ -18282,11 +18672,11 @@ module.exports = function (window) {
             }
         }, 'i-select ul[fm-manage] > li');
 
-        Event.defineEvent('i-select:valuechange')
+        Event.defineEvent(itagName+':valuechange')
              .unPreventable()
              .noRender();
 
-        Event.after('itag:change', function(e) {
+        Event.after('*:change', function(e) {
             var element = e.target,
                 prevValue = element.getData('i-select-value'),
                 model = element.model,
@@ -18294,15 +18684,20 @@ module.exports = function (window) {
                 markValue;
             if (prevValue!==newValue) {
                 markValue = newValue - 1;
+
                 /**
-                * Emitted when a draggable gets dropped inside a dropzone.
+                * Emitted when a the i-select changes its value
                 *
-                * @event *:dropzone-drop
+                * @event i-select:valuechange
                 * @param e {Object} eventobject including:
-                * @param e.target {HtmlElement} the dropzone
+                * @param e.target {HtmlElement} the i-select element
+                * @param e.prevValue {Number} the selected item, starting with 1
+                * @param e.newValue {Number} the selected item, starting with 1
+                * @param e.buttonText {String} the text that will appear on the button
+                * @param e.listText {String} the text as it is in the list
                 * @since 0.1
                 */
-                Event.emit(e.target, 'i-select:valuechange', {
+                element.emit('valuechange', {
                     prevValue: prevValue,
                     newValue: newValue,
                     buttonText: model.buttonTexts[markValue] || model.items[markValue],
@@ -18313,54 +18708,6 @@ module.exports = function (window) {
         }, itagCore.itagFilter);
 
         Itag = DOCUMENT.createItag(itagName, {
-           /**
-            * Redefines the childNodes of both the vnode as well as its related dom-node. The new
-            * definition replaces any previous nodes. (without touching unmodified nodes).
-            *
-            * Syncs the new vnode's childNodes with the dom.
-            *
-            * @method _setChildNodes
-            * @param newVChildNodes {Array} array with vnodes which represent the new childNodes
-            * @private
-            * @chainable
-            * @since 0.0.1
-            */
-            init: function() {
-                var element = this,
-                    itemNodes = element.getAll('>i-item'),
-                    items = [],
-                    buttonTexts = [],
-                    content;
-
-                itemNodes.forEach(function(node, i) {
-                    var header = node.getElement('i-head');
-                    if (header) {
-                        buttonTexts[i] = header.getHTML();
-                        header.remove(true);
-                    }
-                    items[items.length] = node.getHTML();
-                });
-
-                element.model.items = items;
-                element.model.buttonTexts = buttonTexts;
-
-                // store its current value, so that valueChange-event can fire:
-                element.setData('i-select-value', element.model.value);
-
-                // building the template of the itag:
-                content = '<button class="pure-button pure-button-bordered"><div class="pointer"></div><div class="btntext"></div></button>';
-                // first: outerdiv which will be relative positioned
-                // next: innerdiv which will be absolute positioned
-                // also: hide the container by default --> updateUI could make it shown
-                content += '<div class="itsa-hidden">' +
-                             '<div>'+
-                               '<ul fm-manage="li" fm-keyup="38" fm-keydown="40" fm-noloop="true"></ul>';
-                             '</div>'+
-                           '</div>';
-                // set the content:
-                element.setHTML(content);
-            },
-
             /*
              * Internal hash containing all DOM-events that are listened for (at `document`).
              *
@@ -18395,6 +18742,53 @@ module.exports = function (window) {
             * @chainable
             * @since 0.0.1
             */
+            init: function() {
+                var element = this,
+                    itemNodes = element.getAll('>i-item'),
+                    items = [],
+                    buttonTexts = [],
+                    content;
+                itemNodes.forEach(function(node, i) {
+                    var header = node.getElement('i-head');
+                    if (header) {
+                        buttonTexts[i] = header.getHTML();
+                        header.remove(true);
+                    }
+                    items[items.length] = node.getHTML();
+                });
+
+                element.model.items = items;
+                element.model.buttonTexts = buttonTexts;
+
+                // store its current value, so that valueChange-event can fire:
+                element.setData('i-select-value', element.model.value);
+
+                // building the template of the itag:
+                content = '<button class="pure-button pure-button-bordered"><div class="pointer"></div><div class="btntext"></div></button>';
+                // first: outerdiv which will be relative positioned
+                // next: innerdiv which will be absolute positioned
+                // also: hide the container by default --> updateUI could make it shown
+                content += '<div class="itsa-hidden">' +
+                             '<div>'+
+                               '<ul fm-manage="li" fm-keyup="38" fm-keydown="40" fm-noloop="true"></ul>';
+                             '</div>'+
+                           '</div>';
+                // set the content:
+                element.setHTML(content);
+            },
+
+           /**
+            * Redefines the childNodes of both the vnode as well as its related dom-node. The new
+            * definition replaces any previous nodes. (without touching unmodified nodes).
+            *
+            * Syncs the new vnode's childNodes with the dom.
+            *
+            * @method _setChildNodes
+            * @param newVChildNodes {Array} array with vnodes which represent the new childNodes
+            * @private
+            * @chainable
+            * @since 0.0.1
+            */
             sync: function() {
                 // inside sync, YOU CANNOT change attributes which are part of `attrs` !!!
                 // those actions will be ignored.
@@ -18410,7 +18804,7 @@ module.exports = function (window) {
                     buttonTexts = model.buttonTexts,
                     value = model.value,
                     item, content, buttonText, len, i, markValue,
-                    button, container, itemsContainer, renderedBefore, hiddenTimer;
+                    button, container, itemsContainer, hiddenTimer;
 
                 len = items.length;
                 (value>len) && (value=0);
@@ -18428,8 +18822,6 @@ module.exports = function (window) {
                 button.toggleClass('pure-button-primary', model['primary-button']);
                 button.getElement('div.btntext').setHTML(buttonText);
 
-                // show or hide the content, note that when not rendered before, you should use transitions
-                renderedBefore = element.hasClass(CLASS_ITAG_RENDERED);
                 container = element.getElement('>div');
 
                 if (model.expanded) {
@@ -18460,14 +18852,12 @@ module.exports = function (window) {
         });
 
         Itag.setItagDirectEventResponse(['blur', 'keypress']);
-
-        window.ITAGS[itagName] = Itag;
     }
 
     return window.ITAGS[itagName];
 };
 },{"./css/i-select.css":311,"css":4,"event-dom":6,"focusmanager":78,"i-head":309,"i-item":310,"itags.core":316,"js-ext/lib/string.js":244,"polyfill/polyfill-base.js":257,"utils":258}],313:[function(require,module,exports){
-var css = ""; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-tabpane;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-tabpane:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-tabpane:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\ni-tabpane >ul {\n    margin:0;\n    padding:0;\n    list-style:none;\n    border-bottom: 3px solid #2647a0;\n}\n\ni-tabpane >ul li {\n    display: inline-block;\n    *display: inline; /* IE */\n    *zoom: 1; /* IE */\n    margin-right: 0.25em;\n}\n\ni-tabpane >ul li.pure-button {\n    display: inline-block;\n    *display: inline; /* IE */\n    *zoom: 1; /* IE */\n    margin-right: 0.25em;\n    border-radius: 2px 2px 0 0;\n}\n\ni-tabpane >div {\n    border: 1px solid #2647a0;\n}\n"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
 },{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],314:[function(require,module,exports){
 /*
 * attributes:
@@ -18478,41 +18868,127 @@ require('js-ext/lib/string.js');
 require('css');
 require('./css/i-tabpane.css');
 
-var TRANS_TIME_SHOW = 0.3,
-    TRANS_TIME_HIDE = 0.1,
-    CLASS_ITAG_RENDERED = 'itag-rendered';
-
 module.exports = function (window) {
 
     "use strict";
     require('itags.core')(window);
 
-    var itagName = 'i-select:dummy',
-        Event, ISelectClass;
+    var itagName = 'i-tabpane',
+        DOCUMENT = window.document,
+        Event;
 
     if (!window.ITAGS[itagName]) {
         Event = require('event-dom')(window);
-        // require('focusmanager')(window);
+        require('focusmanager')(window);
         require('i-item')(window);
         require('i-head')(window);
 
-        // window.document.createItag('i-tabpane');
+        Event.after('xfocus', function(e) {
+            var element = e.target,
+                model = element.model,
+                liNodes;
+            liNodes = element.getParent().getAll('li');
+            model.pane = liNodes.indexOf(element) + 1;
+        }, 'i-tabpane > ul li');
 
-
-        ISelectClass = require('i-select')(window);
-
-
-        ISelectClass.pseudoClass('dummy', {
-            args: {
-                expanded: 'boolean',
-                'primary-button': 'boolean',
-                value: 'string',
-                'invalid-value': 'string',
-                dummyarg: 'string'
+        DOCUMENT.createItag(itagName, {
+            /*
+             * Internal hash containing all DOM-events that are listened for (at `document`).
+             *
+             * @property DOMEvents
+             * @default {}
+             * @type Object
+             * @private
+             * @since 0.0.1
+            */
+            attrs: {
+                pane: 'number'
             },
+
+           /**
+            * Redefines the childNodes of both the vnode as well as its related dom-node. The new
+            * definition replaces any previous nodes. (without touching unmodified nodes).
+            *
+            * Syncs the new vnode's childNodes with the dom.
+            *
+            * @method _setChildNodes
+            * @param newVChildNodes {Array} array with vnodes which represent the new childNodes
+            * @private
+            * @chainable
+            * @since 0.0.1
+            */
+            init: function() {
+                var element = this,
+                    itemNodes = element.getAll('>i-item'),
+                    panes = [],
+                    tabs = [],
+                    content;
+                itemNodes.forEach(function(node, i) {
+                    var header = node.getElement('i-head');
+                    if (header) {
+                        tabs[i] = header.getHTML();
+                        header.remove(true);
+                    }
+                    else {
+                        tabs[i] = '&laquo;';
+                    }
+                    panes[panes.length] = node.getHTML();
+                });
+
+                element.model.panes = panes;
+                element.model.tabs = tabs;
+
+                // store its current value, so that valueChange-event can fire:
+                element.setData('i-select-pane', element.model.pane);
+
+                content = '<ul fm-manage="li" fm-keyup="37" fm-keydown="39" fm-noloop="true"></ul><div></div>';
+                // set the content:
+                element.setHTML(content);
+            },
+
+           /**
+            * Redefines the childNodes of both the vnode as well as its related dom-node. The new
+            * definition replaces any previous nodes. (without touching unmodified nodes).
+            *
+            * Syncs the new vnode's childNodes with the dom.
+            *
+            * @method _setChildNodes
+            * @param newVChildNodes {Array} array with vnodes which represent the new childNodes
+            * @private
+            * @chainable
+            * @since 0.0.1
+            */
             sync: function() {
-                this.$superProp('sync');
-                this.model.dummyarg = 'myarg';
+                // inside sync, YOU CANNOT change attributes which are part of `attrs` !!!
+                // those actions will be ignored.
+
+                // BE CAREFUL to start async actions here:
+                // be aware that before ending, this method can run again
+                // if you do, then make sure to handle possible running
+                // async actions well !!!
+
+                var element = this,
+                    model = element.model,
+                    panes = model.panes,
+                    pane = model.pane,
+                    tabs = model.tabs,
+                    len = tabs.length,
+                    navContainer = element.getElement('>ul'),
+                    container = element.getElement('>div'),
+                    content = '',
+                    i, tabItem, index;
+
+                index = pane - 1;
+                for (i=0; i<len; i++) {
+                    tabItem = tabs[i];
+                    content += '<li class="pure-button'+((i===index) ? ' pure-button-active' : '')+'">'+tabItem+'</li>';
+                }
+
+                // set the tabs:
+                navContainer.setHTML(content);
+
+                // set the content:
+                container.setHTML(panes[index]);
             }
         });
 
@@ -18522,7 +18998,7 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 
 };
-},{"./css/i-tabpane.css":313,"css":4,"event-dom":6,"i-head":309,"i-item":310,"i-select":312,"itags.core":316,"js-ext/lib/string.js":244,"polyfill/polyfill-base.js":257}],315:[function(require,module,exports){
+},{"./css/i-tabpane.css":313,"css":4,"event-dom":6,"focusmanager":78,"i-head":309,"i-item":310,"itags.core":316,"js-ext/lib/string.js":244,"polyfill/polyfill-base.js":257}],315:[function(require,module,exports){
 var css = "span.itag-data {\n    display: none !important;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
 },{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],316:[function(require,module,exports){
 (function (global){
@@ -19059,7 +19535,7 @@ module.exports = function (window) {
                 attrValue;
             attrs.each(function(value, key) {
                 attrValue = domElement.getAttr(key);
-                switch (value) {
+                switch (value.toLowerCase()) {
                     case 'boolean':
                         attrValue = (attrValue==='true');
                         break;
@@ -19171,19 +19647,17 @@ module.exports = function (window) {
         * @since 0.0.1
         */
         setupEmitters: function() {
-            Event.defineEvent('itag:change')
-                 .unPreventable()
-                 .noRender();
-            Event.after(NODE_CONTENT_CHANGE, function(e) {
+            Event.after('*:'+NODE_CONTENT_CHANGE, function(e) {
+                var element = e.target;
                 /**
-                * Emitted when a draggable gets dropped inside a dropzone.
+                * Emitted when an itag changed its content
                 *
-                * @event *:dropzone-drop
+                * @event *:change
                 * @param e {Object} eventobject including:
                 * @param e.target {HtmlElement} the dropzone
                 * @since 0.1
                 */
-                Event.emit(e.target, 'itag:change', {model: e.target.model});
+                element.emit('change', {model: element.model});
             }, this.itagFilter);
         },
 
@@ -19296,7 +19770,7 @@ module.exports = function (window) {
 
             if (PROTO_SUPPORTED) {
                 Event.after(
-                    'itag:prototypechange',
+                    '*:prototypechange',
                     function(e) {
                         var prototypes = e.prototypes,
                             ItagClass = e.target,
@@ -19317,10 +19791,11 @@ module.exports = function (window) {
                                 node.syncUI();
                             }
                         }
-                    }
+                    },
+                    instance.itagFilter
                 );
                 Event.after(
-                    'itag:prototyperemove',
+                    '*:prototyperemove',
                     function(e) {
                         var properties = e.properties,
                             ItagClass = e.target,
@@ -19341,7 +19816,8 @@ module.exports = function (window) {
                                 node.syncUI();
                             }
                         }
-                    }
+                    },
+                    instance.itagFilter
                 );
             }
         },
@@ -19363,26 +19839,34 @@ module.exports = function (window) {
                 mergeFlat(domElementConstructor, domElement);
                 domElement.__proto__ = proto;
                 domElement.__classCarier__ = domElementConstructor;
-                domElement.after('itag:prototypechange', function(e) {
-                    var prototypes = e.prototypes;
-                    mergeFlat(domElementConstructor, domElement);
-                    if ('init' in prototypes) {
-                        domElement.reInitializeUI(domElement.__proto__.constructor);
-                    }
-                    else if ('sync' in prototypes) {
-                        domElement.syncUI();
-                    }
-                });
-                domElement.after('itag:prototyperemove', function(e) {
-                    var properties = e.properties;
-                    mergeFlat(domElementConstructor, domElement);
-                    if (properties.contains('init')) {
-                        domElement.reInitializeUI(domElement.__proto__.constructor);
-                    }
-                    else if (properties.contains('sync')) {
-                        domElement.syncUI();
-                    }
-                });
+                domElement.after(
+                    '*:prototypechange',
+                    function(e) {
+                        var prototypes = e.prototypes;
+                        mergeFlat(domElementConstructor, domElement);
+                        if ('init' in prototypes) {
+                            domElement.reInitializeUI(domElement.__proto__.constructor);
+                        }
+                        else if ('sync' in prototypes) {
+                            domElement.syncUI();
+                        }
+                    },
+                    instance.itagFilter
+                );
+                domElement.after(
+                    '*:prototyperemove',
+                    function(e) {
+                        var properties = e.properties;
+                        mergeFlat(domElementConstructor, domElement);
+                        if (properties.contains('init')) {
+                            domElement.reInitializeUI(domElement.__proto__.constructor);
+                        }
+                        else if (properties.contains('sync')) {
+                            domElement.syncUI();
+                        }
+                    },
+                    instance.itagFilter
+                );
             }
             else {
                 domElement.__proto__ = proto;
@@ -19480,7 +19964,7 @@ module.exports = function (window) {
         *     <li>scroll</li>
         * </ul>
         *
-        * Events that are not in this list don;t need to be set: they always go through the finalizer immediatly.
+        * Events that are not in this list don't need to be set: they always go through the finalizer immediatly.
         *
         * You need to set this if the itag-definition its `sync`-method should be updated after one of the events in the list.
         *
@@ -19548,18 +20032,17 @@ module.exports = function (window) {
          * By default, this method will not override existing prototype members,
          * unless the second argument `force` is true.
          *
-         * In case of merging properties into an itag, a `itag:prototypechange`-event gets emitted
+         * In case of merging properties into an itag, a `*:prototypechange`-event gets emitted
          *
          * @method mergePrototypes
          * @param prototypes {Object} Hash prototypes of properties to add to the prototype of this object
          * @param [force=false] {Boolean}  If true, existing members will be overwritten
-         * @param [silent=false] {Boolean}  If true, no `itag:prototypechange` event will get emitted
+         * @param [silent=false] {Boolean}  If true, no `*:prototypechange` event will get emitted
          * @chainable
          * @since 0.0.1
         */
         FunctionPrototype.mergePrototypes = function(prototypes, force, silent) {
-            var instance = this,
-                silent;
+            var instance = this;
             if (!instance.$$itag) {
                 // default mergePrototypes
                 instance._mergePrototypes.apply(instance, arguments);
@@ -19567,35 +20050,36 @@ module.exports = function (window) {
             else {
                 instance._mergePrototypes(prototypes, force, ITAG_METHODS, PROTECTED_MEMBERS);
                 /**
-                * Emitted when prototypes are set on an existing itag-definition.
+                * Emitted when prototypes are set on an existing Itag-Class.
                 *
-                * @event itag:prototypechange
+                * @event *:prototypechange
                 * @param e {Object} eventobject including:
                 * @param e.prototypes {Object} Hash prototypes of properties to add to the prototype of this object
                 * @param e.force {Boolean} whether existing members are overwritten
                 * @since 0.1
                 */
-                silent || Event.emit(instance, 'itag:prototypechange', {prototypes: prototypes, force: !!force});
+                silent || instance.emit('prototypechange', {prototypes: prototypes, force: !!force});
             }
             return instance;
         };
 
        /**
         * Subclasses in Itag-Class into a pseudo-class: retaining its tagname, yet still subclassing.
-        * The pseudoclass gets identified by `i-parentclass:pseudo` and once rendered it has the signature of:
+        * The pseudoclass gets identified by `i-parentclass#pseudo` and once rendered it has the signature of:
         * &lt;i-parentclass&gt; is="pseudo" &lt;/i-parentclass&gt;
         *
         * Syncs the new vnode's childNodes with the dom.
         *
         * @method pseudoClass
-        * @param pseudo
-        * @param prototypes
-        * @param chainInit
-        * @param chainDestroy
+        * @param pseudo {String} The pseudoname (without a minustoken), leading into the definition of `i-parent:pseudo`
+        * @param [prototypes] {Object} Hash map of properties to be added to the prototype of the new class.
+        * @param [chainInit=true] {Boolean} Whether -during instance creation- to automaticly construct in the complete hierarchy with the given constructor arguments.
+        * @param [chainDestroy=true] {Boolean} Whether -when the Element gets out if the DOM- to automaticly destroy in the complete hierarchy.
+        * @param [subClassable=true] {Boolean} whether the Class is subclassable. Can only be set to false on ItagClasses
         * @return {Class}
         * @since 0.0.1
         */
-        FunctionPrototype.pseudoClass = function(pseudo, prototypes, chainInit, chainDestroy) {
+        FunctionPrototype.pseudoClass = function(pseudo, prototypes, chainInit, chainDestroy, subClassable) {
             var instance = this;
             if (!instance.$$itag) {
                 console.warn(NAME, 'cannot pseudoClass '+pseudo+' for its Parent is no Itag-Class');
@@ -19609,14 +20093,11 @@ module.exports = function (window) {
                 console.warn(NAME, 'cannot pseudoClass '+pseudo+' --> name cannot consist a minus-token');
                 return instance;
             }
-            return instance.subClass(instance.$$itag+':'+pseudo , prototypes, chainInit, chainDestroy);
+            return instance.subClass(instance.$$itag+'#'+pseudo , prototypes, chainInit, chainDestroy, subClassable);
         };
 
        /**
-        * Redefines the childNodes of both the vnode as well as its related dom-node. The new
-        * definition replaces any previous nodes. (without touching unmodified nodes).
-        *
-        * Syncs the new vnode's childNodes with the dom.
+        * Backup of the original `removePrototypes`-method.
         *
         * @method _removePrototypes
         * @param properties
@@ -19646,16 +20127,49 @@ module.exports = function (window) {
             else {
                 instance._removePrototypes(properties, ITAG_METHODS);
                 /**
-                * Emitted when a draggable gets dropped inside a dropzone.
+                * Emitted when prototypes are removed off an existing Itag-Class.
                 *
-                * @event *:dropzone-drop
+                * @event *:prototyperemove
                 * @param e {Object} eventobject including:
-                * @param e.target {HtmlElement} the dropzone
+                * @param e.prototypes {Object} Hash prototypes of properties to add to the prototype of this object
                 * @since 0.1
                 */
-                Event.emit(instance, 'itag:prototyperemove', {properties: properties});
+                instance.emit('prototyperemove', {properties: properties});
             }
             return instance;
+        };
+
+
+       /**
+        * Backup of the original `setConstructor`-method.
+        *
+        * @method _setConstructor
+        * @param [constructorFn] {Function} The function that will serve as the new constructor for the class.
+        *        If `undefined` defaults to `NOOP`
+        * @param [prototypes] {Object} Hash map of properties to be added to the prototype of the new class.
+        * @param [chainConstruct=true] {Boolean} Whether -during instance creation- to automaticly construct in the complete hierarchy with the given constructor arguments.
+        * @chainable
+        * @since 0.0.1
+        */
+        FunctionPrototype._setConstructor = FunctionPrototype.setConstructor;
+
+        /**
+         * Redefines the constructor fo the Class
+         *
+         * @method setConstructor
+         * @param [constructorFn] {Function} The function that will serve as the new constructor for the class.
+         *        If `undefined` defaults to `NOOP`
+         * @param [prototypes] {Object} Hash map of properties to be added to the prototype of the new class.
+         * @param [chainConstruct=true] {Boolean} Whether -during instance creation- to automaticly construct in the complete hierarchy with the given constructor arguments.
+         * @chainable
+         */
+        FunctionPrototype.setConstructor = function(/* constructorFn, chainConstruct */) {
+            var instance = this;
+            if (instance.$$itag) {
+                console.warn(NAME, 'Itags don\t have a constructor --> you need to redefine "init()" by using mergePrototypes()');
+                return instance;
+            }
+            return instance._setConstructor.apply(instance, arguments);
         };
 
        /**
@@ -19677,7 +20191,7 @@ module.exports = function (window) {
         */
         FunctionPrototype.subClass = function(constructorOrItagname, prototypes, chainInit, chainDestroy, subClassable) {
             var instance = this,
-                baseProt, proto, domElementConstructor, itagName, pseudo, registerName, itagNameSplit;
+                baseProt, proto, domElementConstructor, itagName, pseudo, registerName, itagNameSplit, itagEmitterName;
             if (typeof constructorOrItagname === 'string') {
                 // Itag subclassing
                 if (typeof prototypes === 'boolean') {
@@ -19699,7 +20213,7 @@ module.exports = function (window) {
                     console.warn(itagName+' already exists: it will be redefined');
                 }
                 registerName = itagName;
-                itagNameSplit = itagName.split(':');
+                itagNameSplit = itagName.split('#');
                 itagName = itagNameSplit[0];
                 pseudo = itagNameSplit[1]; // may be undefined
 
@@ -19722,9 +20236,9 @@ module.exports = function (window) {
 
                 domElementConstructor.prototype = proto;
 
-                // webkit doesn't let all objects to have their constructorOrItagname redefined
+                // webkit doesn't let all objects to have their constructor redefined
                 // when directly assigned. Using `defineProperty will work:
-                Object.defineProperty(proto, 'constructorOrItagname', {value: domElementConstructor});
+                Object.defineProperty(proto, 'constructor', {value: domElementConstructor});
 
                 domElementConstructor.$$itag = itagName;
                 domElementConstructor.$$pseudo = pseudo;
@@ -19734,7 +20248,20 @@ module.exports = function (window) {
                 domElementConstructor.$$orig = {};
                 domElementConstructor.$$subClassable = subClassable;
 
+                itagEmitterName = itagName + (pseudo ? '#'+pseudo : '');
+                domElementConstructor.mergePrototypes(Event.Emitter(itagEmitterName), true, true);
                 prototypes && domElementConstructor.mergePrototypes(prototypes, true, true);
+                // make emitting change-events unpreventable and unrenderable:
+                Event.defineEvent(itagEmitterName+':change')
+                     .unPreventable()
+                     .noRender();
+                Event.defineEvent(itagEmitterName+':prototypechange')
+                     .unPreventable()
+                     .noRender();
+                Event.defineEvent(itagEmitterName+':prototyperemove')
+                     .unPreventable()
+                     .noRender();
+
                 window.ITAGS[registerName] = domElementConstructor;
 
                 itagCore.renderDomElements(domElementConstructor);
@@ -19768,9 +20295,9 @@ module.exports = function (window) {
         * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
         * @since 0.0.1
         */
-        ElementPrototype.removeAttribute = function(attributeName) {
+        ElementPrototype.removeAttribute = function(attributeName, silent) {
             var instance = this;
-            if (!instance.isItag()) {
+            if (!instance.isItag() || silent) {
                 removeAttributeBKP.apply(instance, arguments);
             }
             else {
@@ -19798,14 +20325,14 @@ module.exports = function (window) {
         ElementPrototype.setAttribute = function(attributeName, value, silent) {
             var instance = this,
                 valueType;
-            if (silent || !instance.isItag()) {
+            if (!instance.isItag() || silent) {
                 setAttributeBKP.apply(instance, arguments);
             }
             else {
 /*jshint boss:true */
                 if (valueType=instance._attrs[attributeName]) {
 /*jshint boss:false */
-                    switch (valueType) {
+                    switch (valueType.toLowerCase()) {
                         case 'boolean':
                             value = (value==='true');
                             break;
@@ -19926,11 +20453,16 @@ module.exports = function (window) {
      *
      *
      * @property createItag
+     * @param itagName {String} The name of the itag-element, starting with `i-`
+     * @param [prototypes] {Object} Hash map of properties to be added to the prototype of the new class.
+     * @param [subClassable=true] {Boolean} whether the Class is subclassable. Can only be set to false on ItagClasses
      * @type Class
      * @for document
      * @since 0.0.1
     */
-    Object.protectedProp(DOCUMENT, 'createItag', Classes.ItagBaseClass.subClass.bind(Classes.ItagBaseClass));
+    Object.protectedProp(DOCUMENT, 'createItag', function(itagName, prototypes, subClassable) {
+        return Classes.ItagBaseClass.subClass.call(Classes.ItagBaseClass, itagName, prototypes, null, null, subClassable);
+    });
 
    /**
     * Refreshes all Itag-elements in the dom by syncing their element.model onto the attributes and calling their `sync`-method.

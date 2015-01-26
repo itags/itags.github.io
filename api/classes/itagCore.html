@@ -43,6 +43,8 @@
             
                 <li><a href="../classes/Array.html">Array</a></li>
             
+                <li><a href="../classes/BaseClass.html">BaseClass</a></li>
+            
                 <li><a href="../classes/Classes.html">Classes</a></li>
             
                 <li><a href="../classes/document.html">document</a></li>
@@ -108,6 +110,8 @@
                 <li><a href="../modules/extend-document.html">extend-document</a></li>
             
                 <li><a href="../modules/extend-element.html">extend-element</a></li>
+            
+                <li><a href="../modules/extra_classes.js.html">extra/classes.js</a></li>
             
                 <li><a href="../modules/focusmanager.html">focusmanager</a></li>
             
@@ -236,6 +240,20 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
                     <h3>Methods</h3>
 
                     <ul class="index-list methods">
+                        
+                            <li class="index-item method private">
+                                <a href="#method__setChildNodes">_setChildNodes</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method private">
+                                <a href="#method__setChildNodes">_setChildNodes</a>
+
+                                
+                                
+                            </li>
                         
                             <li class="index-item method">
                                 <a href="#method_attrsToModel">attrsToModel</a>
@@ -485,6 +503,20 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
                                 
                             </li>
                         
+                            <li class="index-item property protected">
+                                <a href="#property_ITAG_METHODS">ITAG_METHODS</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item property protected">
+                                <a href="#property_ITAG_METHODS">ITAG_METHODS</a>
+
+                                
+                                
+                            </li>
+                        
                     </ul>
                 </div>
             
@@ -498,21 +530,21 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
                     <ul class="index-list events">
                         
                             <li class="index-item event">
-                                <a href="#event_*:dropzone-drop">*:dropzone-drop</a>
+                                <a href="#event_*:change">*:change</a>
 
                                 
                                 
                             </li>
                         
                             <li class="index-item event">
-                                <a href="#event_*:dropzone-drop">*:dropzone-drop</a>
+                                <a href="#event_*:change">*:change</a>
 
                                 
                                 
                             </li>
                         
                             <li class="index-item event">
-                                <a href="#event_*:dropzone-drop">*:dropzone-drop</a>
+                                <a href="#event_*:change">*:change</a>
 
                                 
                                 
@@ -526,6 +558,204 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
         
             <div id="methods" class="api-class-tabpanel">
                 <h2 class="off-left">Methods</h2>
+
+                
+                    <div id="method__setChildNodes" class="method item private">
+    <h3 class="name"><code>_setChildNodes</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>newVChildNodes</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+
+    
+
+    
+        <span class="flag private">private</span>
+    
+
+    
+
+    
+
+    
+        <span class="flag chainable">chainable</span>
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                    <p>Provided by the <a href="../modules/vdom.html">vdom</a> module.</p>
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_i-tabpane_i-tabpane.js.html#l88"><code>src&#x2F;i-tabpane&#x2F;i-tabpane.js:88</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Redefines the childNodes of both the vnode as well as its related dom-node. The new
+definition replaces any previous nodes. (without touching unmodified nodes).</p>
+<p>Syncs the new vnode&#39;s childNodes with the dom.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">newVChildNodes</code>
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array" class="crosslink external" target="_blank">Array</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>array with vnodes which represent the new childNodes</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="method__setChildNodes" class="method item private">
+    <h3 class="name"><code>_setChildNodes</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>newVChildNodes</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+
+    
+
+    
+        <span class="flag private">private</span>
+    
+
+    
+
+    
+
+    
+        <span class="flag chainable">chainable</span>
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                    <p>Provided by the <a href="../modules/vdom.html">vdom</a> module.</p>
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_i-tabpane_i-tabpane.js.html#l47"><code>src&#x2F;i-tabpane&#x2F;i-tabpane.js:47</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Redefines the childNodes of both the vnode as well as its related dom-node. The new
+definition replaces any previous nodes. (without touching unmodified nodes).</p>
+<p>Syncs the new vnode&#39;s childNodes with the dom.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">newVChildNodes</code>
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array" class="crosslink external" target="_blank">Array</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>array with vnodes which represent the new childNodes</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+</div>
 
                 
                     <div id="method_attrsToModel" class="method item">
@@ -570,7 +800,7 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l19038"><code>site&#x2F;dist&#x2F;itagsbuild.js:19038</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l19523"><code>site&#x2F;dist&#x2F;itagsbuild.js:19523</code></a>
         
         </p>
 
@@ -754,7 +984,7 @@ Only processes the attributes that are defined through the Itag-class its <code>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l19038"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:19038</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l19523"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:19523</code></a>
         
         </p>
 
@@ -842,7 +1072,7 @@ Only processes the attributes that are defined through the Itag-class its <code>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l19836"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:19836</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l20372"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:20372</code></a>
         
         </p>
 
@@ -918,7 +1148,7 @@ Will get extra properties merge into its prototype, which leads into the formati
             
         
         
-        <a href="../files/src_itags.core_itags.core.js.html#l1317"><code>src&#x2F;itags.core&#x2F;itags.core.js:1317</code></a>
+        <a href="../files/src_itags.core_itags.core.js.html#l1368"><code>src&#x2F;itags.core&#x2F;itags.core.js:1368</code></a>
         
         </p>
 
@@ -994,7 +1224,7 @@ Will get extra properties merge into its prototype, which leads into the formati
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l19836"><code>site&#x2F;dist&#x2F;itagsbuild.js:19836</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l20372"><code>site&#x2F;dist&#x2F;itagsbuild.js:20372</code></a>
         
         </p>
 
@@ -1023,116 +1253,6 @@ Will get extra properties merge into its prototype, which leads into the formati
                     
                         <span class="type">Class</span>:
                     
-                
-            </div>
-        </div>
-    
-
-    
-</div>
-
-                
-                    <div id="method_itagFilter" class="method item">
-    <h3 class="name"><code>itagFilter</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>e</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-        <span class="returns-inline">
-            <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Boolean" class="crosslink external" target="_blank">Boolean</a></span>
-        </span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/site_dist_itagsbuild.js.html#l19068"><code>site&#x2F;dist&#x2F;itagsbuild.js:19068</code></a>
-        
-        </p>
-
-
-        
-
-        
-            <p>Available since 0.0.1</p>
-        
-    </div>
-
-    <div class="description">
-        <p>Function that can be used ad the <code>filterFn</code> of event-listeners.
-Returns true for any HTML-element that is a rendered itag.</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">e</code>
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>the event-object passed by Event</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Boolean" class="crosslink external" target="_blank">Boolean</a></span>:
-                    
-                    <p>whether the HTML-element that is a rendered itag</p>
-
                 
             </div>
         </div>
@@ -1298,7 +1418,117 @@ Returns true for any HTML-element that is a rendered itag.</p>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l19068"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:19068</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l19553"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:19553</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Function that can be used ad the <code>filterFn</code> of event-listeners.
+Returns true for any HTML-element that is a rendered itag.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">e</code>
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>the event-object passed by Event</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Boolean" class="crosslink external" target="_blank">Boolean</a></span>:
+                    
+                    <p>whether the HTML-element that is a rendered itag</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_itagFilter" class="method item">
+    <h3 class="name"><code>itagFilter</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>e</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Boolean" class="crosslink external" target="_blank">Boolean</a></span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site_dist_itagsbuild.js.html#l19553"><code>site&#x2F;dist&#x2F;itagsbuild.js:19553</code></a>
         
         </p>
 
@@ -1406,7 +1636,7 @@ Returns true for any HTML-element that is a rendered itag.</p>
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l19401"><code>site&#x2F;dist&#x2F;itagsbuild.js:19401</code></a>
+        <a href="../files/src_itags.core_itags.core.js.html#l890"><code>src&#x2F;itags.core&#x2F;itags.core.js:890</code></a>
         
         </p>
 
@@ -1500,7 +1730,7 @@ Only when a focusmanager is active and has focus.</p>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l19401"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:19401</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l19894"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:19894</code></a>
         
         </p>
 
@@ -1594,7 +1824,7 @@ Only when a focusmanager is active and has focus.</p>
             
         
         
-        <a href="../files/src_itags.core_itags.core.js.html#l882"><code>src&#x2F;itags.core&#x2F;itags.core.js:882</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l19894"><code>site&#x2F;dist&#x2F;itagsbuild.js:19894</code></a>
         
         </p>
 
@@ -1686,7 +1916,99 @@ Only when a focusmanager is active and has focus.</p>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l19082"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:19082</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l19567"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:19567</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Copies elemtn.model values into the attibute-values of the element.
+Only processes the attributes that are defined through the Itag-class its <code>attrs</code>-property.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">domElement</code>
+                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>the itag that should be processed.</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="method_modelToAttrs" class="method item">
+    <h3 class="name"><code>modelToAttrs</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>domElement</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site_dist_itagsbuild.js.html#l19567"><code>site&#x2F;dist&#x2F;itagsbuild.js:19567</code></a>
         
         </p>
 
@@ -1779,98 +2101,6 @@ Only processes the attributes that are defined through the Itag-class its <code>
         
         
         <a href="../files/src_itags.core_itags.core.js.html#l563"><code>src&#x2F;itags.core&#x2F;itags.core.js:563</code></a>
-        
-        </p>
-
-
-        
-
-        
-            <p>Available since 0.0.1</p>
-        
-    </div>
-
-    <div class="description">
-        <p>Copies elemtn.model values into the attibute-values of the element.
-Only processes the attributes that are defined through the Itag-class its <code>attrs</code>-property.</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">domElement</code>
-                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>the itag that should be processed.</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-
-    
-</div>
-
-                
-                    <div id="method_modelToAttrs" class="method item">
-    <h3 class="name"><code>modelToAttrs</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>domElement</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/site_dist_itagsbuild.js.html#l19082"><code>site&#x2F;dist&#x2F;itagsbuild.js:19082</code></a>
         
         </p>
 
@@ -2053,7 +2283,7 @@ Only processes the attributes that are defined through the Itag-class its <code>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l19100"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:19100</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l19585"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:19585</code></a>
         
         </p>
 
@@ -2144,7 +2374,7 @@ Only processes the attributes that are defined through the Itag-class its <code>
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l19100"><code>site&#x2F;dist&#x2F;itagsbuild.js:19100</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l19585"><code>site&#x2F;dist&#x2F;itagsbuild.js:19585</code></a>
         
         </p>
 
@@ -2239,7 +2469,7 @@ Only processes the attributes that are defined through the Itag-class its <code>
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l19119"><code>site&#x2F;dist&#x2F;itagsbuild.js:19119</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l19604"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:19604</code></a>
         
         </p>
 
@@ -2453,7 +2683,7 @@ Only processes the attributes that are defined through the Itag-class its <code>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l19119"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:19119</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l19604"><code>site&#x2F;dist&#x2F;itagsbuild.js:19604</code></a>
         
         </p>
 
@@ -2647,7 +2877,7 @@ Only processes the attributes that are defined through the Itag-class its <code>
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l19144"><code>site&#x2F;dist&#x2F;itagsbuild.js:19144</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l19629"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:19629</code></a>
         
         </p>
 
@@ -2738,7 +2968,7 @@ Only processes the attributes that are defined through the Itag-class its <code>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l19144"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:19144</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l19629"><code>site&#x2F;dist&#x2F;itagsbuild.js:19629</code></a>
         
         </p>
 
@@ -2779,6 +3009,63 @@ Only processes the attributes that are defined through the Itag-class its <code>
             
             </ul>
         </div>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="method_setupEmitters" class="method item">
+    <h3 class="name"><code>setupEmitters</code></h3>
+
+    
+        <span class="paren">()</span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site_dist_itagsbuild.js.html#l19643"><code>site&#x2F;dist&#x2F;itagsbuild.js:19643</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Sets up all general itag-emitters.</p>
+
+    </div>
+
     
 
     
@@ -2876,64 +3163,7 @@ Only processes the attributes that are defined through the Itag-class its <code>
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l19158"><code>site&#x2F;dist&#x2F;itagsbuild.js:19158</code></a>
-        
-        </p>
-
-
-        
-
-        
-            <p>Available since 0.0.1</p>
-        
-    </div>
-
-    <div class="description">
-        <p>Sets up all general itag-emitters.</p>
-
-    </div>
-
-    
-
-    
-
-    
-</div>
-
-                
-                    <div id="method_setupEmitters" class="method item">
-    <h3 class="name"><code>setupEmitters</code></h3>
-
-    
-        <span class="paren">()</span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l19158"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:19158</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l19643"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:19643</code></a>
         
         </p>
 
@@ -2990,7 +3220,7 @@ Only processes the attributes that are defined through the Itag-class its <code>
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l19181"><code>site&#x2F;dist&#x2F;itagsbuild.js:19181</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l19664"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:19664</code></a>
         
         </p>
 
@@ -3047,7 +3277,7 @@ Only processes the attributes that are defined through the Itag-class its <code>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l19181"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:19181</code></a>
+        <a href="../files/src_itags.core_itags.core.js.html#l660"><code>src&#x2F;itags.core&#x2F;itags.core.js:660</code></a>
         
         </p>
 
@@ -3104,7 +3334,7 @@ Only processes the attributes that are defined through the Itag-class its <code>
             
         
         
-        <a href="../files/src_itags.core_itags.core.js.html#l662"><code>src&#x2F;itags.core&#x2F;itags.core.js:662</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l19664"><code>site&#x2F;dist&#x2F;itagsbuild.js:19664</code></a>
         
         </p>
 
@@ -3121,6 +3351,119 @@ Only processes the attributes that are defined through the Itag-class its <code>
 
     </div>
 
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="method_upgradeElement" class="method item">
+    <h3 class="name"><code>upgradeElement</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>domElement</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>domElementConstructor</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l19825"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:19825</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Upgrades the HTMLElement into an itag defined by domElementConstructor.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">domElement</code>
+                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>the itag that should be processed.</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">domElementConstructor</code>
+                        <span class="type">Class</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>the Class which belongs with the itag</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
     
 
     
@@ -3290,120 +3633,7 @@ Only processes the attributes that are defined through the Itag-class its <code>
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l19340"><code>site&#x2F;dist&#x2F;itagsbuild.js:19340</code></a>
-        
-        </p>
-
-
-        
-
-        
-            <p>Available since 0.0.1</p>
-        
-    </div>
-
-    <div class="description">
-        <p>Upgrades the HTMLElement into an itag defined by domElementConstructor.</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">domElement</code>
-                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>the itag that should be processed.</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">domElementConstructor</code>
-                        <span class="type">Class</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>the Class which belongs with the itag</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-
-    
-</div>
-
-                
-                    <div id="method_upgradeElement" class="method item">
-    <h3 class="name"><code>upgradeElement</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>domElement</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>domElementConstructor</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l19340"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:19340</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l19825"><code>site&#x2F;dist&#x2F;itagsbuild.js:19825</code></a>
         
         </p>
 
@@ -3501,6 +3731,108 @@ Only processes the attributes that are defined through the Itag-class its <code>
             
         
         
+        <a href="../files/site_dist_itagsbuild.js.html#l19048"><code>site&#x2F;dist&#x2F;itagsbuild.js:19048</code></a>
+        
+        </p>
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Internal hash containing the names of members which names should be transformed</p>
+
+    </div>
+
+    
+        <p><strong>Default:</strong> {init: &#x27;_initUI&#x27;, sync: &#x27;_syncUI&#x27;, destroy: &#x27;_destroyUI&#x27;, attrs: &#x27;_attrs&#x27;}</p>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="property_ITAG_METHODS" class="property item protected">
+    <h3 class="name"><code>ITAG_METHODS</code></h3>
+    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
+
+    
+
+    
+        <span class="flag protected">protected</span>
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l19048"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:19048</code></a>
+        
+        </p>
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Internal hash containing the names of members which names should be transformed</p>
+
+    </div>
+
+    
+        <p><strong>Default:</strong> {init: &#x27;_initUI&#x27;, sync: &#x27;_syncUI&#x27;, destroy: &#x27;_destroyUI&#x27;, attrs: &#x27;_attrs&#x27;}</p>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="property_ITAG_METHODS" class="property item protected">
+    <h3 class="name"><code>ITAG_METHODS</code></h3>
+    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
+
+    
+
+    
+        <span class="flag protected">protected</span>
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
         <a href="../files/src_itags.core_itags.core.js.html#l44"><code>src&#x2F;itags.core&#x2F;itags.core.js:44</code></a>
         
         </p>
@@ -3537,8 +3869,8 @@ Only processes the attributes that are defined through the Itag-class its <code>
                 <h2 class="off-left">Events</h2>
 
                 
-                    <div id="event_*:dropzone-drop" class="events item">
-    <h3 class="name"><code>*:dropzone-drop</code></h3>
+                    <div id="event_*:change" class="events item">
+    <h3 class="name"><code>*:change</code></h3>
     <span class="type"></span>
 
     
@@ -3560,7 +3892,7 @@ Only processes the attributes that are defined through the Itag-class its <code>
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l19169"><code>site&#x2F;dist&#x2F;itagsbuild.js:19169</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l19652"><code>site&#x2F;dist&#x2F;itagsbuild.js:19652</code></a>
         
         </p>
 
@@ -3572,7 +3904,7 @@ Only processes the attributes that are defined through the Itag-class its <code>
     </div>
 
     <div class="description">
-        <p>Emitted when a draggable gets dropped inside a dropzone.</p>
+        <p>Emitted when an itag changed its content</p>
 
     </div>
 
@@ -3625,8 +3957,8 @@ Only processes the attributes that are defined through the Itag-class its <code>
 </div>
 
                 
-                    <div id="event_*:dropzone-drop" class="events item">
-    <h3 class="name"><code>*:dropzone-drop</code></h3>
+                    <div id="event_*:change" class="events item">
+    <h3 class="name"><code>*:change</code></h3>
     <span class="type"></span>
 
     
@@ -3648,7 +3980,7 @@ Only processes the attributes that are defined through the Itag-class its <code>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l19169"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:19169</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l19652"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:19652</code></a>
         
         </p>
 
@@ -3660,7 +3992,7 @@ Only processes the attributes that are defined through the Itag-class its <code>
     </div>
 
     <div class="description">
-        <p>Emitted when a draggable gets dropped inside a dropzone.</p>
+        <p>Emitted when an itag changed its content</p>
 
     </div>
 
@@ -3713,8 +4045,8 @@ Only processes the attributes that are defined through the Itag-class its <code>
 </div>
 
                 
-                    <div id="event_*:dropzone-drop" class="events item">
-    <h3 class="name"><code>*:dropzone-drop</code></h3>
+                    <div id="event_*:change" class="events item">
+    <h3 class="name"><code>*:change</code></h3>
     <span class="type"></span>
 
     
@@ -3736,7 +4068,7 @@ Only processes the attributes that are defined through the Itag-class its <code>
             
         
         
-        <a href="../files/src_itags.core_itags.core.js.html#l650"><code>src&#x2F;itags.core&#x2F;itags.core.js:650</code></a>
+        <a href="../files/src_itags.core_itags.core.js.html#l648"><code>src&#x2F;itags.core&#x2F;itags.core.js:648</code></a>
         
         </p>
 
@@ -3748,7 +4080,7 @@ Only processes the attributes that are defined through the Itag-class its <code>
     </div>
 
     <div class="description">
-        <p>Emitted when a draggable gets dropped inside a dropzone.</p>
+        <p>Emitted when an itag changed its content</p>
 
     </div>
 
