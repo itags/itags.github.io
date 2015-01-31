@@ -292,6 +292,27 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
                             </li>
                         
                             <li class="index-item method">
+                                <a href="#method_bindModel">bindModel</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
+                                <a href="#method_bindModel">bindModel</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
+                                <a href="#method_bindModel">bindModel</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
                                 <a href="#method_contains">contains</a>
 
                                 
@@ -1290,7 +1311,7 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l19908"><code>site&#x2F;dist&#x2F;itagsbuild.js:19908</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l27302"><code>site&#x2F;dist&#x2F;itagsbuild.js:27302</code></a>
         
         </p>
 
@@ -1401,7 +1422,7 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
             
         
         
-        <a href="../files/src_itags.core_itags.core.js.html#l904"><code>src&#x2F;itags.core&#x2F;itags.core.js:904</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l27302"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:27302</code></a>
         
         </p>
 
@@ -1512,7 +1533,7 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l19908"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:19908</code></a>
+        <a href="../files/src_itags.core_itags.core.js.html#l941"><code>src&#x2F;itags.core&#x2F;itags.core.js:941</code></a>
         
         </p>
 
@@ -1564,117 +1585,6 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
                     
                         <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>:
                     
-                
-            </div>
-        </div>
-    
-
-    
-</div>
-
-                
-                    <div id="method_adoptNode" class="method item">
-    <h3 class="name"><code>adoptNode</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>externalNode</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-        <span class="returns-inline">
-            <span class="type"><a href="../classes/Node.html" class="crosslink">Node</a></span>
-        </span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                    <p>Provided by the <a href="../modules/extend-document.html">extend-document</a> module.</p>
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l6341"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:6341</code></a>
-        
-        </p>
-
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        <p>Adopts a node from an external document. The node and its subtree is removed from the document it&#39;s in (if any),
-and its ownerDocument is changed to the current document. The node can then be inserted into the current document.</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">externalNode</code>
-                        <span class="type"><a href="../classes/Node.html" class="crosslink">Node</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>The node from another document to be adopted.</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type"><a href="../classes/Node.html" class="crosslink">Node</a></span>:
-                    
-                    <p>is the adopted node that can be used in the current document.
-The new node&#39;s parentNode is null, since it has not yet been inserted into the document tree.</p>
-
                 
             </div>
         </div>
@@ -1795,8 +1705,8 @@ The new node&#39;s parentNode is null, since it has not yet been inserted into t
 </div>
 
                 
-                    <div id="method_appendChild" class="method item">
-    <h3 class="name"><code>appendChild</code></h3>
+                    <div id="method_adoptNode" class="method item">
+    <h3 class="name"><code>adoptNode</code></h3>
 
     
         <div class="args">
@@ -1804,7 +1714,7 @@ The new node&#39;s parentNode is null, since it has not yet been inserted into t
             
                 <li class="arg">
                     
-                        <code>element</code>
+                        <code>externalNode</code>
                     
                 </li>
             
@@ -1814,7 +1724,7 @@ The new node&#39;s parentNode is null, since it has not yet been inserted into t
 
     
         <span class="returns-inline">
-            <span class="type"><a href="../classes/Element.html" class="crosslink">Element</a></span>
+            <span class="type"><a href="../classes/Node.html" class="crosslink">Node</a></span>
         </span>
     
 
@@ -1843,7 +1753,7 @@ The new node&#39;s parentNode is null, since it has not yet been inserted into t
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l6351"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:6351</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l6341"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:6341</code></a>
         
         </p>
 
@@ -1854,7 +1764,8 @@ The new node&#39;s parentNode is null, since it has not yet been inserted into t
     </div>
 
     <div class="description">
-        <p>Adds a HtmlElement or DocumentFragment to the end of the <code>html</code>-element</p>
+        <p>Adopts a node from an external document. The node and its subtree is removed from the document it&#39;s in (if any),
+and its ownerDocument is changed to the current document. The node can then be inserted into the current document.</p>
 
     </div>
 
@@ -1866,14 +1777,14 @@ The new node&#39;s parentNode is null, since it has not yet been inserted into t
             
                 <li class="param">
                     
-                        <code class="param-name">element</code>
-                        <span class="type"><a href="../classes/Element.html" class="crosslink">Element</a> | <a href="https://developer.mozilla.org/en/Document_Object_Model_(DOM)/DocumentFragment" class="crosslink external" target="_blank">DocumentFragment</a></span>
+                        <code class="param-name">externalNode</code>
+                        <span class="type"><a href="../classes/Node.html" class="crosslink">Node</a></span>
                     
 
                     
 
                     <div class="param-description">
-                        <p>the item to be appended</p>
+                        <p>The node from another document to be adopted.</p>
 
                     </div>
 
@@ -1891,9 +1802,10 @@ The new node&#39;s parentNode is null, since it has not yet been inserted into t
             <div class="returns-description">
                 
                     
-                        <span class="type"><a href="../classes/Element.html" class="crosslink">Element</a></span>:
+                        <span class="type"><a href="../classes/Node.html" class="crosslink">Node</a></span>:
                     
-                    <p>the appended child.</p>
+                    <p>is the adopted node that can be used in the current document.
+The new node&#39;s parentNode is null, since it has not yet been inserted into the document tree.</p>
 
                 
             </div>
@@ -2013,6 +1925,406 @@ The new node&#39;s parentNode is null, since it has not yet been inserted into t
 </div>
 
                 
+                    <div id="method_appendChild" class="method item">
+    <h3 class="name"><code>appendChild</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>element</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type"><a href="../classes/Element.html" class="crosslink">Element</a></span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                    <p>Provided by the <a href="../modules/extend-document.html">extend-document</a> module.</p>
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l6351"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:6351</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Adds a HtmlElement or DocumentFragment to the end of the <code>html</code>-element</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">element</code>
+                        <span class="type"><a href="../classes/Element.html" class="crosslink">Element</a> | <a href="https://developer.mozilla.org/en/Document_Object_Model_(DOM)/DocumentFragment" class="crosslink external" target="_blank">DocumentFragment</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>the item to be appended</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="../classes/Element.html" class="crosslink">Element</a></span>:
+                    
+                    <p>the appended child.</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_bindModel" class="method item">
+    <h3 class="name"><code>bindModel</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>model</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <span class="flag chainable">chainable</span>
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                    <p>Provided by the <a href="../modules/itags.core.html">itags.core</a> module.</p>
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l27330"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:27330</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Binds a model to the itag-element, making element.model equals the bound model.
+Immediately syncs the itag with the new model-data.</p>
+<p>Syncs the new vnode&#39;s childNodes with the dom.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">model</code>
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>the model to bind to the itag-element</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="method_bindModel" class="method item">
+    <h3 class="name"><code>bindModel</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>model</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <span class="flag chainable">chainable</span>
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                    <p>Provided by the <a href="../modules/itags.core.html">itags.core</a> module.</p>
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site_dist_itagsbuild.js.html#l27330"><code>site&#x2F;dist&#x2F;itagsbuild.js:27330</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Binds a model to the itag-element, making element.model equals the bound model.
+Immediately syncs the itag with the new model-data.</p>
+<p>Syncs the new vnode&#39;s childNodes with the dom.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">model</code>
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>the model to bind to the itag-element</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="method_bindModel" class="method item">
+    <h3 class="name"><code>bindModel</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>model</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <span class="flag chainable">chainable</span>
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                    <p>Provided by the <a href="../modules/itags.core.html">itags.core</a> module.</p>
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_itags.core_itags.core.js.html#l969"><code>src&#x2F;itags.core&#x2F;itags.core.js:969</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Binds a model to the itag-element, making element.model equals the bound model.
+Immediately syncs the itag with the new model-data.</p>
+<p>Syncs the new vnode&#39;s childNodes with the dom.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">model</code>
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>the model to bind to the itag-element</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+</div>
+
+                
                     <div id="method_contains" class="method item">
     <h3 class="name"><code>contains</code></h3>
 
@@ -2067,7 +2379,7 @@ The new node&#39;s parentNode is null, since it has not yet been inserted into t
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l6025"><code>site&#x2F;dist&#x2F;itagsbuild.js:6025</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l6025"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:6025</code></a>
         
         </p>
 
@@ -2200,7 +2512,7 @@ The new node&#39;s parentNode is null, since it has not yet been inserted into t
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l6025"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:6025</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l6025"><code>site&#x2F;dist&#x2F;itagsbuild.js:6025</code></a>
         
         </p>
 
@@ -2716,6 +3028,224 @@ The new node&#39;s parentNode is null, since it has not yet been inserted into t
             
                 <li class="arg">
                     
+                        <code>tag</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                    <p>Provided by the <a href="../modules/itags.core.html">itags.core</a> module.</p>
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site_dist_itagsbuild.js.html#l27314"><code>site&#x2F;dist&#x2F;itagsbuild.js:27314</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Redefinition of document.createElement, enabling creation of itags.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">tag</code>
+                        <span class="type"><a href="../classes/String.html" class="crosslink">String</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>tagname to be created</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>:
+                    
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_createElement" class="method item">
+    <h3 class="name"><code>createElement</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>tag</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                    <p>Provided by the <a href="../modules/itags.core.html">itags.core</a> module.</p>
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_itags.core_itags.core.js.html#l953"><code>src&#x2F;itags.core&#x2F;itags.core.js:953</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Redefinition of document.createElement, enabling creation of itags.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">tag</code>
+                        <span class="type"><a href="../classes/String.html" class="crosslink">String</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>tagname to be created</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>:
+                    
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_createElement" class="method item">
+    <h3 class="name"><code>createElement</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
                         <code>tagName</code>
                     
                 </li>
@@ -2864,116 +3394,7 @@ The new node&#39;s parentNode is null, since it has not yet been inserted into t
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l19920"><code>site&#x2F;dist&#x2F;itagsbuild.js:19920</code></a>
-        
-        </p>
-
-
-        
-
-        
-            <p>Available since 0.0.1</p>
-        
-    </div>
-
-    <div class="description">
-        <p>Redefinition of document.createElement, enabling creation of itags.</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">tag</code>
-                        <span class="type"><a href="../classes/String.html" class="crosslink">String</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>tagname to be created</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>:
-                    
-                
-            </div>
-        </div>
-    
-
-    
-</div>
-
-                
-                    <div id="method_createElement" class="method item">
-    <h3 class="name"><code>createElement</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>tag</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-        <span class="returns-inline">
-            <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
-        </span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                    <p>Provided by the <a href="../modules/itags.core.html">itags.core</a> module.</p>
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l19920"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:19920</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l27314"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:27314</code></a>
         
         </p>
 
@@ -3133,115 +3554,6 @@ The new node&#39;s parentNode is null, since it has not yet been inserted into t
                 
                     
                         <span class="type">HtmlElement</span>:
-                    
-                
-            </div>
-        </div>
-    
-
-    
-</div>
-
-                
-                    <div id="method_createElement" class="method item">
-    <h3 class="name"><code>createElement</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>tag</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-        <span class="returns-inline">
-            <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
-        </span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                    <p>Provided by the <a href="../modules/itags.core.html">itags.core</a> module.</p>
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_itags.core_itags.core.js.html#l916"><code>src&#x2F;itags.core&#x2F;itags.core.js:916</code></a>
-        
-        </p>
-
-
-        
-
-        
-            <p>Available since 0.0.1</p>
-        
-    </div>
-
-    <div class="description">
-        <p>Redefinition of document.createElement, enabling creation of itags.</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">tag</code>
-                        <span class="type"><a href="../classes/String.html" class="crosslink">String</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>tagname to be created</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>:
                     
                 
             </div>
@@ -3990,7 +4302,7 @@ You can use or sum one of the next properties:</p>
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l6004"><code>site&#x2F;dist&#x2F;itagsbuild.js:6004</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l6004"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:6004</code></a>
         
         </p>
 
@@ -4149,7 +4461,7 @@ You can use or sum one of the next properties:</p>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l6004"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:6004</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l6004"><code>site&#x2F;dist&#x2F;itagsbuild.js:6004</code></a>
         
         </p>
 
@@ -5024,7 +5336,7 @@ and disables all other style sheets (except those without a title, which are alw
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l6051"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:6051</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l6051"><code>site&#x2F;dist&#x2F;itagsbuild.js:6051</code></a>
         
         </p>
 
@@ -5159,7 +5471,7 @@ you need to prepend the id-name with a <code>#</code>. When multiple Element&#39
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l6051"><code>site&#x2F;dist&#x2F;itagsbuild.js:6051</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l6051"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:6051</code></a>
         
         </p>
 
@@ -5288,7 +5600,7 @@ you need to prepend the id-name with a <code>#</code>. When multiple Element&#39
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l6065"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:6065</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l6065"><code>site&#x2F;dist&#x2F;itagsbuild.js:6065</code></a>
         
         </p>
 
@@ -5395,7 +5707,7 @@ you need to prepend the id-name with a <code>#</code>. When multiple Element&#39
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l6065"><code>site&#x2F;dist&#x2F;itagsbuild.js:6065</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l6065"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:6065</code></a>
         
         </p>
 
@@ -5726,7 +6038,7 @@ To match multiple different classes, separate them with a <code>comma</code>.</p
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l6454"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:6454</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l6454"><code>site&#x2F;dist&#x2F;itagsbuild.js:6454</code></a>
         
         </p>
 
@@ -5837,7 +6149,7 @@ To match multiple different classes, separate them with a <code>comma</code>.</p
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l6454"><code>site&#x2F;dist&#x2F;itagsbuild.js:6454</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l6454"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:6454</code></a>
         
         </p>
 
@@ -5870,117 +6182,6 @@ To match multiple different classes, separate them with a <code>comma</code>.</p
 
                     <div class="param-description">
                         <p>the property of name-attribute to search for</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type"><a href="../classes/ElementArray.html" class="crosslink">ElementArray</a></span>:
-                    
-                    <p>life Array with Elements</p>
-
-                
-            </div>
-        </div>
-    
-
-    
-</div>
-
-                
-                    <div id="method_getElementsByTagName" class="method item">
-    <h3 class="name"><code>getElementsByTagName</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>tagNames</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-        <span class="returns-inline">
-            <span class="type"><a href="../classes/ElementArray.html" class="crosslink">ElementArray</a></span>
-        </span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                    <p>Provided by the <a href="../modules/extend-document.html">extend-document</a> module.</p>
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/site_dist_itagsbuild.js.html#l6466"><code>site&#x2F;dist&#x2F;itagsbuild.js:6466</code></a>
-        
-        </p>
-
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        <p>Returns an ElementArray of all Elements that match their <code>name</code>-attribute with the supplied <code>name</code> argument.</p>
-<p>getElementsByTagName is life presentation of the dom. The returned ElementArray gets updated when the dom changes.</p>
-<p>NOTE: it is highly recomended to use <code>document.getAll</code> because that method takes advantage of the vdom.</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">tagNames</code>
-                        <span class="type"><a href="../classes/String.html" class="crosslink">String</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>the tags to search for</p>
 
                     </div>
 
@@ -6122,16 +6323,26 @@ To match multiple different classes, separate them with a <code>comma</code>.</p
 </div>
 
                 
-                    <div id="method_getItags" class="method item">
-    <h3 class="name"><code>getItags</code></h3>
+                    <div id="method_getElementsByTagName" class="method item">
+    <h3 class="name"><code>getElementsByTagName</code></h3>
 
     
-        <span class="paren">()</span>
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>tagNames</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
     
 
     
         <span class="returns-inline">
-            <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array" class="crosslink external" target="_blank">Array</a></span>
+            <span class="type"><a href="../classes/ElementArray.html" class="crosslink">ElementArray</a></span>
         </span>
     
 
@@ -6160,7 +6371,7 @@ To match multiple different classes, separate them with a <code>comma</code>.</p
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l6077"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:6077</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l6466"><code>site&#x2F;dist&#x2F;itagsbuild.js:6466</code></a>
         
         </p>
 
@@ -6171,10 +6382,36 @@ To match multiple different classes, separate them with a <code>comma</code>.</p
     </div>
 
     <div class="description">
-        <p>Returns the an Array with all itag-Elements</p>
+        <p>Returns an ElementArray of all Elements that match their <code>name</code>-attribute with the supplied <code>name</code> argument.</p>
+<p>getElementsByTagName is life presentation of the dom. The returned ElementArray gets updated when the dom changes.</p>
+<p>NOTE: it is highly recomended to use <code>document.getAll</code> because that method takes advantage of the vdom.</p>
 
     </div>
 
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">tagNames</code>
+                        <span class="type"><a href="../classes/String.html" class="crosslink">String</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>the tags to search for</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
     
 
     
@@ -6184,8 +6421,10 @@ To match multiple different classes, separate them with a <code>comma</code>.</p
             <div class="returns-description">
                 
                     
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array" class="crosslink external" target="_blank">Array</a></span>:
+                        <span class="type"><a href="../classes/ElementArray.html" class="crosslink">ElementArray</a></span>:
                     
+                    <p>life Array with Elements</p>
+
                 
             </div>
         </div>
@@ -6268,8 +6507,8 @@ To match multiple different classes, separate them with a <code>comma</code>.</p
 </div>
 
                 
-                    <div id="method_getSelection" class="method item">
-    <h3 class="name"><code>getSelection</code></h3>
+                    <div id="method_getItags" class="method item">
+    <h3 class="name"><code>getItags</code></h3>
 
     
         <span class="paren">()</span>
@@ -6277,7 +6516,7 @@ To match multiple different classes, separate them with a <code>comma</code>.</p
 
     
         <span class="returns-inline">
-            <span class="type">Selection</span>
+            <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array" class="crosslink external" target="_blank">Array</a></span>
         </span>
     
 
@@ -6306,7 +6545,7 @@ To match multiple different classes, separate them with a <code>comma</code>.</p
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l6478"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:6478</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l6077"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:6077</code></a>
         
         </p>
 
@@ -6317,8 +6556,7 @@ To match multiple different classes, separate them with a <code>comma</code>.</p
     </div>
 
     <div class="description">
-        <p>Returns a selection object representing the range of text selected by the user.</p>
-<p>Is also available on the <code>window</code>-object.</p>
+        <p>Returns the an Array with all itag-Elements</p>
 
     </div>
 
@@ -6331,10 +6569,8 @@ To match multiple different classes, separate them with a <code>comma</code>.</p
             <div class="returns-description">
                 
                     
-                        <span class="type">Selection</span>:
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array" class="crosslink external" target="_blank">Array</a></span>:
                     
-                    <p>A Selection object. When cast to string, either by adding empty quotes &quot;&quot; or using .toString, this object is the text selected.</p>
-
                 
             </div>
         </div>
@@ -6420,6 +6656,82 @@ To match multiple different classes, separate them with a <code>comma</code>.</p
 </div>
 
                 
+                    <div id="method_getSelection" class="method item">
+    <h3 class="name"><code>getSelection</code></h3>
+
+    
+        <span class="paren">()</span>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type">Selection</span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                    <p>Provided by the <a href="../modules/extend-document.html">extend-document</a> module.</p>
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l6478"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:6478</code></a>
+        
+        </p>
+
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Returns a selection object representing the range of text selected by the user.</p>
+<p>Is also available on the <code>window</code>-object.</p>
+
+    </div>
+
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">Selection</span>:
+                    
+                    <p>A Selection object. When cast to string, either by adding empty quotes &quot;&quot; or using .toString, this object is the text selected.</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
                     <div id="method_hasFocus" class="method item">
     <h3 class="name"><code>hasFocus</code></h3>
 
@@ -6458,7 +6770,7 @@ To match multiple different classes, separate them with a <code>comma</code>.</p
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l6487"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:6487</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l6487"><code>site&#x2F;dist&#x2F;itagsbuild.js:6487</code></a>
         
         </p>
 
@@ -6533,7 +6845,7 @@ To match multiple different classes, separate them with a <code>comma</code>.</p
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l6487"><code>site&#x2F;dist&#x2F;itagsbuild.js:6487</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l6487"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:6487</code></a>
         
         </p>
 
@@ -6624,7 +6936,7 @@ To match multiple different classes, separate them with a <code>comma</code>.</p
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l6494"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:6494</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l6494"><code>site&#x2F;dist&#x2F;itagsbuild.js:6494</code></a>
         
         </p>
 
@@ -6756,7 +7068,7 @@ The new node&#39;s parentNode is null, since it has not yet been inserted into t
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l6494"><code>site&#x2F;dist&#x2F;itagsbuild.js:6494</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l6494"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:6494</code></a>
         
         </p>
 
@@ -7360,7 +7672,7 @@ they need to be separated by a <code>comma</code>.</p>
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l6127"><code>site&#x2F;dist&#x2F;itagsbuild.js:6127</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l6127"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:6127</code></a>
         
         </p>
 
@@ -7471,7 +7783,7 @@ they need to be separated by a <code>comma</code>.</p>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l6127"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:6127</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l6127"><code>site&#x2F;dist&#x2F;itagsbuild.js:6127</code></a>
         
         </p>
 
@@ -7570,7 +7882,7 @@ they need to be separated by a <code>comma</code>.</p>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l20467"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:20467</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l27923"><code>site&#x2F;dist&#x2F;itagsbuild.js:27923</code></a>
         
         </p>
 
@@ -7631,7 +7943,7 @@ they need to be separated by a <code>comma</code>.</p>
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l20467"><code>site&#x2F;dist&#x2F;itagsbuild.js:20467</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l27923"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:27923</code></a>
         
         </p>
 
@@ -7692,7 +8004,7 @@ they need to be separated by a <code>comma</code>.</p>
             
         
         
-        <a href="../files/src_itags.core_itags.core.js.html#l1463"><code>src&#x2F;itags.core&#x2F;itags.core.js:1463</code></a>
+        <a href="../files/src_itags.core_itags.core.js.html#l1562"><code>src&#x2F;itags.core&#x2F;itags.core.js:1562</code></a>
         
         </p>
 
@@ -9406,7 +9718,7 @@ and might be affected by automatic type conversions performed by either the brow
             
         
         
-        <a href="../files/src_itags.core_itags.core.js.html#l1447"><code>src&#x2F;itags.core&#x2F;itags.core.js:1447</code></a>
+        <a href="../files/src_itags.core_itags.core.js.html#l1546"><code>src&#x2F;itags.core&#x2F;itags.core.js:1546</code></a>
         
         </p>
 
@@ -9505,7 +9817,7 @@ and might be affected by automatic type conversions performed by either the brow
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l20451"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:20451</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l27907"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:27907</code></a>
         
         </p>
 
@@ -9604,7 +9916,7 @@ and might be affected by automatic type conversions performed by either the brow
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l20451"><code>site&#x2F;dist&#x2F;itagsbuild.js:20451</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l27907"><code>site&#x2F;dist&#x2F;itagsbuild.js:27907</code></a>
         
         </p>
 

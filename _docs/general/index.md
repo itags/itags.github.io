@@ -451,7 +451,9 @@ Itags-elements are unfocusable by default: the dom will only set focus on partic
 ##Using focusmanager##
 By setting `itsa/focusmanager` on the itag-element (which could be done in the init() or sync() method, depending on its nature), the itag can get focus and the focusmanager will delegate focus to one of the focusable nodes.
 
-####Example focusmanager####
+<ul>This is not the favored way</ul>: all logic is better keeped hidden inside the itag-element.
+
+####Example focusmanager on Itag####
 
 ```js
 document.createItag('i-myform', {
@@ -461,6 +463,7 @@ document.createItag('i-myform', {
 });
 ```
 
+Preferable is to use an innernode by making use of the `manualfocus-event`:
 
 ##Listening for the manualfocus-event##
 Another way is to listen for a `manualfocus`-event --> which gets fired before a domnode gets focussed by node.focus(). The trick is to subscribe at the before-listener, perventDefault and refocus on the node that really should get focus. Be aware though, that a page might set the focus to an itag-element while it's not rendered yet - which only happens when focus is set before the dom is ready. So, we need to wait re-setting focus until the itag-element is rendered (see next example):
@@ -470,7 +473,6 @@ Another way is to listen for a `manualfocus`-event --> which gets fired before a
 ```js
 document.createItag('i-myform', {
     init: function() {
-        this.plug(ITSA.Plugins.focusManager);
         this.append('<button>Send data</button>');
     },
 });
@@ -489,6 +491,30 @@ ITSA.Event.before('i-myform:manualfocus', function(e) {
 });
 ```
 
+The same technique can be used in combination with the focusmanager:
+
+####Example using the manualfocus-event with focusmanager####
+
+```js
+document.createItag('i-myform', {
+    init: function() {
+        this.append('<ul fm-manage="true"><input /><button>Send data</button></ul>');
+    },
+});
+
+ITSA.Event.before('i-myform:manualfocus', function(e) {
+    var element = e.target;
+    e.preventDefault();
+    // cautious: the element might get focus before it is rendered
+    // therefore, we wait until it is ready:
+    element.itagReady().then(
+        function() {
+            var ul = element.getElement('ul');
+            ul.focus();
+        }
+    );
+});
+```
 
 
 #Best practices#
