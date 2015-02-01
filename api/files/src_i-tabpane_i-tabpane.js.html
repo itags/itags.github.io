@@ -107,6 +107,8 @@
             
                 <li><a href="../modules/event-listener.html">event-listener</a></li>
             
+                <li><a href="../modules/event-mobile.html">event-mobile</a></li>
+            
                 <li><a href="../modules/extend-document.html">extend-document</a></li>
             
                 <li><a href="../modules/extend-element.html">extend-element</a></li>
@@ -205,7 +207,7 @@ module.exports = function (window) {
         Event, Itag;
 
     if (!window.ITAGS[itagName]) {
-        Event = require(&#x27;event-dom&#x27;)(window);
+        Event = require(&#x27;event-mobile&#x27;)(window);
         require(&#x27;focusmanager&#x27;)(window);
         require(&#x27;i-item&#x27;)(window);
         require(&#x27;i-head&#x27;)(window);
@@ -238,6 +240,12 @@ module.exports = function (window) {
                 liNodes;
             liNodes = ul.getAll(&#x27;li&#x27;);
             model.pane = liNodes.indexOf(node) + 1;
+        }, &#x27;i-tabpane &gt; ul li&#x27;);
+
+        Event.before(&#x27;tap&#x27;, function(e) {
+            // don&#x27;t double render (especialliy not BEFORE the tab changes)
+            // rendering will be done because of the focus-event
+            e.preventRender();
         }, &#x27;i-tabpane &gt; ul li&#x27;);
 
         Itag = DOCUMENT.createItag(itagName, {
@@ -345,7 +353,6 @@ module.exports = function (window) {
                 navContainer.setHTML(content);
 
                 // set the content:
-console.info(&#x27;SETTING &#x27;+panes[index]);
                 container.setHTML(panes[index]);
             }
         });

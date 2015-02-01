@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>src/itags.core/itags.core.js - Itsa</title>
+    <title>src/itags.core/itags.core kopie.js - Itsa</title>
     <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -184,7 +184,7 @@
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-                        <h1 class="file-heading">File: src/itags.core/itags.core.js</h1>
+                        <h1 class="file-heading">File: src/itags.core/itags.core kopie.js</h1>
 
 <div class="file">
     <pre class="code prettyprint linenums">
@@ -666,54 +666,6 @@ module.exports = function (window) {
 
     itagCore = {
        /**
-        * Binds a model to the itag-element, making element.model equals the bound model.
-        * Immediately syncs the itag with the new model-data.
-        *
-        * Syncs the new vnode&#x27;s childNodes with the dom.
-        *
-        * @method bindModel
-        * @param element {HTMLElement} element, which should be an Itag
-        * @param model {Object} the model to bind to the itag-element
-        * @since 0.0.1
-        */
-        bindModel: function(element, model) {
-            var instance = this,
-                stringifiedData, prevContent, observer;
-            if (element.isItag()) {
-                if (NATIVE_OBJECT_OBSERVE) {
-                    observer = element.getData(&#x27;_observer&#x27;);
-                    observer &amp;&amp; Object.unobserve(element.model, observer);
-                }
-                element.model = model;
-                if (NATIVE_OBJECT_OBSERVE) {
-                    observer = function() {
-                        itagCore.modelToAttrs(element);
-                        element.syncUI();
-                    };
-                    Object.observe(element.model, observer);
-                    element.setData(&#x27;_observer&#x27;, observer);
-                }
-                if (!element.vnode.ce_initialized) {
-                    element.initUI(PROTO_SUPPORTED ? null : element.__proto__.constructor);
-                }
-                element.syncUI();
-                element.itagRendered || instance.setRendered(element);
-                if (RUNNING_ON_NODE) {
-                    // store the modeldata inside an inner div-node
-                    try {
-                        stringifiedData = JSON.stringify(model);
-                        prevContent = element.getElement(&#x27;span.itag-data&#x27;);
-                        prevContent &amp;&amp; prevContent.remove();
-                        element.prepend(&#x27;&lt;span class=&quot;itag-data&quot;&gt;&#x27;+stringifiedData+&#x27;&lt;/span&gt;&#x27;);
-                    }
-                    catch(e) {
-                        console.warn(e);
-                    }
-                }
-            }
-        },
-
-       /**
         * Copies the attibute-values into element.model.
         * Only processes the attributes that are defined through the Itag-class its &#x60;attrs&#x60;-property.
         *
@@ -741,6 +693,58 @@ module.exports = function (window) {
                 }
                 model[key] = attrValue;
             });
+        },
+
+       /**
+        * Default function for binds a model to the itag-element, making element.model equals the bound model.
+        * Gets invoked on itagelement&#x27;s &#x60;bindmodel&#x60;-event.
+        *
+        * Immediately syncs the itag with the new model-data.
+        *
+        * Syncs the new vnode&#x27;s childNodes with the dom.
+        *
+        * @method bindModelDefFn
+        * @param e {Object} eventobject
+        * @param e.target {HTMLElement} the HTMLElement where the model was bound to
+        * @param e.model {Object} model that was bind to the element
+        * @since 0.0.1
+        */
+       bindModelDefFn: function(e) {
+            var element = e.target,
+                model = e.model,
+                stringifiedData, prevContent, observer;
+            if (element.isItag()) {
+                if (NATIVE_OBJECT_OBSERVE) {
+                    observer = element.getData(&#x27;_observer&#x27;);
+                    observer &amp;&amp; Object.unobserve(element.model, observer);
+                }
+                element.model = model;
+                if (NATIVE_OBJECT_OBSERVE) {
+                    observer = function() {
+                        itagCore.modelToAttrs(element);
+                        element.syncUI();
+                    };
+                    Object.observe(element.model, observer);
+                    element.setData(&#x27;_observer&#x27;, observer);
+                }
+                if (!element.vnode.ce_initialized) {
+                    element.initUI(PROTO_SUPPORTED ? null : element.__proto__.constructor);
+                }
+                element.syncUI();
+                element.itagRendered || itagCore.setRendered(element);
+                if (RUNNING_ON_NODE) {
+                    // store the modeldata inside an inner div-node
+                    try {
+                        stringifiedData = JSON.stringify(model);
+                        prevContent = element.getElement(&#x27;span.itag-data&#x27;);
+                        prevContent &amp;&amp; prevContent.remove();
+                        element.prepend(&#x27;&lt;span class=&quot;itag-data&quot;&gt;&#x27;+stringifiedData+&#x27;&lt;/span&gt;&#x27;);
+                    }
+                    catch(e) {
+                        console.warn(e);
+                    }
+                }
+            }
         },
 
        /**
@@ -1113,7 +1117,7 @@ module.exports = function (window) {
     */
     manageFocus = function(domElement) {
         var focusManagerNode = domElement.getElement(&#x27;[focusmanager].focussed&#x27;);
-        // focusManagerNode &amp;&amp; focusManagerNode.focus();
+        focusManagerNode &amp;&amp; focusManagerNode.focus();
     };
 
    /**
@@ -1537,6 +1541,9 @@ module.exports = function (window) {
                 Event.defineEvent(itagEmitterName+&#x27;:prototyperemove&#x27;)
                      .unPreventable()
                      .noRender();
+                Event.defineEvent(itagEmitterName+&#x27;:bindmodel&#x27;)
+                     .defaultFn(itagCore.bindModelDefFn)
+                     .noRender();
 
                 window.ITAGS[registerName] = domElementConstructor;
 
@@ -1578,11 +1585,11 @@ module.exports = function (window) {
                 BINDING_LIST[selector] = true;
                 elements = instance.getAll(selector);
                 elements.forEach(function(element) {
-                    itagCore.bindModel(element, (typeof fineGrain===&#x27;function&#x27;) ? fineGrain(element, model) : model);
+                    element.emit(&#x27;bindmodel&#x27;, {model: (typeof fineGrain===&#x27;function&#x27;) ? fineGrain(element, model) : model});
                 });
                 listener = Event.after(NODE_INSERT, function(e) {
                     var element = e.target;
-                    itagCore.bindModel(element, (typeof fineGrain===&#x27;function&#x27;) ? fineGrain(element, model) : model);
+                    element.emit(&#x27;bindmodel&#x27;, {model: (typeof fineGrain===&#x27;function&#x27;) ? fineGrain(element, model) : model});
                     // element.selfOnceAfter is not available yet: listen through Event:
                     Event.onceAfter(
                         NODE_REMOVE,

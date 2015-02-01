@@ -107,6 +107,8 @@
             
                 <li><a href="../modules/event-listener.html">event-listener</a></li>
             
+                <li><a href="../modules/event-mobile.html">event-mobile</a></li>
+            
                 <li><a href="../modules/extend-document.html">extend-document</a></li>
             
                 <li><a href="../modules/extend-element.html">extend-element</a></li>
@@ -228,7 +230,7 @@ module.exports = function (window) {
         Event, Itag;
 
     if (!window.ITAGS[itagName]) {
-        Event = require(&#x27;event-dom&#x27;)(window);
+        Event = require(&#x27;event-mobile&#x27;)(window);
         require(&#x27;focusmanager&#x27;)(window);
         require(&#x27;i-item&#x27;)(window);
         require(&#x27;i-head&#x27;)(window);
@@ -265,9 +267,8 @@ module.exports = function (window) {
             // cautious:  all child-elements that have &#x60;manualfocus&#x60; event are
             // subscribed as well: we NEED to inspect e.target and only continue.
             //
-            // I didn;t figure out why, but it seems we need &#x60;later&#x60;
+            // I didn&#x27;t figure out why, but it seems we need &#x60;later&#x60;
             // in order to make the i-select prevent from acting unpredictable.
-            // maybe because of the responsetime of the click-event
             laterSilent(function() {
                 // if e.target===i-select
                 if ((element.getTagName()===&#x27;I-SELECT&#x27;) &amp;&amp; !element.hasClass(&#x27;focussed&#x27;)) {
@@ -287,29 +288,22 @@ module.exports = function (window) {
 
         // CAUTIOUS: it seems &#x60;tap&#x60; will be subscribed 8 times!!!
         // TODO: figure out why not once
-        Event.after([&#x27;click&#x27;, &#x27;keydown&#x27;], function(e) {
+        Event.after([&#x27;tap&#x27;, &#x27;keydown&#x27;], function(e) {
             var element = e.target.getParent(),
-                expanded, value, liNodes, focusNode, model;
-            if ((e.type===&#x27;click&#x27;) || (e.keyCode===40)) {
+                model;
+            if ((e.type===&#x27;tap&#x27;) || (e.keyCode===40)) {
                 (e.keyCode===40) &amp;&amp; e.preventDefault();
                 model = element.model;
-                expanded = model.expanded;
-                value = element.model.value;
-                if (!expanded) {
-                    liNodes = element.getAll(&#x27;ul[fm-manage] &gt; li&#x27;);
-                    focusNode = liNodes[value-1];
-                    focusNode &amp;&amp; focusNode.focus();
-                }
-                model.expanded = !expanded;
+                model.expanded = !model.expanded;
             }
         }, &#x27;i-select &gt; button&#x27;);
 
         // CAUTIOUS: it seems &#x60;tap&#x60; will be subscribed 8 times!!!
         // TODO: figure out why not once
-        Event.after([&#x27;click&#x27;, &#x27;keypress&#x27;], function(e) {
+        Event.after([&#x27;tap&#x27;, &#x27;keypress&#x27;], function(e) {
             var liNode = e.target,
                 element, index, model;
-            if ((e.type===&#x27;click&#x27;) || (e.keyCode===13)) {
+            if ((e.type===&#x27;tap&#x27;) || (e.keyCode===13)) {
                 element = liNode.inside(&#x27;i-select&#x27;);
                 model = element.model;
                 index = liNode.getParent().getAll(&#x27;li&#x27;).indexOf(liNode);
@@ -356,18 +350,9 @@ module.exports = function (window) {
 
         Itag = DOCUMENT.createItag(itagName, {
             /*
-             * Internal hash containing all DOM-events that are listened for (at &#x60;document&#x60;).
              *
-             * DOMEvents = {
-             *     &#x27;click&#x27;: callbackFn,
-             *     &#x27;mousemove&#x27;: callbackFn,
-             *     &#x27;keypress&#x27;: callbackFn
-             * }
-             *
-             * @property DOMEvents
-             * @default {}
+             * @property attrs
              * @type Object
-             * @private
              * @since 0.0.1
             */
             attrs: {
@@ -444,13 +429,12 @@ module.exports = function (window) {
                 // be aware that before ending, this method can run again
                 // if you do, then make sure to handle possible running
                 // async actions well !!!
-console.info(&#x27;i-select begin sync&#x27;);
                 var element = this,
                     model = element.model,
                     items = model.items,
                     buttonTexts = model.buttonTexts,
                     value = model.value,
-                    item, content, buttonText, len, i, markValue,
+                    item, content, buttonText, len, i, markValue, ulNode,
                     button, container, itemsContainer, hiddenTimer;
 
                 len = items.length;
@@ -466,7 +450,7 @@ console.info(&#x27;i-select begin sync&#x27;);
 
                 // rebuild the button:
                 button = element.getElement(&#x27;button&#x27;);
-                button.toggleClass(&#x27;pure-button-primary&#x27;, model[&#x27;primary-button&#x27;]);
+                button.toggleClass(&#x27;pure-button-primary&#x27;, !!model[&#x27;primary-button&#x27;]);
                 button.getElement(&#x27;div.btntext&#x27;).setHTML(buttonText);
 
                 container = element.getElement(&#x27;&gt;div&#x27;);
@@ -474,6 +458,8 @@ console.info(&#x27;i-select begin sync&#x27;);
                 if (model.expanded) {
                     hiddenTimer = container.getData(&#x27;_hiddenTimer&#x27;);
                     hiddenTimer &amp;&amp; hiddenTimer.cancel();
+                    ulNode = element.getElement(&#x27;ul[fm-manage]&#x27;);
+                    ulNode.focus();
                     container.setClass(SHOW);
                     container.removeClass(HIDDEN);
                 }
@@ -495,11 +481,10 @@ console.info(&#x27;i-select begin sync&#x27;);
 
                 // set the items:
                 itemsContainer.setHTML(content);
-console.info(&#x27;i-select end sync&#x27;);
             }
         });
 
-        Itag.setItagDirectEventResponse([&#x27;blur&#x27;, &#x27;keypress&#x27;]);
+        Itag.setItagDirectEventResponse([&#x27;keypress&#x27;, &#x27;keydown&#x27;]);
     }
 
     return window.ITAGS[itagName];

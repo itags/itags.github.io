@@ -34,8 +34,8 @@ YUI.add("yuidoc-meta", function(Y) {
         "event-dom",
         "event-emitter",
         "event-listener",
+        "event-mobile",
         "extend-document",
-        "extend-element",
         "extend-element",
         "extend-element",
         "extra/classes.js",
@@ -93,6 +93,11 @@ YUI.add("yuidoc-meta", function(Y) {
             "displayName": "event-listener",
             "name": "event-listener",
             "description": "Extends the Event-instance by adding the object `Listener` to it.\nThe returned object should be merged into any Class-instance or object you want to\nextend with the listener-methods, so the appropriate methods can be invoked on the instance.\n\n\n<i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>\nNew BSD License - http://choosealicense.com/licenses/bsd-3-clause/\n\n\nShould be called using  the provided `extend`-method like this:"
+        },
+        {
+            "displayName": "event-mobile",
+            "name": "event-mobile",
+            "description": "Integrates mobile-events to event-dom. more about DOM-events:\nhttp://www.smashingmagazine.com/2013/11/12/an-introduction-to-dom-events/\n\n\n<i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>\nNew BSD License - http://choosealicense.com/licenses/bsd-3-clause/"
         },
         {
             "displayName": "extend-document",

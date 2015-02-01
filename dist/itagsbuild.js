@@ -507,6 +507,7 @@ module.exports = function (window) {
                 var buttonNode = e.target;
                 if (e._buttonPressed) {
                     buttonNode.setClass(PURE_BUTTON_ACTIVE);
+                    e._noRender = true;
                     // even if the node isn't in the DOM, we can still try to manipulate it:
                     // the vdom makes sure no errors occur when the node is already removed
                     laterSilent(buttonNode.removeClass.bind(buttonNode, PURE_BUTTON_ACTIVE), TIME_BTN_PRESSED);
@@ -7612,9836 +7613,6 @@ module.exports = function (window) {
         ElementPrototype.append = function(content, escape, refElement, silent) {
             var instance = this,
                 vnode = instance.vnode,
-                i, len, item, createdElement, vnodes, vRefElement,
-            doAppend = function(oneItem) {
-                escape && (oneItem.nodeType===1) && (oneItem=DOCUMENT.createTextNode(oneItem.getOuterHTML()));
-                createdElement = refElement ? vnode._insertBefore(oneItem.vnode, refElement.vnode) : vnode._appendChild(oneItem.vnode);
-            };
-            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
-            vnode._noSync()._normalizable(false);
-            if (refElement && (vnode.vChildNodes.indexOf(refElement.vnode)!==-1)) {
-                vRefElement = refElement.vnode.vNext;
-                refElement = vRefElement && vRefElement.domNode;
-            }
-            (typeof content===STRING) && (content=htmlToVFragments(content, vnode.ns));
-            if (content.isFragment) {
-                vnodes = content.vnodes;
-                len = vnodes.length;
-                for (i=0; i<len; i++) {
-                    doAppend(vnodes[i].domNode);
-                }
-            }
-            else if (Array.isArray(content)) {
-                len = content.length;
-                for (i=0; i<len; i++) {
-                    item = content[i];
-                    doAppend(item);
-                }
-            }
-            else {
-                doAppend(content);
-            }
-            vnode._normalizable(true)._normalize();
-            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(false);
-            return createdElement;
-        };
-
-        /**
-         * Adds a node to the end of the list of childNodes of a specified parent node.
-         *
-         * @method appendChild
-         * @param content {Element|ElementArray|String} content to append
-         * @param [escape] {Boolean} whether to insert `escaped` content, leading it into only text inserted
-         * @return {Element} the Element that was appended
-         */
-        ElementPrototype._appendChild = ElementPrototype.appendChild;
-        ElementPrototype.appendChild = function(domNode, escape) {
-            return this.append(domNode, escape);
-        };
-
-       /**
-        * Returns a duplicate of the node. Use cloneNode(true) for a `deep` clone.
-        *
-        * @method cloneNode
-        * @param [deep] {Boolean} whether to perform a `deep` clone: with all descendants
-        * @return {Element} a clone of this Element
-        * @since 0.0.1
-        */
-        ElementPrototype._cloneNode = ElementPrototype.cloneNode;
-        ElementPrototype.cloneNode = function(deep) {
-            var instance = this,
-                vnode = instance.vnode,
-                cloned = instance._cloneNode(deep),
-                cloneData = function(srcVNode, targetVNode) {
-                    if (srcVNode._data) {
-                        Object.protectedProp(targetVNode, '_data', {});
-                        targetVNode._data.merge(srcVNode._data);
-                    }
-                },
-                cloneDeepData = function(srcVNode, targetVNode) {
-                    var srcVChildren = srcVNode.vChildren,
-                        targetVChildren = targetVNode.vChildren,
-                        len = srcVChildren.length,
-                        i, childSrcVNode, childTargetVNode;
-                    for (i=0; i<len; i++) {
-                        childSrcVNode = srcVChildren[i];
-                        childTargetVNode = targetVChildren[i];
-                        cloneData(childSrcVNode, childTargetVNode);
-                        childSrcVNode.hasVChildren() && cloneDeepData(childSrcVNode, childTargetVNode);
-                    }
-                };
-            cloned.vnode = domNodeToVNode(cloned);
-            cloneData(vnode, cloned.vnode);
-            // if deep, then we need to merge _data of all deeper nodes
-            deep && vnode.hasVChildren() && cloneDeepData(vnode, cloned.vnode);
-            return cloned;
-        };
-
-        /**
-         * Compares the position of the current node against another node in any other document.
-         *
-         * Returnvalues are a composition of the following bitwise values:
-         * <ul>
-         *     <li>Node.DOCUMENT_POSITION_DISCONNECTED === 1 (one of the Elements is not part of the dom)</li>
-         *     <li>Node.DOCUMENT_POSITION_PRECEDING === 2 (this Element comes before otherElement)</li>
-         *     <li>Node.DOCUMENT_POSITION_FOLLOWING === 4 (this Element comes after otherElement)</li>
-         *     <li>Node.DOCUMENT_POSITION_CONTAINS === 8 (otherElement trully contains -not equals- this Element)</li>
-         *     <li>Node.DOCUMENT_POSITION_CONTAINED_BY === 16 (Element trully contains -not equals- otherElement)</li>
-         * </ul>
-         *
-         * @method compareDocumentPosition
-         * @param otherElement {Element}
-         * @return {Number} A bitmask, use it this way: if (thisNode.compareDocumentPosition(otherNode) & Node.DOCUMENT_POSITION_FOLLOWING) {// otherNode is following thisNode}
-         */
-        ElementPrototype.compareDocumentPosition = function(otherElement) {
-            // see http://ejohn.org/blog/comparing-document-position/
-            var instance = this,
-                parent, index1, index2, vChildNodes;
-            if (instance===otherElement) {
-                return 0;
-            }
-            if (!DOCUMENT.contains(instance) || !DOCUMENT.contains(otherElement)) {
-                return 1;
-            }
-            else if (instance.contains(otherElement)) {
-                return 20;
-            }
-            else if (otherElement.contains(instance)) {
-                return 10;
-            }
-            parent = instance.getParent();
-            vChildNodes = parent.vnode.vChildNodes;
-            index1 = vChildNodes.indexOf(instance.vnode);
-            index2 = vChildNodes.indexOf(otherElement.vnode);
-            if (index1<index2) {
-                return 2;
-            }
-            else {
-                return 4;
-            }
-        };
-
-        /**
-         * Indicating whether this Element contains OR equals otherElement.
-         *
-         * @method contains
-         * @param otherElement {Element}
-         * @param [insideItags=false] {Boolean} no deepsearch in iTags --> by default, these elements should be hidden
-         * @return {Boolean} whether this Element contains OR equals otherElement.
-         */
-        ElementPrototype.contains = function(otherElement, insideItags) {
-            if (otherElement===this) {
-                return true;
-            }
-            return this.vnode.contains(otherElement.vnode, !insideItags);
-        };
-
-        /**
-         * Returns a newly created TreeWalker object with this Element as root.
-         *
-         * The TreeWalker is life presentation of the dom. It gets updated when the dom changes.
-         *
-         * @method createTreeWalker
-         * @param root {Element} The root node at which to begin the NodeIterator's traversal.
-         * @param [whatToShow] {Number} Filter specification constants from the NodeFilter DOM interface, indicating which nodes to iterate over.
-         * You can use or sum one of the next properties:
-         * <ul>
-         *   <li>window.NodeFilter.SHOW_ALL === -1</li>
-         *   <li>window.NodeFilter.SHOW_ELEMENT === 1</li>
-         *   <li>window.NodeFilter.SHOW_COMMENT === 128</li>
-         *   <li>window.NodeFilter.SHOW_TEXT === 4</li>
-         * </ul>
-         *
-         * A treewalker has the next methods:
-         * <ul>
-         *   <li>treewalker.firstChild()</li>
-         *   <li>treewalker.lastChild()</li>
-         *   <li>treewalker.nextNode()</li>
-         *   <li>treewalker.nextSibling()</li>
-         *   <li>treewalker.parentNode()</li>
-         *   <li>treewalker.previousNode()</li>
-         *   <li>treewalker.previousSibling()</li>
-         * </ul>
-         *
-         * A treewalker has the next properties:
-         * <ul>
-         *   <li>treewalker.currentNode</li>
-         *   <li>treewalker.filter</li>
-         *   <li>treewalker.root</li>
-         *   <li>treewalker.whatToShow</li>
-         * </ul>
-         *
-         * @param [filter] {NodeFilter|function} An object implementing the NodeFilter interface or a function. See https://developer.mozilla.org/en-US/docs/Web/API/NodeFilter
-         * @return {TreeWalker}
-         * @since 0.0.1
-         */
-        ElementPrototype.createTreeWalker = function(whatToShow, filter) {
-            var treeWalker = Object.create(treeWalkerProto);
-            treeWalker._init(this, whatToShow, filter);
-            return treeWalker;
-        };
-
-       /**
-        * Sets the inline-style of the Element exactly to the specified `value`, overruling previous values.
-        * Making the Element's inline-style look like: style="value".
-        *
-        * This is meant for a quick one-time setup. For individually inline style-properties to be set, you can use `setInlineStyle()`.
-        *
-        * @method defineInlineStyle
-        * @param value {String} the style string to be set
-        * @chainable
-        * @since 0.0.1
-        */
-        ElementPrototype.defineInlineStyle = function(value) {
-            return this.setAttr(STYLE, value);
-        };
-
-       /**
-        * Empties the content of the Element.
-        * Alias for thisNode.vTextContent = '';
-        *
-        * @method empty
-        * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
-        * @chainable
-        * @since 0.0.1
-        */
-        ElementPrototype.empty = function(silent) {
-            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
-            this.vnode.empty();
-            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(false);
-        };
-
-        /**
-         * Reference to the first of sibbling vNode's, where the related dom-node is an Element(nodeType===1).
-         *
-         * @method first
-         * @param [cssSelector] {String} to return the first Element that matches the css-selector
-         * @return {Element}
-         * @since 0.0.1
-         */
-        ElementPrototype.first = function(cssSelector) {
-            return this.vnode.vParent.firstOfVChildren(cssSelector).domNode;
-        };
-
-        /**
-         * Reference to the first child-Element, where the related dom-node an Element (nodeType===1).
-         *
-         * @method firstOfChildren
-         * @param [cssSelector] {String} to return the first Element that matches the css-selector
-         * @return {Element}
-         * @since 0.0.1
-         */
-        ElementPrototype.firstOfChildren = function(cssSelector) {
-            var foundVNode = this.vnode.firstOfVChildren(cssSelector);
-            return foundVNode && foundVNode.domNode;
-        };
-
-       /**
-        * Forces the Element to be inside an ancestor-Element that has the `overfow="scroll" set.
-        *
-        * @method forceIntoNodeView
-        * @param [ancestor] {Element} the Element where it should be forced into its view.
-        *        Only use this when you know the ancestor and this ancestor has an `overflow="scroll"` property
-        *        when not set, this method will seek through the doc-tree upwards for the first Element that does match this criteria.
-        * @chainable
-        * @since 0.0.1
-        */
-        ElementPrototype.forceIntoNodeView = function(ancestor) {
-            // TODO: transitioned: http://wibblystuff.blogspot.nl/2014/04/in-page-smooth-scroll-using-css3.html
-            console.log(NAME, 'forceIntoNodeView');
-            var instance = this,
-                parentOverflowNode = this.getParent(),
-                match, left, width, right, height, top, bottom, scrollLeft, scrollTop, parentOverflowNodeX, parentOverflowNodeY,
-                parentOverflowNodeStartTop, parentOverflowNodeStartLeft, parentOverflowNodeStopRight, parentOverflowNodeStopBottom, newX, newY;
-            if (parentOverflowNode) {
-                if (ancestor) {
-                    parentOverflowNode = ancestor;
-                }
-                else {
-                    while (parentOverflowNode && (parentOverflowNode!==DOCUMENT) && !(match=((parentOverflowNode.getStyle(OVERFLOW)===SCROLL) || (parentOverflowNode.getStyle(OVERFLOW+'-y')===SCROLL)))) {
-                        parentOverflowNode = parentOverflowNode.getParent();
-                    }
-                }
-                if (parentOverflowNode && (parentOverflowNode!==DOCUMENT)) {
-                    left = instance.left;
-                    width = instance.offsetWidth;
-                    right = left + width;
-                    height = instance.offsetHeight;
-                    top = instance.top;
-                    bottom = top + height;
-                    scrollLeft = parentOverflowNode.scrollLeft;
-                    scrollTop = parentOverflowNode.scrollTop;
-                    parentOverflowNodeX = parentOverflowNode.left;
-                    parentOverflowNodeY = parentOverflowNode.top;
-                    parentOverflowNodeStartTop = parentOverflowNodeY+parseInt(parentOverflowNode.getStyle(BORDER_TOP_WIDTH), 10);
-                    parentOverflowNodeStartLeft = parentOverflowNodeX+parseInt(parentOverflowNode.getStyle(BORDER_LEFT_WIDTH), 10);
-                    parentOverflowNodeStopRight = parentOverflowNodeX+parentOverflowNode.offsetWidth-parseInt(parentOverflowNode.getStyle(BORDER_RIGHT_WIDTH), 10);
-                    parentOverflowNodeStopBottom = parentOverflowNodeY+parentOverflowNode.offsetHeight-parseInt(parentOverflowNode.getStyle(BORDER_BOTTOM_WIDTH), 10);
-
-                    if (left<parentOverflowNodeStartLeft) {
-                        newX = Math.max(0, scrollLeft+left-parentOverflowNodeStartLeft);
-                    }
-                    else if (right>parentOverflowNodeStopRight) {
-                        newX = scrollLeft + right - parentOverflowNodeStopRight;
-                    }
-
-                    if (top<parentOverflowNodeStartTop) {
-                        newY = Math.max(0, scrollTop+top-parentOverflowNodeStartTop);
-                    }
-                    else if (bottom>parentOverflowNodeStopBottom) {
-                        newY = scrollTop + bottom - parentOverflowNodeStopBottom;
-                    }
-
-                    if ((newX!==undefined) || (newY!==undefined)) {
-                        parentOverflowNode.scrollTo((newX!==undefined) ? newX : scrollLeft,(newY!==undefined) ? newY : scrollTop);
-                    }
-                }
-            }
-            return instance;
-        };
-
-       /**
-        * Forces the Element to be inside the window-view. Differs from `scrollIntoView()` in a way
-        * that `forceIntoView()` doesn't change the position when it's inside the view, whereas
-        * `scrollIntoView()` sets it on top of the view.
-        *
-        * @method forceIntoView
-        * @param [notransition=false] {Boolean} set true if you are sure positioning is without transition.
-        *        this isn't required, but it speeds up positioning. Only use when no transition is used:
-        *        when there is a transition, setting this argument `true` would miscalculate the position.
-        * @param [rectangle] {Object} Set this if you have already calculated the window-rectangle (used for preformance within drag-drop)
-        * @param [rectangle.x] {Number} scrollLeft of window
-        * @param [rectangle.y] {Number} scrollTop of window
-        * @param [rectangle.w] {Number} width of window
-        * @param [rectangle.h] {Number} height of window
-        * @chainable
-        * @since 0.0.2
-        */
-        ElementPrototype.forceIntoView = function(notransition, rectangle) {
-            // TODO: 'notransition' can be calculated with this.getTransition(left) this.getTransition(left)
-            // TODO: transitioned: http://wibblystuff.blogspot.nl/2014/04/in-page-smooth-scroll-using-css3.html
-            console.log(NAME, 'forceIntoView');
-            var instance = this,
-                left = instance.left,
-                width = instance.offsetWidth,
-                right = left + width,
-                height = instance.offsetHeight,
-                top = instance.top,
-                bottom = top + height,
-                windowLeft, windowTop, windowRight, windowBottom, newX, newY;
-            if (rectangle) {
-                windowLeft = rectangle.x;
-                windowTop = rectangle.y;
-                windowRight = rectangle.w;
-                windowBottom = rectangle.h;
-            }
-            else {
-                windowLeft = window.getScrollLeft();
-                windowTop = window.getScrollTop();
-                windowRight = windowLeft + window.getWidth();
-                windowBottom = windowTop + window.getHeight();
-            }
-
-            if (left<windowLeft) {
-                newX = Math.max(0, left);
-            }
-            else if (right>windowRight) {
-                newX = windowLeft + right - windowRight;
-            }
-            if (top<windowTop) {
-                newY = Math.max(0, top);
-            }
-            else if (bottom>windowBottom) {
-                newY = windowTop + bottom - windowBottom;
-            }
-
-            if ((newX!==undefined) || (newY!==undefined)) {
-                window.scrollTo((newX!==undefined) ? newX : windowLeft, (newY!==undefined) ? newY : windowTop);
-            }
-            return instance;
-        };
-
-        /**
-         * Gets an ElementArray of Elements that lie within this Element and match the css-selector.
-         *
-         * @method getAll
-         * @param cssSelector {String} css-selector to match
-         * @param [insideItags=false] {Boolean} no deepsearch in iTags --> by default, these elements should be hidden
-         * @return {ElementArray} ElementArray of Elements that match the css-selector
-         * @since 0.0.1
-         */
-        ElementPrototype.getAll = function(cssSelector, insideItags) {
-            return this.querySelectorAll(cssSelector, insideItags);
-        };
-
-       /**
-        * Gets an attribute of the Element.
-        *
-        * Alias for getAttribute().
-        *
-        * @method getAttr
-        * @param attributeName {String}
-        * @return {String|null} value of the attribute
-        * @since 0.0.1
-        */
-        ElementPrototype.getAttr = function(attributeName) {
-            return this.vnode.attrs[attributeName] || null;
-        };
-
-        /**
-         * Returns all attributes as defined as an key/value object.
-         *
-         * @method getAttrs
-         * @param attributeName {String}
-         * @return {Object} all attributes as on Object
-         * @since 0.0.1
-         */
-        ElementPrototype.getAttrs = function() {
-            return this.vnode.attrs;
-        };
-
-       /**
-        * Gets an attribute of the Element.
-        *
-        * Same as getAttr().
-        *
-        * @method getAttribute
-        * @param attributeName {String}
-        * @return {String|null} value of the attribute
-        * @since 0.0.1
-        */
-        ElementPrototype._getAttribute = ElementPrototype.getAttribute;
-        ElementPrototype.getAttribute = function(attributeName) {
-            return this.vnode.attrs[attributeName] || null;
-        };
-
-        /**
-         * Returns a live collection of the Element-childNodes.
-         *
-         * @method getChildren
-         * @return {ElementArray}
-         * @since 0.0.1
-         */
-        ElementPrototype.getChildren = function() {
-            var vChildren = this.vnode.vChildren,
-                len = vChildren.length,
-                children = ElementArray.createArray(),
-                i;
-            for (i=0; i<len; i++) {
-                children[children.length] = vChildren[i].domNode;
-            }
-            return children;
-        };
-
-        /**
-         * Returns a token list of the class attribute of the element.
-         * See: https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList
-         *
-         * @method getClassList
-         * @return DOMTokenList
-         * @since 0.0.1
-         */
-        ElementPrototype.getClassList = function() {
-            var instance = this,
-                vnode = instance.vnode;
-            if (!vnode._classList) {
-                vnode._classList = Object.create(classListProto);
-                vnode._classList._init(instance);
-            }
-            return vnode._classList;
-        };
-
-       /**
-        * Returns data set specified by `key`. If not set, `undefined` will be returned.
-        * The data is efficiently stored on the vnode.
-        *
-        * @method getData
-        * @param key {string} name of the key
-        * @return {Any|undefined} data set specified by `key`
-        * @since 0.0.1
-        */
-        ElementPrototype.getData = function(key) {
-            var vnode = this.vnode;
-            return vnode._data && vnode._data[key];
-        };
-
-       /**
-        * Gets one Element, specified by the css-selector. To retrieve a single element by id,
-        * you need to prepend the id-name with a `#`. When multiple Element's match, the first is returned.
-        *
-        * @method getElement
-        * @param cssSelector {String} css-selector to match
-        * @param [insideItags=false] {Boolean} no deepsearch in iTags --> by default, these elements should be hidden
-        * @return {Element|null} the Element that was search for
-        * @since 0.0.1
-        */
-        ElementPrototype.getElement = function(cssSelector, insideItags) {
-            return ((cssSelector[0]==='#') && (cssSelector.indexOf(' ')===-1)) ? this.getElementById(cssSelector.substr(1)) : this.querySelector(cssSelector, insideItags);
-        };
-
-        /**
-         * Returns the Element matching the specified id, which should should be a descendant of this Element.
-         *
-         * @method getElementById
-         * @param id {String} id of the Element
-         * @param [insideItags=false] {Boolean} no deepsearch in iTags --> by default, these elements should be hidden
-         * @return {Element|null}
-         *
-         */
-        ElementPrototype.getElementById = function(id, insideItags) {
-            var element = nodeids[id];
-            if (element && !this.contains(element, insideItags)) {
-                // outside itself
-                return null;
-            }
-            return element || null;
-        };
-
-        /**
-         * Gets innerHTML of the dom-node.
-         * Goes through the vdom, so it's superfast.
-         *
-         * Use this method instead of `innerHTML`
-         *
-         * @method getHTML
-         * @return {String}
-         * @since 0.0.1
-         */
-        ElementPrototype.getHTML = function() {
-            return this.vnode.innerHTML;
-        };
-
-       /**
-        * Returns the Elments `id`
-        *
-        * @method getId
-        * @return {String|undefined} Elements `id`
-        * @since 0.0.1
-        */
-        ElementPrototype.getId = function() {
-            return this.vnode.id;
-        };
-
-       /**
-        * Returns inline style of the specified property. `Inline` means: what is set directly on the Element,
-        * this doesn't mean necesairy how it is looked like: when no css is set inline, the Element might still have
-        * an appearance because of other CSS-rules.
-        *
-        * In most cases, you would be interesting in using `getStyle()` instead.
-        *
-        * Note: no need to camelCase cssProperty: both `margin-left` as well as `marginLeft` are fine
-        *
-        * @method getInlineStyle
-        * @param cssProperty {String} the css-property to look for
-        * @param [pseudo] {String} to look inside a pseudo-style
-        * @return {String|undefined} css-style
-        * @since 0.0.1
-        */
-        ElementPrototype.getInlineStyle = function(cssProperty, pseudo) {
-            var styles = this.vnode.styles,
-                groupStyle = styles && styles[pseudo || 'element'],
-                value;
-            if (groupStyle) {
-                value = groupStyle[fromCamelCase(cssProperty)];
-                value && (cssProperty===VENDOR_TRANSITION_PROPERTY) && (value=extractor.serializeTransition(value));
-            }
-            return value;
-        };
-
-       /**
-        * Returns inline transition-css-property. `Inline` means: what is set directly on the Element,
-        * When `transition` is set inline, no `parent` transition-rules apply.
-        *
-        *
-        * @method getInlineTransition
-        * @param [transitionProperty] {String} the css-property to look for
-        * @param [pseudo] {String} to look inside a pseudo-style
-        * @return {Object} the transition-object, with the properties:
-        * <ul>
-        *     <li>duration {Number}</li>
-        *     <li>timingFunction {String}</li>
-        *     <li>delay {Number}</li>
-        * </ul>
-        * @since 0.0.1
-        */
-        ElementPrototype.getInlineTransition = function(transitionProperty, pseudo) {
-            var styles = this.vnode.styles,
-                groupStyle = styles && styles[pseudo || 'element'],
-                transitionStyles = groupStyle && groupStyle[VENDOR_TRANSITION_PROPERTY];
-            if (transitionStyles) {
-                return transitionProperty ? transitionStyles[fromCamelCase(transitionProperty)] : transitionStyles;
-            }
-        };
-
-        /**
-         * Gets the outerHTML of the dom-node.
-         * Goes through the vdom, so it's superfast.
-         *
-         * Use this method instead of `outerHTML`
-         *
-         * @method getOuterHTML
-         * @return {String}
-         * @since 0.0.1
-         */
-        ElementPrototype.getOuterHTML = function() {
-            return this.vnode.outerHTML;
-        };
-
-        /**
-         * Returns the Element's parent Element.
-         *
-         * @method getParent
-         * @return {Element}
-         */
-        ElementPrototype.getParent = function() {
-            var vParent = this.vnode.vParent;
-            return vParent && vParent.domNode;
-        };
-
-       /**
-        * Returns cascaded style of the specified property. `Cascaded` means: the actual present style,
-        * the way it is visible (calculated through the DOM-tree).
-        *
-        * <ul>
-        *     <li>Note1: values are absolute: percentages and points are converted to absolute values, sizes are in pixels, colors in rgb/rgba-format.</li>
-        *     <li>Note2: you cannot query shotcut-properties: use `margin-left` instead of `margin`.</li>
-        *     <li>Note3: no need to camelCase cssProperty: both `margin-left` as well as `marginLeft` are fine.</li>
-        *     <li>Note4: you can query `transition`, `transform`, `perspective` and `transform-origin` instead of their vendor-specific properties.</li>
-        *     <li>Note5: `transition` or `transform` return an Object instead of a String.</li>
-        * </ul>
-        *
-        * @method getCascadeStyle
-        * @param cssProperty {String} property that is queried
-        * @param [pseudo] {String} to query pseudo-element, fe: `:before` or `:first-line`
-        * @return {String|Object} value for the css-property: this is an Object for the properties `transition` or `transform`
-        * @since 0.0.1
-        */
-        ElementPrototype.getStyle = function(cssProperty, pseudo) {
-            // Cautious: when reading the property `transform`, getComputedStyle should
-            // read the calculated value, but some browsers (webkit) only calculate the style on the current element
-            // In those cases, we need a patch and look up the tree ourselves
-            //  Also: we will return separate value, NOT matrices
-            var instance = this;
-            if (cssProperty===VENDOR_TRANSITION_PROPERTY) {
-                return instance._getTransitionAll(pseudo);
-            }
-            VENDOR_CSS_PROPERTIES[cssProperty] || (cssProperty=generateVendorCSSProp(cssProperty));
-            return window.getComputedStyle(instance, pseudo)[toCamelCase(cssProperty)];
-        };
-
-        /**
-        * Returns cascaded "transition" style of the specified trandform-property. `Cascaded` means: the actual present style,
-        * the way it is visible (calculated through the DOM-tree).
-        *
-        * Note1: When "transition" is set inline, ONLY inline transtition is active!
-        * Thus, if parentNode has "transition: width 2s" and inline has "transition: height 3s", then the transition
-        * will be "transition: height 3s" --> returning "undefined" for transitionProperty=width.
-        * Note2: in case of "transition: all" --> these values will be returned for every "transitionProperty" (even when querying "width")
-        *
-        * @method getTransition
-        * @param transitionProperty {String} transform property that is queried, f.e. "width", or "all"
-        * @param [pseudo] {String} to query pseudo-element, fe: `:before` or `:first-line`
-        * @return {Object} the transition-object, with the properties:
-        * <ul>
-        *     <li>duration {Number}</li>
-        *     <li>timingFunction {String}</li>
-        *     <li>delay {Number}</li>
-        * </ul>
-        * @since 0.0.1
-        */
-        ElementPrototype.getTransition = function(transitionProperty, pseudo) {
-            var instance = this,
-                transProperty, transDuration, transTimingFunction, transDelay, transPropertySplitted,
-                transition, transDurationSplitted, transTimingFunctionSplitted, transDelaySplitted, index;
-            if (instance.hasInlineStyle(VENDOR_TRANSITION_PROPERTY, pseudo)) {
-                transition = instance.getInlineTransition(transitionProperty, pseudo);
-                // if not found, then search for "all":
-                transition || (transition=instance.getInlineTransition('all', pseudo));
-                if (transition) {
-                    // getTransition always returns all the properties:
-                    transition.timingFunction || (transition.timingFunction='ease');
-                    transition.delay || (transition.delay=0);
-                }
-                return transition;
-            }
-            transProperty = instance.getStyle(VENDOR_TRANSITION_PROPERTY+'Property', pseudo);
-            transDuration = instance.getStyle(VENDOR_TRANSITION_PROPERTY+'Duration', pseudo);
-            transTimingFunction = instance.getStyle(VENDOR_TRANSITION_PROPERTY+'TimingFunction', pseudo);
-            transDelay = instance.getStyle(VENDOR_TRANSITION_PROPERTY+'Delay', pseudo);
-            transPropertySplitted = transProperty && transProperty.split(',');
-            if (transProperty) {
-                if (transPropertySplitted.length>1) {
-                    // multiple definitions
-                    index = transPropertySplitted.indexOf(transitionProperty);
-                    // the array is in a form like this: 'width, height, opacity' --> therefore, we might need to look at a whitespace
-                    if (index===-1) {
-                        index = transPropertySplitted.indexOf(' '+transitionProperty);
-                        // if not found, then search for "all":
-                        if (index===-1) {
-                            index = transPropertySplitted.indexOf('all');
-                            (index===-1) && (index=transPropertySplitted.indexOf(' '+'all'));
-                        }
-                    }
-                    if (index!==-1) {
-                        transDurationSplitted = transDuration.split(',');
-                        transTimingFunctionSplitted = transTimingFunction.split(',');
-                        transDelaySplitted = transDelay.split(',');
-                        transition = {
-                            duration: parseFloat(transDurationSplitted[index]),
-                            timingFunction: transTimingFunctionSplitted[index].trimLeft(),
-                            delay: parseFloat(transDelaySplitted)
-                        };
-                    }
-                }
-                else {
-                    // one definition
-                    if ((transProperty===transitionProperty) || (transProperty==='all')) {
-                        transition = {
-                            duration: parseFloat(transDuration),
-                            timingFunction: transTimingFunction,
-                            delay: parseFloat(transDelay)
-                        };
-                    }
-                }
-                transition && (transition.duration===0) && (transition=undefined);
-                return transition;
-            }
-        };
-
-       /**
-        * Elements tag-name in uppercase (same as nodeName).
-        *
-        * @method getTagName
-        * @return {String}
-        * @since 0.0.1
-        */
-        ElementPrototype.getTagName = function() {
-            return this.vnode.tag;
-        };
-
-        /**
-         * Gets the innerContent of the Element as plain text.
-         * Goes through the vdom, so it's superfast.
-         *
-         * Use this method instead of `textContent`
-         *
-         * @method getText
-         * @return String
-         * @since 0.0.1
-         */
-        ElementPrototype.getText = function() {
-            return this.vnode.textContent;
-        };
-
-       /**
-        * Gets the value of the following Elements:
-        *
-        * <ul>
-        *     <li>input</li>
-        *     <li>textarea</li>
-        *     <li>select</li>
-        *     <li>any container that is `contenteditable`</li>
-        * </ul>
-        *
-        * @method getValue
-        * @return {String}
-        * @since 0.0.1
-        */
-        ElementPrototype.getValue = function() {
-            // cautious: input and textarea must be accessed by their propertyname:
-            // input.getAttribute('value') would return the default-value instead of actual
-            // and textarea.getAttribute('value') doesn't exist
-            var instance = this,
-                contenteditable = instance.vnode.attrs.contenteditable,
-                editable = contenteditable && (contenteditable!=='false');
-            return editable ? instance.getHTML() : instance.value;
-        };
-
-       /**
-        * Whether the Element has the attribute set.
-        *
-        * Alias for hasAttribute().
-        *
-        * @method hasAttr
-        * @param attributeName {String}
-        * @return {Boolean} Whether the Element has the attribute set.
-        * @since 0.0.1
-        */
-        ElementPrototype.hasAttr = function(attributeName) {
-            return !!this.vnode.attrs[attributeName];
-        };
-
-       /**
-        * Whether the Element has the attribute set.
-        *
-        * Same as hasAttr().
-        *
-        * @method hasAttribute
-        * @param attributeName {String}
-        * @return {Boolean} Whether the Element has the attribute set.
-        * @since 0.0.1
-        */
-        ElementPrototype.hasAttribute = function(attributeName) {
-            return !!this.vnode.attrs[attributeName];
-        };
-
-        /**
-         * Indicating if the current element has any attributes or not.
-         *
-         * @method hasAttributes
-         * @return {Boolean} Whether the current element has any attributes or not.
-         */
-        ElementPrototype.hasAttributes = function() {
-            var attrs = this.vnode.attrs;
-            return attrs ? (attrs.size() > 0) : false;
-        };
-
-       /**
-        * Indicating if the Element has any children (childNodes with nodeType of 1).
-        *
-        * @method hasChildren
-        * @return {Boolean} whether the Element has children
-        * @since 0.0.1
-        */
-        ElementPrototype.hasChildren = function() {
-            return this.vnode.hasVChildren();
-        };
-
-       /**
-        * Checks whether the className is present on the Element.
-        *
-        * @method hasClass
-        * @param className {String|Array} the className to check for. May be an Array of classNames, which all needs to be present.
-        * @return {Boolean} whether the className (or classNames) is present on the Element
-        * @since 0.0.1
-        */
-        ElementPrototype.hasClass = function(className) {
-            return this.getClassList().contains(className);
-        };
-
-       /**
-        * If the Element has data set specified by `key`. The data could be set with `setData()`.
-        *
-        * @method hasData
-        * @param key {string} name of the key
-        * @return {Boolean}
-        * @since 0.0.1
-        */
-        ElementPrototype.hasData = function(key) {
-            var vnode = this.vnode;
-            return !!(vnode._data && (vnode._data[key]!==undefined));
-        };
-
-       /**
-        * Indicates whether Element currently has the focus.
-        *
-        * @method hasFocus
-        * @return {Boolean}
-        * @since 0.0.1
-        */
-        ElementPrototype.hasFocus = function() {
-            return (DOCUMENT.activeElement===this);
-        };
-
-       /**
-        * Indicates whether the current focussed Element lies inside this Element (on a descendant Element).
-        *
-        * @method hasFocusInside
-        * @return {Boolean}
-        * @since 0.0.1
-        */
-        ElementPrototype.hasFocusInside = function() {
-            var activeElement = DOCUMENT.activeElement;
-            return ((DOCUMENT.activeElement!==this) && this.contains(activeElement));
-        };
-
-       /**
-        * Returns whether the inline style of the specified property is present. `Inline` means: what is set directly on the Element.
-        *
-        * Note: no need to camelCase cssProperty: both `margin-left` as well as `marginLeft` are fine
-        *
-        * @method hasInlineStyle
-        * @param cssProperty {String} the css-property to look for
-        * @param [pseudo] {String} to look inside a pseudo-style
-        * @return {Boolean} whether the inlinestyle was present
-        * @since 0.0.1
-        */
-        ElementPrototype.hasInlineStyle = function(cssProperty, pseudo) {
-            return !!this.getInlineStyle(cssProperty, pseudo);
-        };
-
-       /**
-        * Returns whether the specified inline transform-css-property is present. `Inline` means: what is set directly on the Element.
-        *
-        * See more about tranform-properties: https://developer.mozilla.org/en-US/docs/Web/CSS/transform
-        *
-        * @method hasInlineTransition
-        * @param transitionProperty {String} the css-property to look for
-        * @param [pseudo] {String} to look inside a pseudo-style
-        * @return {Boolean} whether the inline transform-css-property was present
-        * @since 0.0.1
-        */
-        ElementPrototype.hasInlineTransition = function(transitionProperty, pseudo) {
-            return !!this.getInlineTransition(transitionProperty, pseudo);
-        };
-
-        /**
-        * Returns whether the specified transform-property is active.
-        *
-        * Note1: When "transition" is set inline, ONLY inline transtition is active!
-        * Thus, if parentNode has "transition: width 2s" and inline has "transition: height 3s",
-        * then hasTransition('width') will return false.
-        * Note2: in case of "transition: all" --> hasTransition() will always `true` for every transitionProperty.
-        *
-        * @method hasTransition
-        * @param transitionProperty {String} the css-property to look for
-        * @param [pseudo] {String} to look inside a pseudo-style
-        * @return {Boolean} whether the inlinestyle was present
-        * @since 0.0.1
-        */
-        ElementPrototype.hasTransition = function(transitionProperty, pseudo) {
-            return !!this.getTransition(transitionProperty, pseudo);
-        };
-
-       /**
-        * Hides a node by making it floated and removing it out of the visible screen.
-        * Hides immediately without `fade`, or will fade when fade is specified.
-        *
-        * @method hide
-        * @param [fade] {Number} sec to fade (you may use `0.1`)
-        * @return {this|Promise} fulfilled when the element is ready hiding, or rejected when showed up again (using node.show) before fully hided.
-        * @since 0.0.1
-        */
-        ElementPrototype.hide = function(duration) {
-            // when it doesn't have, it doesn;t harm to leave the transitionclass on: it would work anyway
-            // nevertheless we will remove it with a timeout
-            var instance = this,
-                showPromise = instance.getData('_showNodeBusy'),
-                hidePromise = instance.getData('_hideNodeBusy'),
-                originalOpacity, hasOriginalOpacity, promise, freezedOpacity, fromOpacity;
-
-            instance.setData('nodeShowed', false); // for any routine who wants to know
-            originalOpacity = instance.getData('_showNodeOpacity');
-            if (!originalOpacity && !showPromise && !hidePromise) {
-                originalOpacity = parseFloat(instance.getInlineStyle('opacity'));
-                instance.setData('_showNodeOpacity', originalOpacity);
-            }
-            hasOriginalOpacity = !!originalOpacity;
-
-            showPromise && showPromise.freeze();
-            if (showPromise) {
-                showPromise.freeze();
-                instance.removeData('_showNodeBusy');
-            }
-            hidePromise && hidePromise.freeze();
-
-            if (duration) {
-                if (showPromise || hidePromise) {
-                    freezedOpacity = instance.getInlineStyle('opacity');
-                    fromOpacity = originalOpacity || 1;
-                    duration = (fromOpacity>0) ? Math.min(1, (freezedOpacity/fromOpacity))*duration : 0;
-                }
-                promise = instance.transition({property: 'opacity', value: 0, duration: duration});
-                instance.setData('_hideNodeBusy', promise);
-                promise.finally(
-                    function() {
-                        if (!promise.cancelled && !promise.frozen) {
-                            instance.setClass(HIDDEN);
-                            originalOpacity ? instance.setInlineStyle('opacity', originalOpacity) : instance.removeInlineStyle('opacity');
-                        }
-                        instance.removeData('_hideNodeBusy');
-                    }
-                );
-                return promise;
-            }
-            else {
-                async(function() {
-                    instance.setClass(HIDDEN);
-                    hasOriginalOpacity ? instance.setInlineStyle('opacity', originalOpacity) : instance.removeInlineStyle('opacity');
-                });
-                return instance;
-            }
-        };
-
-       /**
-        * Indicates whether the Element currently is part if the DOM.
-        *
-        * @method inDOM
-        * @return {Boolean} whether the Element currently is part if the DOM.
-        * @since 0.0.1
-        */
-        ElementPrototype.inDOM = function() {
-            if (this.vnode.removedFromDOM) {
-                return false;
-            }
-            return DOCUMENT.contains(this, true);
-        };
-
-       /**
-         * Checks whether the Element lies within the specified selector (which can be a CSS-selector or a Element)
-         *
-         * @example
-         * var divnode = childnode.inside('div.red');
-         *
-         * @example
-         * var divnode = childnode.inside(containerNode);
-         *
-         * @method inside
-         * @param selector {Element|String} the selector, specified by a Element or a css-selector
-         * @return {Element|false} the nearest Element that matches the selector, or `false` when not found
-         * @since 0.0.1
-         */
-        ElementPrototype.inside = function(selector) {
-            var instance = this,
-                vParent;
-            if (typeof selector===STRING) {
-                vParent = instance.vnode.vParent;
-                while (vParent && !vParent.matchesSelector(selector)) {
-                    vParent = vParent.vParent;
-                }
-                return vParent ? vParent.domNode : false;
-            }
-            else {
-                // selector should be an Element
-                return ((selector!==instance) && selector.contains(instance)) ? selector : false;
-            }
-        };
-
-       /**
-         * Checks whether a point specified with x,y is within the Element's region.
-         *
-         * @method insidePos
-         * @param x {Number} x-value for new position (coordinates are page-based)
-         * @param y {Number} y-value for new position (coordinates are page-based)
-         * @return {Boolean} whether there is a match
-         * @since 0.0.1
-         */
-        ElementPrototype.insidePos = function(x, y) {
-            var instance = this,
-                left = instance.left,
-                top = instance.top,
-                right = left + instance.offsetWidth,
-                bottom = top + instance.offsetHeight;
-            return (x>=left) && (x<=right) && (y>=top) && (y<=bottom);
-        };
-
-        /**
-         * Inserts `domNode` before `refDomNode`.
-         *
-         * @method insertBefore
-         * @param domNode {Node|Element|ElementArray|String} content to insert
-         * @param refDomNode {Element} The Element before which newElement is inserted.
-         * @param [escape] {Boolean} whether to insert `escaped` content, leading it into only text inserted
-         * @return {Node} the Element being inserted (equals domNode)
-         */
-        ElementPrototype._insertBefore = ElementPrototype.insertBefore;
-        ElementPrototype.insertBefore = function(domNode, refDomNode, escape) {
-            return this.prepend(domNode, escape, refDomNode);
-        };
-
-        /**
-         * Whether the element is an Itag-element
-         *
-         * @method isItag
-         * @return {Boolean}
-         * @since 0.0.1
-         */
-        ElementPrototype.isItag = function() {
-            return this.vnode.isItag;
-        };
-
-        /**
-         * Reference to the last of sibbling vNode's, where the related dom-node is an Element(nodeType===1).
-         *
-         * @method last
-         * @param [cssSelector] {String} to return the last Element that matches the css-selector
-         * @return {Element}
-         * @since 0.0.1
-         */
-        ElementPrototype.last = function(cssSelector) {
-            var vParent = this.vnode.vParent;
-            return vParent && vParent.lastOfVChildren(cssSelector).domNode;
-        };
-
-        /**
-         * Reference to the last child-Element, where the related dom-node an Element (nodeType===1).
-         *
-         * @method lastOfChildren
-         * @param [cssSelector] {String} to return the last Element that matches the css-selector
-         * @return {Element}
-         * @since 0.0.1
-         */
-        ElementPrototype.lastOfChildren = function(cssSelector) {
-            var foundVNode = this.vnode.lastOfVChildren(cssSelector);
-            return foundVNode && foundVNode.domNode;
-        };
-
-        /**
-         * Indicates if the element would be selected by the specified selector string.
-         * Alias for matchesSelector()
-         *
-         * @method matches
-         * @param [cssSelector] {String} the css-selector to check for
-         * @return {Boolean}
-         * @since 0.0.1
-         */
-        ElementPrototype.matches = function(selectors) {
-            return this.vnode.matchesSelector(selectors);
-        };
-
-        /**
-         * Indicates if the element would be selected by the specified selector string.
-         * Alias for matches()
-         *
-         * @method matchesSelector
-         * @param [cssSelector] {String} the css-selector to check for
-         * @return {Boolean}
-         * @since 0.0.1
-         */
-        ElementPrototype.matchesSelector = function(selectors) {
-            return this.vnode.matchesSelector(selectors);
-        };
-
-        /**
-         * Reference to the next of sibbling Element, where the related dom-node is an Element(nodeType===1).
-         *
-         * @method next
-         * @param [cssSelector] {String} css-selector to be used as a filter
-         * @return {Element|null}
-         * @type Element
-         * @since 0.0.1
-         */
-        ElementPrototype.next = function(cssSelector) {
-            var vnode = this.vnode,
-                found, vNextElement, firstCharacter, i, len;
-            if (!cssSelector) {
-                vNextElement = vnode.vNextElement;
-                return vNextElement && vNextElement.domNode;
-            }
-            else {
-                i = -1;
-                len = cssSelector.length;
-                while (!firstCharacter && (++i<len)) {
-                    firstCharacter = cssSelector[i];
-                    (firstCharacter===' ') && (firstCharacter=null);
-                }
-                if (firstCharacter==='>') {
-                    return null;
-                }
-            }
-            vNextElement = vnode;
-            do {
-                vNextElement = vNextElement.vNextElement;
-                found = vNextElement && vNextElement.matchesSelector(cssSelector);
-            } while(vNextElement && !found);
-            return found ? vNextElement.domNode : null;
-        };
-
-       /**
-        * Prepends a Element or text at the start of Element's innerHTML, or before the `refElement`.
-        *
-        * @method prepend
-        * @param content {Element|Element|ElementArray|String} content to prepend
-        * @param [escape] {Boolean} whether to insert `escaped` content, leading it into only text inserted
-        * @param [refElement] {Element} reference Element where the content should be prepended
-        * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
-        * @return {Element} the created Element (or the last when multiple)
-        * @since 0.0.1
-        */
-        ElementPrototype.prepend = function(content, escape, refElement, silent) {
-            var instance = this,
-                vnode = instance.vnode,
-                i, len, item, createdElement, vnodes, vChildNodes, vRefElement,
-            doPrepend = function(oneItem) {
-                escape && (oneItem.nodeType===1) && (oneItem=DOCUMENT.createTextNode(oneItem.getOuterHTML()));
-                createdElement = refElement ? vnode._insertBefore(oneItem.vnode, refElement.vnode) : vnode._appendChild(oneItem.vnode);
-                // CAUTIOUS: when using TextNodes, they might get merged (vnode._normalize does this), which leads into disappearance of refElement:
-                refElement = createdElement;
-            };
-            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
-            vnode._noSync()._normalizable(false);
-            if (!refElement) {
-                vChildNodes = vnode.vChildNodes;
-                vRefElement = vChildNodes && vChildNodes[0];
-                refElement = vRefElement && vRefElement.domNode;
-            }
-            (typeof content===STRING) && (content=htmlToVFragments(content, vnode.ns));
-            if (content.isFragment) {
-                vnodes = content.vnodes;
-                len = vnodes.length;
-                // to manage TextNodes which might get merged, we loop downwards:
-                for (i=len-1; i>=0; i--) {
-                    doPrepend(vnodes[i].domNode);
-                }
-            }
-            else if (Array.isArray(content)) {
-                len = content.length;
-                // to manage TextNodes which might get merged, we loop downwards:
-                for (i=len-1; i>=0; i--) {
-                    item = content[i];
-                    doPrepend(item);
-                }
-            }
-            else {
-                doPrepend(content);
-            }
-            vnode._normalizable(true)._normalize();
-            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(false);
-            return createdElement;
-        };
-
-        /**
-         * Reference to the previous of sibbling Element, where the related dom-node is an Element(nodeType===1).
-         *
-         * @method previous
-         * @param [cssSelector] {String} css-selector to be used as a filter
-         * @return {Element|null}
-         * @type Element
-         * @since 0.0.1
-         */
-        ElementPrototype.previous = function(cssSelector) {
-            var vnode = this.vnode,
-                found, vPreviousElement, firstCharacter, i, len;
-            if (!cssSelector) {
-                vPreviousElement = vnode.vPreviousElement;
-                return vPreviousElement && vPreviousElement.domNode;
-            }
-            else {
-                i = -1;
-                len = cssSelector.length;
-                while (!firstCharacter && (++i<len)) {
-                    firstCharacter = cssSelector[i];
-                    (firstCharacter===' ') && (firstCharacter=null);
-                }
-                if (firstCharacter==='>') {
-                    return null;
-                }
-            }
-            vPreviousElement = vnode;
-            do {
-                vPreviousElement = vPreviousElement.vPreviousElement;
-                found = vPreviousElement && vPreviousElement.matchesSelector(cssSelector);
-            } while(vPreviousElement && !found);
-            return found ? vPreviousElement.domNode : null;
-        };
-
-        /**
-         * Returns the first Element within the Element, that matches the CSS-selectors. You can pass one, or multiple CSS-selectors. When passed multiple,
-         * they need to be separated by a `comma`.
-         *
-         * @method querySelector
-         * @param selectors {String} CSS-selector(s) that should match
-         * @param [insideItags=false] {Boolean} no deepsearch in iTags --> by default, these elements should be hidden
-         * @return {Element}
-         */
-        ElementPrototype.querySelector = function(selectors, insideItags) {
-            var found,
-                i = -1,
-                len = selectors.length,
-                firstCharacter, startvnode,
-                thisvnode = this.vnode,
-                inspectChildren = function(vnode) {
-                    var vChildren = vnode.vChildren,
-                        len2 = vChildren ? vChildren.length : 0,
-                        j, vChildNode;
-                    for (j=0; (j<len2) && !found; j++) {
-                        vChildNode = vChildren[j];
-                        vChildNode.matchesSelector(selectors, thisvnode) && (found=vChildNode.domNode);
-                        found || (!insideItags && vChildNode.isItag && (vChildNode.tag!==I_PARCEL)) || inspectChildren(vChildNode); // not dive into itags (except from i-parcel)
-                    }
-                };
-            while (!firstCharacter && (++i<len)) {
-                firstCharacter = selectors[i];
-                (firstCharacter===' ') && (firstCharacter=null);
-            }
-            startvnode = SIBLING_MATCH_CHARACTER[firstCharacter] ? thisvnode.vParent : thisvnode;
-            startvnode && inspectChildren(startvnode);
-            return found;
-        };
-
-        /**
-         * Returns an ElementArray of all Elements within the Element, that match the CSS-selectors. You can pass one, or multiple CSS-selectors. When passed multiple,
-         * they need to be separated by a `comma`.
-         *
-         * querySelectorAll is a snapshot of the dom at the time this method was called. It is not updated when changes of the dom are made afterwards.
-         *
-         * @method querySelectorAll
-         * @param selectors {String} CSS-selector(s) that should match
-         * @param [insideItags=false] {Boolean} no deepsearch in iTags --> by default, these elements should be hidden
-         * @return {ElementArray} non-life Array (snapshot) with Elements
-         */
-        ElementPrototype.querySelectorAll = function(selectors, insideItags) {
-            var found = ElementArray.createArray(),
-                i = -1,
-                len = selectors.length,
-                firstCharacter, startvnode,
-                thisvnode = this.vnode,
-                inspectChildren = function(vnode) {
-                    var vChildren = vnode.vChildren,
-                        len2 = vChildren ? vChildren.length : 0,
-                        j, vChildNode;
-                    for (j=0; j<len2; j++) {
-                        vChildNode = vChildren[j];
-                        vChildNode.matchesSelector(selectors, thisvnode) && (found[found.length]=vChildNode.domNode);
-                        (!insideItags && vChildNode.isItag && (vChildNode.tag!==I_PARCEL)) || inspectChildren(vChildNode); // not dive into itags
-                    }
-                };
-            while (!firstCharacter && (++i<len)) {
-                firstCharacter = selectors[i];
-                (firstCharacter===' ') && (firstCharacter=null);
-            }
-            startvnode = SIBLING_MATCH_CHARACTER[firstCharacter] ? thisvnode.vParent : thisvnode;
-            startvnode && inspectChildren(startvnode);
-            return found;
-        };
-
-       /**
-         * Checks whether the Element has its rectangle inside the outbound-Element.
-         * This is no check of the DOM-tree, but purely based upon coordinates.
-         *
-         * @method rectangleInside
-         * @param outboundElement {Element} the Element where this element should lie inside
-         * @return {Boolean} whether the Element lies inside the outboundElement
-         * @since 0.0.1
-         */
-        ElementPrototype.rectangleInside = function(outboundElement) {
-            var instance = this,
-                outerRect = outboundElement.getBoundingClientRect(),
-                innerRect = instance.getBoundingClientRect();
-            return (outerRect.left<=innerRect.left) &&
-                   (outerRect.top<=innerRect.top) &&
-                   ((outerRect.left+outboundElement.offsetWidth)>=(innerRect.left+instance.offsetWidth)) &&
-                   ((outerRect.top+outboundElement.offsetHeight)>=(innerRect.top+instance.offsetHeight));
-        };
-
-       /**
-        * Removes the Element from the DOM.
-        * Alias for thisNode.parentNode.removeChild(thisNode);
-        *
-        * @method remove
-        * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
-        * @return {Node} the DOM-node that was removed. You could re-insert it at a later time.
-        * @since 0.0.1
-        */
-        ElementPrototype.remove = function(silent) {
-            var instance = this,
-                vnode = instance.vnode,
-                vParent = vnode.vParent;
-            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
-            vParent && vParent._removeChild(vnode);
-            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(false);
-            return instance;
-        };
-
-       /**
-        * Removes the attribute from the Element.
-        *
-        * Alias for removeAttribute() BUT is chainable instead (removeAttribute is not).
-        *
-        * @method removeAttr
-        * @param attributeName {String}
-        * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
-        * @chainable
-        * @since 0.0.1
-        */
-        ElementPrototype.removeAttr = function(attributeName, silent) {
-            this.removeAttribute(attributeName, silent);
-            return this;
-        };
-
-       /**
-         * Removes multiple attributes on the Element.
-         * The argument should be one ore more AttributeNames.
-         *
-         * @example
-         * instance.removeAttrs(['tabIndex', 'style']);
-         *
-         * @method removeAttrs
-         * @param attributeData {Array|String}
-         * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
-         * @chainable
-         * @since 0.0.1
-        */
-        ElementPrototype.removeAttrs = function(attributeData, silent) {
-            var instance = this;
-            Array.isArray(attributeData) || (attributeData=[attributeData]);
-            attributeData.forEach(function(item) {
-                instance.removeAttribute(item, silent);
-            });
-            return instance;
-        };
-
-       /**
-        * Removes the attribute from the Element.
-        *
-        * Use removeAttr() to be able to chain.
-        *
-        * @method removeAttr
-        * @param attributeName {String}
-        * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
-        * @since 0.0.1
-        */
-        ElementPrototype._removeAttribute = ElementPrototype.removeAttribute;
-        ElementPrototype.removeAttribute = function(attributeName, silent) {
-            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
-            this.vnode._removeAttr(attributeName);
-            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(false);
-        };
-
-       /**
-         * Removes the attribute of the Elementinside a specified namespace
-         *
-         * @method removeAttributeNS
-         * @param nameSpace {String} the namespace where to attribuyte should be set in
-         * @param attributeName {String}
-         * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
-        */
-        ElementPrototype._removeAttributeNS = ElementPrototype.removeAttributeNS;
-        ElementPrototype.removeAttributeNS = function(nameSpace, attributeName, silent) {
-            this.removeAttribute((nameSpace ? nameSpace+':' : '')+attributeName, silent);
-        };
-
-        /**
-        * Removes the Element's child-Node from the DOM.
-        *
-        * @method removeChild
-        * @param domNode {Node} the child-Node to remove
-        * @return {Node} the DOM-node that was removed. You could re-insert it at a later time.
-        */
-        ElementPrototype._removeChild = ElementPrototype.removeChild;
-        ElementPrototype.removeChild = function(domNode) {
-            var instance = this;
-            instance.vnode._removeChild(domNode.vnode);
-            return instance;
-        };
-
-       /**
-        * Removes a className from the Element.
-        *
-        * @method removeClass
-        * @param className {String|Array} the className that should be removed. May be an Array of classNames.
-        * @param [returnPromise] {Boolean} whether to return a Promise instead of `this`, which might be useful in case of
-        *        transition-properties. The promise will fullfil when the transition is ready, or immediately when no transitioned.
-        * @param [transitionFix] set this to `true` if you experience transition-problems due to wrong calculated css (mostly because of the `auto` value)
-        *        Setting this parameter, will calculate the true css of the transitioned properties and set this temporarely inline, to fix the issue.
-        *        Don't use it when not needed, it has a slightly performancehit.
-        *        No need to set when `returnPromise` is set --> returnPromise always handles the transitionFix.
-        * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
-        * @return {Promise|this} In case `returnPromise` is set, a Promise returns with the next handles:
-        *        <ul>
-        *            <li>cancel() {Promise}</li>
-        *            <li>freeze() {Promise}</li>
-        *            <li>unfreeze()</li>
-        *            <li>finish() {Promise}</li>
-        *        </ul>
-        *        These handles resolve with the `elapsed-time` as first argument of the callbackFn
-        * @since 0.0.1
-        */
-        ElementPrototype.removeClass = function(className, returnPromise, transitionFix, silent) {
-            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
-            var instance = this,
-                transPromise = (returnPromise || transitionFix) && getClassTransPromise(instance, REMOVE, className),
-                returnValue = returnPromise ? transPromise : instance;
-            transPromise || instance.getClassList().remove(className);
-            if (silent && DOCUMENT.suppressMutationEvents) {
-                if (returnValue===instance) {
-                    DOCUMENT.suppressMutationEvents(false);
-                }
-                else {
-                    returnValue.finally(function() {
-                        DOCUMENT.suppressMutationEvents(false);
-                    });
-                }
-            }
-            return returnValue;
-        };
-
-       /**
-        * Removes data specified by `key` that was set by using `setData()`.
-        * When no arguments are passed, all node-data (key-value pairs) will be removed.
-        *
-        * @method removeData
-        * @param [key] {string} name of the key, when not set, all data is removed
-        * @param [deep] {Boolean} whether to set the data to all descendants recursively
-        * @chainable
-        * @since 0.0.1
-        */
-        ElementPrototype.removeData = function(key, deep) {
-            var instance = this,
-                vnode = instance.vnode;
-            if (vnode._data) {
-                if (key) {
-                    delete vnode._data[key];
-                }
-                else {
-                    // we cannot just redefine _data, for it is set as readonly
-                    vnode._cleanData();
-                    if (deep) {
-                        instance.getChildren().forEach(function(element) {
-                            element.removeData(key, true);
-                        });
-                    }
-                }
-            }
-            return instance;
-        };
-
-       /**
-        * Removes the Elment's `id`.
-        *
-        * @method removeId
-        * @chainable
-        * @since 0.0.1
-        */
-        ElementPrototype.removeId = function() {
-            return this.removeAttr('id');
-        };
-
-       /**
-        * Removes a css-property (inline) out of the Element.
-        * No need to use camelCase.
-        *
-        * @method removeInlineStyle
-        * @param cssProperty {String} the css-property to remove
-        * @param [pseudo] {String} to look inside a pseudo-style
-        * @param [returnPromise] {Boolean} whether to return a Promise instead of `this`, which might be useful in case of
-        *        transition-properties. The promise will fullfil when the transition is ready, or immediately when no transitioned.
-        * @chainable
-        * @since 0.0.1
-        */
-        ElementPrototype.removeInlineStyle = function(cssProperty, pseudo, returnPromise) {
-            return this.removeInlineStyles({property: cssProperty, pseudo: pseudo}, returnPromise);
-        };
-
-       /**
-        * Removes multiple css-properties (inline) out of the Element. You need to supply an Array of Objects, with the properties:
-        *        <ul>
-        *            <li>property  {String}</li>
-        *            <li>pseudo  {String}</li>
-        *        <ul>
-        * No need to use camelCase.
-        *
-        * @method removeInlineStyles
-        * @param cssProperties {Array|Object} Array of objects, Strings (or 1 Object/String).
-        *       When String, then speduo is considered as undefined. When `Objects`, they need the properties:
-        *        <ul>
-        *            <li>property  {String}</li>
-        *            <li>pseudo  {String}</li>
-        *        <ul>
-        * @param [returnPromise] {Boolean} whether to return a Promise instead of `this`, which might be useful in case of
-        *        transition-properties. The promise will fullfil when the transition is ready, or immediately when no transitioned.
-        * @chainable
-        * @since 0.0.1
-        */
-        ElementPrototype.removeInlineStyles = function(cssProperties, returnPromise) {
-            // There will be 3 sets of styles:
-            // `fromStyles` --> the current styles, only exactly calculated -without `auto`- (that is, for the transitioned properties)
-            // `toStylesExact` --> the new styles, exactly calculated -without `auto`- (that is, for the transitioned properties)
-            // `vnodeStyles` --> the new styles as how they should be in the end (f.i. with `auto`)
-            var instance = this,
-                vnode = instance.vnode,
-                removed = [],
-                transCount = 0,
-                transitionProperties = {},
-                maxtranstime = 0,
-                needSync, prop, styles, i, len, item, hasTransitionedStyle, promise, vnodeStyles,
-                pseudo, group, clonedElement, fromStyles, toStylesExact, value, transproperty, transtime;
-
-            Array.isArray(cssProperties) || (cssProperties=[cssProperties]);
-            cssProperties = getVendorCSS(cssProperties);
-            len = cssProperties.length;
-            vnodeStyles = vnode.styles;
-            for (i=0; i<len; i++) {
-                item = cssProperties[i];
-                if (typeof item==='string') {
-                    item = cssProperties[i] = {
-                        property: item
-                    };
-                }
-                pseudo = item.pseudo;
-                group = pseudo || 'element';
-                styles = vnodeStyles[group];
-                if (styles) {
-                    prop = item.property;
-                    // if property is vendor-specific transition, or transform, than we reset it to the current vendor
-                    if (styles[prop]) {
-                        fromStyles || (fromStyles=vnodeStyles.deepClone());
-                        needSync = true;
-                        if ((prop!==VENDOR_TRANSITION_PROPERTY) && instance.hasTransition(prop, pseudo)) {
-                            // store the calculated value:
-                            fromStyles[group] || (fromStyles[group]={});
-                            (prop===VENDOR_TRANSFORM_PROPERTY) || (fromStyles[group][prop]=instance.getStyle(prop, group));
-                            hasTransitionedStyle = true;
-                            removed[removed.length] = {
-                                group: group,
-                                property: prop,
-                                pseudo: pseudo
-                            };
-                        }
-                        delete styles[prop];
-                        (styles.size()===0) && (delete vnode.styles[pseudo || 'element']);
-                    }
-                }
-            }
-
-            RUNNING_ON_NODE && (hasTransitionedStyle=false);
-            if (hasTransitionedStyle) {
-                // fix the current style with what is actual calculated:
-                vnode.styles = fromStyles; // exactly styles, so we can transition well
-                instance.setClass(NO_TRANS);
-                instance.setAttr(STYLE, vnode.serializeStyles());
-                async(function() {
-                    // needs to be done in the next eventcyle, otherwise webkit-browsers miscalculate the syle (with transition on)
-                    instance.removeClass(NO_TRANS);
-                });
-
-                // now calculate the final value
-                clonedElement = instance.cloneNode(true);
-                toStylesExact = vnodeStyles.deepClone();
-                clonedElement.vnode.styles = toStylesExact;
-                clonedElement.setClass(INVISIBLE_UNFOCUSABLE);
-                clonedElement.setAttr(STYLE, clonedElement.vnode.serializeStyles());
-                DOCUMENT.body.append(clonedElement);
-                // clonedElement has `vnodeStyles`, but we change them into `toStylesExact`
-
-                len = removed.length;
-                for (i=0; i<len; i++) {
-                    item = removed[i];
-                    prop = item.property;
-                    group = item.pseudo || 'element';
-                    if (!NON_CLONABLE_STYLES[prop]) {
-                        value = (prop===VENDOR_TRANSFORM_PROPERTY) ? clonedElement.getInlineStyle(prop, item.pseudo) : clonedElement.getStyle(prop, item.pseudo);
-                        if (value) {
-                            toStylesExact[group] || (toStylesExact[group]={});
-                            toStylesExact[group][prop] = value;
-                        }
-                    }
-                    // look if we really have a change in the value:
-
-                    if (toStylesExact[group] && (toStylesExact[group][prop]!==fromStyles[group][prop])) {
-                        transproperty = instance.getTransition(prop, (group==='element') ? null : group);
-                        transtime = transproperty.delay+transproperty.duration;
-                        maxtranstime = Math.max(maxtranstime, transtime);
-                        if (transtime>0) {
-                            transCount++;
-                            // TODO: transitionProperties supposes that we DO NOT have pseudo transitions!
-                            // as soon we do, we need to split this object for each 'group'
-                            transitionProperties[prop] = true;
-                        }
-                    }
-                }
-                hasTransitionedStyle = (transCount>0);
-                clonedElement.remove();
-            }
-            if (needSync) {
-                if (returnPromise || hasTransitionedStyle) {
-                    promise = window.Promise.manage();
-                    // need to call `setAttr` in a next event-cycle, otherwise the eventlistener made
-                    // by `getTransPromise gets blocked.
-                    async(function() {
-                        if (hasTransitionedStyle) {
-                            // reset
-                            vnode.styles = toStylesExact;
-                            promise.then(function() {
-                                vnode.styles = vnodeStyles; // finally values, not exactly calculated, but as is passed through
-                                instance.setClass(NO_TRANS);
-                                instance.setAttr(STYLE, vnode.serializeStyles());
-                            }).finally(function() {
-                                async(function() {
-                                    instance.removeClass(NO_TRANS);
-                                    // webkit browsers seems to need to recalculate their set width:
-                                    instance.getBoundingClientRect();
-                                });
-                            });
-                        }
-                        else {
-                            vnode.styles = vnodeStyles; // finally values, not exactly calculated, but as is passed through
-                        }
-                        getTransPromise(instance, hasTransitionedStyle, null, transCount, transitionProperties, maxtranstime).then(
-                            promise.fulfill
-                        ).catch(promise.reject);
-                        instance.setAttr(STYLE, vnode.serializeStyles());
-                    });
-                }
-                else {
-                    vnode.styles = vnodeStyles; // finally values, not exactly calculated, but as is passed through
-                    instance.setAttr(STYLE, vnode.serializeStyles());
-                    // webkit browsers seems to need to recalculate their set width:
-                    instance.getBoundingClientRect();
-                }
-            }
-            // else
-            return returnPromise ? (promise || window.Promise.resolve()) : instance;
-        };
-
-       /**
-        * Removes a subtype `transform`-css-property of (inline) out of the Element.
-        * This way you can sefely remove partial `transform`-properties while remaining the
-        * other inline `transform` css=properties.
-        *
-        * See more about tranform-properties: https://developer.mozilla.org/en-US/docs/Web/CSS/transform
-        *
-        * @method removeInlineTransition
-        * @param transitionProperty {String} the css-transform property to remove
-        * @param [pseudo] {String} to look inside a pseudo-style
-        * @chainable
-        * @since 0.0.1
-        */
-        ElementPrototype.removeInlineTransition = function(transitionProperty, pseudo) {
-            return this.removeInlineTransitions({property: transitionProperty, pseudo: pseudo});
-        };
-
-       /**
-        * Removes multiple subtype `transform`-css-property of (inline) out of the Element.
-        * This way you can sefely remove partial `transform`-properties while remaining the
-        * other inline `transform` css=properties.
-        * You need to supply an Array of Objects, with the properties:
-        *        <ul>
-        *            <li>property  {String}</li>
-        *            <li>pseudo  {String}</li>
-        *        <ul>
-        *
-        * See more about tranform-properties: https://developer.mozilla.org/en-US/docs/Web/CSS/transform
-        *
-        * @method removeInlineTransitions
-        * @param transitionProperties {Array|Object} the css-transform properties to remove
-        * @chainable
-        * @since 0.0.1
-        */
-        ElementPrototype.removeInlineTransitions = function(transitionProperties) {
-            var instance = this,
-                vnode = instance.vnode,
-                styles = vnode.styles,
-                groupStyle, transitionStyles, i, len, item, needSync, transitionProperty, pseudo;
-
-            if (styles) {
-                Array.isArray(transitionProperties) || (transitionProperties=[transitionProperties]);
-                transitionProperties = getVendorCSS(transitionProperties);
-                len = transitionProperties.length;
-                for (i=0; i<len; i++) {
-                    item = transitionProperties[i];
-                    pseudo = item.pseudo;
-                    groupStyle = styles && styles[pseudo || 'element'];
-                    transitionStyles = groupStyle && groupStyle[VENDOR_TRANSITION_PROPERTY];
-                    if (transitionStyles) {
-                        transitionProperty = item.property;
-                        if (transitionStyles[transitionProperty]) {
-                            delete transitionStyles[transitionProperty];
-                            (transitionStyles.size()===0) && (delete groupStyle[VENDOR_TRANSITION_PROPERTY]);
-                            (styles.size()===0) && (delete vnode.styles[pseudo || 'element']);
-                            needSync = true;
-                        }
-                    }
-                }
-            }
-            needSync && instance.setAttr(STYLE, vnode.serializeStyles());
-            return instance;
-        };
-
-       /**
-        * Replaces the Element with a new Element.
-        *
-        * @method replace
-        * @param content {Element|Element|ElementArray|String} content to replace
-        * @param [escape] {Boolean} whether to insert `escaped` content, leading it into only text inserted
-        * @return {Element} the created Element (or the last when multiple)
-        * @since 0.0.1
-        */
-        ElementPrototype.replace = function(newElement, escape) {
-            var instance = this,
-                vnode = instance.vnode,
-                previousVNode = vnode.vPrevious,
-                vParent = vnode.vParent,
-                createdElement;
-            createdElement = previousVNode ? vParent.domNode.append(newElement, escape, previousVNode.domNode) : vParent.domNode.prepend(newElement, escape);
-            instance.setClass(HIDDEN);
-            instance.remove();
-            return createdElement;
-        };
-
-        /**
-        * Replaces the Element's child-Element with a new Element.
-        *
-        * @method replaceChild
-        * @param newElement {Element} the new Element
-        * @param oldVChild {Element} the Element to be replaced
-        * @param [escape] {Boolean} whether to insert `escaped` content, leading it into only text inserted
-        * @return {Element} the Element that was removed (equals oldVChild)
-        * @since 0.0.1
-        */
-        ElementPrototype._replaceChild = ElementPrototype.replaceChild;
-        ElementPrototype.replaceChild = function(newDomNode, oldDomNode, escape) {
-            return oldDomNode.replace(newDomNode, escape);
-        };
-
-       /**
-        * Replaces the className of the Element with a new className.
-        * If the previous className is not available, the new className is set nevertheless.
-        *
-        * @method replaceClass
-        * @param prevClassName {String} the className to be replaced
-        * @param newClassName {String} the className to be set
-        * @param [force ] {Boolean} whether the new className should be set, even is the previous className isn't there
-        * @param [returnPromise] {Boolean} whether to return a Promise instead of `this`, which might be useful in case of
-        *        transition-properties. The promise will fullfil when the transition is ready, or immediately when no transitioned.
-        * @param [transitionFix] set this to `true` if you experience transition-problems due to wrong calculated css (mostly because of the `auto` value)
-        *        Setting this parameter, will calculate the true css of the transitioned properties and set this temporarely inline, to fix the issue.
-        *        Don't use it when not needed, it has a slightly performancehit.
-        *        No need to set when `returnPromise` is set --> returnPromise always handles the transitionFix.
-        * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
-        * @return {Promise|this} In case `returnPromise` is set, a Promise returns with the next handles:
-        *        <ul>
-        *            <li>cancel() {Promise}</li>
-        *            <li>freeze() {Promise}</li>
-        *            <li>unfreeze()</li>
-        *            <li>finish() {Promise}</li>
-        *        </ul>
-        *        These handles resolve with the `elapsed-time` as first argument of the callbackFn
-        * @since 0.0.1
-        */
-        ElementPrototype.replaceClass = function(prevClassName, newClassName, force, returnPromise, transitionFix, silent) {
-            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
-            var instance = this,
-                transPromise = (returnPromise || transitionFix) && getClassTransPromise(instance, REPLACE, newClassName, prevClassName, force),
-                returnValue;
-            if (force || instance.hasClass(prevClassName)) {
-                returnValue = returnPromise ? transPromise : instance;
-                transPromise || instance.removeClass(prevClassName).setClass(newClassName);
-                return returnValue;
-            }
-            if (silent && DOCUMENT.suppressMutationEvents) {
-                if (returnValue===instance) {
-                    DOCUMENT.suppressMutationEvents(false);
-                }
-                else {
-                    returnValue.finally(function() {
-                        DOCUMENT.suppressMutationEvents(false);
-                    });
-                }
-            }
-            return returnPromise ? window.Promise.resolve() : instance;
-        };
-
-        /**
-         * Scrolls the content of the Element into the specified scrollposition.
-         * Only available when the Element has overflow.
-         *
-         * @method scrollTo
-         * @param x {Number} left-offset in pixels
-         * @param y {Number} top-offset in pixels
-         * @chainable
-         * @since 0.0.1
-        */
-        ElementPrototype.scrollTo = function(x, y) {
-            var instance = this;
-            instance.scrollLeft = x;
-            instance.scrollTop = y;
-            return instance;
-        };
-
-       /**
-         * Sets the attribute on the Element with the specified value.
-         *
-         * Alias for setAttribute(), BUT differs in a way that setAttr is chainable, setAttribute is not.
-         *
-         * @method setAttr
-         * @param attributeName {String}
-         * @param value {Any} the value that belongs to `key`
-         * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
-         * @chainable
-         * @since 0.0.1
-        */
-        ElementPrototype.setAttr = function(attributeName, value, silent) {
-            var instance = this;
-            instance.setAttribute(attributeName, value, silent);
-            return instance;
-        };
-
-       /**
-         * Sets the attribute on the Element with the specified value.
-         *
-         * Alias for setAttr(), BUT differs in a way that setAttr is chainable, setAttribute is not.
-         *
-         * @method setAttribute
-         * @param attributeName {String}
-         * @param value {String} the value for the attributeName
-         * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
-        */
-        ElementPrototype._setAttribute = ElementPrototype.setAttribute;
-        ElementPrototype.setAttribute = function(attributeName, value, silent) {
-            var instance = this,
-                vnode = instance.vnode;
-            (value==='') && (value=null);
-            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
-            ((value!==null) && (value!==undefined)) ? vnode._setAttr(attributeName, value) : vnode._removeAttr(attributeName);
-            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(false);
-        };
-
-       /**
-         * Sets the attribute on the Element with the specified value inside a specified namespace
-         *
-         * @method setAttributeNS
-         * @param nameSpace {String} the namespace where to attribuyte should be set in
-         * @param attributeName {String}
-         * @param value {String} the value for the attributeName
-         * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
-        */
-        ElementPrototype._setAttributeNS = ElementPrototype.setAttributeNS;
-        ElementPrototype.setAttributeNS = function(nameSpace, attributeName, value, silent) {
-            this.setAttribute((nameSpace ? nameSpace+':' : '')+attributeName, value, silent);
-        };
-
-       /**
-         * Sets multiple attributes on the Element with the specified value.
-         * The argument should be one ore more Objects with the properties: `name` and `value`
-         *
-         * @example
-         * instance.setAttrs([
-         *                      {name: 'tabIndex', value: '0'},
-         *                      {name: 'style', value: 'color: #000;'}
-         *                  ]);
-         *
-         * @method setAttrs
-         * @param attributeData {Array|Object}
-         * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
-         * @chainable
-         * @since 0.0.1
-        */
-        ElementPrototype.setAttrs = function(attributeData, silent) {
-            var instance = this;
-            Array.isArray(attributeData) || (attributeData=[attributeData]);
-            attributeData.forEach(function(item) {
-                instance.setAttribute(item.name, item.value, silent);
-            });
-            return instance;
-        };
-
-       /**
-        * Adds a class to the Element. If the class already exists it won't be duplicated.
-        *
-        * @method setClass
-        * @param className {String|Array} className to be added, may be an array of classNames
-        * @param [returnPromise] {Boolean} whether to return a Promise instead of `this`, which might be useful in case of
-        *        transition-properties. The promise will fullfil when the transition is ready, or immediately when no transitioned.
-        * @param [transitionFix] set this to `true` if you experience transition-problems due to wrong calculated css (mostly because of the `auto` value)
-        *        Setting this parameter, will calculate the true css of the transitioned properties and set this temporarely inline, to fix the issue.
-        *        Don't use it when not needed, it has a slightly performancehit.
-        *        No need to set when `returnPromise` is set --> returnPromise always handles the transitionFix.
-        * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
-        * @return {Promise|this} In case `returnPromise` is set, a Promise returns with the next handles:
-        *        <ul>
-        *            <li>cancel() {Promise}</li>
-        *            <li>freeze() {Promise}</li>
-        *            <li>unfreeze()</li>
-        *            <li>finish() {Promise}</li>
-        *        </ul>
-        *        These handles resolve with the `elapsed-time` as first argument of the callbackFn
-        * @since 0.0.1
-        */
-        ElementPrototype.setClass = function(className, returnPromise, transitionFix, silent) {
-            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
-            var instance = this,
-                transPromise = (returnPromise || transitionFix) && getClassTransPromise(instance, SET, className),
-                returnValue = returnPromise ? transPromise : instance;
-            transPromise || instance.getClassList().add(className);
-            if (silent && DOCUMENT.suppressMutationEvents) {
-                if (returnValue===instance) {
-                    DOCUMENT.suppressMutationEvents(false);
-                }
-                else {
-                    returnValue.finally(function() {
-                        DOCUMENT.suppressMutationEvents(false);
-                    });
-                }
-            }
-            return returnValue;
-        };
-
-        /**
-         * Stores arbitary `data` at the Element (actually at vnode). This has nothing to do with node-attributes whatsoever,
-         * it is just a way to bind any data to the specific Element so it can be retrieved later on with `getData()`.
-         *
-         * @method setData
-         * @param key {string} name of the key
-         * @param value {Any} the value that belongs to `key`
-         * @param [deep] {Boolean} whether to set the data to all descendants recursively
-         * @chainable
-         * @since 0.0.1
-        */
-        ElementPrototype.setData = function(key, value, deep) {
-            var instance = this,
-                vnode = instance.vnode;
-            if (value!==undefined) {
-                vnode._data || Object.protectedProp(vnode, '_data', {});
-                vnode._data[key] = value;
-                if (deep) {
-                    instance.getChildren().forEach(function(element) {
-                        element.setData(key, value, true);
-                    });
-                }
-            }
-            return instance;
-        };
-
-        /**
-         * Sets the innerHTML of both the vnode as well as the representing dom-node.
-         * Goes through the vdom, so it's superfast.
-         *
-         * Use this method instead of `innerHTML`
-         *
-         * Syncs with the DOM.
-         *
-         * @method setHTML
-         * @param val {String} the new value to be set
-         * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
-         * @chainable
-         * @since 0.0.1
-         */
-        ElementPrototype.setHTML = function(val, silent) {
-            var instance = this;
-            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
-            instance.vnode.innerHTML = val;
-            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(false);
-            return instance;
-        };
-
-       /**
-        * Sets the Elments `id`
-        *
-        * @method setId
-        * @param val {String} Elements new `id`
-        * @chainable
-        * @since 0.0.1
-        */
-        ElementPrototype.setId = function(val) {
-            return this.setAttr('id', val);
-        };
-
-       /**
-        * Sets a css-property (inline) for the Element.
-        *
-        * Note1: Do not use vendor-specific properties, but general (like `transform` instead of `-webkit-transform`)
-        *        This method will use the appropriate css-property.
-        * Note2: no need to camelCase cssProperty: both `margin-left` as well as `marginLeft` are fine
-        *
-        * @method setInlineStyle
-        * @param cssProperty {String} the css-property to be set
-        * @param value {String} the css-value
-        * @param [pseudo] {String} to look inside a pseudo-style
-        * @param [returnPromise] {Boolean} whether to return a Promise instead of `this`, which might be useful in case of
-        *        transition-properties. The promise will fullfil when the transition is ready, or immediately when no transitioned.
-        * @return {Promise|this}
-        * @since 0.0.1
-        */
-        ElementPrototype.setInlineStyle = function(cssProperty, value, pseudo, returnPromise) {
-            if (typeof pseudo==='boolean') {
-                returnPromise = pseudo;
-                pseudo = null;
-            }
-            return this.setInlineStyles([{property: cssProperty, value: value, pseudo: pseudo}], returnPromise);
-        };
-
-       /**
-        * Sets multiple css-properties (inline) for the Element at once.
-        *
-        * Note1: Do not use vendor-specific properties, but general (like `transform` instead of `-webkit-transform`)
-        *        This method will use the appropriate css-property.
-        * Note2: no need to camelCase cssProperty: both `margin-left` as well as `marginLeft` are fine
-        *
-        * @method setInlineStyles
-        * @param cssProperties {Array|Object} the css-properties to be set, specified as an Array of Objects, or 1 Object.
-        *        The objects should have the next properties:
-        *        <ul>
-        *            <li>property  {String}</li>
-        *            <li>value  {String}</li>
-        *            <li>pseudo  {String} (optional) --> not: not supported yet in browsers</li>
-        *        </ul>
-        * @param [returnPromise] {Boolean} whether to return a Promise instead of `this`, which might be useful in case of
-        *        transition-properties. The promise will fullfil when the transition is ready, or immediately when no transitioned.
-        * @return {Promise|this}
-        * @since 0.0.1
-        */
-        ElementPrototype.setInlineStyles = function(cssProperties, returnPromise) {
-            // There will be 3 sets of styles:
-            // `fromStyles` --> the current styles, only exactly calculated -without `auto`- (that is, for the transitioned properties)
-            // `toStylesExact` --> the new styles, exactly calculated -without `auto`- (that is, for the transitioned properties)
-            // `vnodeStyles` --> the new styles as how they should be in the end (f.i. with `auto`)
-            var instance = this,
-                vnode = instance.vnode,
-                transitionedProps = [],
-                transCount = 0,
-                maxtranstime = 0,
-                transitionProperties = {},
-                // third argument is a hidden feature --> used by getClassTransPromise()
-                avoidBackup = arguments[2],
-                styles, group, i, len, item, promise, hasTransitionedStyle, property, hasChanged, transtime,
-                pseudo, fromStyles, value, vnodeStyles, toStylesExact, clonedElement, transproperty;
-
-            // if there is a class-transition going on (initiated by getClassTransPromise),
-            // the we might need to update the internal bkpNode:
-            if (!avoidBackup && vnode._data) {
-                // there might be more bkpNodes, so we need to loop through the data:
-                vnode._data.each(function(bkpNode, key) {
-                    if (key.startsWith('bkpNode')) {
-                        bkpNode.setInlineStyles(cssProperties, null, true);
-                    }
-                });
-            }
-
-            Array.isArray(cssProperties) || (cssProperties=[cssProperties]);
-            cssProperties = getVendorCSS(cssProperties);
-            len = cssProperties.length;
-            vnode.styles || (vnode.styles={});
-            vnodeStyles = vnode.styles;
-            // Both `from` and `to` ALWAYS need to be set to their calculated value --> this makes transition
-            // work with `auto`, or when the page isn't completely loaded
-            // First: backup the actual style:
-            fromStyles = vnodeStyles.deepClone();
-            for (i=0; i<len; i++) {
-                item = cssProperties[i];
-                pseudo = item.pseudo;
-                group = pseudo || 'element';
-                vnodeStyles[group] || (vnodeStyles[group]={});
-                styles = vnodeStyles[group];
-                property = fromCamelCase(item.property);
-                value = item.value;
-
-                (property===VENDOR_TRANSITION_PROPERTY) && (value=extractor.toTransitionObject(value));
-                if (value===undefined) {
-                    delete styles[property];
-                }
-                else {
-                    styles[property] = value;
-                }
-                if ((property!==VENDOR_TRANSITION_PROPERTY) && instance.hasTransition(property, pseudo)) {
-                    fromStyles[group] || (fromStyles[group]={});
-                    (property===VENDOR_TRANSFORM_PROPERTY) || (fromStyles[group][property]=instance.getStyle(property, pseudo));
-                    if (fromStyles[group][property]!==value) {
-                        transproperty = instance.getTransition(property, (group==='element') ? null : group);
-                        transtime = transproperty.delay+transproperty.duration;
-                        maxtranstime = Math.max(maxtranstime, transtime);
-                        if (transtime>0) {
-                            hasTransitionedStyle = true;
-                            transCount++;
-                            // TODO: transitionProperties supposes that we DO NOT have pseudo transitions!
-                            // as soon we do, we need to split this object for each 'group'
-                            transitionProperties[property] = true;
-                            transitionedProps[transitionedProps.length] = {
-                                group: group,
-                                property: property,
-                                value: value,
-                                pseudo: pseudo
-                            };
-                        }
-                    }
-                }
-            }
-            RUNNING_ON_NODE && (hasTransitionedStyle=false);
-            if (hasTransitionedStyle) {
-                // we forced set the exact initial css inline --> this is the only way to make a right transition
-                // under all circumstances
-                toStylesExact = vnodeStyles.deepClone();
-                clonedElement = instance.cloneNode(true); // cloned with `vnodeStyles`
-                clonedElement.vnode.styles = toStylesExact;
-                // fix the current style with what is actual calculated:
-                vnode.styles = fromStyles; // exactly styles, so we can transition well
-                instance.setClass(NO_TRANS);
-                instance.setAttr(STYLE, vnode.serializeStyles());
-                async(function() {
-                    // needs to be done in the next eventcyle, otherwise webkit-browsers miscalculate the syle (with transition on)
-                    instance.removeClass(NO_TRANS);
-                });
-
-                // clonedElement has `vnodeStyles`, but we change them into `toStylesExact`
-                clonedElement.setClass(INVISIBLE_UNFOCUSABLE);
-                clonedElement.setAttr(STYLE, clonedElement.vnode.serializeStyles());
-                DOCUMENT.body.append(clonedElement);
-
-                // now calculate the `transition` styles and store them in the css-property of `toStylesExact`:
-                len = transitionedProps.length;
-                hasChanged = false;
-                for (i=0; i<len; i++) {
-                    item = transitionedProps[i];
-                    property = item.property;
-                    group = item.pseudo || 'element';
-                    if (!NON_CLONABLE_STYLES[property]) {
-                        value = (property===VENDOR_TRANSFORM_PROPERTY) ? clonedElement.getInlineStyle(property, item.pseudo) : clonedElement.getStyle(property, item.pseudo);
-                        if (value) {
-                            toStylesExact[group] || (toStylesExact[group]={});
-                            toStylesExact[group][property] = value;
-                        }
-                    }
-                    // look if we really have a change in the value:
-                    if (!hasChanged && toStylesExact[group]) {
-                        hasChanged = (toStylesExact[group][property]!==fromStyles[group][property]);
-                    }
-                }
-                clonedElement.remove();
-                hasTransitionedStyle = hasChanged;
-            }
-            RUNNING_ON_NODE && (hasTransitionedStyle=false);
-            if (returnPromise || hasTransitionedStyle) {
-                promise = window.Promise.manage();
-                // need to call `setAttr` in a next event-cycle, otherwise the eventlistener made
-                // by `getTransPromise gets blocked.
-                async(function() {
-                    if (hasTransitionedStyle) {
-                        // reset
-                        vnode.styles = toStylesExact;
-                        promise.then(function() {
-
-                            vnode.styles = vnodeStyles; // finally values, not exactly calculated, but as is passed through
-                            instance.setClass(NO_TRANS);
-                            instance.setAttr(STYLE, vnode.serializeStyles());
-                        }).finally(function() {
-                            async(function() {
-                                // needs to be done in the next eventcyle, otherwise webkit-browsers miscalculate the syle (with transition on)
-                                instance.removeClass(NO_TRANS);
-                                // webkit browsers seems to need to recalculate their set width:
-                                instance.getBoundingClientRect();
-                            });
-                        });
-                    }
-                    else {
-                        vnode.styles = vnodeStyles; // finally values, not exactly calculated, but as is passed through
-                    }
-                    getTransPromise(instance, hasTransitionedStyle, null, transCount, transitionProperties, maxtranstime).then(
-                        function() {
-                            promise.fulfill();
-                        }
-                    ).catch(promise.reject);
-                    instance.setAttr(STYLE, vnode.serializeStyles());
-                });
-                return returnPromise ? promise : instance;
-            }
-            // else
-            vnode.styles = vnodeStyles; // finally values, not exactly calculated, but as is passed through
-            instance.setAttr(STYLE, vnode.serializeStyles());
-            // webkit browsers seems to need to recalculate their set width:
-            instance.getBoundingClientRect();
-            return instance;
-        };
-
-       /**
-        * Sets a transform-css-property (inline) for the Element.
-        *
-        * See more about transitions: https://developer.mozilla.org/en-US/docs/Web/Guide/CSS/Using_CSS_transitions
-        *
-        * @method setStyle
-        * @param setInlineTransition {String} the css-property to be set, f.e. `translateX`
-        * @param duration {Number} the duration in seconds (may be a broken number, like `0.5`)
-        * @param [timingFunction] {String} See https://developer.mozilla.org/en-US/docs/Web/CSS/transition-timing-function
-        * @param delay {Number} the delay in seconds (may be a broken number, like `0.5`)
-        * @param [pseudo] {String} to look inside a pseudo-style
-        * @chainable
-        * @since 0.0.1
-        */
-        ElementPrototype.setInlineTransition = function(transitionProperty, duration, timingFunction, delay, pseudo) {
-            // transition-example: transition: width 2s, height 2s, transform 2s;
-            return this.setInlineTransitions({property: transitionProperty, duration: duration, timingFunction: timingFunction, delay: delay, pseudo: pseudo});
-        };
-
-       /**
-        * Sets a transform-css-property (inline) for the Element.
-        *
-        * See more about transitions: https://developer.mozilla.org/en-US/docs/Web/Guide/CSS/Using_CSS_transitions
-        *
-        * @method setStyle
-        * @param transitionProperties {Array} the css-transition-properties to be set, specified as an Array of Objects.
-        *        The objects should have the next properties:
-        *        <ul>
-        *            <li>property  {String}</li>
-        *            <li>duration  {Number}</li>
-        *            <li>timingFunction  {String} (optional)</li>
-        *            <li>delay  {Number} (optional)</li>
-        *            <li>pseudo  {String} (optional)</li>
-        *        </ul>
-        * @param [pseudo] {String} to look inside a pseudo-style
-        * @chainable
-        * @since 0.0.1
-        */
-        ElementPrototype.setInlineTransitions = function(transitionProperties) {
-            // transition-example: transition: width 2s, height 2s, transform 2s;
-            var instance = this,
-                vnode = instance.vnode,
-                transitionStyles, transitionProperty, group, trans, i, len, item;
-            Array.isArray(transitionProperties) || (transitionProperties=[transitionProperties]);
-            transitionProperties = getVendorCSS(transitionProperties);
-            len = transitionProperties.length;
-            vnode.styles || (vnode.styles={});
-            for (i=0; i<len; i++) {
-                item = transitionProperties[i];
-                if (item.property) {
-                    group = item.pseudo || 'element';
-                    vnode.styles[group] || (vnode.styles[group]={});
-                    vnode.styles[group][VENDOR_TRANSITION_PROPERTY] || (vnode.styles[group][VENDOR_TRANSITION_PROPERTY]={});
-                    transitionStyles = vnode.styles[group][VENDOR_TRANSITION_PROPERTY];
-                    transitionProperty = fromCamelCase(item.property);
-                    trans = transitionStyles[transitionProperty] = {
-                        duration: item.duration
-                    };
-                    item.timingFunction && (trans.timingFunction=item.timingFunction);
-                    item.delay && (trans.delay=item.delay);
-                }
-            }
-            instance.setAttr(STYLE, vnode.serializeStyles());
-            return instance;
-        };
-
-        /**
-         * Gets or sets the outerHTML of both the Element as well as the representing dom-node.
-         * Goes through the vdom, so it's superfast.
-         *
-         * Use this property instead of `outerHTML`
-         *
-         * Syncs with the DOM.
-         *
-         * @method setOuterHTML
-         * @param val {String} the new value to be set
-         * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
-         * @chainable
-         * @since 0.0.1
-         */
-        ElementPrototype.setOuterHTML = function(val, silent) {
-            var instance = this;
-            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
-            instance.vnode.outerHTML = val;
-            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(false);
-            return instance;
-        };
-
-        /**
-         * Sets the innerContent of the Element as plain text.
-         * Goes through the vdom, so it's superfast.
-         *
-         * Use this method instead of `textContent`
-         *
-         * Syncs with the DOM.
-         *
-         * @method setText
-         * @param val {String} the textContent to be set
-         * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
-         * @chainable
-         * @since 0.0.1
-         */
-        ElementPrototype.setText = function(val, silent) {
-            var instance = this;
-            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
-            instance.vnode.textContent = val;
-            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(false);
-            return instance;
-        };
-
-       /**
-        * Sets the value of the following Elements:
-        *
-        * <ul>
-        *     <li>input</li>
-        *     <li>textarea</li>
-        *     <li>select</li>
-        *     <li>any container that is `contenteditable`</li>
-        * </ul>
-        *
-        * Will emit a `valuechange`-event when a new value is set and ITSA's `event`-module is active.
-        *
-        * @method setValue
-        * @param val {String} thenew value to be set
-        * @chainable
-        * @since 0.0.1
-        */
-        ElementPrototype.setValue = function(val) {
-            var instance = this,
-                prevVal = instance.value,
-                contenteditable = instance.vnode.attrs.contenteditable,
-            // cautious: input and textarea must be accessed by their propertyname:
-            // input.getAttribute('value') would return the defualt-value instead of actusl
-            // and textarea.getAttribute('value') doesn't exist
-                editable = contenteditable && (contenteditable!=='false'),
-                tag, i, option, len, vChildren;
-            if (editable) {
-                instance.setHTML(val);
-            }
-            else {
-                tag = instance.getTagName();
-                if ((tag==='INPUT') || (tag==='TEXTAREA')) {
-                    instance.value = val;
-                }
-                else if (tag==='SELECT') {
-                    vChildren = instance.vnode.vChildren;
-                    len = vChildren.length;
-                    for (i=0; i<len; i++) {
-                        option = vChildren[i];
-                        if (option.attrs.value === val) {
-                            instance.selectedIndex = i;
-                            break;
-                        }
-                    }
-                }
-            }
-            // if `document._emitVC` is available, then invoke it to emit the `valuechange`-event
-            /**
-            * @event valuechange
-            * @param e.value {String} new value
-            * @param e.sourceTarget {Element} Element whare the valuechange occured
-            */
-            DOCUMENT._emitVC && (prevVal!==val) && DOCUMENT._emitVC(instance, val);
-            return instance;
-        };
-
-       /**
-         * Set the position of an html element in page coordinates.
-         * The element must be part of the DOM tree to have page coordinates (display:none or elements not appended return false).
-         *
-         * If the Element has the attribute `xy-constrian` set, then its position cannot exceed any matching container it lies within.
-         *
-         * @method setXY
-         * @param x {Number} x-value for new position (coordinates are page-based)
-         * @param y {Number} y-value for new position (coordinates are page-based)
-         * @param [constrain] {'window', Element, Object, String}
-         * <ul>
-         *     <li><b>'window'</b> to constrain to the visible window</li>
-         *     <li><b>Element</b> to constrain to a specified Element</li>
-         *     <li><b>Object</b> to constrain to an object with the properties: {x, y, w, h} where x and y are absolute pixels of the document
-         *            (like calculated with getX() and getY()).</li>
-         *     <li><b>String</b> to constrain to a specified css-selector, which should be an ancestor</li>
-         * </ul>
-         * @param [notransition=false] {Boolean} set true if you are sure positioning is without transition.
-         *        this isn't required, but it speeds up positioning. Only use when no transition is used:
-         *        when there is a transition, setting this argument `true` would miscalculate the position.
-         *        The return-value will be `this` in case `notransition`===true, making setXY to be chainable.
-         * @return {Promise|this}
-         * @since 0.0.1
-         */
-        ElementPrototype.setXY = function(x, y, constrain, notransition) {
-            console.log(NAME, 'setXY '+x+','+y);
-            var instance = this,
-                dif, match, constrainNode, byExactId, parent, clone, promise,
-                containerTop, containerRight, containerLeft, containerBottom, requestedX, requestedY,
-                transObject, xtrans, ytrans, inlinePosition, globalPosition, invisibleClass;
-
-            // default position to relative: check first inlinestyle because this goes quicker
-            inlinePosition = instance.getInlineStyle(POSITION);
-            inlinePosition || (globalPosition=instance.getStyle(POSITION));
-            if ((inlinePosition==='static') || (inlinePosition==='fixed') || (globalPosition==='static') || (globalPosition==='fixed')) {
-                inlinePosition = 'relative';
-                instance.setInlineStyle(POSITION, inlinePosition);
-            }
-            invisibleClass = (inlinePosition==='absolute') ? INVISIBLE : INVISIBLE_RELATIVE;
-            // make sure it has sizes and can be positioned
-            instance.setClass([invisibleClass, BORDERBOX]);
-            (instance.getInlineStyle('display')==='none') && instance.setClass(BLOCK);
-            constrain || (constrain=instance.getAttr('constrain-selector'));
-            if (constrain) {
-                if (constrain==='window') {
-                    containerLeft = window.getScrollLeft();
-                    containerTop = window.getScrollTop();
-                    containerRight = containerLeft + window.getWidth();
-                    containerBottom = containerTop + window.getHeight();
-                }
-                else {
-                    if (typeof constrain === STRING) {
-                        match = false;
-                        constrainNode = instance.getParent();
-                        byExactId = REGEXP_NODE_ID.test(constrain);
-                        while (constrainNode.matchesSelector && !match) {
-                            match = byExactId ? (constrainNode.id===constrain.substr(1)) : constrainNode.matchesSelector(constrain);
-                            // if there is a match, then make sure x and y fall within the region
-                            match || (constrainNode=constrainNode.getParent());
-                        }
-                        // if Element found, then bound it to `constrain` as if the argument `constrain` was an Element
-                        match && (constrain=constrainNode);
-                    }
-                    if (constrain.matchesSelector) {
-                        // Element --> we need to search the rectangle
-                        containerLeft = constrain.left + parseInt(constrain.getStyle(BORDER_LEFT_WIDTH), 10);
-                        containerTop = constrain.top + parseInt(constrain.getStyle(BORDER_TOP_WIDTH), 10);
-                        containerRight = containerLeft + constrain.scrollWidth;
-                        containerBottom = containerTop + constrain.scrollHeight;
-                    }
-                    else {
-                        containerLeft = constrain.x;
-                        containerTop = constrain.y;
-                        containerRight = constrain.x + constrain.w;
-                        containerBottom = constrain.y + constrain.h;
-                    }
-                }
-                if (typeof containerLeft === NUMBER) {
-                    // found constrain, always redefine x and y
-                    x = requestedX = (typeof x===NUMBER) ? x : instance.left;
-                    if (requestedX<containerLeft) {
-                        x = containerLeft;
-                    }
-                    else {
-                        if ((requestedX+instance.offsetWidth)>containerRight) {
-                            x = requestedX = containerRight - instance.offsetWidth;
-                        }
-                        // now we might need to reset to the left again:
-                        (requestedX<containerLeft) && (x=containerLeft);
-                    }
-                    y = requestedY = (typeof y===NUMBER) ? y : instance.top;
-                    if (requestedY<containerTop) {
-                        y = containerTop;
-                    }
-                    else {
-                        if ((requestedY+instance.offsetHeight)>containerBottom) {
-                            y = requestedY = containerBottom - instance.offsetHeight;
-                        }
-                        // now we might need to reset to the top again:
-                        (requestedY<containerTop) && (y=containerTop);
-                    }
-                }
-            }
-            xtrans = (typeof x === NUMBER);
-            ytrans = (typeof y === NUMBER);
-            if (xtrans || ytrans) {
-                // check if there is a transition:
-                if (notransition) {
-                    instance.setClass([NO_TRANS2, invisibleClass]);
-                    transObject = [];
-                    xtrans && (transObject[0]={property: LEFT, value: x + PX});
-                    ytrans && (transObject[xtrans ? 1 : 0]={property: TOP, value: y + PX});
-                    instance.setInlineStyles(transObject);
-                    // reset transObject and maybe it will be filled when there is a difference
-                    // between the set value and the true value (which could appear due to different `position` properties)
-                    transObject = [];
-                    if (xtrans) {
-                        dif = (instance.left-x);
-                        (dif!==0) && (transObject[0]={property: LEFT, value: (x - dif) + PX});
-                    }
-                    if (ytrans) {
-                        dif = (instance.top-y);
-                        (dif!==0) && (transObject[transObject.length]={property: TOP, value: (y - dif) + PX});
-                    }
-                    (transObject.length>0) && instance.setInlineStyles(transObject);
-                    instance.removeClass([NO_TRANS2, invisibleClass]);
-                }
-                else {
-                    // we will clone the node, make it invisible and without transitions and look what its correction should be
-                    clone = instance.cloneNode();
-                    clone.setClass([NO_TRANS2, invisibleClass]);
-                    parent = instance.getParent() || DOCUMENT.body;
-                    parent.prepend(clone, null, instance);
-
-                    transObject = [];
-                    xtrans && (transObject[0]={property: LEFT, value: x + PX});
-                    ytrans && (transObject[xtrans ? 1 : 0]={property: TOP, value: y + PX});
-
-                    clone.setInlineStyles(transObject);
-
-                    // reset transObject and fill it with the final true values
-                    transObject = [];
-                    xtrans && (transObject[0]={property: LEFT, value: (2*x-clone.left) + PX});
-                    ytrans && (transObject[xtrans ? 1 : 0]={property: TOP, value: (2*y-clone.top) + PX});
-                    clone.remove();
-                    promise = instance.setInlineStyles(transObject, true);
-                }
-            }
-            else if (!notransition) {
-                promise = window.Promise.resolve();
-            }
-            instance.removeClass([BLOCK, BORDERBOX, invisibleClass]);
-            return promise || instance;
-        };
-
-       /**
-        * Shows a previously hidden node.
-        * Shows immediately without `fade`, or will fade-in when fade is specified.
-        *
-        * @method show
-        * @param [fade] {Number} sec to fade-in (you may use `0.1`)
-        * @return {this|Promise} fulfilled when the element is ready showing up, or rejected when hidden again (using node.hide) before fully showed.
-        * @since 0.0.1
-        */
-        ElementPrototype.show = function(duration, forceFull) {
-            var instance = this,
-                showPromise = instance.getData('_showNodeBusy'),
-                hidePromise = instance.getData('_hideNodeBusy'),
-                originalOpacity, hasOriginalOpacity, promise, freezedOpacity, finalValue;
-
-            instance.setData('nodeShowed', true); // for any routine who wants to know
-            originalOpacity = instance.getData('_showNodeOpacity');
-            if (!originalOpacity && !showPromise && !hidePromise) {
-                originalOpacity = instance.getInlineStyle('opacity');
-                instance.setData('_showNodeOpacity', originalOpacity);
-            }
-            hasOriginalOpacity = !!originalOpacity;
-
-            showPromise && showPromise.freeze();
-            if (hidePromise) {
-                hidePromise.freeze();
-                instance.removeData('_hideNodeBusy');
-            }
-
-            if (duration) {
-
-                instance.setInlineStyle('opacity', (instance.hasClass(HIDDEN) ? 0 : instance.getStyle('opacity')));
-                instance.removeClass(HIDDEN);
-
-                finalValue = (forceFull || !hasOriginalOpacity) ? 1 : originalOpacity;
-                if (showPromise || hidePromise) {
-                    freezedOpacity = instance.getInlineStyle('opacity');
-                    duration = (finalValue>0) ? Math.min(1, ((finalValue-freezedOpacity)/finalValue))*duration : 0;
-                }
-                promise = instance.transition({property: 'opacity', value: finalValue, duration: duration});
-                instance.setData('_showNodeBusy', promise);
-
-                promise.finally(function() {
-                    if (!promise.cancelled && !promise.frozen) {
-                        hasOriginalOpacity || instance.removeInlineStyle('opacity');
-                        if (!forceFull || !hasOriginalOpacity) {
-                            instance.removeData('_showNodeOpacity');
-                        }
-                    }
-                    instance.removeData('_showNodeBusy');
-                });
-                return promise;
-            }
-            else {
-                async(function() {
-                    (hasOriginalOpacity && !forceFull) ? instance.setInlineStyle('opacity', originalOpacity) : instance.removeInlineStyle('opacity');
-                    instance.removeClass(HIDDEN);
-                });
-                return instance;
-            }
-        };
-
-       /**
-        * Transitions one ore more properties of the Element.
-        *
-        * @method toggleClass
-        * @param to {Array} the css-properties to be set, specified as an Array of Objects.
-        *        The objects should have the next properties:
-        *        <ul>
-        *            <li>property  {String}</li>
-        *            <li>value  {String}</li>
-        *            <li>duration  {Number} (optional)</li>
-        *            <li>timingFunction  {String} (optional)</li>
-        *            <li>delay  {String} (optional)</li>
-        *            <li>pseudo  {String} (optional) --> not: not supported yet in browsers</li>
-        *        </ul>
-        * @param [from] {Array} starting the css-properties to be set, specified as an Array of Objects.
-        *        If disguarded, then the current style is used as startingpoint. You may specify a subset of the `to`-properties.
-        *        The objects should have the next properties:
-        *        <ul>
-        *            <li>property  {String}</li>
-        *            <li>value  {String}</li>
-        *            <li>duration  {Number} (optional)</li>
-        *            <li>timingFunction  {String} (optional)</li>
-        *            <li>delay  {String} (optional)</li>
-        *            <li>pseudo  {String} (optional) --> not: not supported yet in browsers</li>
-        *        </ul>
-        * @return {Promise} The promise has the handles:
-        *        <ul>
-        *            <li>cancel() {Promise}</li>
-        *            <li>freeze() {Promise}</li>
-        *            <li>unfreeze()</li>
-        *            <li>finish() {Promise}</li>
-        *        </ul>
-        *        These handles resolve with the `elapsed-time` as first argument of the callbackFn
-        * @since 0.0.1
-        */
-        ElementPrototype.transition = function(to, from) {
-            var instance = this,
-                currentInlineTransition, transitions, transitionRun, transitionError, promise, resolveHandle, initialStyle, time1, intermediateInvoked,
-                initialProperties, cleanup, getCurrentProperties, manipulated, getNoTransProp, transpromise, endIntermediate, time2;
-
-            to || (to={});
-            Array.isArray(to) || (to=[to]);
-            to = getVendorCSS(to);
-            transitions = Array.isArray(to) ? to.deepClone() : [to.shallowClone()];
-            time1 = Date.now();
-            // transitions = Array.isArray(to) ? to.deepClone() : [to.shallowClone()];
-            cleanup = function() {
-                currentInlineTransition = instance.getData('_bkpTransition');
-                currentInlineTransition ? instance.setInlineStyle(TRANSITION, currentInlineTransition) : instance.removeInlineStyle(TRANSITION);
-                instance.removeData('_bkpTransition');
-                instance.removeData('_readyOnRun');
-                Object.defineProperty(promise, 'isFulfilled', {
-                    configurable: false,
-                    enumerable: false,
-                    writable: false,
-                    value: true
-                });
-            };
-            getCurrentProperties = function() {
-                var props = [],
-                    currentStyle = window.getComputedStyle(instance),
-                    currentStyleBefore = window.getComputedStyle(instance, ':before'),
-                    currentStyleAfter = window.getComputedStyle(instance, ':after');
-                to.each(function(value) {
-                    var styles = (value.pseudo===':before') ? currentStyleBefore : ((value.pseudo===':after') ? currentStyleAfter : currentStyle),
-                        property = value.property;
-                    // if property is vendor-specific transition, or transform, than we reset it to the current vendor
-                    props.push({
-                        property: property,
-                        value: styles[toCamelCase(property)]
-                    });
-                });
-                return props;
-            };
-            getNoTransProp = function() {
-                var props = [];
-                transitions.forEach(function(item) {
-                    props.push({
-                        property: item.property,
-                        duration: 0,
-                        delay: 0
-                    });
-                });
-                return props;
-            };
-            endIntermediate = function(type) {
-                intermediateInvoked = true;
-                if (!promise.isFulfilled) {
-                    manipulated = true;
-                    instance.setInlineTransitions(getNoTransProp());
-                    instance.setInlineStyles((type==='cancelled') ? initialProperties : getCurrentProperties());
-                    // also force to set the style on the node outside the vdom --> by forcing this
-                    // we won't run into the situation where the vdom doesn't change the dom because the style didn';'t change:
-                    instance._setAttribute(STYLE, instance.getAttr(STYLE));
-                    switch (type) {
-                        case 'cancelled':
-                            // now cleanup inline style that wasn't there initially,
-                            async(function() {
-                                instance.setClass(NO_TRANS2);
-                                instance.setAttr(STYLE, initialStyle);
-                                instance.removeClass(NO_TRANS2);
-                            });
-                            cleanup();
-                        break;
-                        case 'frozen':
-                            async(function() {
-                                cleanup();
-                            });
-                        break;
-                        case 'finished':
-                            instance.setInlineStyles(to);
-                            async(function() {
-                                cleanup();
-                            });
-                        break;
-                    }
-                    Object.defineProperty(promise, type, {
-                        configurable: false,
-                        enumerable: false,
-                        writable: false,
-                        value: true
-                    });
-                    // prevent transitionpromise to set its own final values after finishing
-                    // but only if it is already available:
-                    transpromise && transpromise.reject();
-                    resolveHandle && resolveHandle();
-                }
-                time2 || (time2=Date.now());
-                return new window.Promise(function(resolve) {
-                    async(function() {
-                        resolve(time2-time1);
-                    });
-                });
-            };
-            promise = new window.Promise(function(resolve, reject) {
-                async(function() {
-                    if (intermediateInvoked) {
-                        reject();
-                        return;
-                    }
-                    resolveHandle = resolve;
-                    transitionRun = idGenerator('nodeTransition');
-                    // only make ready on the last run
-                    instance.setData('_readyOnRun', transitionRun);
-
-                    if (from) {
-                        instance.setClass(NO_TRANS2);
-                        instance.setInlineStyles(from);
-                        instance.removeClass(NO_TRANS2);
-                    }
-                    initialProperties = getCurrentProperties();
-                    initialStyle = instance.getAttr(STYLE);
-
-                    currentInlineTransition = instance.getData('_bkpTransition');
-                    if (currentInlineTransition===undefined) {
-                        currentInlineTransition = instance.getInlineStyle(TRANSITION) || null;
-                        // `null` can be set as node-data, `undefined` connot
-                        instance.setData('_bkpTransition', currentInlineTransition);
-                    }
-
-                    // we could use the `to` object and pass into `setInlineTransitions` directly,
-                    // however, in case `duration` is not specified, we will define them to 1 sec.
-
-                    // CAUTIOUS: the sum of `duration`+`delay` determines when the transition will be ready.
-                    // This leads into separate transitions, we must prevent the promise to fulfill on the
-                    // first tranition to be ready.
-                    // Thus: we need to split every (`duration`+`delay`) group and give them each a separate setInlineStyle()-promise!
-                    transitions.forEach(function(item) {
-                        item.duration || (item.duration=1);
-                        item.delay || (item.delay=0);
-                    });
-
-                    instance.setInlineTransitions(transitions);
-                    transpromise = instance.setInlineStyles(to, true);
-                    transpromise.catch(
-                        function(err) {
-                            transitionError = err;
-                            return true; // fulfill the chain
-                        }
-                    ).finally(
-                        function() {
-                            // to prevent `transitionend` events biting each other when chaining `transition`,
-                            // and reset the inline transition in time,
-                            // we need to resolve the Promise after the eventstack:
-                            async(function() {
-                                if (!manipulated && (instance.getData('_readyOnRun')===transitionRun)) {
-                                    cleanup();
-                                    // because cleanup does an async action (setInlineStyles), we will append the eventstack:
-                                    async(function() {
-                                        if (transitionError) {
-                                            reject(transitionError);
-                                        }
-                                        else {
-                                            time2 || (time2=Date.now());
-                                            resolve(time2-time1);
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                    );
-                });
-            });
-
-            promise.cancel = function() {
-                return endIntermediate('cancelled');
-            };
-
-            promise.freeze = function() {
-                return endIntermediate('frozen');
-            };
-
-            promise.finish = function() {
-                return endIntermediate('finished');
-            };
-
-            return promise;
-        };
-
-       /**
-        * Toggles the className of the Element.
-        *
-        * @method toggleClass
-        * @param className {String|Array} className that should be toggled, may be an array of classNames
-        * @param forceState {Boolean} to force toggling into this specific state
-        * @param [returnPromise] {Boolean} whether to return a Promise instead of `this`, which might be useful in case of
-        *        transition-properties. The promise will fullfil when the transition is ready, or immediately when no transitioned.
-        * @param [transitionFix] set this to `true` if you experience transition-problems due to wrong calculated css (mostly because of the `auto` value)
-        *        Setting this parameter, will calculate the true css of the transitioned properties and set this temporarely inline, to fix the issue.
-        *        Don't use it when not needed, it has a slightly performancehit.
-        *        No need to set when `returnPromise` is set --> returnPromise always handles the transitionFix.
-        * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
-        * @return {Promise|this} In case `returnPromise` is set, a Promise returns with the next handles:
-        *        <ul>
-        *            <li>cancel() {Promise}</li>
-        *            <li>freeze() {Promise}</li>
-        *            <li>unfreeze()</li>
-        *            <li>finish() {Promise}</li>
-        *        </ul>
-        *        These handles resolve with the `elapsed-time` as first argument of the callbackFn
-        * @since 0.0.1
-        */
-        ElementPrototype.toggleClass = function(className, forceState, returnPromise, transitionFix, silent) {
-            silent && DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
-            var instance = this,
-                transPromise = (returnPromise || transitionFix) && getClassTransPromise(instance, TOGGLE, className, forceState),
-                returnValue = returnPromise ? transPromise : instance;
-            transPromise || instance.getClassList().toggle(className, forceState);
-            if (silent && DOCUMENT.suppressMutationEvents) {
-                if (returnValue===instance) {
-                    DOCUMENT.suppressMutationEvents(false);
-                }
-                else {
-                    returnValue.finally(function() {
-                        DOCUMENT.suppressMutationEvents(false);
-                    });
-                }
-            }
-            return returnValue;
-        };
-
-        Object.defineProperties(ElementPrototype, {
-
-           /**
-            * Gets or set the height of the element in pixels. Included are padding and border, not any margins.
-            * By setting the argument `overflow` you get the total height, included the invisible overflow.
-            *
-            * The getter is calculating through `offsetHeight`, the setter will set inline css-style for the height.
-            *
-            * Values are numbers without unity.
-            *
-            * @property height
-            * @type {Number}
-            * @since 0.0.1
-            */
-            height: {
-                get: function() {
-                    return this.offsetHeight;
-                },
-                set: function(val) {
-                    var instance = this,
-                        dif;
-                    instance.setClass(INVISIBLE);
-                    instance.setInlineStyle(HEIGHT, val + PX);
-                    dif = (instance.offsetHeight-val);
-                    (dif!==0) && (instance.setInlineStyle(HEIGHT, (val - dif) + PX));
-                    instance.removeClass(INVISIBLE);
-                }
-            },
-
-           /**
-            * Gets the x-position (in the DOCUMENT) of the element in pixels.
-            * DOCUMENT-related: regardless of the window's scroll-position.
-            *
-            * @property left
-            * @since 0.0.1
-            */
-            left: {
-                get: function() {
-                    return Math.round(this.getBoundingClientRect().left + window.getScrollLeft());
-                },
-                set: function(pixelsLeft) {
-                    return this.setXY(pixelsLeft, null, null, true);
-                }
-            },
-
-           /**
-            * Gets the y-position (in the DOCUMENT) of the element in pixels.
-            * DOCUMENT-related: regardless of the window's scroll-position.
-            *
-            * @property top
-            * @since 0.0.1
-            */
-            top: {
-                get: function() {
-                    return Math.round(this.getBoundingClientRect().top + window.getScrollTop());
-                },
-                set: function(pixelsTop) {
-                    return this.setXY(null, pixelsTop, null, true);
-                }
-            },
-
-           /**
-            * Gets or set the width of the element in pixels. Included are padding and border, not any margins.
-            * By setting the argument `overflow` you get the total width, included the invisible overflow.
-            *
-            * The getter is calculating through `offsetHeight`, the setter will set inline css-style for the width.
-            *
-            * Values are numbers without unity.
-            *
-            * @property width
-            * @type {Number}
-            * @since 0.0.1
-            */
-            width: {
-                get: function() {
-                    return this.offsetWidth;
-                },
-                set: function(val) {
-                    var instance = this,
-                        dif;
-                    instance.setClass(INVISIBLE);
-                    instance.setInlineStyle(WIDTH, val + PX);
-                    dif = (instance.offsetWidth-val);
-                    (dif!==0) && (instance.setInlineStyle(WIDTH, (val - dif) + PX));
-                    instance.removeClass(INVISIBLE);
-                }
-            }
-
-        });
-
-    }(window.Element.prototype));
-
-    setupObserver = function() {
-        // configuration of the observer:
-        var observerConfig = {
-                attributes: true,
-                subtree: true,
-                characterData: true,
-                childList : true
-            };
-        (new window.MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-
-                var node = mutation.target,
-                    vnode = node.vnode,
-                    type = mutation.type,
-                    attribute = mutation.attributeName,
-                    addedChildNodes = mutation.addedNodes,
-                    removedChildNodes = mutation.removedNodes,
-                    i, len, childDomNode, childVNode, index, vchildnode;
-                if (vnode && !vnode._nosync) {
-                    if (type==='attributes') {
-                        vnode.reloadAttr(attribute);
-                    }
-                    else if (type==='characterData') {
-                        vnode.text = node.nodeValue;
-                    }
-                    else {
-                        // remove the childNodes that are no longer there:
-                        len = removedChildNodes.length;
-                        for (i=len-1; i>=0; i--) {
-                            childVNode = removedChildNodes[i].vnode;
-                            childVNode && childVNode._destroy();
-                        }
-                       // add the new childNodes:
-                        len = addedChildNodes.length;
-                        for (i=0; i<len; i++) {
-                            childDomNode = addedChildNodes[i];
-                            // find its index in the true DOM:
-                            index = node.childNodes.indexOf(childDomNode);
-                            // create the vnode:
-                            vchildnode = domNodeToVNode(childDomNode);
-//======================================================================================================
-// TODO: remove this block of code: we shouldn;t be needing it
-// that is: when the alert never rises (which I expect it doesn't)
-
-
-// prevent double definitions (for whatever reason):
-// check if there is a vChild with the same domNode and remove it:
-var vChildNodes = vnode.vChildNodes;
-var len2 = vChildNodes ? vChildNodes.length : 0;
-var j;
-for (j=0; j<len2; j++) {
-    var checkChildVNode = vChildNodes[j];
-    if (checkChildVNode.domNode===node) {
-        checkChildVNode._destroy();
-        alert('double deleted');
-        break;
-    }
-}
-// END OF removable block
-//======================================================================================================
-                            // add the vnode:
-                            vchildnode._moveToParent(vnode, index);
-                        }
-                    }
-                }
-            });
-        })).observe(DOCUMENT, observerConfig);
-    };
-
-    setupObserver();
-
-};
-
-//--- definition API of unmodified `Element`-methods ------
-
-/**
- * Returns the specified attribute of the specified element, as an Attr node.
- *
- * @method getAttributeNode
- * @return {attributeNode}
- */
-
-/**
- * Returns a text rectangle object that encloses a group of text rectangles. The returned value is
- * a TextRectangle object which is the union of the rectangles returned by getClientRects() for the element,
- * i.e., the CSS border-boxes associated with the element.
- *
- * The returned value is a TextRectangle object, which contains read-only left, top, right and bottom properties
- * describing the border-box in pixels. top and left are relative to the top-left of the viewport.
- *
- * @method getBoundingClientRect
- * @return {attributeNode} Therectangle object that encloses a group of text rectangles.
- */
-
-/**
- * Returns a collection of rectangles that indicate the bounding rectangles for each box in a client.
- *
- * The returned value is a collection of ClientRect objects, one for each CSS border box associated with the element.
- * Each ClientRect object contains read-only left, top, right and bottom properties describing the border box, in pixels,
- * with the top-left relative to the top-left of the viewport. For tables with captions,
- * the caption is included even though it's outside the border box of the table.
- *
- * @method getClientRects
- * @return {Collection}
- */
-
-/**
- * Returns a new NodeIterator object with this Element as root.
- *
- * The NodeIterator is a snapshot of the dom at the time this method was called. It is not updated when changes of the dom are made afterwards.
- *
- * @method createNodeIterator
- * @param [whatToShow] {Number} Filter specification constants from the NodeFilter DOM interface, indicating which nodes to iterate over.
- * You can use or sum one of the next properties:
- * <ul>
- *   <li>window.NodeFilter.SHOW_ELEMENT</li>
- *   <li>window.NodeFilter.SHOW_COMMENT</li>
- *   <li>window.NodeFilter.SHOW_TEXT</li>
- * </ul>
- * @param [filter] {NodeFilter|function} An object implementing the NodeFilter interface or a function. See https://developer.mozilla.org/en-US/docs/Web/API/NodeFilter
- * @return {NodeIterator}
- * @since 0.0.1
-*/
-
-/**
- * Returns an HTMLCollection of all Elements within this Element, that match their classes with the supplied `classNames` argument.
- * To match multiple different classes, separate them with a `comma`.
- *
- * getElementsByClassName is life presentation of the dom. The returned HTMLCollection gets updated when the dom changes.
- *
- * NOTE: it is highly recomended to use `document.getAll` because that method takes advantage of the vdom.
- *
- * @method getElementsByClassName
- * @param classNames {String} the classes to search for
- * @return {HTMLCollection} life Array with Elements
- */
-
-/**
- * Returns an HTMLCollection of all Elements within this Element, that match their `name`-attribute with the supplied `name` argument.
- *
- * getElementsByName is life presentation of the dom. The returned HTMLCollection gets updated when the dom changes.
- *
- * NOTE: it is highly recomended to use `document.getAll` because that method takes advantage of the vdom.
- *
- * @method getElementsByName
- * @param name {String} the property of name-attribute to search for
- * @return {HTMLCollection} life Array with Elements
- */
-
-
-/**
- * Returns an HTMLCollection of all Elements within this Element, that match their `name`-attribute with the supplied `name` argument.
- *
- * getElementsByTagName is life presentation of the dom. The returned HTMLCollection gets updated when the dom changes.
- *
- * NOTE: it is highly recomended to use `document.getAll` because that method takes advantage of the vdom.
- *
- * @method getElementsByTagName
- * @param tagNames {String} the tags to search for
- * @return {HTMLCollection} life Array with Elements
- */
-
-/**
-* Parses the specified text as HTML and inserts the resulting nodes into the DOM tree at a specified position.
-*
-* @method insertAdjacentHTML
-* @param position {String}
-* <ul>
-*     <li>'beforebegin' Before the element itself</li>
-*     <li>'afterbegin' Just inside the element, before its first child</li>
-*     <li>'beforeend' Just inside the element, after its last child</li>
-*     <li>'afterend' After the element itself</li>
-* <ul>
-* @param element {Element}
-*/
-
-/**
-* Removes the attribute specified by an attributeNode from the Element.
-*
-* @method removeAttributeNode
-* @param attributeNode {attributeNode}
-* @since 0.0.1
-*/
-
-/**
- * Scrolls the element into view.
- *
- * @method scrollIntoView
- */
-
-/**
- * Sets the attribute on the Element specified by `attributeNode`
- *
- * @method setAttributeNode
- * @param attributeNode {attributeNode}
-*/
-
-//------ events --------
-
-/**
- * Fired when a static `script` element  finishes executing its script. Does not fire if the element is added dynamically, eg with appendChild().
- *
- * @event afterscriptexecute
- */
-
-
-/**
- * Fired when the code in a `script` element declared in an HTML document is about to start executing. Does not fire if the element is added dynamically, eg with appendChild().
- *
- * @event beforescriptexecute
- */
-
-//------- properties --------
-
-/**
- * sets or returns an accesskey for an element. An accesskey specifies a shortcut key to activate/focus an element.
- * Note: The way of accessing the shortcut key is varying in different browsers: http://www.w3schools.com/jsref/prop_html_accesskey.asp
- *
- * @property accessKey
- * @type String
- */
-
-
-/**
- * Returns a live collection of all attribute nodes registered to the specified node.
- * It is a NamedNodeMap, not an Array, so it has no Array methods and the Attr nodes' indexes may differ among browsers.
- * To be more specific, attributes is a key/value pair of strings that represents any information regarding that attribute.
- *
- * Prefer to use `getAttrs()` which is much quicker, but doesn't return a life-list.
- *
- * @property attributes
- * @type NamedNodeMap
- */
-
-/**
- * The absolute base URL of a node.
- *
- * @property baseURI
- * @type String
- * @readOnly
- */
-
-/**
- * Returns the number of children (child Elements)
- *
- * @property childElementCount
- * @type Number
- * @readOnly
- */
-
-/**
- * Returns a live collection of childNodes of the given element, either Element, TextNode or CommentNode
- *
- * @property childNodes
- * @type NodeList
- * @readOnly
- */
-
-/**
- * Returns a live collection of child Element's of the given element.
- *
- * @property children
- * @type NodeList
- * @readOnly
- */
-
-/**
- * Gets and sets the value of the class attribute of the specified element.
- *
- * @property className
- * @type String
- */
-
-/**
- * Returns the inner height of an element in pixels, including padding but not the horizontal scrollbar height, border, or margin.
- *
- * @property clientHeight
- * @type Number
- * @readOnly
- */
-
-/**
- * The width of the left border of an element in pixels. It includes the width of the vertical scrollbar if the text direction of the element is right–to–left
- * and if there is an overflow causing a left vertical scrollbar to be rendered. clientLeft does not include the left margin or the left padding.
- *
- * @property clientLeft
- * @type Number
- * @readOnly
- */
-
-/**
- * The width of the top border of an element in pixels. It does not include the top margin or padding.
- *
- * @property clientTop
- * @type Number
- * @readOnly
- */
-
-/**
- * Returns the inner width of an element in pixels, including padding but not the vertical scrollbar height, border, or margin.
- *
- * @property clientWidth
- * @type Number
- * @readOnly
- */
-
-/**
- * Reference to the first childNode, where the related dom-node is either an Element, TextNode or CommentNode (nodeType===1, 3 or 8).
- *
- * Better work with Elements only:  use `firstElementChild` instead, which returns the first Element-child.
- *
- * @property firstChild
- * @type Node
- * @readOnly
- * @deprecated
- */
-
-/**
- * Reference to the first Element-child, which is an Element (nodeType===1).
- *
- * @property firstElementChild
- * @type Element
- * @readOnly
- */
-
-/**
- * Gets or sets the element's attribute `href`. Only applies for the `a`-element.
- *
- * @property href
- * @type String
- */
-
-/**
- * Gets or sets the element's identifier (attribute id).
- *
- * @property id
- * @type String
- */
-
-/**
- * Reference to the last childNode, where the related dom-node is either an Element, TextNode or CommentNode (nodeType===1, 3 or 8).
- *
- * Better use `lastElementChild` instead, which returns the last Element-child.
- *
- * @property lastChild
- * @type Node
- * @readOnly
- * @deprecated
- */
-
-/**
- * Reference to the last Element-child, where the related dom-node is an Element (nodeType===1).
- *
- * @property lastElementChild
- * @type Element
- * @readOnly
- */
-
-/**
- * Gets or sets the `name` property of a Element; it only applies to the following elements:
- * `a`, `applet`, `button`, `form`, `frame`, `iframe`, `img`, `input`, `map`, `meta`, `object`, `param`, `select`, and `textarea`.
- *
- * @property name
- * @type String
- */
-
-/**
- * Returns the Element immediately following the specified one in its parent's childNodes list, or null if the specified node is the last node in that list.
- * Is an Element (nodeType===1).
- *
- * @property nextElementSibling
- * @type Element
- * @readOnly
- */
-
-/**
- * Returns the Element immediately following the specified one in its parent's childNodes list, or null if the specified node is the last node in that list.
- * Is either an Element, TextNode or CommentNode (nodeType===1, 3 or 8).
- *
- * Do not use this, but use `lastElementChild` instead, which returns the next Element-child.
- *
- * @property nextElementSibling
- * @type Node
- * @deprecated
- * @readOnly
- */
-
-/**
- * Elements tag-name
- *
- * @property nodeName
- * @type String
- * @readOnly
- */
-
-/**
- * Elements nodetype: 1==Element, 3==TextNode, 8===CommentNode
- *
- * @property nodeType
- * @type String
- * @readOnly
- */
-
-/**
- * Value/text for non-Element Nodes
- *
- * @property nodeValue
- * @type String
- * @since 0.0.1
- */
-
-/**
- * The exact width of the Element on the screen.
- * Included borders and padding (no margin).
- *
- * Returns a number without unity.
- *
- * Better use `width` --> it's an alias, but has a setter as well
- *
- * @property offsetWidth
- * @type Number
- * @readOnly
- * @since 0.0.1
- */
-
-/**
- * The exact height of the Element on the screen.
- * Included borders and padding (no margin).
- *
- * Returns a number without unity.
- *
- * Better use `height` --> it's an alias, but has a setter as well
- *
- * @property offsetHeight
- * @type Number
- * @since 0.0.1
- */
-
-/**
- * Returns the Element's parent Element.
- *
- * Same as `parentNode`
- *
- * @property parentElement
- * @type Element
- */
-
-/**
- * Returns the Element's parent Element.
- *
- * Same as `parentElement`
- *
- * @property parentNode
- * @type Element
- */
-
-/**
- * Returns the Element immediately preceding the specified one in its parent's childNodes list, or null if the specified node is the last node in that list.
- * Is an Element (nodeType===1).
- *
- * @property previousElementSibling
- * @type Element
- * @readOnly
- */
-
-/**
- * Returns the Element immediately preceding the specified one in its parent's childNodes list, or null if the specified node is the last node in that list.
- * Is either an Element, TextNode or CommentNode (nodeType===1, 3 or 8).
- *
- * Do not use this, but use `previousElementSibling` instead, which returns the previous Element-child.
- *
- * @property previousSibling
- * @deprecated
- * @type Node
- * @readOnly
- */
-
-
-/**
- * A measurement of the height of an element's content, including content not visible on the screen due to overflow.
- * The scrollHeight value is equal to the minimum clientHeight the element would require in order to fit all the content in the viewpoint
- * without using a vertical scrollbar. It includes the element padding but not its margin.
- *
- * Returns a number without unity.
- *
- * @property scrollHeight
- * @type Number
- * @readOnly
- */
-
-/**
- * Gets or sets the number of pixels that an element's content is scrolled to the left.
- *
- * @property scrollLeft
- * @type Number
- */
-
-/**
- * Gets or sets the number of pixels that the content of an element is scrolled upward. An element's scrollTop is a measurement
- * of the distance of an element's top to its topmost visible content. When an element content does not generate a vertical scrollbar,
- * then its scrollTop value defaults to 0.
- *
- * @property scrollTop
- * @type Number
- */
-
-/**
- * Returns either the width in pixels of the content of an element or the width of the element itself, whichever is greater.
- * If the element is wider than its content area (for example, if there are scroll bars for scrolling through the content),
- * the scrollWidth is larger than the clientWidth.
- *
- * Returns a number without unity.
- *
- * @property scrollWidth
- * @type Number
- * @readOnly
- */
-
-/**
- * Gets or sets the element's attribute `type`. Only applies for the `script`, `img` and `style`-elements.
- *
- * @property src
- * @type String
- */
-
-/**
- * Gets or sets the element's attribute `style`.
- *
- * @property style
- * @type String
- */
-
-/**
- * Gets or sets the element's attribute `type`. Only applies for the `input`-element.
- *
- * @property type
- * @type String
- */
-
-/**
-* Gets or sets the value of an input or select Element.
-*
-* Note it is highly preferable to use getValue() and setValue().
-*
-* @property value
-* @type String
-* @since 0.0.1
-*/
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../css/element.css":36,"./attribute-extractor.js":68,"./element-array.js":69,"./html-parser.js":73,"./node-parser.js":74,"./vdom-ns.js":75,"./vnode.js":76,"js-ext/extra/hashmap.js":38,"js-ext/lib/object.js":41,"js-ext/lib/promise.js":42,"js-ext/lib/string.js":43,"polyfill":54,"polyfill/extra/transition.js":49,"polyfill/extra/transitionend.js":50,"polyfill/extra/vendorCSS.js":51,"utils":55,"window-ext":61}],73:[function(require,module,exports){
-"use strict";
-
-/**
- * Exports `htmlToVNodes` which transforms html-text into vnodes.
- *
- *
- * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
- * <br>
- * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
- *
- * @module vdom
- * @submodule html-parser
- * @since 0.0.1
-*/
-
-require('polyfill');
-require('js-ext/lib/object.js');
-
-var createHashMap = require('js-ext/extra/hashmap.js').createMap;
-
-module.exports = function (window) {
-
-    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
-
-    if (window._ITSAmodules.HtmlParser) {
-        return window._ITSAmodules.HtmlParser; // HtmlParser was already created
-    }
-
-    var NS = require('./vdom-ns.js')(window),
-        extractor = require('./attribute-extractor.js')(window),
-        DOCUMENT = window.document,
-        xmlNS = NS.xmlNS,
-        voidElements = NS.voidElements,
-        nonVoidElements = NS.nonVoidElements,
-
-        TAG_OR_ATTR_START_CHARACTERS = createHashMap({
-            a: true,
-            b: true,
-            c: true,
-            d: true,
-            e: true,
-            f: true,
-            g: true,
-            h: true,
-            i: true,
-            j: true,
-            k: true,
-            l: true,
-            m: true,
-            n: true,
-            o: true,
-            p: true,
-            q: true,
-            r: true,
-            s: true,
-            t: true,
-            u: true,
-            v: true,
-            w: true,
-            x: true,
-            y: true,
-            z: true,
-            A: true,
-            B: true,
-            C: true,
-            D: true,
-            E: true,
-            F: true,
-            G: true,
-            H: true,
-            I: true,
-            J: true,
-            K: true,
-            L: true,
-            M: true,
-            N: true,
-            O: true,
-            P: true,
-            Q: true,
-            R: true,
-            S: true,
-            T: true,
-            U: true,
-            V: true,
-            W: true,
-            X: true,
-            Y: true,
-            Z: true
-        }),
-        STARTTAG_OR_ATTR_VALUE_ENDS_CHARACTERS = createHashMap({
-            ' ': true,
-            '>': true
-        }),
-        ATTRUBUTE_NAME_ENDS_CHARACTER = createHashMap({
-            ' ': true,
-            '=': true,
-            '>': true
-        }),
-
-        /**
-         * Transforms html-text into a vnodes-Array.
-         *
-         * @method htmlToVNodes
-         * @param htmlString {String} plain html as string
-         * @return {Array} array with `vnodes`
-         * @since 0.0.1
-         */
-        htmlToVNodes = window._ITSAmodules.HtmlParser = function(htmlString, vNodeProto, nameSpace) {
-            var i = 0,
-                len = htmlString.length,
-                vnodes = [],
-                parentVNode = arguments[3], // private pass through-argument, only available when internal looped
-                insideTagDefinition, insideComment, innerText, endTagCount, stringMarker, attributeisString, attribute, attributeValue,
-                j, character, character2, vnode, tag, isBeginTag, isEndTag, scriptVNode, extractClass, extractStyle, tagdefinition, is;
-
-            while (i<len) {
-                character = htmlString[i];
-                character2 = htmlString[i+1];
-                if (insideTagDefinition) {
-
-                    vnode.attrs = {};
-                    if (character!=='>') {
-                        // fill attributes until tagdefinition is over:
-                        // NOTE: we need to DOUBLE check for "(character!=='>')" because the loop might set the position to '>' where an i++ would miss it!
-                        while ((character!=='>') && (++i<len) && (character=htmlString[i]) && (character!=='>')) {
-                            // when starting to read an attribute, finish reading until it is completely ready.
-                            // this is, because attributes can have a '>' which shouldn't be noticed as an end-of-tag definition
-                            if (TAG_OR_ATTR_START_CHARACTERS[character]) {
-                                attribute = character;
-                                while ((++i<len) && (character=htmlString[i]) && !ATTRUBUTE_NAME_ENDS_CHARACTER[character]) {
-                                    attribute += character;
-                                }
-                                if (character==='=') {
-                                    stringMarker = htmlString[i+1];
-                                    attributeisString = (stringMarker==='"') || (stringMarker==="'");
-
-                                    attributeValue = '';
-                                    if (attributeisString) {
-                                        i++;
-                                        while ((++i<len) && (character=htmlString[i]) && ((character!==stringMarker) || (htmlString[i-1]==='\\'))) {
-                                            ((htmlString[i+1]!==stringMarker) || (character!=='\\')) && (attributeValue+=character);
-                                        }
-                                    }
-                                    else {
-                                        while ((++i<len) && (character=htmlString[i]) && !STARTTAG_OR_ATTR_VALUE_ENDS_CHARACTERS[character]) {
-                                            attributeValue += character;
-                                        }
-                                        // need to set the position one step behind --> the attributeloop will increase it and would otherwise miss a character
-                                        i--;
-                                    }
-                                }
-                                else {
-                                    attributeValue = "";
-                                }
-                                // always store the `is` attribute in lowercase:
-                                (attribute.length===2) && (attribute.toLowerCase()==='is') && (attribute='is');
-                                vnode.attrs[attribute] = attributeValue;
-                            }
-                        }
-                        vnode.id = vnode.attrs.id;
-
-                        extractClass = extractor.extractClass(vnode.attrs['class']);
-                        extractClass.attrClass && (vnode.attrs['class']=extractClass.attrClass);
-                        vnode.classNames = extractClass.classNames;
-
-                        extractStyle = extractor.extractStyle(vnode.attrs.style);
-                        extractStyle.attrStyle && (vnode.attrs.style=extractStyle.attrStyle);
-                        vnode.styles = extractStyle.styles;
-
-                    }
-
-                    if (!vnode.isVoid) {
-                        innerText = '';
-                        endTagCount = 1;
-                        // fill innerText until end-tagdefinition:
-                        while ((endTagCount>0) && (++i<len) && (character=htmlString[i])) {
-                            if (character==='<') {
-                                if ((character2=htmlString[i+1]) && (character2==='/')) {
-                                    // possible end-tag
-                                    j = i+1;
-                                    isEndTag = true;
-                                    while (isEndTag && (++j<len) && (htmlString[j]!=='>')) {
-                                        if (htmlString[j].toUpperCase()!==tag[j-i-2]) {
-                                            isEndTag = false;
-                                        }
-                                    }
-                                    isEndTag && (endTagCount--);
-                                }
-                                else {
-                                    // possible begin-tag of the same tag (an innertag with the same tagname)
-                                    j = i;
-                                    isBeginTag = true;
-                                    while (isBeginTag && (++j<len) && (character2=htmlString[j]) && (character2!=='>') && (character2!==' ')) {
-                                        if (htmlString[j].toUpperCase()!==tag[j-i-1]) {
-                                            isBeginTag = false;
-                                        }
-                                    }
-                                    isBeginTag && (endTagCount++);
-                                }
-                            }
-                            if (endTagCount>0) {
-                                innerText += character;
-                            }
-                        }
-                        (endTagCount===0) && (i=i+tag.length+3);
-                        // in case of 'SCRIPT' or 'STYLE' tags --> just use the innertext, all other tags need to be extracted
-
-                        if (NS.SCRIPT_OR_STYLE_TAG[vnode.tag]) {
-                            // CREATE INNER TEXTNODE
-                            scriptVNode = Object.create(vNodeProto);
-                            scriptVNode.ns = nameSpace;
-                            scriptVNode.nodeType = 3;
-                            scriptVNode.domNode = DOCUMENT.createTextNode(innerText);
-                            // create circular reference:
-                            scriptVNode.domNode._vnode = scriptVNode;
-                            scriptVNode.text = innerText;
-                            scriptVNode.vParent = vnode;
-                            vnode.vChildNodes = [scriptVNode];
-                        }
-                        else {
-                            vnode.vChildNodes = (innerText!=='') ? htmlToVNodes(innerText, vNodeProto, vnode.ns, vnode) : [];
-                        }
-                    }
-                    else {
-                        i++; // compensate for the '>'
-                    }
-
-                    //vnode.domNode can only be set after inspecting the attributes --> there might be an `is` attribute
-                    tagdefinition = tag.toLowerCase();
-                    if ((is=vnode.attrs.is) && !is.contains('-')) {
-                        tagdefinition = tag + '#' + is;
-                    }
-                    vnode.domNode = vnode.ns ? DOCUMENT.createElementNS(vnode.ns, tagdefinition) : DOCUMENT.createElement(tagdefinition);
-                    // create circular reference:
-                    vnode.domNode._vnode = vnode;
-
-                    vnodes[vnodes.length] = vnode;
-                    // reset vnode to force create a new one
-                    vnode = null;
-                    insideTagDefinition = false;
-                }
-
-                else if (insideComment) {
-                    if (character+character2+htmlString[i+2]==='-->') {
-                        // close vnode
-                        // move index to last character of comment
-                        i = i+2;
-                        vnode.domNode = DOCUMENT.createComment('');
-                        // create circular reference:
-                        vnode.domNode._vnode = vnode;
-                        vnodes[vnodes.length] = vnode;
-                        // reset vnode to force create a new one
-                        vnode = null;
-                        insideComment = false;
-                    }
-                    else {
-                        vnode.text += character;
-                    }
-                    i++;
-                }
-
-                else {
-                    // inside TextNode which could go over into an Element or CommentNode
-                    if ((character==='<') && TAG_OR_ATTR_START_CHARACTERS[character2] && (htmlString.lastIndexOf('>')>i)) {
-                        // begin of opening Element
-                        // first: store current vnode:
-                        if (vnode) {
-                            vnode.domNode = DOCUMENT.createTextNode('');
-                            // create circular reference:
-                            vnode.domNode._vnode = vnode;
-                            vnodes[vnodes.length] = vnode;
-                        }
-                        vnode = Object.create(vNodeProto);
-                        vnode.ns = nameSpace;
-                        vnode.nodeType = 1;
-                        vnode.vParent = parentVNode;
-                        vnode.tag = '';
-                        vnode.classNames ={};
-
-                        // find tagname:
-                        while ((++i<len) && (character=htmlString[i]) && (!STARTTAG_OR_ATTR_VALUE_ENDS_CHARACTERS[character])) {
-                            vnode.tag += character.toUpperCase();
-                        }
-
-                        tag = vnode.tag;
-                        vnode.isItag = ((tag[0]==='I') && (tag[1]==='-'));
-                        vnode.ns = xmlNS[tag] || nameSpace;
-
-                        //vnode.domNode can only be set after inspecting the attributes --> there might be an `is` attribute
-
-                        // check if it is a void-tag, but only need to do the regexp once per tag-element:
-                        if (voidElements[tag]) {
-                            vnode.isVoid = true;
-                        }
-                        else if (nonVoidElements[tag]) {
-                            vnode.isVoid = false;
-                        }
-                        else {
-                            vnode.isVoid = vnode.isItag ? false : !(new RegExp('</'+tag+'>', 'i')).test(htmlString);
-                            vnode.isVoid ? (voidElements[tag]=true) : (nonVoidElements[tag]=true);
-                        }
-                        insideTagDefinition = true;
-                    }
-                    else if (character+character2+htmlString[i+2]+htmlString[i+3]==='<!--') {
-                        // begin of CommentNode
-                        if (vnode) {
-                            vnode.domNode = DOCUMENT.createTextNode('');
-                            // create circular reference:
-                            vnode.domNode._vnode = vnode;
-                            vnodes[vnodes.length] = vnode;
-                        }
-                        vnode = Object.create(vNodeProto);
-                        vnode.ns = nameSpace;
-                        vnode.nodeType = 8;
-                        vnode.text = '';
-                        vnode.vParent = parentVNode;
-                        // move index to first character of comment
-                        i = i+4;
-                        insideComment = true;
-                    }
-                    else {
-                        if (!vnode) {
-                            // no current vnode --> create a TextNode:
-                            vnode = Object.create(vNodeProto);
-                            vnode.ns = nameSpace;
-                            vnode.nodeType = 3;
-                            vnode.text = '';
-                            vnode.vParent = parentVNode;
-                        }
-                        vnode.text += character;
-                        i++;
-                    }
-                }
-            }
-
-            if (vnode) {
-                vnode.domNode = DOCUMENT.createTextNode('');
-                // create circular reference:
-                vnode.domNode._vnode = vnode;
-                vnodes[vnodes.length] = vnode;
-            }
-            return vnodes;
-        };
-
-    return htmlToVNodes;
-
-};
-},{"./attribute-extractor.js":68,"./vdom-ns.js":75,"js-ext/extra/hashmap.js":38,"js-ext/lib/object.js":41,"polyfill":54}],74:[function(require,module,exports){
-"use strict";
-
-/**
- * Exports `domNodeToVNode` which transforms dom-nodes into vnodes.
- *
- *
- * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i><br>
- * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
- *
- * @module vdom
- * @submodule node-parser
- * @since 0.0.1
-*/
-
-require('polyfill');
-require('js-ext/lib/object.js');
-
-var createHashMap = require('js-ext/extra/hashmap.js').createMap;
-
-module.exports = function (window) {
-
-    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
-
-    if (window._ITSAmodules.NodeParser) {
-        return window._ITSAmodules.NodeParser; // NodeParser was already created
-    }
-
-    var NS = require('./vdom-ns.js')(window),
-        escapeEntities = NS.EscapeEntities,
-        extractor = require('./attribute-extractor.js')(window),
-        xmlNS = NS.xmlNS,
-        voidElements = NS.voidElements,
-        nonVoidElements = NS.nonVoidElements,
-        vNodeProto = require('./vnode.js')(window),
-        /**
-         * Transforms a dom-node into a vnode.
-         *
-         * @method domNodeToVNode
-         * @param domNode {Node} The dom-node to be transformed
-         * @param [parentVNode] {vnode} the parent-vnode that belongs to the dom-node
-         * @return {vnode} the vnode-representation of the dom-node
-         * @since 0.0.1
-         */
-        domNodeToVNode = window._ITSAmodules.NodeParser = function(domNode, parentVNode) {
-            var nodeType = domNode.nodeType,
-                vnode, attributes, attr, i, len, childNodes, domChildNode, vChildNodes, tag,
-                childVNode, extractClass, extractStyle, attributeName;
-            if (!NS.VALID_NODE_TYPES[nodeType]) {
-                // only process ElementNodes, TextNodes and CommentNodes
-                return;
-            }
-            vnode = Object.create(vNodeProto);
-
-            // set properties:
-            vnode.domNode = domNode;
-            // create circular reference:
-            vnode.domNode._vnode = vnode;
-
-            parentVNode && (vnode.ns=parentVNode.ns);
-            vnode.nodeType = nodeType;
-            vnode.vParent = parentVNode;
-
-            if (nodeType===1) {
-                // ElementNode
-                tag = vnode.tag = domNode.nodeName; // is always uppercase
-                vnode.isItag = ((tag[0]==='I') && (tag[1]==='-'));
-                vnode.ns = xmlNS[tag] || vnode.ns;
-
-                vnode.attrs = {};
-
-                attributes = domNode.attributes;
-                len = attributes.length;
-                for (i=0; i<len; i++) {
-                    attr = attributes[i];
-                    // always store the `is` attribute in lowercase:
-                    attributeName = ((attr.name.length===2) && (attr.name.toLowerCase()==='is')) ? 'is' : attr.name;
-                    vnode.attrs[attributeName] = String(attr.value);
-                }
-
-                vnode.id = vnode.attrs.id;
-
-                extractClass = extractor.extractClass(vnode.attrs['class']);
-                extractClass.attrClass && (vnode.attrs['class']=extractClass.attrClass);
-                vnode.classNames = extractClass.classNames;
-
-                extractStyle = extractor.extractStyle(vnode.attrs.style);
-                extractStyle.attrStyle && (vnode.attrs.style=extractStyle.attrStyle);
-                vnode.styles = extractStyle.styles;
-
-                if (voidElements[tag]) {
-                    vnode.isVoid = true;
-                }
-                else if (nonVoidElements[tag]) {
-                    vnode.isVoid = false;
-                }
-                else {
-                    (vnode.isVoid=!(new RegExp('</'+tag+'>$', 'i')).test(domNode.outerHTML)) ? (voidElements[tag]=true) : (nonVoidElements[tag]=true);
-                }
-
-                if (!vnode.isVoid) {
-                    // in case of 'SCRIPT' or 'STYLE' tags --> just use the innertext, all other tags need to be extracted
-                    if (NS.SCRIPT_OR_STYLE_TAG[tag]) {
-                        vnode.text = domNode.textContent;
-                    }
-                    else {
-                        vChildNodes = vnode.vChildNodes = [];
-                        childNodes = domNode.childNodes;
-                        len = childNodes.length;
-                        for (i=0; i<len; i++) {
-                            domChildNode = childNodes[i];
-                            childVNode = domNodeToVNode(domChildNode, vnode);
-                            vChildNodes[vChildNodes.length] = childVNode;
-                        }
-                    }
-                }
-            }
-            else {
-                // TextNode or CommentNode
-                vnode.text = escapeEntities(domNode.nodeValue);
-            }
-            // store vnode's id:
-            vnode.storeId();
-            return vnode;
-        };
-
-    return domNodeToVNode;
-
-};
-},{"./attribute-extractor.js":68,"./vdom-ns.js":75,"./vnode.js":76,"js-ext/extra/hashmap.js":38,"js-ext/lib/object.js":41,"polyfill":54}],75:[function(require,module,exports){
-/**
- * Creates a Namespace that can be used accros multiple vdom-modules to share information.
- *
- *
- * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
- * <br>
- * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
- *
- *
- * @module vdom
- * @submodule vdom-ns
- * @class NS-vdom
- * @since 0.0.1
-*/
-
-"use strict";
-
-require('js-ext/lib/object.js');
-require('polyfill');
-
-var createHashMap = require('js-ext/extra/hashmap.js').createMap,
-    // for escaping entoties inside domNode.nodeValue, we need this trick: https://code.google.com/p/jslibs/wiki/JavascriptTips
-/*jshint proto:true */
-    ENTITY_TO_CODE = { __proto__: null,
-        apos:0x0027,quot:0x0022,amp:0x0026,lt:0x003C,gt:0x003E,nbsp:0x00A0,iexcl:0x00A1,cent:0x00A2,pound:0x00A3,
-        curren:0x00A4,yen:0x00A5,brvbar:0x00A6,sect:0x00A7,uml:0x00A8,copy:0x00A9,ordf:0x00AA,laquo:0x00AB,
-        not:0x00AC,shy:0x00AD,reg:0x00AE,macr:0x00AF,deg:0x00B0,plusmn:0x00B1,sup2:0x00B2,sup3:0x00B3,
-        acute:0x00B4,micro:0x00B5,para:0x00B6,middot:0x00B7,cedil:0x00B8,sup1:0x00B9,ordm:0x00BA,raquo:0x00BB,
-        frac14:0x00BC,frac12:0x00BD,frac34:0x00BE,iquest:0x00BF,Agrave:0x00C0,Aacute:0x00C1,Acirc:0x00C2,Atilde:0x00C3,
-        Auml:0x00C4,Aring:0x00C5,AElig:0x00C6,Ccedil:0x00C7,Egrave:0x00C8,Eacute:0x00C9,Ecirc:0x00CA,Euml:0x00CB,
-        Igrave:0x00CC,Iacute:0x00CD,Icirc:0x00CE,Iuml:0x00CF,ETH:0x00D0,Ntilde:0x00D1,Ograve:0x00D2,Oacute:0x00D3,
-        Ocirc:0x00D4,Otilde:0x00D5,Ouml:0x00D6,times:0x00D7,Oslash:0x00D8,Ugrave:0x00D9,Uacute:0x00DA,Ucirc:0x00DB,
-        Uuml:0x00DC,Yacute:0x00DD,THORN:0x00DE,szlig:0x00DF,agrave:0x00E0,aacute:0x00E1,acirc:0x00E2,atilde:0x00E3,
-        auml:0x00E4,aring:0x00E5,aelig:0x00E6,ccedil:0x00E7,egrave:0x00E8,eacute:0x00E9,ecirc:0x00EA,euml:0x00EB,
-        igrave:0x00EC,iacute:0x00ED,icirc:0x00EE,iuml:0x00EF,eth:0x00F0,ntilde:0x00F1,ograve:0x00F2,oacute:0x00F3,
-        ocirc:0x00F4,otilde:0x00F5,ouml:0x00F6,divide:0x00F7,oslash:0x00F8,ugrave:0x00F9,uacute:0x00FA,ucirc:0x00FB,
-        uuml:0x00FC,yacute:0x00FD,thorn:0x00FE,yuml:0x00FF,OElig:0x0152,oelig:0x0153,Scaron:0x0160,scaron:0x0161,
-        Yuml:0x0178,fnof:0x0192,circ:0x02C6,tilde:0x02DC,Alpha:0x0391,Beta:0x0392,Gamma:0x0393,Delta:0x0394,
-        Epsilon:0x0395,Zeta:0x0396,Eta:0x0397,Theta:0x0398,Iota:0x0399,Kappa:0x039A,Lambda:0x039B,Mu:0x039C,
-        Nu:0x039D,Xi:0x039E,Omicron:0x039F,Pi:0x03A0,Rho:0x03A1,Sigma:0x03A3,Tau:0x03A4,Upsilon:0x03A5,
-        Phi:0x03A6,Chi:0x03A7,Psi:0x03A8,Omega:0x03A9,alpha:0x03B1,beta:0x03B2,gamma:0x03B3,delta:0x03B4,
-        epsilon:0x03B5,zeta:0x03B6,eta:0x03B7,theta:0x03B8,iota:0x03B9,kappa:0x03BA,lambda:0x03BB,mu:0x03BC,
-        nu:0x03BD,xi:0x03BE,omicron:0x03BF,pi:0x03C0,rho:0x03C1,sigmaf:0x03C2,sigma:0x03C3,tau:0x03C4,
-        upsilon:0x03C5,phi:0x03C6,chi:0x03C7,psi:0x03C8,omega:0x03C9,thetasym:0x03D1,upsih:0x03D2,piv:0x03D6,
-        ensp:0x2002,emsp:0x2003,thinsp:0x2009,zwnj:0x200C,zwj:0x200D,lrm:0x200E,rlm:0x200F,ndash:0x2013,
-        mdash:0x2014,lsquo:0x2018,rsquo:0x2019,sbquo:0x201A,ldquo:0x201C,rdquo:0x201D,bdquo:0x201E,dagger:0x2020,
-        Dagger:0x2021,bull:0x2022,hellip:0x2026,permil:0x2030,prime:0x2032,Prime:0x2033,lsaquo:0x2039,rsaquo:0x203A,
-        oline:0x203E,frasl:0x2044,euro:0x20AC,image:0x2111,weierp:0x2118,real:0x211C,trade:0x2122,alefsym:0x2135,
-        larr:0x2190,uarr:0x2191,rarr:0x2192,darr:0x2193,harr:0x2194,crarr:0x21B5,lArr:0x21D0,uArr:0x21D1,
-        rArr:0x21D2,dArr:0x21D3,hArr:0x21D4,forall:0x2200,part:0x2202,exist:0x2203,empty:0x2205,nabla:0x2207,
-        isin:0x2208,notin:0x2209,ni:0x220B,prod:0x220F,sum:0x2211,minus:0x2212,lowast:0x2217,radic:0x221A,
-        prop:0x221D,infin:0x221E,ang:0x2220,and:0x2227,or:0x2228,cap:0x2229,cup:0x222A,int:0x222B,
-        there4:0x2234,sim:0x223C,cong:0x2245,asymp:0x2248,ne:0x2260,equiv:0x2261,le:0x2264,ge:0x2265,
-        sub:0x2282,sup:0x2283,nsub:0x2284,sube:0x2286,supe:0x2287,oplus:0x2295,otimes:0x2297,perp:0x22A5,
-        sdot:0x22C5,lceil:0x2308,rceil:0x2309,lfloor:0x230A,rfloor:0x230B,lang:0x2329,rang:0x232A,loz:0x25CA,
-        spades:0x2660,clubs:0x2663,hearts:0x2665,diams:0x2666
-    },
-/*jshint proto:false */
-    charToEntity = {},
-    entityName;
-
-for (entityName in ENTITY_TO_CODE) {
-    charToEntity[String.fromCharCode(ENTITY_TO_CODE[entityName])] = entityName;
-}
-
-module.exports = function (window) {
-    var NS;
-
-    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
-
-    if (window._ITSAmodules.VDOM_NS) {
-        return window._ITSAmodules.VDOM_NS; // VDOM_NS was already created
-    }
-
-    NS = window._ITSAmodules.VDOM_NS = createHashMap();
-
-    /**
-     * Reference to the VElement of document.body (gets its value as soon as it gets refered to)
-     *
-     * @property body
-     * @default null
-     * @type VElement
-     * @since 0.0.1
-     */
-    NS.body = null;
-
-    NS.xmlNS = createHashMap({
-        SVG: 'http://www.w3.org/2000/svg',
-        XBL: 'http://www.mozilla.org/xbl',
-        XUL: 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul',
-        MATH: 'http://www.w3.org/1998/Math/MathML',
-        XLINK: 'http://www.w3.org/1999/xlink'
-    });
-
-    /**
-     * A hash with all node'ids (of all the domnodes that have an id). The value is a reference to an VElement.
-     *
-     * @property nodeids
-     * @default {}
-     * @type Object
-     * @since 0.0.1
-     */
-    NS.nodeids || (NS.nodeids=createHashMap());
-
-    /**
-     * A hash with all encountered non-void Elements
-     *
-     * @property nonVoidElements
-     * @default {}
-     * @type Object
-     * @since 0.0.1
-     */
-    NS.nonVoidElements || (NS.nonVoidElements=createHashMap());
-
-    /**
-     * A hash to identify what tagNames are equal to `SCRIPT` or `STYLE`.
-     *
-     * @property SCRIPT_OR_STYLE_TAG
-     * @default {SCRIPT: true, STYLE: true}
-     * @type Object
-     * @since 0.0.1
-     */
-    NS.SCRIPT_OR_STYLE_TAG = createHashMap({
-        SCRIPT: true,
-        STYLE: true
-    });
-
-    /**
-     * A hash with all nodeTypes that should be captured by the vDOM.
-     *
-     * @property VALID_NODE_TYPES
-     * @default {1: true, 3: true, 8: true}
-     * @type Object
-     * @since 0.0.1
-     */
-    NS.VALID_NODE_TYPES = createHashMap({
-        1: true,
-        3: true,
-        8: true
-    });
-
-    /**
-     * A hash with all encountered void Elements
-     *
-     * @property voidElements
-     * @default {}
-     * @type Object
-     * @since 0.0.1
-     */
-    NS.voidElements || (NS.voidElements=createHashMap());
-
-    NS.UnescapeEntities = function(str) {
-        return str.replace(
-            /&(.+?);/g,
-            function(str, ent) {
-                return String.fromCharCode( (ent[0]!=='#' ? ENTITY_TO_CODE[ent] : ent[1]==='x') ? parseInt(ent.substr(2),16) : parseInt(ent.substr(1)) );
-            }
-        );
-    };
-
-    NS.EscapeEntities = function(str) {
-        return str.replace(
-            /[^\x20-\x7E]/g,
-            function(str) {
-                return charToEntity[str] ? '&'+charToEntity[str]+';' : str;
-            }
-        );
-    };
-
-    return NS;
-};
-},{"js-ext/extra/hashmap.js":38,"js-ext/lib/object.js":41,"polyfill":54}],76:[function(require,module,exports){
-"use strict";
-
-/**
- * Delivers the `vnode` prototype object, which is a virtualisation of an `Element` inside the Dom.
- * These Elements work smoothless with the vdom (see ...).
- *
- * vnodes are much quicker to access and walk through than native dom-nodes. However, this is a module you don't need
- * by itself: `Element`-types use these features under the hood.
- *
- *
- * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
- * <br>
- * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
- *
- *
- * @module vdom
- * @submodule vnode
- * @class vnode
- * @since 0.0.1
-*/
-
-require('js-ext/lib/array.js');
-require('js-ext/lib/object.js');
-require('js-ext/lib/string.js');
-require('polyfill');
-
-var createHashMap = require('js-ext/extra/hashmap.js').createMap;
-
-module.exports = function (window) {
-
-    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
-
-    if (window._ITSAmodules.VNode) {
-        return window._ITSAmodules.VNode; // VNODE was already created
-    }
-
-    var NS = require('./vdom-ns.js')(window),
-        extractor = require('./attribute-extractor.js')(window),
-        DOCUMENT = window.document,
-        LightMap = require('js-ext/extra/lightmap.js'),
-        MUTATION_EVENTS = new LightMap(),
-        BATCH_WILL_RUN = false,
-        xmlNS = NS.xmlNS,
-        nodeids = NS.nodeids,
-        htmlToVNodes = require('./html-parser.js')(window),
-        timers = require('utils/lib/timers.js'),
-        async = timers.asyncSilent,
-        later = timers.laterSilent,
-
-        // cleanup memory after 1 minute: removed nodes SHOULD NOT be accessed afterwards
-        // because vnode would be recalculated and might be different from before
-        DESTROY_DELAY = 60000,
-
-        unescapeEntities = NS.UnescapeEntities,
-        NTH_CHILD_REGEXP = /^(?:(\d*)[n|N])([\+|\-](\d+))?$/, // an+b
-        STRING = 'string',
-        CLASS = 'class',
-        STYLE = 'style',
-        ID = 'id',
-        NODE= 'node',
-        REMOVE = 'remove',
-        INSERT = 'insert',
-        CHANGE = 'change',
-        ATTRIBUTE = 'attribute',
-        EV_REMOVED = NODE+REMOVE,
-        EV_INSERTED = NODE+INSERT,
-        EV_CONTENT_CHANGE = NODE+'content'+CHANGE,
-        EV_ATTRIBUTE_REMOVED = ATTRIBUTE+REMOVE,
-        EV_ATTRIBUTE_CHANGED = ATTRIBUTE+CHANGE,
-        EV_ATTRIBUTE_INSERTED = ATTRIBUTE+INSERT,
-        SPLIT_CHARACTER = createHashMap({
-            ' ': true,
-            '>': true,
-            '+': true, // only select the element when it is immediately preceded by the former element
-            '~': true  // only the element when it has the former element as a sibling. (just like `+`, but less strict)
-        }),
-        STORABLE_SPLIT_CHARACTER = createHashMap({
-            '>': true,
-            '+': true,
-            '~': true
-        }),
-        SIBLING_MATCH_CHARACTER = createHashMap({
-            '+': true,
-            '~': true
-        }),
-        ATTR_DETAIL_SPECIFIERS = createHashMap({
-            '^': true, // “begins with” selector
-            '$': true, // “ends with” selector
-            '*': true, // “contains” selector (might be a substring)
-            '~': true, // “contains” selector as a separate word, separated by spaces
-            '|': true // “contains” selector as a separate word, separated by `|`
-        }),
-        /**
-         * Object to gain quick access to attribute-name end-tokens.
-         *
-         * @property END_ATTRIBUTENAME
-         * @default {
-         *      '=': true,
-         *      ']': true
-         *  }
-         * @type Object
-         * @protected
-         * @since 0.0.1
-         */
-        END_ATTRIBUTENAME = createHashMap({
-            '=': true,
-            ']': true,
-            '^': true, // “begins with” selector
-            '$': true, // “ends with” selector
-            '*': true, // “contains” selector (might be a substring)
-            '~': true, // “contains” selector as a separate word, separated by spaces
-            '|': true // “contains” selector as a separate word, separated by `|`
-        }),
-        /**
-         * Object to gain quick access to different changes of Element nodeType changes.
-         *
-         * @property NODESWITCH
-         * @default {
-         *      1: {
-         *          1: 1,
-         *          3: 2,
-         *          8: 3
-         *      },
-         *      3: {
-         *          1: 4,
-         *          3: 5,
-         *          8: 6
-         *      },
-         *      8: {
-         *          1: 7,
-         *          3: 8,
-         *          8: 9
-         *      }
-         *  }
-         * @type Object
-         * @protected
-         * @since 0.0.1
-         */
-        NODESWITCH = createHashMap({
-            1: createHashMap({
-                1: 1, // oldNodeType==Element, newNodeType==Element
-                3: 2, // oldNodeType==Element, newNodeType==TextNode
-                8: 3  // oldNodeType==Element, newNodeType==Comment
-            }),
-            3: createHashMap({
-                1: 4, // oldNodeType==TextNode, newNodeType==Element
-                3: 5, // oldNodeType==TextNode, newNodeType==TextNode
-                8: 6  // oldNodeType==TextNode, newNodeType==Comment
-            }),
-            8: createHashMap({
-                1: 7, // oldNodeType==Comment, newNodeType==Element
-                3: 8, // oldNodeType==Comment, newNodeType==TextNode
-                8: 9  // oldNodeType==Comment, newNodeType==Comment
-            })
-        }),
-        /**
-         * Object to gain quick access to selector start-tokens.
-         *
-         * @property SELECTOR_IDENTIFIERS
-         * @default {
-         *      '#': 1,
-         *      '.': 2,
-         *      '[': 3
-         *  }
-         * @type Object
-         * @protected
-         * @since 0.0.1
-         */
-        SELECTOR_IDENTIFIERS = createHashMap({
-            '#': 1,
-            '.': 2,
-            '[': 3,
-            ':': 4
-        }),
-        PSEUDO_FIRST_CHILD = ':first-child',
-        PSEUDO_FIRST_OF_TYPE = ':first-of-type',
-        PSEUDO_LAST_CHILD = ':last-child',
-        PSEUDO_LAST_OF_TYPE = ':last-of-type',
-        PSEUDO_NTH_CHILD = ':nth-child',
-        PSEUDO_NTH_LAST_CHILD = ':nth-last-child',
-        PSEUDO_NTH_LAST_OF_TYPE = ':nth-last-of-type',
-        PSEUDO_NTH_OF_TYPE = ':nth-of-type',
-        PSEUDO_ONLY_OF_TYPE = ':only-of-type',
-        PSEUDO_ONLY_CHILD = ':only-child',
-        /**
-         * Object to gain quick access to the selectors that required children
-         *
-         * @property PSEUDO_REQUIRED_CHILDREN
-         * @default {
-         *     ':first-child': true,
-         *     ':first-of-type': true,
-         *     ':last-child': true,
-         *     ':last-of-type': true,
-         *     ':nth-child': true,
-         *     ':nth-last-child': true,
-         *     ':nth-last-of-type': true,
-         *     ':nth-of-type': true,
-         *     ':only-of-type': true,
-         *     ':only-child': true
-         *  }
-         * @type Object
-         * @protected
-         * @since 0.0.1
-         */
-        PSEUDO_REQUIRED_CHILDREN = createHashMap(),
-        _matchesSelectorItem, _matchesOneSelector, _findElementSibling, vNodeProto, _markRemoved,
-        _splitSelector, _findNodeSibling, _matchNthChild, _batchEmit, _emitDestroyChildren;
-        PSEUDO_REQUIRED_CHILDREN[PSEUDO_FIRST_CHILD] = true;
-        PSEUDO_REQUIRED_CHILDREN[PSEUDO_FIRST_OF_TYPE] = true;
-        PSEUDO_REQUIRED_CHILDREN[PSEUDO_LAST_CHILD] = true;
-        PSEUDO_REQUIRED_CHILDREN[PSEUDO_LAST_OF_TYPE] = true;
-        PSEUDO_REQUIRED_CHILDREN[PSEUDO_NTH_CHILD] = true;
-        PSEUDO_REQUIRED_CHILDREN[PSEUDO_NTH_LAST_CHILD] = true;
-        PSEUDO_REQUIRED_CHILDREN[PSEUDO_NTH_LAST_OF_TYPE] = true;
-        PSEUDO_REQUIRED_CHILDREN[PSEUDO_NTH_OF_TYPE] = true;
-        PSEUDO_REQUIRED_CHILDREN[PSEUDO_ONLY_OF_TYPE] = true;
-        PSEUDO_REQUIRED_CHILDREN[PSEUDO_ONLY_CHILD] = true;
-
-   /**
-    * Searches for the next -or previous- node-sibling (nodeType of 1, 3 or 8).
-    *
-    * @method _findNodeSibling
-    * @param vnode {Object} the vnode to inspect
-    * @param [next] {Boolean} whether to search for the next, or previous match.
-    * @return {Object|undefined} the vnode that matches the search
-    * @protected
-    * @private
-    * @since 0.0.1
-    */
-    _findNodeSibling = function(vnode, next) {
-        var vParent = vnode.vParent,
-            index;
-        if (!vParent || !vParent.vChildNodes) {
-            return;
-        }
-        index = vParent.vChildNodes.indexOf(vnode) + (next ? 1 : -1);
-        return vParent.vChildNodes[index];
-    };
-
-   /**
-    * Searches for the next -or previous- Element-sibling (nodeType of 1).
-    *
-    * @method _findElementSibling
-    * @param vnode {Object} the vnode to inspect
-    * @param [next] {Boolean} whether to search for the next, or previous match.
-    * @return {Object|undefined} the vnode that matches the search
-    * @protected
-    * @private
-    * @since 0.0.1
-    */
-    _findElementSibling = function(vnode, next) {
-        var vParent = vnode.vParent,
-            index;
-        if (!vParent || !vParent.vChildNodes) {
-            return;
-        }
-        if (vnode.nodeType===1) {
-            index = vParent.vChildren.indexOf(vnode) + (next ? 1 : -1);
-            return vParent.vChildren[index];
-        }
-        else {
-/*jshint noempty:true */
-            while ((vnode=_findNodeSibling(vnode, next)) && (vnode.nodeType!==1)) {}
-/*jshint noempty:false */
-            return vnode;
-        }
-    };
-
-   /**
-    * Check whether the vnode matches a "nth-child" test, which is used for css pseudoselectors like `nth-child`, `nth-of-type` etc.
-    *
-    * @method _matchNthChild
-    * @param pseudoArg {String} the argument for nth-child
-    * @param index {Number} the index of the inspected vnode
-    * @return {Boolean} whether the vnode matches the nthChild test
-    * @protected
-    * @private
-    * @since 0.0.1
-    */
-    _matchNthChild = function(pseudoArg, index) {
-        var match, k, a, b, nodeOk, nthIndex, sign, isNumber;
-        (pseudoArg==='even') && (pseudoArg='2n');
-        (pseudoArg==='odd') && (pseudoArg='2n+1');
-
-        match = pseudoArg.match(NTH_CHILD_REGEXP) || (isNumber=pseudoArg.validateNumber());
-        if (!match) {
-            return false;
-        }
-        // pseudoArg follows the pattern: `an+b`
-        if (!isNumber) {
-            a = match[1];
-            sign = match[2];
-            b = match[3] || 0;
-            (b==='') && (b=0);
-        }
-        else {
-            b = pseudoArg;
-        }
-        sign && (sign=sign[0]);
-        if (!a) {
-            // only fixed index to match
-            return (sign==='-') ? false : (parseInt(b, 10)===index);
-        }
-        else {
-            // we need to iterate
-            nodeOk = false;
-            b = window.Number(b);
-            for (k=0; !nodeOk; k++) {
-                nthIndex = (sign==='-') ? (a*k) - b : (a*k) + b;
-                if (nthIndex===index) {
-                    nodeOk = true;
-                }
-                else if (nthIndex>index) {
-                    // beyond index --> will never become a fix anymore
-                    return false;
-                }
-            }
-            return nodeOk;
-        }
-    };
-
-   /**
-    * Check whether the vnode matches the css-selector. the css-selector should be a single selector,
-    * not multiple, so it shouldn't contain a `comma`.
-    *
-    * @method _matchesOneSelector
-    * @param vnode {vnode} the vnode to inspect
-    * @param selector {String} the selector-item to check the match for
-    * @param [relatedVNode] {vnode} a related vnode where to selectors starting with `>`, `~` or `+` should be compared.
-    *        If not specified, any of these three starting selector-characters will be ignored (leading to matching this first character).
-    * @return {Boolean} whether the vnode matches the css-selector
-    * @protected
-    * @private
-    * @since 0.0.1
-    */
-    _matchesOneSelector = function(vnode, selector, relatedVNode) {
-        var selList = _splitSelector(selector),
-            size = selList.length,
-            originalVNode = vnode,
-            firstSelectorChar = selector[0],
-            i, selectorItem, selMatch, directMatch, vParentvChildren, indexRelated;
-
-        if (size===0) {
-            return false;
-        }
-
-        selectorItem = selList[size-1];
-        selMatch = _matchesSelectorItem(vnode, selectorItem);
-        for (i=size-2; (selMatch && (i>=0)); i--) {
-            selectorItem = selList[i];
-            if (SIBLING_MATCH_CHARACTER[selectorItem]) {
-                // need to search through the same level
-                if (--i>=0) {
-                    directMatch = (selectorItem==='+');
-                    selectorItem = selList[i];
-                    // need to search the previous siblings
-                    vnode = vnode.vPreviousElement;
-                    if (!vnode) {
-                        return false;
-                    }
-                    if (directMatch) {
-                        // should be immediate match
-                        selMatch = _matchesSelectorItem(vnode, selectorItem);
-                    }
-                    else {
-                        while (vnode && !(selMatch=_matchesSelectorItem(vnode, selectorItem))) {
-                            vnode = vnode.vPreviousElement;
-                        }
-                    }
-                }
-            }
-            else {
-                // need to search up the tree
-                vnode = vnode.vParent;
-                if (!vnode || ((vnode===relatedVNode) && (selectorItem!=='>'))) {
-                    return false;
-                }
-                if (selectorItem==='>') {
-                    if (--i>=0) {
-                        selectorItem = selList[i];
-                       // should be immediate match
-                        selMatch = _matchesSelectorItem(vnode, selectorItem);
-                    }
-                }
-                else {
-                    while (!(selMatch=_matchesSelectorItem(vnode, selectorItem))) {
-                        vnode = vnode.vParent;
-                        if (!vnode || (vnode===relatedVNode)) {
-                            return false;
-                        }
-                    }
-                }
-            }
-        }
-        if (selMatch && relatedVNode && STORABLE_SPLIT_CHARACTER[firstSelectorChar]) {
-            // when `selector` starts with `>`, `~` or `+`, then
-            // there should also be a match comparing a related node!
-            switch (firstSelectorChar) {
-                case '>':
-                    selMatch = (relatedVNode.vChildren.indexOf(originalVNode)!==-1);
-                break;
-                case '~':
-                    vParentvChildren = originalVNode.vParent.vChildren;
-                    indexRelated = vParentvChildren.indexOf(relatedVNode);
-                    selMatch = (indexRelated!==-1) && (indexRelated<vParentvChildren.indexOf(originalVNode));
-                break;
-                case '+':
-                    selMatch = (originalVNode.vPreviousElement === relatedVNode);
-            }
-        }
-        return selMatch;
-    };
-
-   /**
-    * Check whether the vnode matches one specific selector-item. Suppose the css-selector: "#mynode li.red .blue"
-    * then there are 3 selector-items: "#mynode",  "li.red" and ".blue"
-    *
-    * This method also can handle the new selectors:
-    * <ul>
-    *     <li>[att^=val] –-> the “begins with” selector</li>
-    *     <li>[att$=val] –-> the “ends with” selector</li>
-    *     <li>[att*=val] –-> the “contains” selector (might be a substring)</li>
-    *     <li>[att~=val] –-> the “contains” selector as a separate word, separated by spaces</li>
-    *     <li>[att|=val] –-> the “contains” selector as a separate word, separated by `|`</li>
-    *     <li>+ --> (same level)</li>
-    *     <li>~ --> (same level)</li>
-    * </ul>
-    *
-    * @method _matchesSelectorItem
-    * @param vnode {Object} the vnode to inspect
-    * @param selectorItem {String} the selector-item to check the match for
-    * @return {Boolean} whether the vnode matches the selector-item
-    * @protected
-    * @private
-    * @since 0.0.1
-    */
-    _matchesSelectorItem = function (vnode, selectorItem) {
-        var i = 0,
-            len = selectorItem.length,
-            character = selectorItem[0],
-            tagName, id, className, attributeName, attributeValue, stringMarker, attributeisString, isBoolean, insideAttributeValue, insideAttribute,
-            vParent, checkBoolean, treatment, k, min, max, value, len2, index, found, pseudo, pseudoArg, arglevel, count, vParentVChildren;
-        if (selectorItem==='*') {
-            return true;
-        }
-        if (!SELECTOR_IDENTIFIERS[character]) {
-            // starts with tagName
-            tagName = '';
-            // reposition i to continue in the right way:
-            i--;
-            while ((++i<len) && (character=selectorItem[i]) && !SELECTOR_IDENTIFIERS[character]) {
-                tagName += character;
-            }
-            if (tagName.toUpperCase()!==vnode.tag) {
-                return false;
-            }
-        }
-        while (i<len) {
-            switch (character) {
-                case '#':
-                    id = '';
-                    while ((++i<len) && (character=selectorItem[i]) && !SELECTOR_IDENTIFIERS[character]) {
-                        id += character;
-                    }
-                    if (id!==vnode.id) {
-                        return false;
-                    }
-                    break;
-                case '.':
-                    className = '';
-                    while ((++i<len) && (character=selectorItem[i]) && !SELECTOR_IDENTIFIERS[character]) {
-                        className += character;
-                    }
-
-                    if (!vnode.hasClass(className)) {
-                        return false;
-                    }
-                    break;
-                case '[':
-                    attributeName = '';
-                    while ((++i<len) && (character=selectorItem[i]) && !END_ATTRIBUTENAME[character]) {
-                        attributeName += character;
-                    }
-                    // if character===']' then we have an attribute without a value-definition
-                    if (!vnode.attrs[attributeName] || ((character===']') && (vnode.attrs[attributeName]!==''))) {
-                        return !!vnode.attrs[attributeName];
-                    }
-                    // now we read the value of the attribute
-                    // however, it could be that the selector has a special `detailed` identifier set (defined by: ATTR_DETAIL_SPECIFIERS)
-                    if (ATTR_DETAIL_SPECIFIERS[character]) {
-                        treatment = character; // store the character to know how the attributedata should be treaded
-                        i++; // character should be a "=" by now
-                    }
-                    else {
-                        treatment = null;
-                    }
-                    attributeValue = '';
-                    stringMarker = selectorItem[i+1];
-                    attributeisString = (stringMarker==='"') || (stringMarker==="'");
-                    attributeisString && (i++);
-
-                    // end of attributaValue = (character===']') && (!attributeisString || (selectorItem[i-1]===stringMarker))
-                    while ((++i<len) && (character=selectorItem[i]) && !((character===']') && (!attributeisString || (selectorItem[i-1]===stringMarker)))) {
-                        attributeValue += character;
-                    }
-
-                    if (attributeisString) {
-                        // if attribute is string, then we need to _remove to last stringmarker
-                        attributeValue = attributeValue.substr(0, attributeValue.length-1);
-                    }
-                    else {
-                        // if attribute is no string, then we need to typecast its value
-                        isBoolean = ((attributeValue.length>3) && (attributeValue.length<6) &&
-                                     (checkBoolean=attributeValue.toUpperCase()) &&
-                                     ((checkBoolean==='FALSE') || (checkBoolean==='TRUE')));
-                        // typecast the value to either Boolean or Number:
-                        attributeValue = isBoolean ? (checkBoolean==='TRUE') : parseFloat(attributeValue);
-                    }
-
-                    // depending upon how the attributedata should be treated:
-                    if (treatment) {
-                        switch (treatment) {
-                            case '^': // “begins with” selector
-                                if (!vnode.attrs[attributeName].startsWith(attributeValue)) {
-                                    return false;
-                                }
-                                break;
-                            case '$': // “ends with” selector
-                                if (!vnode.attrs[attributeName].endsWith(attributeValue)) {
-                                    return false;
-                                }
-                                break;
-                            case '*': // “contains” selector (might be a substring)
-                                if (!vnode.attrs[attributeName].contains(attributeValue)) {
-                                    return false;
-                                }
-                                break;
-                            case '~': // “contains” selector as a separate word, separated by spaces
-                                if (!(' '+vnode.attrs[attributeName]+' ').contains(' '+attributeValue+' ')) {
-                                    return false;
-                                }
-                                break;
-                            case '|': // “contains” selector as a separate word, separated by `|`
-                                if (!('|'+vnode.attrs[attributeName]+'|').contains('|'+attributeValue+'|')) {
-                                    return false;
-                                }
-                                break;
-                        }
-                    }
-                    else if (vnode.attrs[attributeName]!==attributeValue) {
-                        return false;
-                    }
-
-                    // we still need to increase one position:
-                    (++i<len) && (character=selectorItem[i]);
-                    break;
-                case ':':
-                    // we have a pseudo-selector
-                    // first, find out which one
-                    // because '::' is a valid start (though without any selection), we start to back the next character as well:
-                    pseudo = ':'+selectorItem[++i];
-                    pseudoArg = '';
-                    vParent = vnode.vParent;
-                    vParentVChildren = vParent && vParent.vChildren;
-                    // pseudo-selectors might have an argument passed in, like `:nth-child(2n+1)` or `:not([type="checkbox"])` --> we
-                    // store this argument inside `pseudoArg`
-                    // also note that combinations are possible with `:not` --> `:not(:nth-child(2n+1))`
-                    // also note that we cannot "just" look for a closing character when running into the usage of attributes:
-                    // for example --> `:not([data-x="some data :)"])`
-                    // that's why -once we are inside attribute-data- we need to continue until the attribute-data ends
-                    while ((++i<len) && (character=selectorItem[i]) && !SELECTOR_IDENTIFIERS[character]) {
-                        if (character==='(') {
-                            // starting arguments
-                            arglevel = 1;
-                            insideAttribute = false;
-                            insideAttributeValue = false;
-                            while ((++i<len) && (character=selectorItem[i]) && (arglevel>0)) {
-                                if (!insideAttribute) {
-                                    if (character==='(') {
-                                        arglevel++;
-                                    }
-                                    else if (character===')') {
-                                        arglevel--;
-                                    }
-                                    else if (character==='[') {
-                                        insideAttribute = true;
-                                    }
-                                }
-                                else {
-                                    // inside attribute
-                                    if (!insideAttributeValue) {
-                                        if ((character==='"') || (character==="'")) {
-                                            insideAttributeValue = true;
-                                            stringMarker = character;
-                                        }
-                                        else if (character===']') {
-                                            insideAttribute = false;
-                                        }
-                                    }
-                                    else if ((character===stringMarker) && (selectorItem[i+1]===']')) {
-                                        insideAttributeValue = false;
-                                    }
-                                }
-                                (arglevel>0) && (pseudoArg+=character);
-                            }
-                        }
-                        else {
-                            pseudo += character;
-                        }
-                    }
-                    // now, `pseudo` is known as well as its possible pseudoArg
-                    if (!vParentVChildren && PSEUDO_REQUIRED_CHILDREN[pseudo]) {
-                        return false;
-                    }
-                    switch (pseudo) {
-                        case ':checked': // input:checked   Selects every checked <input> element
-                            if (!vnode.attrs.checked) {
-                                return false;
-                            }
-                            break;
-                        case ':disabled': // input:disabled  Selects every disabled <input> element
-                            if (!vnode.attrs.disabled) {
-                                return false;
-                            }
-                            break;
-                        case ':empty': // p:empty Selects every <p> element that has no children (including text nodes)
-                            if (vnode.vChildNodes && (vnode.vChildNodes.length>0)) {
-                                return false;
-                            }
-                            break;
-                        case ':enabled': // input:enabled   Selects every enabled <input> element
-                            if (vnode.attrs.disabled) {
-                                return false;
-                            }
-                            break;
-                        case PSEUDO_FIRST_CHILD: // p:first-child   Selects every <p> element that is the first child of its parent
-                            if (vParentVChildren[0]!==vnode) {
-                                return false;
-                            }
-                            break;
-                        case PSEUDO_FIRST_OF_TYPE: // p:first-of-type Selects every <p> element that is the first <p> element of its parent
-                            for (k=vParentVChildren.indexOf(vnode)-1; k>=0; k--) {
-                                if (vParentVChildren[k].tag===vnode.tag) {
-                                    return false;
-                                }
-                            }
-                            break;
-                        case ':focus': // input:focus Selects the input element which has focus
-                            if (vnode.domNode!==DOCUMENT.activeElement) {
-                                return false;
-                            }
-                            break;
-                        case ':in-range': // input:in-range  Selects input elements with a value within a specified range
-                            if ((vnode.tag!=='INPUT') || ((vnode.attrs.type || '').toLowerCase()!=='number')) {
-                                return false;
-                            }
-                            min = parseInt(vnode.attrs.min, 10);
-                            max = parseInt(vnode.attrs.max, 10);
-                            value = parseInt(vnode.domNode.value, 10);
-                            if (!value || !min || !max || (value<min) || (value>max)) {
-                                return false;
-                            }
-                            break;
-                        case ':lang': // p:lang(it)  Selects every <p> element with a lang attribute equal to "it" (Italian)
-                            if (vnode.attrs.lang!==pseudoArg) {
-                                return false;
-                            }
-                            break;
-                        case PSEUDO_LAST_CHILD: // p:last-child    Selects every <p> element that is the last child of its parent
-                            if (vParentVChildren[vParentVChildren.length-1]!==vnode) {
-                                return false;
-                            }
-                            break;
-                        case PSEUDO_LAST_OF_TYPE: // p:last-of-type  Selects every <p> element that is the last <p> element of its parent
-                            len2 = vParentVChildren.length;
-                            for (k=vParentVChildren.indexOf(vnode)+1; k<len2; k++) {
-                                if (vParentVChildren[k].tag===vnode.tag) {
-                                    return false;
-                                }
-                            }
-                            break;
-                        case ':not': // :not(p) Selects every element that is not a <p> element
-                            if (vnode.matchesSelector(pseudoArg)) {
-                                return false;
-                            }
-                            break;
-                        case PSEUDO_NTH_CHILD: // p:nth-child(2)  Selects every <p> element that is the second child of its parent
-                            // NOTE: css `nth` starts with 1 instead of 0 !!!
-                            index = vParentVChildren.indexOf(vnode)+1;
-                            if (!_matchNthChild(pseudoArg, index)) {
-                                return false;
-                            }
-                            break;
-                        case PSEUDO_NTH_LAST_CHILD: // p:nth-last-child(2) Selects every <p> element that is the second child of its parent, counting from the last child
-                            // NOTE: css `nth` starts with 1 instead of 0 !!!
-                            // Also, nth-last-child counts from bottom up
-                            index = vParentVChildren.length - vParentVChildren.indexOf(vnode);
-                            if (!_matchNthChild(pseudoArg, index)) {
-                                return false;
-                            }
-                            break;
-                        case PSEUDO_NTH_LAST_OF_TYPE: // p:nth-last-of-type(2)   Selects every <p> element that is the second <p> element of its parent, counting from the last child
-                            // NOTE: css `nth` starts with 1 instead of 0 !!!
-                            // Also, nth-last-child counts from bottom up
-                            index = vParentVChildren.length - vParentVChildren.indexOf(vnode);
-                            // NOTE: css `nth` starts with 1 instead of 0 !!!
-                            found = false;
-                            index = 0;
-                            for (k=vParentVChildren.length-1; (k>=0) && !found; k--) {
-                                (vParentVChildren[k].tag===vnode.tag) && index++;
-                                (vParentVChildren[k]===vnode) && (found=true);
-                            }
-                            if (!found || !_matchNthChild(pseudoArg, index)) {
-                                return false;
-                            }
-                            break;
-                        case PSEUDO_NTH_OF_TYPE: // p:nth-of-type(2)    Selects every <p> element that is the second <p> element of its parent
-                            // NOTE: css `nth` starts with 1 instead of 0 !!!
-                            found = false;
-                            len2 = vParentVChildren.length;
-                            index = 0;
-                            for (k=0; (k<len2) && !found; k++) {
-                                (vParentVChildren[k].tag===vnode.tag) && index++;
-                                (vParentVChildren[k]===vnode) && (found=true);
-                            }
-                            if (!found || !_matchNthChild(pseudoArg, index)) {
-                                return false;
-                            }
-                            break;
-                        case PSEUDO_ONLY_OF_TYPE: // p:only-of-type  Selects every <p> element that is the only <p> element of its parent
-                            len2 = vParentVChildren.length;
-                            count = 0;
-                            for (k=0; (k<len2) && (count<=1); k++) {
-                                (vParentVChildren[k].tag===vnode.tag) && count++;
-                            }
-                            if (count!==1) {
-                                return false;
-                            }
-                            break;
-                        case PSEUDO_ONLY_CHILD: // p:only-child    Selects every <p> element that is the only child of its parent
-                            if (vParentVChildren.length!==1) {
-                                return false;
-                            }
-                            break;
-                        case ':optional': // input:optional  Selects input elements with no "required" attribute
-                            if (vnode.attrs.required) {
-                                return false;
-                            }
-                            break;
-                        case ':out-of-range': // input:out-of-range  Selects input elements with a value outside a specified range
-                            if ((vnode.tag!=='INPUT') || ((vnode.attrs.type || '').toLowerCase()!=='number')) {
-                                return false;
-                            }
-                            min = parseInt(vnode.attrs.min, 10);
-                            max = parseInt(vnode.attrs.max, 10);
-                            value = parseInt(vnode.domNode.value, 10);
-                            if (!value || !min || !max || ((value>=min) && (value<=max))) {
-                                return false;
-                            }
-                            break;
-                        case ':read-only': // input:read-only Selects input elements with the "readonly" attribute specified
-                            if (!vnode.attrs.readonly) {
-                                return false;
-                            }
-                            break;
-                        case ':read-write': // input:read-write    Selects input elements with the "readonly" attribute NOT specified
-                            if (vnode.attrs.readonly) {
-                                return false;
-                            }
-                            break;
-                        case ':required': // input:required  Selects input elements with the "required" attribute specified
-                            if (!vnode.attrs.required) {
-                                return false;
-                            }
-                            break;
-                        case ':root': // Selects the document's root element
-                            if (vnode.domNode!==DOCUMENT.documentElement) {
-                                return false;
-                            }
-                            break;
-                    }
-            }
-        }
-        return true;
-    };
-
-    /**
-     * Splits the selector into separate subselector-items that should match different elements through the tree.
-     * Special characters '>' and '+' are added as separate items in the hash.
-     *
-     * @method _splitSelector
-     * @param selector {String} the selector-item to check the match for
-     * @return {Array} splitted selectors
-     * @protected
-     * @private
-     * @since 0.0.1
-     */
-    _splitSelector = function(selector) {
-        var list = [],
-            len = selector.length,
-            sel = '',
-            i, character, insideDataAttr;
-
-        for (i=0; i<len; i++) {
-            character = selector[i];
-            if (character==='[') {
-                sel += character;
-                insideDataAttr = true;
-            }
-            else if (character===']') {
-                sel += character;
-                insideDataAttr = false;
-            }
-            else if (insideDataAttr || !SPLIT_CHARACTER[character]) {
-                sel += character;
-            }
-            else {
-                // unique selectoritem is found, add it to the list
-                if (sel.length>0) {
-                    list[list.length] = sel;
-                    sel = '';
-                }
-                // in case the last character was '>', '+' or '~', we need to add it as a separate item
-                STORABLE_SPLIT_CHARACTER[character] && (list[list.length]=character);
-            }
-        }
-        // add the last item
-        if (sel.length>0) {
-            list[list.length] = sel;
-            sel = '';
-        }
-        return list;
-    };
-
-    _batchEmit = function() {
-        // we will exactly define the 'UI:'-event --> Itags will have another emitterName
-        MUTATION_EVENTS.each(function (mutationEvents, vnode) {
-            var domNode = vnode.domNode;
-            if (mutationEvents[EV_REMOVED]) {
-                domNode.emit('UI:'+EV_REMOVED);
-            }
-            else if (mutationEvents[EV_INSERTED]) {
-                domNode.emit('UI:'+EV_INSERTED);
-            }
-            else {
-                // contentchange and attributechanges can go hand in hand
-                mutationEvents.each(function(value, evt) {
-                    domNode.emit('UI:'+evt, (evt===EV_CONTENT_CHANGE) ? null : {changed: value});
-                });
-            }
-        });
-        MUTATION_EVENTS.clear();
-        BATCH_WILL_RUN = false;
-    };
-
-    _emitDestroyChildren = function(vnode) {
-        var children = vnode.vChildren,
-            len = children.length,
-            i, vChild;
-        for (i=0; i<len; i++) {
-            vChild = children[i];
-            vChild._emit(EV_REMOVED);
-            _emitDestroyChildren(vChild);
-        }
-    };
-
-    _markRemoved = function(vnode) {
-        var vChildNodes = vnode.vChildNodes,
-            len, i, vChildNode;
-        if (vnode.nodeType===1) {
-            Object.protectedProp(vnode, 'removedFromDOM', true);
-            if (vChildNodes) {
-                len = vChildNodes.length;
-                for (i=0; i < len; i++) {
-                    vChildNode = vChildNodes[i];
-                    vChildNode && _markRemoved(vChildNode);
-                }
-            }
-        }
-    };
-
-    vNodeProto = window._ITSAmodules.VNode = {
-       /**
-        * Check whether the vnode's domNode is equal, or contains the specified Element.
-        *
-        * @method contains
-        * @return {Boolean} whether the vnode's domNode is equal, or contains the specified Element.
-        * @since 0.0.1
-        */
-        contains: function(otherVNode, noItagSearch) {
-            if (otherVNode && otherVNode.destroyed) {
-                return false;
-            }
-            while (otherVNode && (otherVNode!==this) && (!noItagSearch || !otherVNode.isItag || (otherVNode.tag==='I-PARCEL'))) {
-                otherVNode = otherVNode.vParent;
-            }
-            return (otherVNode===this);
-        },
-
-        empty: function() {
-            this._setChildNodes([]);
-        },
-
-       /**
-        * Returns the first child-vnode (if any). The child represents an Element (nodeType===1).
-        *
-        * @method firstOfVChildren
-        * @param cssSelector {String} one or more css-selectors
-        * @return {Object|null} the first child-vnode or null when not present
-        * @since 0.0.1
-        */
-        firstOfVChildren: function(cssSelector) {
-            var instance = this,
-                found, i, len, vChildren, element;
-            if (!cssSelector) {
-                return instance.vFirstElementChild;
-            }
-            vChildren = instance.vChildren;
-            len = vChildren.length;
-            for (i=0; !found && (i<len); i++) {
-                element = vChildren[i];
-                element.matchesSelector(cssSelector) && (found=element);
-            }
-            return found;
-        },
-
-       /**
-        * Checks whether the vnode has any vChildNodes (nodeType of 1, 3 or 8).
-        *
-        * @method hasVChildNodes
-        * @return {Boolean} whether the vnode has any vChildNodes.
-        * @since 0.0.1
-        */
-        hasVChildNodes: function() {
-            return this.vChildNodes ? (this.vChildNodes.length>0) : false;
-        },
-
-       /**
-        * Checks whether the vnode has any vChildren (vChildNodes with nodeType of 1).
-        *
-        * @method hasVChildren
-        * @return {Boolean} whether the vnode has any vChildren.
-        * @since 0.0.1
-        */
-        hasVChildren: function() {
-            return this.vChildNodes ? (this.vChildren.length>0) : false;
-        },
-
-       /**
-        * Checks whether the className is present on the vnode.
-        *
-        * @method hasClass
-        * @param className {String|Array} the className to check for. May be an Array of classNames, which all needs to be present.
-        * @return {Boolean} whether the className (or classNames) is present on the vnode
-        * @since 0.0.1
-        */
-        hasClass: function(className) {
-            var instance = this,
-                check = function(cl) {
-                    return !!instance.classNames[cl];
-                };
-            if (!instance.classNames) {
-                return false;
-            }
-            if (typeof className === STRING) {
-                return check(className);
-            }
-            else if (Array.isArray(className)) {
-                return className.every(check);
-            }
-            return false;
-        },
-
-       /**
-        * Returns the last child-vnode (if any). The child represents an Element (nodeType===1).
-        *
-        * @method lastOfVChildren
-        * @param cssSelector {String} one or more css-selectors
-        * @return {Object|null} the last child-vnode or null when not present
-        * @since 0.0.1
-        */
-        lastOfVChildren: function(cssSelector) {
-            var vChildren = this.vChildren,
-                found, i, element;
-            if (vChildren) {
-                if (!cssSelector) {
-                    return this.vLastElementChild;
-                }
-                for (i=vChildren.length-1; !found && (i>=0); i--) {
-                    element = vChildren[i];
-                    element.matchesSelector(cssSelector) && (found=element);
-                }
-            }
-            return found;
-        },
-
-       /**
-        * Checks whether the vnode matches one of the specified selectors. `selectors` can be one, or multiple css-selectors,
-        * separated by a `comma`. For example: "#myid li.red blue" is one selector, "div.red, div.blue, div.green" are three selectors.
-        *
-        * @method matchesSelector
-        * @param selectors {String} one or more css-selectors
-        * @param [relatedVNode] {vnode} a related vnode where to selectors starting with `>`, `~` or `+` should be compared.
-        *        If not specified, any of these three starting selector-characters will be ignored (leading to matching this first character).
-        * @return {Boolean} whether the vnode matches one of the selectors
-        * @since 0.0.1
-        */
-        matchesSelector: function(selectors, relatedVNode) {
-            var instance = this;
-            if (instance.nodeType!==1) {
-                return false;
-            }
-            selectors = selectors.split(',');
-            // we can use Array.some, because there won't be many separated selectoritems,
-            // so the final invocation won't be delayed much compared to looping
-            return selectors.some(function(selector) {
-                return _matchesOneSelector(instance, selector, relatedVNode);
-            });
-        },
-
-       /**
-        * Reloads the DOM-attribute into the vnode.
-        *
-        * @method matchesSelector
-        * @param attributeName {String} the name of the attribute to be reloaded.
-        * @return {Node} the domNode that was reloaded.
-        * @since 0.0.1
-        */
-        reloadAttr: function(attributeName) {
-            var instance = this,
-                domNode = instance.domNode,
-                attributeValue = domNode._getAttribute(attributeName),
-                attrs = instance.attrs,
-                extractStyle, extractClass;
-            if (instance.nodeType===1) {
-                attributeValue || (attributeValue='');
-                if (attributeValue==='') {
-                    delete attrs[attributeName];
-                    // in case of STYLE attributeName --> special treatment
-                    (attributeName===STYLE) && (instance.styles={});
-                    // in case of CLASS attributeName --> special treatment
-                    (attributeName===CLASS) && (instance.classNames={});
-                    // in case of ID attributeName --> special treatment
-                    if ((attributeName===ID) && (instance.id)) {
-                        delete nodeids[instance.id];
-                        delete instance.id;
-                    }
-                }
-                else {
-                    attrs[attributeName] = attributeValue;
-                    // in case of STYLE attributeName --> special treatment
-                    if (attributeName===STYLE) {
-                        extractStyle = extractor.extractStyle(attributeValue);
-                        attributeValue = extractStyle.attrStyle;
-                        if (attributeValue) {
-                            attrs.style = attributeValue;
-                        }
-                        else {
-                            delete attrs.style;
-                        }
-                        instance.styles = extractStyle.styles;
-                    }
-                    else if (attributeName===CLASS) {
-                        // in case of CLASS attributeName --> special treatment
-                        extractClass = extractor.extractClass(attributeValue);
-                        attributeValue = extractClass.attrClass;
-                        if (attributeValue) {
-                            attrs[CLASS] = attributeValue;
-                        }
-                        else {
-                            delete attrs[CLASS];
-                        }
-                        instance.classNames = extractClass.classNames;
-                    }
-                    else if (attributeName===ID) {
-                        instance.id && (instance.id!==attributeValue) && (delete nodeids[instance.id]);
-                        instance.id = attributeValue;
-                        nodeids[attributeValue] = domNode;
-                    }
-                }
-            }
-            return domNode;
-        },
-
-        serializeStyles: function() {
-            return extractor.serializeStyles(this.styles);
-        },
-
-       /**
-        * Syncs the vnode's nodeid (if available) inside `NS-vdom.nodeids`.
-        *
-        * Does NOT sync with the dom. Can be invoked multiple times without issues.
-        *
-        * @method storeId
-        * @chainable
-        * @since 0.0.1
-        */
-        storeId: function() {
-            // store node/vnode inside WeakMap:
-            var instance = this;
-            instance.id ? (nodeids[instance.id]=instance.domNode) : (delete nodeids[instance.id]);
-            return instance;
-        },
-
-        //---- private ------------------------------------------------------------------
-
-        /**
-         * Adds a vnode to the end of the list of vChildNodes.
-         *
-         * Syncs with the DOM.
-         *
-         * @method _appendChild
-         * @param VNode {vnode} vnode to append
-         * @private
-         * @return {Node} the Node that was appended
-         * @since 0.0.1
-         */
-        _appendChild: function(VNode) {
-            var instance = this,
-                domNode = VNode.domNode,
-                size;
-            VNode._moveToParent(instance);
-            instance.domNode._appendChild(domNode);
-            if (VNode.nodeType===3) {
-                size = instance.vChildNodes.length;
-                instance._normalize();
-                // if the size changed, then the domNode was merged
-                (size===instance.vChildNodes.length) || (domNode=instance.vChildNodes[instance.vChildNodes.length-1].domNode);
-            }
-            if (VNode.nodeType===1) {
-                DOCUMENT._itagList && VNode.isItag && !DOCUMENT._itagList.contains(domNode) && DOCUMENT._itagList.push(domNode);
-                VNode._emit(EV_INSERTED);
-            }
-            return domNode;
-        },
-
-       /**
-        * Removes the vnode from its parent vChildNodes- and vChildren-list.
-        *
-        * Does NOT sync with the dom.
-        *
-        * @method _deleteFromParent
-        * @private
-        * @chainable
-        * @since 0.0.1
-        */
-        _deleteFromParent: function() {
-            var instance = this,
-                vParent = instance.vParent;
-            if (vParent && vParent.vChildNodes) {
-                vParent.vChildNodes.remove(instance);
-                // force to recalculate the vChildren on a next call:
-                (instance.nodeType===1) && (vParent._vChildren=null);
-            }
-            return instance;
-        },
-
-        _cleanData: function() {
-            var instance = this,
-                data = instance._data;
-            data && data.each(
-                function(value, key) {
-                    delete data[key];
-                }
-            );
-            return instance;
-        },
-
-       /**
-        * Destroys the vnode and all its vnode-vChildNodes.
-        * Removes it from its vParent.vChildNodes list,
-        * also removes its definitions inside `NS-vdom.nodeids`.
-        *
-        * Does NOT sync with the dom.
-        *
-        * @method _destroy
-        * @private
-        * @chainable
-        * @since 0.0.1
-        */
-        _destroy: function(silent) {
-            var instance = this,
-                vChildNodes = instance.vChildNodes,
-                len, i, vChildNode, vParent, treeNodes;
-            if (!instance.destroyed) {
-                silent || instance._emit(EV_REMOVED);
-                Object.protectedProp(instance, 'destroyed', true);
-
-                // first: determine the dom-tree, which module `event-dom` needs to determine where the node was before it was destroyed:
-                treeNodes = [instance];
-                vParent = instance.vParent;
-                while (vParent) {
-                    treeNodes[treeNodes.length] = vParent;
-                    vParent = vParent.vParent;
-                }
-
-                // mark all its vChildNodes so we can see if the node is in the DOM
-                _markRemoved(instance);
-                // if vnode is part of DOCUMENT._itagList then remove it
-                if (DOCUMENT._itagList && instance.isItag) {
-                    DOCUMENT._itagList.remove(instance.domNode);
-                }
-
-                // The definite cleanup needs to be done after a timeout:
-                // someone might need to handle the Element when removed (fe to cleanup specific things)
-                later(function() {
-                    instance._cleanData();
-                    if (instance.nodeType===1) {
-                        // _destroy all its vChildNodes
-                        if (vChildNodes) {
-                            len = vChildNodes.length;
-                            for (i=0; i < len; i++) {
-                                vChildNode = vChildNodes[i];
-                                vChildNode && vChildNode._destroy(true);
-                            }
-                        }
-                    }
-                    instance._vChildren = null;
-                    // explicitely set instance.domNode._vnode and instance.domNode to null in order to prevent problems with the GC (we break the circular reference)
-                    delete instance.domNode._vnode;
-                    // if valid id, then _remove the DOMnodeRef from internal hash
-                    instance.id && delete nodeids[instance.id];
-                }, silent ? 0 : DESTROY_DELAY);
-
-                instance._deleteFromParent();
-                // Do not make domNode `null` --> it could be used even when not in the dom
-            }
-            return instance;
-        },
-
-        _emit: function(evt, attribute, newValue, prevValue) {
-           /**
-            * Emitted by every Element that gets inserted.
-            *
-            * @event nodeinsert
-            * @param e {Object} eventobject including:
-            * @param e.target {HtmlElement} the HtmlElement that is being dragged
-            * @param e.currentTarget {HtmlElement} the HtmlElement that is delegating
-            * @since 0.1
-            */
-
-           /**
-            * Emitted by every Element that gets removed.
-            *
-            * @event noderemove
-            * @param e {Object} eventobject including:
-            * @param e.target {HtmlElement} the HtmlElement that is being dragged
-            * @param e.currentTarget {HtmlElement} the HtmlElement that is delegating
-            * @since 0.1
-            */
-
-           /**
-            * Emitted by every Element that gets its content changed (innerHTML/innerText).
-            *
-            * @event nodecontentchange
-            * @param e {Object} eventobject including:
-            * @param e.target {HtmlElement} the HtmlElement that is being dragged
-            * @param e.currentTarget {HtmlElement} the HtmlElement that is delegating
-            * @since 0.1
-            */
-
-           /**
-            * Emitted by every Element that gets an attribute inserted.
-            *
-            * @event attributeinsert
-            * @param e {Object} eventobject including:
-            * @param e.target {HtmlElement} the HtmlElement that is being dragged
-            * @param e.currentTarget {HtmlElement} the HtmlElement that is delegating
-            * @param e.changed {Array} Array with Objects having three properties:
-            * <ul>
-            *     <li>attribute</li>
-            *     <li>newValue</li>
-            * </ul>
-            * @since 0.1
-            */
-
-           /**
-            * Emitted by every Element that gets an attribute removed.
-            *
-            * @event attributeremove
-            * @param e {Object} eventobject including:
-            * @param e.target {HtmlElement} the HtmlElement that is being dragged
-            * @param e.currentTarget {HtmlElement} the HtmlElement that is delegating
-            * @param e.changed {Array} Array with Strings of the attributeNames that are removed
-            * @since 0.1
-            */
-
-           /**
-            * Emitted by every Element that gets an attribute changed.
-            *
-            * @event attributechange
-            * @param e {Object} eventobject including:
-            * @param e.target {HtmlElement} the HtmlElement that is being dragged
-            * @param e.currentTarget {HtmlElement} the HtmlElement that is delegating
-            * @param e.changed {Array} Array with Objects having three properties:
-            * <ul>
-            *     <li>attribute</li>
-            *     <li>newValue</li>
-            *     <li>prevValue</li>
-            * </ul>
-            * @since 0.1
-            */
-
-            var instance = this,
-                silent, attrMutations, mutationEvents, mutation, vParent;
-            if (!DOCUMENT.hasMutationSubs || (instance.nodeType!==1)) {
-                return;
-            }
-            silent = !!DOCUMENT._suppressMutationEvents;
-            if (!silent && !instance.destroyed) {
-                mutationEvents = MUTATION_EVENTS.get(instance) || {};
-                if (attribute) {
-                    attrMutations = mutationEvents[evt] || [];
-                    if (evt===EV_ATTRIBUTE_REMOVED) {
-                        mutation = attribute;
-                    }
-                    else {
-                        mutation = {
-                            attribute: attribute
-                        };
-                        if ((evt===EV_ATTRIBUTE_INSERTED) || (evt===EV_ATTRIBUTE_CHANGED)) {
-                            mutation.newValue = newValue;
-                        }
-                        if ((evt===EV_ATTRIBUTE_CHANGED) && prevValue) {
-                            mutation.prevValue = prevValue;
-                        }
-                    }
-                    attrMutations.push(mutation);
-                    mutationEvents[evt] = attrMutations;
-                }
-                else {
-                    mutationEvents[evt] = true;
-                }
-                MUTATION_EVENTS.set(instance, mutationEvents);
-                // now set all parent to have a nodecontentchange:
-                vParent = instance;
-/*jshint boss:true */
-                while (vParent=vParent.vParent) {
-/*jshint boss:false */
-                    vParent._emit(EV_CONTENT_CHANGE);
-                }
-
-                // in case of removal we need to emit EV_REMOVED for all children right now
-                // for they will be actually removed silently after a delay of 1 minute
-                (evt===EV_REMOVED) && _emitDestroyChildren(instance);
-
-                if (!BATCH_WILL_RUN) {
-                    BATCH_WILL_RUN = true;
-                    async(function() {
-                        _batchEmit();
-                    });
-                }
-            }
-            return instance;
-        },
-
-        /**
-         * Inserts `newVNode` before `refVNode`.
-         *
-         * Syncs with the DOM.
-         *
-         * @method _insertBefore
-         * @param newVNode {vnode} vnode to insert
-         * @param refVNode {vnode} The vnode before which newVNode should be inserted.
-         * @private
-         * @return {Node} the Node being inserted (equals domNode)
-         * @since 0.0.1
-         */
-        _insertBefore: function(newVNode, refVNode) {
-            var instance = this,
-                domNode = newVNode.domNode,
-                index = instance.vChildNodes.indexOf(refVNode);
-            if (index!==-1) {
-                newVNode._moveToParent(instance, index);
-                instance.domNode._insertBefore(domNode, refVNode.domNode);
-                (newVNode.nodeType===3) && instance._normalize();
-                if (newVNode.nodeType===1) {
-                    DOCUMENT._itagList && newVNode.isItag && !DOCUMENT._itagList.contains(domNode) && DOCUMENT._itagList.push(domNode);
-                    newVNode._emit(EV_INSERTED);
-                }
-            }
-            return domNode;
-        },
-
-       /**
-        * Moves the vnode from its current parent.vChildNodes list towards a new parent vnode at the specified position.
-        *
-        * Does NOT sync with the dom.
-        *
-        * @method _moveToParent
-        * @param parentVNode {vnode} the parent-vnode
-        * @param [index] {Number} the position of the child. When not specified, it will be appended.
-        * @private
-        * @chainable
-        * @since 0.0.1
-        */
-        _moveToParent: function(parentVNode, index) {
-            var instance = this,
-                vParent = instance.vParent;
-            instance._deleteFromParent();
-            instance.vParent = parentVNode;
-            parentVNode.vChildNodes || (parentVNode.vChildNodes=[]);
-            (typeof index==='number') ? parentVNode.vChildNodes.insertAt(instance, index) : (parentVNode.vChildNodes[parentVNode.vChildNodes.length]=instance);
-            // force to recalculate the vChildren on a next call:
-            vParent && (instance.nodeType===1) && (vParent._vChildren = null);
-            // force to recalculate the vChildren on a next call:
-            parentVNode && (instance.nodeType===1) && (parentVNode._vChildren=null);
-            return instance;
-        },
-
-       /**
-        * Removes empty TextNodes and merges following TextNodes inside the vnode.
-        *
-        * Syncs with the dom.
-        *
-        * @method _normalize
-        * @private
-        * @chainable
-        * @since 0.0.1
-        */
-        _normalize: function() {
-            var instance = this,
-                domNode = instance.domNode,
-                vChildNodes = instance.vChildNodes,
-                changed = false,
-                i, preChildNode, vChildNode;
-            if (!instance._unNormalizable && vChildNodes) {
-                for (i=vChildNodes.length-1; i>=0; i--) {
-                    vChildNode = vChildNodes[i];
-                    preChildNode = vChildNodes[i-1]; // i will get the value `-1` eventually, which leads into undefined preChildNode
-                    if (vChildNode.nodeType===3) {
-                        if (vChildNode.text==='') {
-                            domNode._removeChild(vChildNode.domNode);
-                            vChildNode._destroy();
-                            changed = true;
-                        }
-                        else if (preChildNode && preChildNode.nodeType===3) {
-                            preChildNode.text += vChildNode.text;
-                            preChildNode.domNode.nodeValue = unescapeEntities(preChildNode.text);
-                            domNode._removeChild(vChildNode.domNode);
-                            vChildNode._destroy();
-                            changed = true;
-                        }
-                    }
-                }
-            }
-            changed && instance._emit(EV_CONTENT_CHANGE);
-            return instance;
-        },
-
-       /**
-        * Makes the vnode `normalizable`. Could be set to `false` when batch-inserting nodes, while `normalizaing` manually at the end.
-        * Afterwards, you should always reset `normalizable` to true.
-        *
-        * @method _normalizable
-        * @param value {Boolean} whether the vnode should be normalisable.
-        * @private
-        * @chainable
-        * @since 0.0.1
-        */
-        _normalizable: function(value) {
-            var instance = this;
-            value ? (delete instance._unNormalizable) : (instance._unNormalizable=true);
-            return instance;
-        },
-
-       /**
-        * Prevents MutationObserver from making the dom sync with the vnode.
-        * Should be used when manipulating the dom from within the vnode itself (to preventing looping)
-        *
-        * @method _noSync
-        * @chainable
-        * @private
-        * @since 0.0.1
-        */
-        _noSync: function() {
-            var instance = this;
-            if (!instance._nosync) {
-                instance._nosync = true;
-                async(function() {
-                    instance._nosync = false;
-                });
-            }
-            return instance;
-        },
-
-       /**
-        * Removes the attribute of both the vnode as well as its related dom-node.
-        *
-        * Syncs with the dom.
-        *
-        * @method _removeAttr
-        * @param attributeName {String}
-        * @private
-        * @chainable
-        * @since 0.0.1
-        */
-        _removeAttr: function(attributeName) {
-            var instance = this,
-                attributeNameSplitted, ns;
-            if ((instance._unchangableAttrs && instance._unchangableAttrs[attributeName]) || ((attributeName.length===2) && (attributeName.toLowerCase()==='is'))) {
-                console.warn('Not allowed to remove the attribute '+attributeName);
-                return instance;
-            }
-            if (instance.attrs[attributeName]!==undefined) {
-                delete instance.attrs[attributeName];
-                // in case of STYLE attribute --> special treatment
-                (attributeName===STYLE) && (instance.styles={});
-                // in case of CLASS attribute --> special treatment
-                (attributeName===CLASS) && (instance.classNames={});
-                if (attributeName===ID) {
-                    delete nodeids[instance.id];
-                    delete instance.id;
-                }
-                instance._emit(EV_ATTRIBUTE_REMOVED, attributeName);
-                if (attributeName.indexOf(':')!==-1) {
-                    attributeNameSplitted = attributeName.split(':');
-                    ns = attributeNameSplitted[0];
-                    attributeName = attributeNameSplitted[1];
-                    instance.domNode._removeAttributeNS(xmlNS[ns.toUpperCase()] || ns, attributeName);
-                }
-                else {
-                    instance.domNode._removeAttribute(attributeName);
-                }
-            }
-            return instance;
-        },
-
-        /**
-        * Removes the vnode's child-vnode from its vChildren and the DOM.
-        *
-         * Syncs with the DOM.
-         *
-        * @method removeChild
-        * @param VNode {vnode} the child-vnode to remove
-        * @private
-        * @since 0.0.1
-        */
-        _removeChild: function(VNode) {
-            var instance = this,
-                domNode = VNode.domNode,
-                hadFocus = domNode.hasFocus() && (VNode.attrs['fm-lastitem']==='true'),
-                parentVNode = VNode.vParent;
-            VNode._destroy();
-            instance.domNode._removeChild(VNode.domNode);
-            instance._normalize();
-            // now, reset the focus on focusmanager when needed:
-            if (hadFocus) {
-                while (parentVNode && !parentVNode.attrs['fm-manage']) {
-                    parentVNode = parentVNode.vParent;
-                }
-                parentVNode && parentVNode.domNode.focus();
-            }
-        },
-
-       /**
-        * Replaces the current vnode at the parent.vChildNode list by `newVNode`
-        *
-        * Does NOT sync with the dom.
-        *
-        * @method _replaceAtParent
-        * @param newVNode {Object} the new vnode which should take over the place of the current vnode
-        * @private
-        * @chainable
-        * @since 0.0.1
-        */
-        _replaceAtParent: function(newVNode) {
-            var instance = this,
-                vParent = instance.vParent,
-                vChildNodes, index;
-            if (vParent && (vChildNodes=vParent.vChildNodes)) {
-                index = vChildNodes.indexOf(instance);
-                // force to recalculate the vChildren on a next call:
-                ((instance.nodeType===1) || (newVNode.nodeType===1)) && (instance.vParent._vChildren=null);
-                vChildNodes[index] = newVNode;
-            }
-            return instance._destroy();
-        },
-
-       /**
-        * Sets the attribute of both the vnode as well as its related dom-node.
-        *
-        * Syncs with the dom.
-        *
-        * @method _setAttr
-        * @param attributeName {String}
-        * @param value {String} the value for the attributeName
-        * @param [force=false] {Boolean} force the attribute to be set, even if restrictions would deny it
-        * @private
-        * @chainable
-        * @since 0.0.1
-        */
-        _setAttr: function(attributeName, value, force) {
-            var instance = this,
-                extractStyle, extractClass,
-                attrs = instance.attrs,
-                prevVal = attrs[attributeName],
-                attributeNameSplitted, ns;
-
-            if (!force && ((instance._unchangableAttrs && instance._unchangableAttrs[attributeName]) || ((attributeName.length===2) && (attributeName.toLowerCase()==='is')))) {
-                console.warn('Not allowed to set the attribute '+attributeName);
-                return instance;
-            }
-            // don't check by !== --> value isn't parsed into a String yet
-            if (prevVal && ((value===undefined) || (value===null))) {
-                instance._removeAttr(attributeName);
-                return instance;
-            }
-            // attribute-values are always Strings:
-            value = String(value);
-            // attribute-values will be stored without &quot; or &apos;
-            value = value.replace(/&quot;/g, '"').replace(/&apos;/g, "'");
-            if (prevVal!=value) {
-                attrs[attributeName] = value;
-                // in case of STYLE attribute --> special treatment
-                if (attributeName===STYLE) {
-                    extractStyle = extractor.extractStyle(value);
-                    value = extractStyle.attrStyle;
-                    if (value) {
-                        attrs.style = value;
-                    }
-                    else {
-                        delete attrs.style;
-                    }
-                    instance.styles = extractStyle.styles;
-                }
-                else if (attributeName===CLASS) {
-                    // in case of CLASS attribute --> special treatment
-                    extractClass = extractor.extractClass(value);
-                    value = extractClass.attrClass;
-                    if (value) {
-                        attrs[CLASS] = value;
-                    }
-                    else {
-                        delete attrs[CLASS];
-                    }
-                    instance.classNames = extractClass.classNames;
-                }
-                else if (attributeName===ID) {
-                    instance.id && (delete nodeids[instance.id]);
-                    instance.id = value;
-                    nodeids[value] = instance.domNode;
-                }
-
-                instance._emit(prevVal ? EV_ATTRIBUTE_CHANGED : EV_ATTRIBUTE_INSERTED, attributeName, value, prevVal);
-
-                // when set in the dom --> quotes need to be set as &quot;
-                value = value.replace(/"/g, '&quot;');
-                if (attributeName.indexOf(':')!==-1) {
-                    attributeNameSplitted = attributeName.split(':');
-                    ns = attributeNameSplitted[0];
-                    attributeName = attributeNameSplitted[1];
-                    instance.domNode._setAttributeNS(xmlNS[ns.toUpperCase()] || ns, attributeName, value);
-                }
-                else {
-                    instance.domNode._setAttribute(attributeName, value);
-                }
-            }
-            return instance;
-        },
-
-       /**
-        * Redefines the attributes of both the vnode as well as its related dom-node. The new
-        * definition replaces any previous attributes (without touching unmodified attributes).
-        * the `is` attribute cannot be changed.
-        *
-        * Syncs the new vnode's attributes with the dom.
-        *
-        * @method _setAttrs
-        * @param newAttrs {Object|Array} the new attributes to be set
-        * @private
-        * @chainable
-        * @since 0.0.1
-        */
-        _setAttrs: function(newAttrs) {
-            // does sync the DOM
-            var instance = this,
-                attrsObj, attr, attrs, i, key, keys, len, value;
-            if (instance.nodeType!==1) {
-                return;
-            }
-            instance._noSync();
-            attrs = instance.attrs;
-            attrs.id && (delete nodeids[attrs.id]);
-
-            if (Object.isObject(newAttrs)) {
-                attrsObj = newAttrs;
-            }
-            else {
-                attrsObj = {};
-                len = newAttrs.length;
-                for (i=0; i<len; i++) {
-                    attr = newAttrs[i];
-                    attrsObj[attr.name] = attr.value;
-                }
-            }
-
-            if (attrs.is) {
-                attrsObj.is = attrs.is;
-            }
-            else {
-                delete attrsObj.is;
-                delete attrsObj.Is;
-                delete attrsObj.iS;
-                delete attrsObj.IS;
-            }
-
-            // first _remove the attributes that are no longer needed.
-            // quickest way for object iteration: http://jsperf.com/object-keys-iteration/20
-            keys = Object.keys(attrs);
-            len = keys.length;
-            for (i = 0; i < len; i++) {
-                key = keys[i];
-                attrsObj[key] || instance._removeAttr(key);
-            }
-
-            // next: every attribute that differs: redefine
-            keys = Object.keys(attrsObj);
-            len = keys.length;
-            for (i = 0; i < len; i++) {
-                key = keys[i];
-                value = attrsObj[key];
-                (attrs[key]===value) || instance._setAttr(key, value);
-            }
-
-            return instance;
-        },
-
-       /**
-        * Redefines the childNodes of both the vnode as well as its related dom-node. The new
-        * definition replaces any previous nodes. (without touching unmodified nodes).
-        *
-        * Syncs the new vnode's childNodes with the dom.
-        *
-        * @method _setChildNodes
-        * @param newVChildNodes {Array} array with vnodes which represent the new childNodes
-        * @private
-        * @chainable
-        * @since 0.0.1
-        */
-        _setChildNodes: function(newVChildNodes) {
-            // does sync the DOM
-            var instance = this,
-                vChildNodes = instance.vChildNodes || [],
-                domNode = instance.domNode,
-                forRemoval = [],
-                i, oldChild, newChild, newLength, len, len2, childDomNode, nodeswitch, bkpAttrs, bkpChildNodes, needNormalize;
-
-            instance._noSync();
-            // first: reset ._vChildren --> by making it empty, its getter will refresh its list on a next call
-            instance._vChildren = null;
-            // if newVChildNodes is undefined, then we assume it to be empty --> an empty array
-            newVChildNodes || (newVChildNodes=[]);
-            // quickest way to loop through array is by using for loops: http://jsperf.com/array-foreach-vs-for-loop/5
-            len = vChildNodes.length;
-            newLength = newVChildNodes.length;
-            for (i=0; i<len; i++) {
-                oldChild = vChildNodes[i];
-                childDomNode = oldChild.domNode;
-                if (i < newLength) {
-                    newChild = newVChildNodes[i];
-                    newChild.vParent || (newChild.vParent=instance);
-/*jshint boss:true */
-                    switch (nodeswitch=NODESWITCH[oldChild.nodeType][newChild.nodeType]) {
-/*jshint boss:false */
-                        case 1: // oldNodeType==Element, newNodeType==Element
-                            if ((oldChild.tag!==newChild.tag) ||
-                                ((oldChild.tag===newChild.tag) && oldChild.isItag && (oldChild.attrs.is!==newChild.attrs.is)) ||
-                                ((oldChild.tag==='SCRIPT') && (oldChild.text!==newChild.text))) {
-                                // new tag --> completely replace
-                                bkpAttrs = newChild.attrs;
-                                bkpChildNodes = newChild.vChildNodes;
-                                oldChild.attrs.id && (delete nodeids[oldChild.attrs.id]);
-                                newChild.attrs = {}; // reset to force defined by `_setAttrs`
-                                newChild.vChildNodes = []; // reset , to force defined by `_setAttrs`
-                                domNode._replaceChild(newChild.domNode, childDomNode);
-                                newChild.vParent = instance;
-                                newChild._setAttrs(bkpAttrs);
-                                newChild._setChildNodes(bkpChildNodes);
-                                newChild.id && (nodeids[newChild.id]=newChild.domNode);
-                                oldChild._replaceAtParent(newChild);
-                                DOCUMENT._itagList && newChild.isItag && !DOCUMENT._itagList.contains(newChild.domNode) && DOCUMENT._itagList.push(newChild.domNode);
-                                newChild._emit(EV_INSERTED);
-                            }
-                            else {
-                                // same tag --> only update what is needed
-                                // NOTE: when this._unchangableAttrs exists, an itag-element syncs its UI -->
-                                // In those cases we shouldn't refresh any descendent itag-elements, for they rerender by themselves
-                                if (!oldChild.isItag || !this._unchangableAttrs) {
-                                    // first: we might need to set the class `focussed` when the attributeData says so:
-                                    // this happens when an itag gets rerendered: its renderFn doesn't know if any elements
-                                    // were focussed
-                                    if (oldChild._data && oldChild._data.focussed && !newChild.hasClass('focussed')) {
-                                        newChild.classNames.focussed = true;
-                                        if (newChild.attrs[CLASS]) {
-                                            newChild.attrs[CLASS] = newChild.attrs[CLASS] + ' focussed';
-                                        }
-                                        else {
-                                            newChild.attrs[CLASS] = 'focussed';
-                                        }
-                                    }
-                                    if (oldChild._data && oldChild._data['fm-tabindex']) {
-                                        // node has the tabindex set by the focusmanager,
-                                        // but that info might got lost with re-rendering of the new element
-                                        newChild.attrs.tabindex = '0';
-                                    }
-                                    oldChild._setAttrs(newChild.attrs);
-                                    // next: sync the vChildNodes:
-                                    oldChild._setChildNodes(newChild.vChildNodes);
-                                    // reset ref. to the domNode, for it might have been changed by newChild:
-                                    oldChild.id && (nodeids[oldChild.id]=childDomNode);
-                                    newVChildNodes[i] = oldChild;
-                                }
-                            }
-                            break;
-                        case 2: // oldNodeType==Element, newNodeType==TextNode
-                                // case2 and case3 should be treated the same
-                        case 3: // oldNodeType==Element, newNodeType==Comment
-                            oldChild.attrs.id && (delete nodeids[oldChild.attrs.id]);
-                            newChild.domNode.nodeValue = unescapeEntities(newChild.text);
-                            domNode._replaceChild(newChild.domNode, childDomNode);
-                            newChild.vParent = instance;
-                            oldChild._replaceAtParent(newChild);
-                            instance._emit(EV_CONTENT_CHANGE);
-                            break;
-                        case 4: // oldNodeType==TextNode, newNodeType==Element
-                                // case4 and case7 should be treated the same
-                        case 7: // oldNodeType==Comment, newNodeType==Element
-                            bkpAttrs = newChild.attrs;
-                            bkpChildNodes = newChild.vChildNodes;
-                            newChild.attrs = {}; // reset, to force defined by `_setAttrs`
-                            newChild.vChildNodes = []; // reset to current state, to force defined by `_setAttrs`
-                            domNode._replaceChild(newChild.domNode, childDomNode);
-                            newChild._setAttrs(bkpAttrs);
-                            newChild._setChildNodes(bkpChildNodes);
-                            newChild.id && (nodeids[newChild.id]=newChild.domNode);
-                            // oldChild.isVoid = newChild.isVoid;
-                            // delete oldChild.text;
-                            instance._emit(EV_CONTENT_CHANGE);
-                            DOCUMENT._itagList && newChild.isItag && !DOCUMENT._itagList.contains(newChild.domNode) && DOCUMENT._itagList.push(newChild.domNode);
-                            newChild._emit(EV_INSERTED);
-                            break;
-                        case 5: // oldNodeType==TextNode, newNodeType==TextNode
-                                // case5 and case9 should be treated the same
-                        case 9: // oldNodeType==Comment, newNodeType==Comment
-                            if (oldChild.text!==newChild.text) {
-                                oldChild.text = newChild.text;
-                                oldChild.domNode.nodeValue = unescapeEntities(newChild.text);
-                                instance._emit(EV_CONTENT_CHANGE);
-                            }
-                            newVChildNodes[i] = oldChild;
-                            break;
-                        case 6: // oldNodeType==TextNode, newNodeType==Comment
-                                // case6 and case8 should be treated the same
-                        case 8: // oldNodeType==Comment, newNodeType==TextNode
-                            newChild.domNode.nodeValue = unescapeEntities(newChild.text);
-                            domNode._replaceChild(newChild.domNode, childDomNode);
-                            newChild.vParent = oldChild.vParent;
-                            instance._emit(EV_CONTENT_CHANGE);
-                    }
-                    if ((nodeswitch===2) || (nodeswitch===5) || (nodeswitch===8)) {
-                        needNormalize = true;
-                    }
-                }
-                else {
-                    // _remove previous definition
-                    domNode._removeChild(oldChild.domNode);
-                    // the oldChild needs to be removed, however, this cannot be done right now, for it would effect the loop
-                    // so we store it inside a hash to remove it later
-                    forRemoval[forRemoval.length] = oldChild;
-                }
-            }
-            // now definitely remove marked childNodes:
-            len2 = forRemoval.length;
-            for (i=0; i<len2; i++) {
-                forRemoval[i]._destroy();
-            }
-            // now we add all new vChildNodes that go beyond `len`:
-            for (i = len; i < newLength; i++) {
-                newChild = newVChildNodes[i];
-                newChild.vParent = instance;
-                switch (newChild.nodeType) {
-                    case 1: // Element
-                        bkpAttrs = newChild.attrs;
-                        bkpChildNodes = newChild.vChildNodes;
-                        newChild.attrs = {}; // reset, to force defined by `_setAttrs`
-                        newChild.vChildNodes = []; // reset to current state, to force defined by `_setAttrs`
-                        domNode._appendChild(newChild.domNode);
-                        newChild._setAttrs(bkpAttrs);
-                        newChild._setChildNodes(bkpChildNodes);
-                        DOCUMENT._itagList && newChild.isItag && !DOCUMENT._itagList.contains(newChild.domNode) && DOCUMENT._itagList.push(newChild.domNode);
-                        newChild._emit(EV_INSERTED);
-                        break;
-                    case 3: // TextNode
-                        needNormalize = true;
-                        // we need to break through --> no `break`
-                        /* falls through */
-                    default: // TextNode or CommentNode
-                        newChild.domNode.nodeValue = unescapeEntities(newChild.text);
-                        domNode._appendChild(newChild.domNode);
-                        instance._emit(EV_CONTENT_CHANGE);
-                }
-                newChild.storeId();
-            }
-            instance.vChildNodes = newVChildNodes;
-            needNormalize && instance._normalize();
-            return instance;
-        },
-
-        _setUnchangableAttrs: function(unchangableObj) {
-            this._unchangableAttrs = unchangableObj;
-        }
-
-    };
-
-
-    //---- properties ------------------------------------------------------------------
-
-    /**
-     * A hash of all the `attributes` of the vnode's representing dom-node.
-     *
-     * @property attrs
-     * @type Object
-     * @since 0.0.1
-     */
-
-    /**
-     * Hash with all the classes of the vnode. Every class represents a key, all values are set `true`.
-     *
-     * @property classNames
-     * @type Object
-     * @since 0.0.1
-     */
-
-    /**
-     * The `id` of the vnode's representing dom-node (if any).
-     *
-     * @property id
-     * @type String
-     * @since 0.0.1
-     */
-
-    /**
-     * Tells whether tag is a void Element. Examples are: `br`, `img` and `input`. Non-void Elements are f.e. `div` and `table`.
-     * For TextNodes and CommentNodes, this property is `undefined`.
-     *
-     * @property isVoid
-     * @type Boolean
-     * @since 0.0.1
-     */
-
-    /**
-     * The `nodeType` of the vnode's representing dom-node (1===ElementNode, 3===TextNode, 8===CommentNode).
-     *
-     * @property nodeType
-     * @type Number
-     * @since 0.0.1
-     */
-
-    /**
-     * The `tag` of the vnode's representing dom-node (allways uppercase).
-     *
-     * @property tag
-     * @type String
-     * @since 0.0.1
-     */
-
-    /**
-     * The `content` of the vnode's representing dom-node, in case it is a TextNode or CommentNode.
-     * Equals dom-node.nodeValue.
-     *
-     * Is `undefined` for ElementNodes.
-     *
-     * @property text
-     * @type String
-     * @since 0.0.1
-     */
-
-    /**
-     * Hash with all the childNodes (vnodes). vChildNodes are any kind of vnodes (nodeType===1, 3 or 8)
-     *
-     * @property vChildNodes
-     * @type Array
-     * @since 0.0.1
-     */
-
-    /**
-     * The underlying `dom-node` that the vnode represents.
-     *
-     * @property domNode
-     * @type domNode
-     * @since 0.0.1
-     */
-
-    /**
-     * vnode's parentNode (defined as a vnode itself).
-     *
-     * @property vParent
-     * @type vnode
-     * @since 0.0.1
-     */
-
-    Object.defineProperties(vNodeProto, {
-        /**
-         * Gets or sets the innerHTML of both the vnode as well as the representing dom-node.
-         *
-         * The setter syncs with the DOM.
-         *
-         * @property innerHTML
-         * @type String
-         * @since 0.0.1
-         */
-        innerHTML: {
-            get: function() {
-                var instance = this,
-                    html, vChildNodes, len, i, vChildNode;
-                if (instance.nodeType===1) {
-                    html = '';
-                    vChildNodes = instance.vChildNodes;
-                    len = vChildNodes ? vChildNodes.length : 0;
-                    for (i=0; i<len; i++) {
-                        vChildNode = vChildNodes[i];
-                        switch (vChildNode.nodeType) {
-                            case 1:
-                                html += vChildNode.outerHTML;
-                                break;
-                            case 3:
-                                html += vChildNode.text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                                break;
-                            case 8:
-                                html += '<!--' + vChildNode.text.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '-->';
-                        }
-                    }
-                }
-                return html;
-            },
-            set: function(v) {
-                this._setChildNodes(htmlToVNodes(v, vNodeProto, this.ns));
-            }
-        },
-
-        /**
-         * Gets or sets the innerHTML of both the vnode as well as the representing dom-node.
-         *
-         * The setter syncs with the DOM.
-         *
-         * @property nodeValue
-         * @type String
-         * @since 0.0.1
-         */
-        nodeValue: {
-            get: function() {
-                var instance = this;
-                return ((instance.nodeType===3) || (instance.nodeType===8)) ? instance.text : null;
-            },
-            set: function(v) {
-                var instance = this,
-                    newTextContent, prevTextContent;
-                if ((instance.nodeType===3) || (instance.nodeType===8)) {
-                    prevTextContent = instance.domNode.textContent;
-                    instance.domNode.textContent = v;
-                    // set .text AFTER the dom-node is updated --> the content might be escaped!
-                    newTextContent = instance.text = instance.domNode.textContent;
-                    (newTextContent!==prevTextContent) && instance._emit(EV_CONTENT_CHANGE);
-                }
-            }
-        },
-
-        /**
-         * Gets or sets the outerHTML of both the vnode as well as the representing dom-node.
-         *
-         * The setter syncs with the DOM.
-         *
-         * @property outerHTML
-         * @type String
-         * @since 0.0.1
-         */
-        outerHTML: {
-            get: function() {
-                var instance = this,
-                    html,
-                    attrs = instance.attrs;
-                if (instance.nodeType===1) {
-                    if (instance.nodeType!==1) {
-                        return instance.textContent;
-                    }
-                    html = '<' + instance.tag.toLowerCase();
-                    attrs.each(function(value, key) {
-                        html += ' '+key+'="'+value+'"';
-                    });
-                    instance.isVoid && (html += '/');
-                    html += '>';
-                    if (!instance.isVoid) {
-                        html += instance.innerHTML + '</' + instance.tag.toLowerCase() + '>';
-                    }
-                }
-                return html;
-            },
-            set: function(v) {
-                var instance = this,
-                    vParent = instance.vParent,
-                    id = instance.attrs.id,
-                    vnode, vnodes, bkpAttrs, bkpChildNodes, i, len, vChildNodes, isLastChildNode, index, refDomNode;
-                if ((instance.nodeType!==1) || !vParent) {
-                    return;
-                }
-                instance._noSync();
-                vChildNodes = vParent.vChildNodes;
-                index = vChildNodes.indexOf(instance);
-                isLastChildNode = (index===(vChildNodes.length-1));
-                isLastChildNode || (refDomNode=vChildNodes[index+1].domNode);
-                vnodes = htmlToVNodes(v, vNodeProto, vParent.ns, vParent);
-                len = vnodes.length;
-                if (len>0) {
-                    // the first vnode will replace the current instance:
-                    vnode = vnodes[0];
-                    if (vnode.nodeType===1) {
-                        if (vnode.tag!==instance.tag) {
-                            // new tag --> completely replace
-                            bkpAttrs = vnode.attrs;
-                            bkpChildNodes = vnode.vChildNodes;
-                            id && (delete nodeids[id]);
-                            vnode.attrs = {}; // reset to force defined by `_setAttrs`
-                            vnode.vChildNodes = []; // reset , to force defined by `_setAttrs`
-                            vParent.domNode._replaceChild(vnode.domNode, instance.domNode);
-                            vnode._setAttrs(bkpAttrs);
-                            vnode._setChildNodes(bkpChildNodes);
-                            // vnode.attrs = bkpAttrs;
-                            // vnode.vChildNodes = bkpChildNodes;
-                            vnode.id && (nodeids[vnode.id]=vnode.domNode);
-                            instance._replaceAtParent(vnode);
-                            DOCUMENT._itagList && vnode.isItag && !DOCUMENT._itagList.contains(vnode.domNode) && DOCUMENT._itagList.push(vnode.domNode);
-                            vnode._emit(EV_INSERTED);
-                        }
-                        else {
-                            instance._setAttrs(vnode.attrs);
-                            instance._setChildNodes(vnode.vChildNodes);
-                        }
-                    }
-                    else {
-                        id && (delete nodeids[id]);
-                        vnode.domNode.nodeValue = unescapeEntities(vnode.text);
-                        vParent.domNode._replaceChild(vnode.domNode, instance.domNode);
-                        instance._replaceAtParent(vnode);
-                        DOCUMENT._itagList && vnode.isItag && !DOCUMENT._itagList.contains(vnode.domNode) && DOCUMENT._itagList.push(vnode.domNode);
-                        vnode._emit(EV_INSERTED);
-                    }
-                }
-                for (i=1; i<len; i++) {
-                    vnode = vnodes[i];
-                    switch (vnode.nodeType) {
-                        case 1: // Element
-                            bkpAttrs = vnode.attrs;
-                            bkpChildNodes = vnode.vChildNodes;
-                            vnode.attrs = {}; // reset, to force defined by `_setAttrs`
-                            vnode.vChildNodes = []; // reset to current state, to force defined by `_setAttrs`
-                            isLastChildNode ? vParent.domNode._appendChild(vnode.domNode) : vParent.domNode._insertBefore(vnode.domNode, refDomNode);
-                            DOCUMENT._itagList && vnode.isItag && !DOCUMENT._itagList.contains(vnode.domNode) && DOCUMENT._itagList.push(vnode.domNode);
-                            vnode._emit(EV_INSERTED);
-                            vnode._setAttrs(bkpAttrs);
-                            vnode._setChildNodes(bkpChildNodes);
-                            break;
-                        default: // TextNode or CommentNode
-                            vnode.domNode.nodeValue = unescapeEntities(vnode.text);
-                            isLastChildNode ? vParent.domNode._appendChild(vnode.domNode) : vParent.domNode._appendChild(vnode.domNode, refDomNode);
-                    }
-                    vnode.storeId();
-                    vnode._moveToParent(vParent, index+i);
-                }
-            }
-        },
-
-        /**
-         * Gets or sets the innerContent of the Node as plain text.
-         *
-         * The setter syncs with the DOM.
-         *
-         * @property textContent
-         * @type String
-         * @since 0.0.1
-         */
-        textContent: {
-            get: function() {
-                var instance = this,
-                    text = '',
-                    vChildNodes = instance.vChildNodes,
-                    len, i, vChildNode;
-                if (instance.nodeType===1) {
-                    vChildNodes = instance.vChildNodes;
-                    len = vChildNodes ? vChildNodes.length : 0;
-                    for (i=0; i<len; i++) {
-                        vChildNode = vChildNodes[i];
-                        text += (vChildNode.nodeType===3) ? vChildNode.text : ((vChildNode.nodeType===1) ? vChildNode.textContent : '');
-                    }
-                }
-                else {
-                    text = instance.text;
-                }
-                return text;
-            },
-            set: function(v) {
-                var vnode = Object.create(vNodeProto);
-                vnode.domNode = DOCUMENT.createTextNode(v);
-                // create circular reference:
-                vnode.domNode._vnode = vnode;
-                vnode.nodeType = 3;
-                vnode.text = vnode.domNode.textContent;
-                this._setChildNodes([vnode]);
-            }
-        },
-
-        /**
-         * Hash with all the children (vnodes). vChildren are vnodes that have a representing dom-node that is an HtmlElement (nodeType===1)
-         *
-         * @property vChildren
-         * @type Array
-         * @since 0.0.1
-         */
-        vChildren: {
-            get: function() {
-                var instance = this,
-                    children = instance._vChildren,
-                    vChildNode, vChildNodes, i, len;
-                vChildNodes = instance.vChildNodes;
-                if (vChildNodes && !children) {
-                    children = instance._vChildren = [];
-                    len = vChildNodes.length;
-                    for (i=0; i<len; i++) {
-                        vChildNode = vChildNodes[i];
-                        (vChildNode.nodeType===1) && (children[children.length]=vChildNode);
-                    }
-                }
-                children || (children = instance._vChildren = []);
-                return children;
-            }
-        },
-
-        /**
-         * Reference to the first of sibbling vNode's, where the related dom-node is either an Element, TextNode or CommentNode (nodeType===1, 3 or 8).
-         *
-         * @property vFirst
-         * @type vnode
-         * @since 0.0.1
-         */
-        vFirst: {
-            get: function() {
-                var vParent = this.vParent;
-                if (!vParent) {
-                    return null;
-                }
-                return vParent.vFirstChild;
-            }
-        },
-
-        /**
-         * Reference to the first vChildNode, where the related dom-node is either an Element, TextNode or CommentNode (nodeType===1, 3 or 8).
-         *
-         * @property vFirstChild
-         * @type vnode
-         * @since 0.0.1
-         */
-        vFirstChild: {
-            get: function() {
-                return (this.vChildNodes && this.vChildNodes[0]) || null;
-            }
-        },
-
-        /**
-         * Reference to the first of sibbling vNode's, where the related dom-node is an Element(nodeType===1).
-         *
-         * @property vFirstElement
-         * @type vnode
-         * @since 0.0.1
-         */
-        vFirstElement: {
-            get: function() {
-                var vParent = this.vParent;
-                if (!vParent) {
-                    return null;
-                }
-                return vParent.vFirstElementChild;
-            }
-        },
-
-        /**
-         * Reference to the first vChild, where the related dom-node an Element (nodeType===1).
-         *
-         * @property vFirstElementChild
-         * @type vnode
-         * @since 0.0.1
-         */
-        vFirstElementChild: {
-            get: function() {
-                return this.vChildren[0] || null;
-            }
-        },
-
-        /**
-         * Reference to the last of sibbling vNode's, where the related dom-node is either an Element, TextNode or CommentNode (nodeType===1, 3 or 8).
-         *
-         * @property vLast
-         * @type vnode
-         * @since 0.0.1
-         */
-        vLast: {
-            get: function() {
-                var vParent = this.vParent;
-                if (!vParent) {
-                    return null;
-                }
-                return vParent.vLastChild;
-            }
-        },
-
-        /**
-         * Reference to the last vChildNode, where the related dom-node is either an Element, TextNode or CommentNode (nodeType===1, 3 or 8).
-         *
-         * @property vLastChild
-         * @type vnode
-         * @since 0.0.1
-         */
-        vLastChild: {
-            get: function() {
-                var vChildNodes = this.vChildNodes;
-                return (vChildNodes && vChildNodes[vChildNodes.length-1]) || null;
-            }
-        },
-
-        /**
-         * Reference to the last of sibbling vNode's, where the related dom-node is an Element(nodeType===1).
-         *
-         * @property vLastElement
-         * @type vnode
-         * @since 0.0.1
-         */
-        vLastElement: {
-            get: function() {
-                var vParent = this.vParent;
-                if (!vParent) {
-                    return null;
-                }
-                return vParent.vLastElementChild;
-            }
-        },
-
-        /**
-         * Reference to the last vChild, where the related dom-node an Element (nodeType===1).
-         *
-         * @property vLastElementChild
-         * @type vnode
-         * @since 0.0.1
-         */
-        vLastElementChild: {
-            get: function() {
-                var vChildren = this.vChildren;
-                return vChildren[vChildren.length-1] || null;
-            }
-        },
-
-        /**
-         * the Parent vnode
-         *
-         * @property vParent
-         * @type vnode
-         * @since 0.0.1
-         */
-
-        /**
-         * Reference to the next of sibbling vNode's, where the related dom-node is either an Element, TextNode or CommentNode (nodeType===1, 3 or 8).
-         *
-         * @property vNext
-         * @type vnode
-         * @since 0.0.1
-         */
-        vNext: {
-            get: function() {
-                return _findNodeSibling(this, true);
-            }
-        },
-
-        /**
-         * Reference to the next of sibbling vNode's, where the related dom-node is an Element(nodeType===1).
-         *
-         * @property vNextElement
-         * @type vnode
-         * @since 0.0.1
-         */
-        vNextElement: {
-            get: function() {
-                return _findElementSibling(this, true);
-            }
-        },
-
-        /**
-         * Reference to the previous of sibbling vNode's, where the related dom-node is either an Element, TextNode or CommentNode (nodeType===1, 3 or 8).
-         *
-         * @property vPrevious
-         * @type vnode
-         * @since 0.0.1
-         */
-        vPrevious: {
-            get: function() {
-                return _findNodeSibling(this);
-            }
-        },
-
-        /**
-         * Reference to the previous of sibbling vNode's, where the related dom-node is an Element(nodeType===1).
-         *
-         * @property vPreviousElement
-         * @type vnode
-         * @since 0.0.1
-         */
-        vPreviousElement: {
-            get: function() {
-                return _findElementSibling(this);
-            }
-        }
-    });
-
-    return vNodeProto;
-
-};
-},{"./attribute-extractor.js":68,"./html-parser.js":73,"./vdom-ns.js":75,"js-ext/extra/hashmap.js":38,"js-ext/extra/lightmap.js":39,"js-ext/lib/array.js":40,"js-ext/lib/object.js":41,"js-ext/lib/string.js":43,"polyfill":54,"utils/lib/timers.js":57}],77:[function(require,module,exports){
-"use strict";
-
-require('js-ext/lib/object.js');
-
-var createHashMap = require('js-ext/extra/hashmap.js').createMap;
-
-module.exports = function (window) {
-
-    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
-
-    if (window._ITSAmodules.VDOM) {
-        return window._ITSAmodules.VDOM; // VDOM was already created
-    }
-
-    var DOCUMENT = window.document, vdom;
-
-    if (DOCUMENT.doctype.name==='html') {
-        require('./partials/extend-element.js')(window);
-        require('./partials/extend-document.js')(window);
-        // now parsing and virtualize the complete DOM:
-        require('./partials/node-parser.js')(window)(DOCUMENT.documentElement);
-        vdom = {
-            Plugins: require('./partials/element-plugin.js')(window)
-        };
-        // if there is any Element with inline `transform` that is not compatible with the current browser:
-        // we can revert it into the right `transform`, because the vdom knows the right transform-name:
-        DOCUMENT.getAll('[style*="transform:"]').forEach(function(node) {
-            var vnode = node.vnode,
-                rightStyle = vnode.attrs.style;
-            // delete current definition, so that reset will do an update:
-            delete vnode.attrs.style;
-            // now reset:
-            vnode._setAttr('style', rightStyle);
-        });
-    }
-    else {
-        // if no HTML, then return an empty Plugin-object
-        vdom = {Plugins: {}};
-    }
-
-    window._ITSAmodules.VDOM = vdom;
-
-    return vdom;
-};
-},{"./partials/element-plugin.js":70,"./partials/extend-document.js":71,"./partials/extend-element.js":72,"./partials/node-parser.js":74,"js-ext/extra/hashmap.js":38,"js-ext/lib/object.js":41}],78:[function(require,module,exports){
-"use strict";
-
-require('js-ext/lib/object.js');
-require('polyfill');
-
-/**
- *
- *
- *
- * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
- * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
- *
- * @module focusmanager
- * @class FocusManager
- * @since 0.0.1
-*/
-
-var NAME = '[focusmanager]: ',
-    async = require('utils').async,
-    createHashMap = require('js-ext/extra/hashmap.js').createMap,
-    DEFAULT_SELECTOR = 'input, button, select, textarea, .focusable',
-    // SPECIAL_KEYS needs to be a native Object --> we need .some()
-    SPECIAL_KEYS = {
-        shift: 'shiftKey',
-        ctrl: 'ctrlKey',
-        cmd: 'metaKey',
-        alt: 'altKey'
-    },
-    DEFAULT_KEYUP = 'shift+9',
-    DEFAULT_KEYDOWN = '9',
-    FM_SELECTION = 'fm-selection',
-    FM_SELECTION_START = FM_SELECTION+'start',
-    FM_SELECTION_END = FM_SELECTION+'end',
-    FOCUSSED = 'focussed';
-
-module.exports = function (window) {
-
-    var DOCUMENT = window.document,
-        nodePlugin, FocusManager, Event, nextFocusNode, searchFocusNode, markAsFocussed, getFocusManagerSelector, setupEvents, defineFocusEvent;
-
-    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
-
-    require('window-ext')(window);
-/*jshint boss:true */
-    if (FocusManager=window._ITSAmodules.FocusManager) {
-/*jshint boss:false */
-        return FocusManager; // FocusManager was already created
-    }
-
-    nodePlugin = require('vdom')(window).Plugins.nodePlugin;
-    Event = require('event-dom')(window);
-
-    getFocusManagerSelector = function(focusContainerNode) {
-        var selector = focusContainerNode.getAttr('fm-manage');
-        (selector.toLowerCase()==='true') && (selector=DEFAULT_SELECTOR);
-        return selector;
-    };
-
-    nextFocusNode = function(e, keyCode, actionkey, focusContainerNode, sourceNode, selector, downwards) {
-        console.log(NAME+'nextFocusNode');
-        var keys, lastIndex, i, specialKeysMatch, specialKey, len, enterPressedOnInput, primaryButtons,
-            inputType, foundNode, formNode, primaryonenter, noloop;
-        keys = actionkey.split('+');
-        len = keys.length;
-        lastIndex = len - 1;
-
-        if ((keyCode===13) && (sourceNode.getTagName()==='INPUT')) {
-            inputType = sourceNode.getAttr('type').toLowerCase();
-            enterPressedOnInput = (inputType==='text') || (inputType==='password');
-        }
-
-        if (enterPressedOnInput) {
-            // check if we need to press the primary button - if available
-/*jshint boss:true */
-            if ((primaryonenter=sourceNode.getAttr('fm-primaryonenter')) && (primaryonenter.toLowerCase()==='true')) {
-/*jshint boss:false */
-                primaryButtons = focusContainerNode.getAll('button.pure-button-primary');
-                primaryButtons.some(function(buttonNode) {
-                    buttonNode.matches(selector) && (foundNode=buttonNode);
-                    return foundNode;
-                });
-                if (foundNode) {
-                    async(function() {
-                        Event.emit(foundNode, 'UI:click');
-                        // _buttonPressed make event-dom to simulate a pressed button for 200ms
-                        Event.emit(foundNode, 'UI:tap', {_buttonPressed: true});
-                        // if the button is of type `submit`, then try to submit the form
-                        formNode = foundNode.inside('form');
-                        formNode && formNode.submit();
-                    });
-                    return foundNode;
-                }
-            }
-        }
-        // double == --> keyCode is number, keys is a string
-        if (enterPressedOnInput || (keyCode==keys[lastIndex])) {
-            // posible keyup --> check if special characters match:
-            specialKeysMatch = true;
-            SPECIAL_KEYS.some(function(value) {
-                specialKeysMatch = !e[value];
-                return !specialKeysMatch;
-            });
-            for (i=lastIndex-1; (i>=0) && !specialKeysMatch; i--) {
-                specialKey = keys[i].toLowerCase();
-                specialKeysMatch = e[SPECIAL_KEYS[specialKey]];
-            }
-        }
-        if (specialKeysMatch) {
-            noloop = focusContainerNode.getAttr('fm-noloop');
-            noloop = noloop && (noloop.toLowerCase()==='true');
-            if (downwards) {
-                return sourceNode.next(selector) || (noloop ? sourceNode.last(selector) : sourceNode.first(selector));
-            }
-            else {
-                return sourceNode.previous(selector) || (noloop ? sourceNode.first(selector) : sourceNode.last(selector));
-            }
-        }
-        return false;
-    };
-
-    markAsFocussed = function(focusContainerNode, node) {
-        console.log(NAME+'markAsFocussed');
-        var selector = getFocusManagerSelector(focusContainerNode),
-            index = focusContainerNode.getAll(selector).indexOf(node) || 0;
-        // we also need to set the appropriate nodeData, so that when the itags re-render,
-        // they don't reset this particular information
-        focusContainerNode.getAll('[fm-lastitem]')
-                          .removeAttrs(['fm-lastitem', 'tabindex'], true)
-                          .removeData('fm-tabindex');
-
-        // also store the lastitem's index --> in case the node gets removed,
-        // or re-rendering itags which don't have the attribute-data.
-        // otherwise, a refocus on the container will set the focus to the nearest item
-        focusContainerNode.setData('fm-lastitem-bkp', index);
-        node.setData('fm-tabindex', true);
-
-        node.setAttrs([
-            {name: 'tabindex', value: '0'},
-            {name: 'fm-lastitem', value: true}
-        ]);
-    };
-
-    searchFocusNode = function(initialNode) {
-        console.log(NAME+'searchFocusNode');
-        var focusContainerNode = initialNode.hasAttr('fm-manage') ? initialNode : initialNode.inside('[fm-manage]'),
-            focusNode, alwaysDefault, fmAlwaysDefault, selector, allFocusableNodes, index;
-
-        if (focusContainerNode) {
-            if (initialNode.matches(getFocusManagerSelector(focusContainerNode))) {
-                markAsFocussed(focusContainerNode, initialNode);
-                focusNode = initialNode;
-            }
-            else {
-                // find the right node that should get focus
-/*jshint boss:true */
-                alwaysDefault = ((fmAlwaysDefault=focusContainerNode.getAttr('fm-alwaysdefault')) && (fmAlwaysDefault.toLowerCase()==='true'));
-/*jshint boss:false */
-                alwaysDefault && (focusNode=focusContainerNode.getElement('[fm-defaultitem="true"]'));
-                if (!focusNode) {
-                    // search for last item
-                    focusNode = focusContainerNode.getElement('[fm-lastitem="true"]');
-                    if (!focusNode) {
-                        // set `selector` right now: we might use it later on even when index is undefined
-                        selector = getFocusManagerSelector(focusContainerNode);
-                        // look at the lastitemindex of the focuscontainer
-                        index = focusContainerNode.getData('fm-lastitem-bkp');
-                        if (index!==undefined) {
-                            allFocusableNodes = focusContainerNode.getAll(selector);
-                            focusNode = allFocusableNodes[index];
-                        }
-                    }
-                }
-                // still not found and alwaysDefault was falsy: try the defualt node:
-                !focusNode && !alwaysDefault && (focusNode=focusContainerNode.getElement('[fm-defaultitem="true"]'));
-                // still not found: try the first focussable node (which we might find inside `allFocusableNodes`:
-                !focusNode && (focusNode = allFocusableNodes ? allFocusableNodes[0] : focusContainerNode.getElement(selector));
-                if (focusNode) {
-                    markAsFocussed(focusContainerNode, focusNode);
-                }
-                else {
-                    focusNode = initialNode;
-                }
-            }
-        }
-        else {
-            focusNode = initialNode;
-        }
-        return focusNode;
-    };
-
-    setupEvents = function() {
-
-        Event.before('keydown', function(e) {
-            console.log(NAME+'before keydown-event');
-            var focusContainerNode,
-                sourceNode = e.target,
-                node = sourceNode.getParent(),
-                selector, keyCode, actionkey, focusNode;
-
-            focusContainerNode = sourceNode.inside('[fm-manage]');
-            if (focusContainerNode) {
-                // key was pressed inside a focusmanagable container
-                selector = getFocusManagerSelector(focusContainerNode);
-                keyCode = e.keyCode;
-
-                // first check for keydown:
-                actionkey = node.getAttr('fm-keydown') || DEFAULT_KEYDOWN;
-                focusNode = nextFocusNode(e, keyCode, actionkey, focusContainerNode, sourceNode, selector, true);
-                if (!focusNode) {
-                    // check for keyup:
-                    actionkey = node.getAttr('fm-keyup') || DEFAULT_KEYUP;
-                    focusNode = nextFocusNode(e, keyCode, actionkey, focusContainerNode, sourceNode, selector);
-                }
-                if (focusNode) {
-                    e.preventDefaultContinue();
-                    // prevent default action --> we just want to re-focus, but we DO want afterlisteners
-                    // to be handled in the after-listener: someone else might want to halt the keydown event.
-                    sourceNode.matches(selector) && (e._focusNode=focusNode);
-                }
-            }
-        });
-
-        Event.after('keydown', function(e) {
-            console.log(NAME+'after keydown-event');
-            var focusNode = e._focusNode;
-            focusNode && focusNode.focus && focusNode.focus();
-        });
-
-        Event.after('blur', function(e) {
-            console.log(NAME+'after blur-event');
-            var node = e.target,
-                body = DOCUMENT.body;
-            if (node && node.removeAttr) {
-                do {
-                    // we also need to set the appropriate nodeData, so that when the itags re-render,
-                    // they don't reset this particular information
-                    node.removeData(FOCUSSED);
-                    node.removeClass(FOCUSSED, null, null, true);
-                    node = (node===body) ? null : node.getParent();
-                } while (node);
-            }
-        });
-
-        Event.after('focus', function(e) {
-            console.log(NAME+'after focus-event');
-            var node = e.target,
-                body = DOCUMENT.body;
-            if (node && node.setClass) {
-                do {
-                    // we also need to set the appropriate nodeData, so that when the itags re-render,
-                    // they don't reset this particular information
-                    node.setData(FOCUSSED, true);
-                    node.setClass(FOCUSSED, null, null, true);
-                    node = (node===body) ? null : node.getParent();
-                } while (node);
-            }
-        });
-
-        // focus-fix for keeping focus when a mouse gets down for a longer time
-        Event.after(['mousedown', 'press'], function(e) {
-            console.log(NAME+'after focus-event');
-            var node = e.target;
-            node.hasFocus() || node.focus();
-        }, 'button');
-
-        Event.after(['tap', 'click'], function(e) {
-            console.log(NAME+'after tap-event');
-            var focusNode = e.target,
-                focusContainerNode;
-
-            if (focusNode && focusNode.inside) {
-                focusContainerNode = focusNode.hasAttr('fm-manage') ? focusNode : focusNode.inside('[fm-manage]');
-            }
-            if (focusContainerNode) {
-                if ((focusNode===focusContainerNode) || !focusNode.matches(getFocusManagerSelector(focusContainerNode))) {
-                    focusNode = searchFocusNode(focusNode);
-                }
-                if (focusNode.hasFocus()) {
-                    markAsFocussed(focusContainerNode, focusNode);
-                }
-                else {
-                    focusNode.focus();
-                }
-            }
-        });
-
-        Event.after(['keypress', 'mouseup', 'panup', 'mousedown', 'pandown'], function(e) {
-            console.log(NAME+'after '+e.type+'-event');
-            var focusContainerNode,
-                sourceNode = e.target,
-                selector;
-
-            focusContainerNode = sourceNode.inside('[fm-manage]');
-            if (focusContainerNode) {
-                // key was pressed inside a focusmanagable container
-                selector = getFocusManagerSelector(focusContainerNode);
-                if (sourceNode.matches(selector)) {
-                    sourceNode.setAttr(FM_SELECTION_START, sourceNode.selectionStart || '0')
-                              .setAttr(FM_SELECTION_END, sourceNode.selectionEnd || '0');
-                }
-            }
-        }, 'input[type="text"], textarea');
-
-        Event.after('focus', function(e) {
-            console.log(NAME+'after focus-event');
-            var focusContainerNode,
-                sourceNode = e.target,
-                selector, selectionStart, selectionEnd;
-
-            focusContainerNode = sourceNode.inside('[fm-manage]');
-            if (focusContainerNode) {
-                // key was pressed inside a focusmanagable container
-                selector = getFocusManagerSelector(focusContainerNode);
-                if (sourceNode.matches(selector)) {
-                    // cautious: fm-selectionstart can be 0 --> which would lead into a falsy value
-                    selectionStart = sourceNode.getAttr(FM_SELECTION_START);
-                    (selectionStart===undefined) && (selectionStart=sourceNode.getValue().length);
-                    selectionEnd = Math.max(sourceNode.getAttr(FM_SELECTION_END) || selectionStart, selectionStart);
-                    sourceNode.selectionEnd = selectionEnd;
-                    sourceNode.selectionStart = selectionStart;
-                    markAsFocussed(focusContainerNode, sourceNode);
-                }
-            }
-        }, 'input[type="text"], textarea');
-
-    };
-
-    setupEvents();
-
-    window._ITSAmodules.FocusManager = FocusManager = nodePlugin.definePlugin('fm', {manage: 'true'});
-
-    defineFocusEvent = function(customevent) {
-        Event.defineEvent(customevent)
-             .defaultFn(function(e) {
-                 var node = e.target,
-                     leftScroll = window.getScrollLeft(),
-                     topScroll = window.getScrollTop();
-                 node._focus();
-                 // reset winscroll:
-                 window.scrollTo(leftScroll, topScroll);
-                 // make sure the node is inside the viewport:
-                 // node.forceIntoView();
-             });
-    };
-
-    (function(HTMLElementPrototype) {
-
-        HTMLElementPrototype._focus = HTMLElementPrototype.focus;
-        HTMLElementPrototype.focus = function() {
-            console.log(NAME+'focus');
-            /**
-             * In case of a manual focus (node.focus()) the node will fire an `manualfocus`-event
-             * which can be prevented.
-             * @event manualfocus
-            */
-            var focusNode = searchFocusNode(this),
-                emitterName = focusNode._emitterName,
-                customevent = emitterName+':manualfocus';
-            Event._ce[customevent] || defineFocusEvent(customevent);
-            focusNode.emit('manualfocus');
-        };
-
-    }(window.HTMLElement.prototype));
-
-
-    return FocusManager;
-};
-},{"event-dom":79,"js-ext/extra/hashmap.js":151,"js-ext/lib/object.js":152,"polyfill":158,"utils":159,"vdom":206,"window-ext":207}],79:[function(require,module,exports){
-module.exports=require(6)
-},{"event":83,"js-ext/extra/hashmap.js":93,"js-ext/lib/array.js":94,"js-ext/lib/object.js":95,"js-ext/lib/string.js":96,"polyfill/polyfill-base.js":102,"utils":103,"vdom":150}],80:[function(require,module,exports){
-module.exports=require(7)
-},{"js-ext/extra/hashmap.js":85,"js-ext/lib/object.js":86,"polyfill/polyfill-base.js":92}],81:[function(require,module,exports){
-module.exports=require(8)
-},{"./index.js":83}],82:[function(require,module,exports){
-module.exports=require(9)
-},{"./index.js":83,"js-ext/extra/classes.js":84,"js-ext/lib/object.js":86}],83:[function(require,module,exports){
-module.exports=require(10)
-},{"./event-base.js":80,"./event-emitter.js":81,"./event-listener.js":82}],84:[function(require,module,exports){
-module.exports=require(11)
-},{"../lib/object.js":86,"js-ext/extra/hashmap.js":85,"polyfill/polyfill-base.js":89}],85:[function(require,module,exports){
-module.exports=require(12)
-},{}],86:[function(require,module,exports){
-module.exports=require(13)
-},{"js-ext/extra/hashmap.js":85,"polyfill/polyfill-base.js":89}],87:[function(require,module,exports){
-module.exports=require(14)
-},{}],88:[function(require,module,exports){
-module.exports=require(15)
-},{}],89:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":87,"./lib/window.console.js":88}],90:[function(require,module,exports){
-module.exports=require(14)
-},{}],91:[function(require,module,exports){
-module.exports=require(15)
-},{}],92:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":90,"./lib/window.console.js":91}],93:[function(require,module,exports){
-module.exports=require(12)
-},{}],94:[function(require,module,exports){
-module.exports=require(21)
-},{"polyfill/polyfill-base.js":99}],95:[function(require,module,exports){
-module.exports=require(13)
-},{"js-ext/extra/hashmap.js":93,"polyfill/polyfill-base.js":99}],96:[function(require,module,exports){
-module.exports=require(23)
-},{}],97:[function(require,module,exports){
-module.exports=require(14)
-},{}],98:[function(require,module,exports){
-module.exports=require(15)
-},{}],99:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":97,"./lib/window.console.js":98}],100:[function(require,module,exports){
-module.exports=require(14)
-},{}],101:[function(require,module,exports){
-module.exports=require(15)
-},{}],102:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":100,"./lib/window.console.js":101}],103:[function(require,module,exports){
-module.exports=require(30)
-},{"./lib/idgenerator.js":104,"./lib/timers.js":105}],104:[function(require,module,exports){
-module.exports=require(31)
-},{"js-ext/extra/hashmap.js":93,"polyfill/polyfill-base.js":108}],105:[function(require,module,exports){
-module.exports=require(32)
-},{"polyfill/polyfill-base.js":108}],106:[function(require,module,exports){
-module.exports=require(14)
-},{}],107:[function(require,module,exports){
-module.exports=require(15)
-},{}],108:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":106,"./lib/window.console.js":107}],109:[function(require,module,exports){
-module.exports=require(36)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],110:[function(require,module,exports){
-module.exports=require(11)
-},{"../lib/object.js":114,"js-ext/extra/hashmap.js":111,"polyfill/polyfill-base.js":120}],111:[function(require,module,exports){
-module.exports=require(12)
-},{}],112:[function(require,module,exports){
-module.exports=require(39)
-},{"../lib/array.js":113,"../lib/object.js":114,"./classes.js":110,"js-ext/extra/hashmap.js":111,"polyfill/lib/weakmap.js":118}],113:[function(require,module,exports){
-module.exports=require(21)
-},{"polyfill/polyfill-base.js":120}],114:[function(require,module,exports){
-module.exports=require(13)
-},{"js-ext/extra/hashmap.js":111,"polyfill/polyfill-base.js":120}],115:[function(require,module,exports){
-module.exports=require(42)
-},{"polyfill":120}],116:[function(require,module,exports){
-module.exports=require(23)
-},{}],117:[function(require,module,exports){
-module.exports=require(14)
-},{}],118:[function(require,module,exports){
-module.exports=require(45)
-},{}],119:[function(require,module,exports){
-module.exports=require(15)
-},{}],120:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":117,"./lib/window.console.js":119}],121:[function(require,module,exports){
-module.exports=require(48)
-},{}],122:[function(require,module,exports){
-module.exports=require(49)
-},{"../bin/local-hashmap.js":121}],123:[function(require,module,exports){
-module.exports=require(50)
-},{"../bin/local-hashmap.js":121}],124:[function(require,module,exports){
-module.exports=require(51)
-},{"../bin/local-hashmap.js":121}],125:[function(require,module,exports){
-module.exports=require(14)
-},{}],126:[function(require,module,exports){
-module.exports=require(15)
-},{}],127:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":125,"./lib/window.console.js":126}],128:[function(require,module,exports){
-module.exports=require(30)
-},{"./lib/idgenerator.js":129,"./lib/timers.js":130}],129:[function(require,module,exports){
-module.exports=require(31)
-},{"js-ext/extra/hashmap.js":111,"polyfill/polyfill-base.js":133}],130:[function(require,module,exports){
-module.exports=require(32)
-},{"polyfill/polyfill-base.js":133}],131:[function(require,module,exports){
-module.exports=require(14)
-},{}],132:[function(require,module,exports){
-module.exports=require(15)
-},{}],133:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":131,"./lib/window.console.js":132}],134:[function(require,module,exports){
-module.exports=require(61)
-},{"./lib/sizes.js":135}],135:[function(require,module,exports){
-module.exports=require(62)
-},{"js-ext/extra/hashmap.js":136,"js-ext/lib/object.js":137}],136:[function(require,module,exports){
-module.exports=require(12)
-},{}],137:[function(require,module,exports){
-module.exports=require(13)
-},{"js-ext/extra/hashmap.js":136,"polyfill/polyfill-base.js":140}],138:[function(require,module,exports){
-module.exports=require(14)
-},{}],139:[function(require,module,exports){
-module.exports=require(15)
-},{}],140:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":138,"./lib/window.console.js":139}],141:[function(require,module,exports){
-module.exports=require(68)
-},{"js-ext/extra/hashmap.js":111,"js-ext/lib/object.js":114,"js-ext/lib/string.js":116,"polyfill":127,"polyfill/extra/transition.js":122,"polyfill/extra/vendorCSS.js":124}],142:[function(require,module,exports){
-module.exports=require(69)
-},{"js-ext/extra/hashmap.js":111,"js-ext/lib/object.js":114,"polyfill":127}],143:[function(require,module,exports){
-module.exports=require(70)
-},{"js-ext/extra/hashmap.js":111,"js-ext/lib/object.js":114,"js-ext/lib/string.js":116,"polyfill":127}],144:[function(require,module,exports){
-module.exports=require(71)
-},{"js-ext/extra/hashmap.js":111,"js-ext/lib/object.js":114,"js-ext/lib/string.js":116,"polyfill":127}],145:[function(require,module,exports){
-arguments[4][72][0].apply(exports,arguments)
-},{"../css/element.css":109,"./attribute-extractor.js":141,"./element-array.js":142,"./html-parser.js":146,"./node-parser.js":147,"./vdom-ns.js":148,"./vnode.js":149,"js-ext/extra/hashmap.js":111,"js-ext/lib/object.js":114,"js-ext/lib/promise.js":115,"js-ext/lib/string.js":116,"polyfill":127,"polyfill/extra/transition.js":122,"polyfill/extra/transitionend.js":123,"polyfill/extra/vendorCSS.js":124,"utils":128,"window-ext":134}],146:[function(require,module,exports){
-arguments[4][73][0].apply(exports,arguments)
-},{"./attribute-extractor.js":141,"./vdom-ns.js":148,"js-ext/extra/hashmap.js":111,"js-ext/lib/object.js":114,"polyfill":127}],147:[function(require,module,exports){
-arguments[4][74][0].apply(exports,arguments)
-},{"./attribute-extractor.js":141,"./vdom-ns.js":148,"./vnode.js":149,"js-ext/extra/hashmap.js":111,"js-ext/lib/object.js":114,"polyfill":127}],148:[function(require,module,exports){
-/**
- * Creates a Namespace that can be used accros multiple vdom-modules to share information.
- *
- *
- * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
- * <br>
- * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
- *
- *
- * @module vdom
- * @submodule vdom-ns
- * @class NS-vdom
- * @since 0.0.1
-*/
-
-"use strict";
-
-require('js-ext/lib/object.js');
-require('polyfill');
-
-var createHashMap = require('js-ext/extra/hashmap.js').createMap,
-    // for escaping entoties inside domNode.nodeValue, we need this trick: https://code.google.com/p/jslibs/wiki/JavascriptTips
-/*jshint proto:true */
-    ENTITY_TO_CODE = { __proto__: null,
-        apos:0x0027,quot:0x0022,amp:0x0026,lt:0x003C,gt:0x003E,nbsp:0x00A0,iexcl:0x00A1,cent:0x00A2,pound:0x00A3,
-        curren:0x00A4,yen:0x00A5,brvbar:0x00A6,sect:0x00A7,uml:0x00A8,copy:0x00A9,ordf:0x00AA,laquo:0x00AB,
-        not:0x00AC,shy:0x00AD,reg:0x00AE,macr:0x00AF,deg:0x00B0,plusmn:0x00B1,sup2:0x00B2,sup3:0x00B3,
-        acute:0x00B4,micro:0x00B5,para:0x00B6,middot:0x00B7,cedil:0x00B8,sup1:0x00B9,ordm:0x00BA,raquo:0x00BB,
-        frac14:0x00BC,frac12:0x00BD,frac34:0x00BE,iquest:0x00BF,Agrave:0x00C0,Aacute:0x00C1,Acirc:0x00C2,Atilde:0x00C3,
-        Auml:0x00C4,Aring:0x00C5,AElig:0x00C6,Ccedil:0x00C7,Egrave:0x00C8,Eacute:0x00C9,Ecirc:0x00CA,Euml:0x00CB,
-        Igrave:0x00CC,Iacute:0x00CD,Icirc:0x00CE,Iuml:0x00CF,ETH:0x00D0,Ntilde:0x00D1,Ograve:0x00D2,Oacute:0x00D3,
-        Ocirc:0x00D4,Otilde:0x00D5,Ouml:0x00D6,times:0x00D7,Oslash:0x00D8,Ugrave:0x00D9,Uacute:0x00DA,Ucirc:0x00DB,
-        Uuml:0x00DC,Yacute:0x00DD,THORN:0x00DE,szlig:0x00DF,agrave:0x00E0,aacute:0x00E1,acirc:0x00E2,atilde:0x00E3,
-        auml:0x00E4,aring:0x00E5,aelig:0x00E6,ccedil:0x00E7,egrave:0x00E8,eacute:0x00E9,ecirc:0x00EA,euml:0x00EB,
-        igrave:0x00EC,iacute:0x00ED,icirc:0x00EE,iuml:0x00EF,eth:0x00F0,ntilde:0x00F1,ograve:0x00F2,oacute:0x00F3,
-        ocirc:0x00F4,otilde:0x00F5,ouml:0x00F6,divide:0x00F7,oslash:0x00F8,ugrave:0x00F9,uacute:0x00FA,ucirc:0x00FB,
-        uuml:0x00FC,yacute:0x00FD,thorn:0x00FE,yuml:0x00FF,OElig:0x0152,oelig:0x0153,Scaron:0x0160,scaron:0x0161,
-        Yuml:0x0178,fnof:0x0192,circ:0x02C6,tilde:0x02DC,Alpha:0x0391,Beta:0x0392,Gamma:0x0393,Delta:0x0394,
-        Epsilon:0x0395,Zeta:0x0396,Eta:0x0397,Theta:0x0398,Iota:0x0399,Kappa:0x039A,Lambda:0x039B,Mu:0x039C,
-        Nu:0x039D,Xi:0x039E,Omicron:0x039F,Pi:0x03A0,Rho:0x03A1,Sigma:0x03A3,Tau:0x03A4,Upsilon:0x03A5,
-        Phi:0x03A6,Chi:0x03A7,Psi:0x03A8,Omega:0x03A9,alpha:0x03B1,beta:0x03B2,gamma:0x03B3,delta:0x03B4,
-        epsilon:0x03B5,zeta:0x03B6,eta:0x03B7,theta:0x03B8,iota:0x03B9,kappa:0x03BA,lambda:0x03BB,mu:0x03BC,
-        nu:0x03BD,xi:0x03BE,omicron:0x03BF,pi:0x03C0,rho:0x03C1,sigmaf:0x03C2,sigma:0x03C3,tau:0x03C4,
-        upsilon:0x03C5,phi:0x03C6,chi:0x03C7,psi:0x03C8,omega:0x03C9,thetasym:0x03D1,upsih:0x03D2,piv:0x03D6,
-        ensp:0x2002,emsp:0x2003,thinsp:0x2009,zwnj:0x200C,zwj:0x200D,lrm:0x200E,rlm:0x200F,ndash:0x2013,
-        mdash:0x2014,lsquo:0x2018,rsquo:0x2019,sbquo:0x201A,ldquo:0x201C,rdquo:0x201D,bdquo:0x201E,dagger:0x2020,
-        Dagger:0x2021,bull:0x2022,hellip:0x2026,permil:0x2030,prime:0x2032,Prime:0x2033,lsaquo:0x2039,rsaquo:0x203A,
-        oline:0x203E,frasl:0x2044,euro:0x20AC,image:0x2111,weierp:0x2118,real:0x211C,trade:0x2122,alefsym:0x2135,
-        larr:0x2190,uarr:0x2191,rarr:0x2192,darr:0x2193,harr:0x2194,crarr:0x21B5,lArr:0x21D0,uArr:0x21D1,
-        rArr:0x21D2,dArr:0x21D3,hArr:0x21D4,forall:0x2200,part:0x2202,exist:0x2203,empty:0x2205,nabla:0x2207,
-        isin:0x2208,notin:0x2209,ni:0x220B,prod:0x220F,sum:0x2211,minus:0x2212,lowast:0x2217,radic:0x221A,
-        prop:0x221D,infin:0x221E,ang:0x2220,and:0x2227,or:0x2228,cap:0x2229,cup:0x222A,int:0x222B,
-        there4:0x2234,sim:0x223C,cong:0x2245,asymp:0x2248,ne:0x2260,equiv:0x2261,le:0x2264,ge:0x2265,
-        sub:0x2282,sup:0x2283,nsub:0x2284,sube:0x2286,supe:0x2287,oplus:0x2295,otimes:0x2297,perp:0x22A5,
-        sdot:0x22C5,lceil:0x2308,rceil:0x2309,lfloor:0x230A,rfloor:0x230B,lang:0x2329,rang:0x232A,loz:0x25CA,
-        spades:0x2660,clubs:0x2663,hearts:0x2665,diams:0x2666
-    },
-/*jshint proto:false */
-    charToEntity = {},
-    entityName;
-
-for (entityName in ENTITY_TO_CODE) {
-    charToEntity[String.fromCharCode(ENTITY_TO_CODE[entityName])] = entityName;
-}
-
-module.exports = function (window) {
-    var NS;
-
-    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
-
-    if (window._ITSAmodules.VDOM_NS) {
-        return window._ITSAmodules.VDOM_NS; // VDOM_NS was already created
-    }
-
-    NS = window._ITSAmodules.VDOM_NS = createHashMap();
-
-    /**
-     * Reference to the VElement of document.body (gets its value as soon as it gets refered to)
-     *
-     * @property body
-     * @default null
-     * @type VElement
-     * @since 0.0.1
-     */
-    NS.body = null;
-
-    NS.xmlNS = createHashMap({
-        SVG: 'http://www.w3.org/2000/svg',
-        XBL: 'http://www.mozilla.org/xbl',
-        XUL: 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul',
-        MATH: 'http://www.w3.org/1998/Math/MathML',
-        XLINK: 'http://www.w3.org/1999/xlink'
-    });
-
-    /**
-     * A hash with all node'ids (of all the domnodes that have an id). The value is a reference to an VElement.
-     *
-     * @property nodeids
-     * @default {}
-     * @type Object
-     * @since 0.0.1
-     */
-    NS.nodeids || (NS.nodeids=createHashMap());
-
-    /**
-     * A hash with all encountered non-void Elements
-     *
-     * @property nonVoidElements
-     * @default {}
-     * @type Object
-     * @since 0.0.1
-     */
-    NS.nonVoidElements || (NS.nonVoidElements=createHashMap());
-
-    /**
-     * A hash to identify what tagNames are equal to `SCRIPT` or `STYLE`.
-     *
-     * @property SCRIPT_OR_STYLE_TAG
-     * @default {SCRIPT: true, STYLE: true}
-     * @type Object
-     * @since 0.0.1
-     */
-    NS.SCRIPT_OR_STYLE_TAG = createHashMap({
-        SCRIPT: true,
-        STYLE: true
-    });
-
-    /**
-     * A hash with all nodeTypes that should be captured by the vDOM.
-     *
-     * @property VALID_NODE_TYPES
-     * @default {1: true, 3: true, 8: true}
-     * @type Object
-     * @since 0.0.1
-     */
-    NS.VALID_NODE_TYPES = createHashMap({
-        1: true,
-        3: true,
-        8: true
-    });
-
-    /**
-     * A hash with all encountered void Elements
-     *
-     * @property voidElements
-     * @default {}
-     * @type Object
-     * @since 0.0.1
-     */
-    NS.voidElements || (NS.voidElements=createHashMap());
-
-    NS.UnescapeEntities = function(str) {
-        return str.replace(
-            /&(.+?);/g,
-            function(str, ent) {
-                return String.fromCharCode( ent[0]!=='#' ? ENTITY_TO_CODE[ent] : (ent[1]==='x' ? parseInt(ent.substr(2),16) : parseInt(ent.substr(1)) ) );
-            }
-        );
-    };
-
-    NS.EscapeEntities = function(str) {
-        return str.replace(
-            /[^\x20-\x7E]/g,
-            function(str) {
-                return charToEntity[str] ? '&'+charToEntity[str]+';' : str;
-            }
-        );
-    };
-
-    return NS;
-};
-},{"js-ext/extra/hashmap.js":111,"js-ext/lib/object.js":114,"polyfill":127}],149:[function(require,module,exports){
-arguments[4][76][0].apply(exports,arguments)
-},{"./attribute-extractor.js":141,"./html-parser.js":146,"./vdom-ns.js":148,"js-ext/extra/hashmap.js":111,"js-ext/extra/lightmap.js":112,"js-ext/lib/array.js":113,"js-ext/lib/object.js":114,"js-ext/lib/string.js":116,"polyfill":127,"utils/lib/timers.js":130}],150:[function(require,module,exports){
-arguments[4][77][0].apply(exports,arguments)
-},{"./partials/element-plugin.js":143,"./partials/extend-document.js":144,"./partials/extend-element.js":145,"./partials/node-parser.js":147,"js-ext/extra/hashmap.js":111,"js-ext/lib/object.js":114}],151:[function(require,module,exports){
-module.exports=require(12)
-},{}],152:[function(require,module,exports){
-module.exports=require(13)
-},{"js-ext/extra/hashmap.js":151,"polyfill/polyfill-base.js":155}],153:[function(require,module,exports){
-module.exports=require(14)
-},{}],154:[function(require,module,exports){
-module.exports=require(15)
-},{}],155:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":153,"./lib/window.console.js":154}],156:[function(require,module,exports){
-module.exports=require(14)
-},{}],157:[function(require,module,exports){
-module.exports=require(15)
-},{}],158:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":156,"./lib/window.console.js":157}],159:[function(require,module,exports){
-module.exports=require(30)
-},{"./lib/idgenerator.js":160,"./lib/timers.js":161}],160:[function(require,module,exports){
-module.exports=require(31)
-},{"js-ext/extra/hashmap.js":151,"polyfill/polyfill-base.js":164}],161:[function(require,module,exports){
-module.exports=require(32)
-},{"polyfill/polyfill-base.js":164}],162:[function(require,module,exports){
-module.exports=require(14)
-},{}],163:[function(require,module,exports){
-module.exports=require(15)
-},{}],164:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":162,"./lib/window.console.js":163}],165:[function(require,module,exports){
-module.exports=require(36)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],166:[function(require,module,exports){
-module.exports=require(11)
-},{"../lib/object.js":170,"js-ext/extra/hashmap.js":167,"polyfill/polyfill-base.js":176}],167:[function(require,module,exports){
-module.exports=require(12)
-},{}],168:[function(require,module,exports){
-module.exports=require(39)
-},{"../lib/array.js":169,"../lib/object.js":170,"./classes.js":166,"js-ext/extra/hashmap.js":167,"polyfill/lib/weakmap.js":174}],169:[function(require,module,exports){
-module.exports=require(21)
-},{"polyfill/polyfill-base.js":176}],170:[function(require,module,exports){
-module.exports=require(13)
-},{"js-ext/extra/hashmap.js":167,"polyfill/polyfill-base.js":176}],171:[function(require,module,exports){
-module.exports=require(42)
-},{"polyfill":176}],172:[function(require,module,exports){
-module.exports=require(23)
-},{}],173:[function(require,module,exports){
-module.exports=require(14)
-},{}],174:[function(require,module,exports){
-module.exports=require(45)
-},{}],175:[function(require,module,exports){
-module.exports=require(15)
-},{}],176:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":173,"./lib/window.console.js":175}],177:[function(require,module,exports){
-module.exports=require(48)
-},{}],178:[function(require,module,exports){
-module.exports=require(49)
-},{"../bin/local-hashmap.js":177}],179:[function(require,module,exports){
-module.exports=require(50)
-},{"../bin/local-hashmap.js":177}],180:[function(require,module,exports){
-module.exports=require(51)
-},{"../bin/local-hashmap.js":177}],181:[function(require,module,exports){
-module.exports=require(14)
-},{}],182:[function(require,module,exports){
-module.exports=require(15)
-},{}],183:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":181,"./lib/window.console.js":182}],184:[function(require,module,exports){
-module.exports=require(30)
-},{"./lib/idgenerator.js":185,"./lib/timers.js":186}],185:[function(require,module,exports){
-module.exports=require(31)
-},{"js-ext/extra/hashmap.js":167,"polyfill/polyfill-base.js":189}],186:[function(require,module,exports){
-module.exports=require(32)
-},{"polyfill/polyfill-base.js":189}],187:[function(require,module,exports){
-module.exports=require(14)
-},{}],188:[function(require,module,exports){
-module.exports=require(15)
-},{}],189:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":187,"./lib/window.console.js":188}],190:[function(require,module,exports){
-module.exports=require(61)
-},{"./lib/sizes.js":191}],191:[function(require,module,exports){
-module.exports=require(62)
-},{"js-ext/extra/hashmap.js":192,"js-ext/lib/object.js":193}],192:[function(require,module,exports){
-module.exports=require(12)
-},{}],193:[function(require,module,exports){
-module.exports=require(13)
-},{"js-ext/extra/hashmap.js":192,"polyfill/polyfill-base.js":196}],194:[function(require,module,exports){
-module.exports=require(14)
-},{}],195:[function(require,module,exports){
-module.exports=require(15)
-},{}],196:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":194,"./lib/window.console.js":195}],197:[function(require,module,exports){
-module.exports=require(68)
-},{"js-ext/extra/hashmap.js":167,"js-ext/lib/object.js":170,"js-ext/lib/string.js":172,"polyfill":183,"polyfill/extra/transition.js":178,"polyfill/extra/vendorCSS.js":180}],198:[function(require,module,exports){
-module.exports=require(69)
-},{"js-ext/extra/hashmap.js":167,"js-ext/lib/object.js":170,"polyfill":183}],199:[function(require,module,exports){
-module.exports=require(70)
-},{"js-ext/extra/hashmap.js":167,"js-ext/lib/object.js":170,"js-ext/lib/string.js":172,"polyfill":183}],200:[function(require,module,exports){
-module.exports=require(71)
-},{"js-ext/extra/hashmap.js":167,"js-ext/lib/object.js":170,"js-ext/lib/string.js":172,"polyfill":183}],201:[function(require,module,exports){
-arguments[4][72][0].apply(exports,arguments)
-},{"../css/element.css":165,"./attribute-extractor.js":197,"./element-array.js":198,"./html-parser.js":202,"./node-parser.js":203,"./vdom-ns.js":204,"./vnode.js":205,"js-ext/extra/hashmap.js":167,"js-ext/lib/object.js":170,"js-ext/lib/promise.js":171,"js-ext/lib/string.js":172,"polyfill":183,"polyfill/extra/transition.js":178,"polyfill/extra/transitionend.js":179,"polyfill/extra/vendorCSS.js":180,"utils":184,"window-ext":190}],202:[function(require,module,exports){
-arguments[4][73][0].apply(exports,arguments)
-},{"./attribute-extractor.js":197,"./vdom-ns.js":204,"js-ext/extra/hashmap.js":167,"js-ext/lib/object.js":170,"polyfill":183}],203:[function(require,module,exports){
-arguments[4][74][0].apply(exports,arguments)
-},{"./attribute-extractor.js":197,"./vdom-ns.js":204,"./vnode.js":205,"js-ext/extra/hashmap.js":167,"js-ext/lib/object.js":170,"polyfill":183}],204:[function(require,module,exports){
-module.exports=require(148)
-},{"js-ext/extra/hashmap.js":167,"js-ext/lib/object.js":170,"polyfill":183}],205:[function(require,module,exports){
-arguments[4][76][0].apply(exports,arguments)
-},{"./attribute-extractor.js":197,"./html-parser.js":202,"./vdom-ns.js":204,"js-ext/extra/hashmap.js":167,"js-ext/extra/lightmap.js":168,"js-ext/lib/array.js":169,"js-ext/lib/object.js":170,"js-ext/lib/string.js":172,"polyfill":183,"utils/lib/timers.js":186}],206:[function(require,module,exports){
-arguments[4][77][0].apply(exports,arguments)
-},{"./partials/element-plugin.js":199,"./partials/extend-document.js":200,"./partials/extend-element.js":201,"./partials/node-parser.js":203,"js-ext/extra/hashmap.js":167,"js-ext/lib/object.js":170}],207:[function(require,module,exports){
-module.exports=require(61)
-},{"./lib/sizes.js":208}],208:[function(require,module,exports){
-module.exports=require(62)
-},{"js-ext/extra/hashmap.js":209,"js-ext/lib/object.js":210}],209:[function(require,module,exports){
-module.exports=require(12)
-},{}],210:[function(require,module,exports){
-module.exports=require(13)
-},{"js-ext/extra/hashmap.js":209,"polyfill/polyfill-base.js":213}],211:[function(require,module,exports){
-module.exports=require(14)
-},{}],212:[function(require,module,exports){
-module.exports=require(15)
-},{}],213:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":211,"./lib/window.console.js":212}],214:[function(require,module,exports){
-(function (global){
-/**
- * Provides core IO-functionality.
- *
- *
- * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
- * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
- *
- * @module io
- * @class IO
-*/
-
-"use strict";
-
-require('polyfill/polyfill-base.js');
-require('js-ext');
-
-var NAME = '[io]: ',
-    GET = 'GET',
-    createHashMap = require('js-ext/extra/hashmap.js').createMap,
-    asyncSilent = require('utils').asyncSilent,
-    DEF_REQ_TIMEOUT = 300000, // don't create an ever-lasting request: always quit after 5 minutes
-    BODY_METHODS = createHashMap({
-        POST: 1,
-        PUT: 1
-    }),
-    CONTENT_TYPE = 'Content-Type',
-    MIME_JSON = 'application/json',
-    DEF_CONTENT_TYPE_POST = 'application/x-www-form-urlencoded; charset=UTF-8',
-    ERROR_NO_XHR = 'no valid xhr transport-mechanism available',
-    REQUEST_TIMEOUT = 'Request-timeout',
-    UNKNOW_ERROR = 'Unknown response-error',
-    XHR_ERROR = 'XHR Error',
-    ABORTED = 'Request aborted',
-    NO_XHR = 'No valid xhr found on this browser';
-
-module.exports = function (window) {
-
-    // to prevent multiple IO instances
-    // (which might happen: http://nodejs.org/docs/latest/api/modules.html#modules_module_caching_caveats)
-    // we make sure IO is defined only once. Therefore we bind it to `window` and return it if created before
-    // We need a singleton IO, because submodules might merge in. You can't have them merging
-    // into some other IO-instance than which is used.
-    var Glob = (typeof global !== 'undefined' ? global : /* istanbul ignore next */ this);
-
-    Glob._ITSAmodules || Object.protectedProp(Glob, '_ITSAmodules', createHashMap());
-
-    if (Glob._ITSAmodules.IO) {
-        return Glob._ITSAmodules.IO;
-    }
-
-    var ENCODE_URI_COMPONENT = encodeURIComponent,
-        IO;
-
-    IO = {
-        config: {},
-
-        //===============================================================================================
-        // private methods:
-        //===============================================================================================
-
-        _xhrList: [],
-
-        /**
-         * Initializes the xhr-instance, based on the config-params.
-         * This method is the standard way of doing xhr-requests without processing streams.
-         *
-         * @method _initXHR
-         * @param xhr {Object} xhr-instance
-         * @param options {Object}
-         *    @param [options.url] {String} The url to which the request is sent.
-         *    @param [options.method='GET'] {String} The HTTP method to use.
-         *    can be ignored, even if streams are used --> the returned Promise will always hold all data
-         *    @param [options.sync=false] {boolean} By default, all requests are sent asynchronously. To send synchronous requests, set to true.
-         *           This feature only works in the browser: nodejs will always perform asynchronous requests.
-         *    @param [options.data] {Object} Data to be sent to the server, either to be used by `query-params` or `body`.
-         *    @param [options.headers] {Object} HTTP request headers.
-         *    @param [options.responseType] {String} Force the response type.
-         *    @param [options.timeout=3000] {number} to timeout the request, leading into a rejected Promise.
-         *    @param [options.withCredentials=false] {boolean} Whether or not to send credentials on the request.
-         * @param fulfill {Function} reference to xhr-promise's fulfill-function
-         * @param reject {Function} reference to xhr-promise's reject-function
-         * @param promise {Promise} the xhr-promise which will be extended with the `abort()`-method
-         * @private
-        */
-        _initXHR: function (xhr, options, promise) {
-            console.log(NAME, '_initXHR');
-            var instance = this,
-                url = options.url,
-                method = options.method || GET,
-                headers = options.headers || {}, // all request will get some headers
-                async = !options.sync,
-                data = options.data,
-                reject = promise.reject;
-            // xhr will be null in case of a CORS-request when no CORS is possible
-            if (!xhr) {
-                console.error(NAME, '_initXHR fails: '+ERROR_NO_XHR);
-                reject(new Error(ERROR_NO_XHR));
-                return;
-            }
-            console.log(NAME, '_initXHR succesfully created '+(xhr._isXHR2 ? 'XMLHttpRequest2' : (xhr._isXDR ? 'XDomainRequest' : 'XMLHttpRequest1'))+'-instance');
-
-            // method-name should be in uppercase:
-            method = method.toUpperCase();
-
-            // in case of BODY-method: eliminate any data behind querystring:
-            // else: append data-object behind querystring
-            if (BODY_METHODS[method]) {
-                url = url.split('?'); // now url is an array
-                url = url[0]; // now url is a String again
-            }
-            else if (data) {
-                url += ((url.indexOf('?') > 0) ? '&' : '?') + instance._toQueryString(data);
-            }
-
-            xhr.open(method, url, async);
-            // xhr.responseType = options.responseType || 'text';
-            options.withCredentials && (xhr.withCredentials=true);
-
-
-            // more initialisation might be needed by extended modules:
-            instance._xhrInitList.each(
-                function(fn) {
-                    fn(xhr, promise, headers, method);
-                }
-            );
-
-            // send the request:
-            xhr.send((BODY_METHODS[method] && data) ? (((headers[CONTENT_TYPE]===MIME_JSON) || xhr._isXDR) ? JSON.stringify(data) : instance._toQueryString(data)) : null);
-
-            console.log(NAME, 'xhr send to '+url+' with method '+method);
-
-            // now add xhr.abort() to the promise, so we can call from within the returned promise-instance
-            promise.abort = function() {
-                console.log(NAME, 'xhr aborted');
-                reject(new Error(ABORTED));
-                xhr._aborted = true; // must be set: IE9 won't allow to read anything on xhr after being aborted
-                xhr.abort();
-            };
-
-            // in case synchronous transfer: force an xhr.onreadystatechange:
-            async || xhr.onreadystatechange();
-        },
-
-        /**
-         * Adds the `headers`-object to `xhr`-headers.
-         *
-         * @method _setHeaders
-         * @param xhr {Object} containing the xhr-instance
-         * @param headers {Object} containing all headers
-         * @param method {String} the request-method used
-         * @private
-        */
-        _setHeaders: function(xhr, promise, headers, method) {
-            // XDR cannot set requestheaders, only XHR:
-            if (!xhr._isXDR) {
-                console.log(NAME, '_setHeaders');
-                var name;
-                if ((method!=='POST') && (method!=='PUT')) {
-                    // force GET-request to make a request instead of using cache (like IE does):
-                    headers['If-Modified-Since'] = 'Wed, 15 Nov 1995 01:00:00 GMT';
-                    // header 'Content-Type' should only be set with POST or PUT requests:
-                    delete headers[CONTENT_TYPE];
-                }
-                // set all headers
-                for (name in headers) {
-                    xhr.setRequestHeader(name, headers[name]);
-                }
-
-                // in case of POST or PUT method: always make sure 'Content-Type' is specified
-                ((method!=='POST') && (method!=='PUT')) || (headers && (CONTENT_TYPE in headers)) || xhr.setRequestHeader(CONTENT_TYPE, DEF_CONTENT_TYPE_POST);
-            }
-        },
-
-        /**
-         * Adds 2 methods on the xhr-instance which are used by xhr when events occur:
-         *
-         * xhr.onreadystatechange()
-         * xhr.ontimeout()  // only XMLHttpRequest2
-         *
-         * These events are responsible for making the Promise resolve.
-         * @method _setReadyHandle
-         * @param xhr {Object} containing the xhr-instance
-         * @param fulfill {Function} reference to the Promise fulfill-function
-         * @param reject {Function} reference to the Promise reject-function
-         * @private
-        */
-        _setReadyHandle: function(xhr, promise) {
-            console.log(NAME, '_setReadyHandle');
-            // for XDomainRequest, we need 'onload' instead of 'onreadystatechange'
-            xhr.onreadystatechange = function() {
-                // CANNOT console xhr.responseText here! IE9 will throw an error:
-                // you can only acces it after (xhr.readyState===4)
-                // also check xhr._aborted --> IE9 comes here after aborted and will throw an error when reading xhr's native properties
-                if (!xhr._aborted && (xhr.readyState===4)) {
-                    clearTimeout(xhr._timer);
-                    if ((xhr.status>=200) && (xhr.status<300)) {
-                        console.log(NAME, 'xhr.onreadystatechange will fulfill xhr-instance: '+xhr.responseText);
-                        // In case streamback function is set, but when no intermediate stream-data was send
-                        // (or in case of XDR: below 2kb it doesn't call onprogress)
-                        // --> we might need to call onprogress ourselve.
-                        if (xhr._isStream && !xhr._gotstreamed) {
-                            xhr.onprogress(xhr.responseText);
-                        }
-                        promise.fulfill(xhr);
-                    }
-                    else {
-                        console.warn(NAME, 'xhr.onreadystatechange will reject xhr-instance: '+xhr.statusText);
-                        promise.reject(new Error(xhr.statusText || UNKNOW_ERROR+' '+xhr.status));
-                    }
-                }
-            };
-            xhr.onerror = function() {
-                clearTimeout(xhr._timer);
-                promise.reject(new Error(XHR_ERROR));
-            };
-        },
-
-        /**
-         * Stringifies an object into one string with every pair separated by `&`
-         *
-         * @method _toQueryString
-         * @param data {Object} containing key-value pairs
-         * @return {String} stringified presentation of the object, with every pair separated by `&`
-         * @private
-        */
-        _toQueryString: function(data) {
-            var paramArray = [],
-                key, value;
-        // TODO: use `object` module
-            for (key in data) {
-                value = data[key];
-                key = ENCODE_URI_COMPONENT(key);
-                paramArray.push((value === null) ? key : (key + '=' + ENCODE_URI_COMPONENT(value)));
-            }
-            console.log(NAME, '_toQueryString --> '+paramArray.join('&'));
-            return paramArray.join('&');
-        },
-
-        /**
-         * Sends a HTTP request to the server and returns a Promise with an additional .abort() method to cancel the request.
-         * This method is the standard way of doing xhr-requests without processing streams.
-         *
-         * @method request
-         * @param options {Object}
-         *    @param [options.url] {String} The url to which the request is sent.
-         *    @param [options.method='GET'] {String} The HTTP method to use.
-         *    can be ignored, even if streams are used --> the returned Promise will always hold all data
-         *    @param [options.sync=false] {boolean} By default, all requests are sent asynchronously. To send synchronous requests, set to true.
-         *    @param [options.data] {Object} Data to be sent to the server, either to be used by `query-params` or `body`.
-         *    @param [options.headers] {Object} HTTP request headers.
-         *    @param [options.responseType] {String} Force the response type.
-         *    @param [options.timeout=3000] {number} to timeout the request, leading into a rejected Promise.
-         *    @param [options.withCredentials=false] {boolean} Whether or not to send credentials on the request.
-         *    @param [options.streamback] {Function} callbackfunction in case you want to process streams (needs io-stream module).
-         * @return {Promise} Promise holding the request. Has an additional .abort() method to cancel the request.
-         * <ul>
-         *     <li>on success: xhr {XMLHttpRequest1|XMLHttpRequest2} xhr-response</li>
-         *     <li>on failure: reason {Error}</li>
-         * </ul>
-        */
-        request: function(options) {
-            console.log(NAME, 'request');
-            var instance = this,
-                props = {},
-                xhr, promise;
-            options || (options={});
-            promise = Promise.manage(options.streamback);
-
-            xhr = new window.XMLHttpRequest();
-            props._isXHR2 = ('withCredentials' in xhr) || (window.navigator.userAgent==='fake');
-            // it could be other modules like io-cors or io-stream have subscribed
-            // xhr might be changed, also private properties might be extended
-            instance._xhrList.each(
-                function(fn) {
-                    xhr = fn(xhr, props, options, promise);
-                }
-            );
-            if (!xhr) {
-                return Promise.reject(NO_XHR);
-            }
-            xhr.merge(props);
-            console.log(NAME, 'request creating xhr of type: '+ (props._isXHR2 ? 'XMLHttpRequest2' : (props._isXDR ? 'XDomainRequest' : 'XMLHttpRequest1')));
-            console.log(NAME, 'CORS-IE: '+ props._CORS_IE + ', canStream: '+props._canStream);
-
-            // Don't use xhr.timeout --> IE<10 throws an error when set xhr.timeout
-            // We use a timer that aborts the request
-            Object.defineProperty(xhr, '_timer', {
-                configurable: false,
-                enumerable: false,
-                writable: false,
-                value: setTimeout(function() {
-                           promise.reject(new Error(REQUEST_TIMEOUT));
-                           xhr._aborted = true; // must be set: IE9 won't allow to read anything on xhr after being aborted
-                           xhr.abort();
-                       }, options.timeout || instance.config.timeout || DEF_REQ_TIMEOUT)
-            });
-
-            instance._initXHR(xhr, options, promise);
-
-            // to make any routine informed for the end of xhr.
-            // to make sure they get informed after aother routines have handled the response,
-            // we go async
-            promise.then(function() {
-                asyncSilent(function() {
-                    instance._final.forEach(function(finallySubscriber) {
-                        finallySubscriber(xhr);
-                    });
-                });
-            });
-
-            return promise;
-        },
-
-        /**
-         * Adds a subscriber to the finalization-cycle, which happens after the xhr finishes.
-         * Only gets invoked on fulfilled io.
-         *
-         * @method finalize
-         * @param finallySubscriber {Function} callback to be invoked
-         *        Function recieves `xhr` as its only argument
-         * @return {Object} handler with a `detach()`-method which can be used to detach the subscriber
-         * @since 0.0.1
-         */
-        finalize: function (finallySubscriber) {
-            console.log(NAME, 'finalize');
-            var finalHash = this._final;
-            finalHash.push(finallySubscriber);
-            return {
-                detach: function() {
-                    console.log(NAME, 'detach finalizer');
-                    var index = finalHash.indexOf(finallySubscriber);
-                    (index===-1) || finalHash.splice(index, 1);
-                }
-            };
-        }
-
-    };
-
-    /**
-     * Internal list of finalize-subscribers which are invoked at the end of a successful xhr,
-     * Is an array of function-references.
-     *
-     * @property _final
-     * @default []
-     * @type Array
-     * @private
-     * @since 0.0.1
-    */
-    Object.protectedProp(IO, '_final', []);
-
-    IO._xhrInitList = [
-        IO._setReadyHandle,
-        IO._setHeaders
-    ];
-
-    Glob._ITSAmodules.IO = IO;
-
-    return IO;
-};
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"js-ext":216,"js-ext/extra/hashmap.js":215,"polyfill/polyfill-base.js":228,"utils":229}],215:[function(require,module,exports){
-module.exports=require(12)
-},{}],216:[function(require,module,exports){
-require('./lib/function.js');
-require('./lib/object.js');
-require('./lib/string.js');
-require('./lib/array.js');
-require('./lib/json.js');
-require('./lib/promise.js');
-},{"./lib/array.js":217,"./lib/function.js":218,"./lib/json.js":219,"./lib/object.js":220,"./lib/promise.js":221,"./lib/string.js":222}],217:[function(require,module,exports){
-module.exports=require(21)
-},{"polyfill/polyfill-base.js":225}],218:[function(require,module,exports){
-/**
- *
- * Pollyfils for often used functionality for Functions
- *
- * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
- * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
- *
- * @module js-ext
- * @submodule lib/function.js
- * @class Function
- *
-*/
-
-"use strict";
-
-require('polyfill/polyfill-base.js');
-
-var NAME = '[Function]: ';
-
-(function(FunctionPrototype) {
-	/**
-	 * Sets the context of which the function will be execute. in the
-	 * supplied object's context, optionally adding any additional
-	 * supplied parameters to the end of the arguments the function
-	 * is executed with.
-	 *
-	 * @method rbind
-	 * @param [context] {Object} the execution context.
-	 *        The value is ignored if the bound function is constructed using the new operator.
-	 * @param [args*] {any} args* 0..n arguments to append to the end of
-	 *        arguments collection supplied to the function.
-	 * @return {function} the wrapped function.
-	 */
-	FunctionPrototype.rbind = function (context /*, args* */ ) {
-		console.log(NAME+'rbind');
-		var thisFunction = this,
-			arrayArgs,
-			slice = Array.prototype.slice;
-		context || (context = this);
-		if (arguments.length > 1) {
-			// removing `context` (first item) by slicing it out:
-			arrayArgs = slice.call(arguments, 1);
-		}
-
-		return (arrayArgs ?
-			function () {
-				// over here, `arguments` will be the "new" arguments when the final function is called!
-				return thisFunction.apply(context, slice.call(arguments, 0).concat(arrayArgs));
-			} :
-			function () {
-				// over here, `arguments` will be the "new" arguments when the final function is called!
-				return thisFunction.apply(context, arguments);
-			}
-		);
-	};
-
-}(Function.prototype));
-
-},{"polyfill/polyfill-base.js":225}],219:[function(require,module,exports){
-/**
- *
- * Pollyfils for often used functionality for Arrays
- *
- * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
- * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
- *
- * @module js-ext
- * @submodule lib/array.js
- * @class Array
- *
- */
-
-"use strict";
-
-require('polyfill/polyfill-base.js');
-
-var REVIVER = function(key, value) {
-    return ((typeof value==='string') && value.toDate()) || value;
-};
-
-JSON.parseWithDate = function(stringifiedObj) {
-    return this.parse(stringifiedObj, REVIVER);
-};
-},{"polyfill/polyfill-base.js":225}],220:[function(require,module,exports){
-module.exports=require(13)
-},{"js-ext/extra/hashmap.js":215,"polyfill/polyfill-base.js":225}],221:[function(require,module,exports){
-module.exports=require(42)
-},{"polyfill":225}],222:[function(require,module,exports){
-module.exports=require(23)
-},{}],223:[function(require,module,exports){
-module.exports=require(14)
-},{}],224:[function(require,module,exports){
-module.exports=require(15)
-},{}],225:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":223,"./lib/window.console.js":224}],226:[function(require,module,exports){
-module.exports=require(14)
-},{}],227:[function(require,module,exports){
-module.exports=require(15)
-},{}],228:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":226,"./lib/window.console.js":227}],229:[function(require,module,exports){
-module.exports=require(30)
-},{"./lib/idgenerator.js":230,"./lib/timers.js":231}],230:[function(require,module,exports){
-module.exports=require(31)
-},{"js-ext/extra/hashmap.js":215,"polyfill/polyfill-base.js":234}],231:[function(require,module,exports){
-module.exports=require(32)
-},{"polyfill/polyfill-base.js":234}],232:[function(require,module,exports){
-module.exports=require(14)
-},{}],233:[function(require,module,exports){
-module.exports=require(15)
-},{}],234:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":232,"./lib/window.console.js":233}],235:[function(require,module,exports){
-module.exports=require(11)
-},{"../lib/object.js":242,"js-ext/extra/hashmap.js":236,"polyfill/polyfill-base.js":248}],236:[function(require,module,exports){
-module.exports=require(12)
-},{}],237:[function(require,module,exports){
-module.exports=require(39)
-},{"../lib/array.js":239,"../lib/object.js":242,"./classes.js":235,"js-ext/extra/hashmap.js":236,"polyfill/lib/weakmap.js":246}],238:[function(require,module,exports){
-"use strict";
-
-require('./lib/function.js');
-require('./lib/object.js');
-require('./lib/string.js');
-require('./lib/array.js');
-require('./lib/json.js');
-require('./lib/promise.js');
-
-module.exports = {
-    createHashMap: require('./extra/hashmap.js').createMap,
-    Classes: require('./extra/classes.js'),
-    LightMap: require('./extra/lightmap.js')
-};
-},{"./extra/classes.js":235,"./extra/hashmap.js":236,"./extra/lightmap.js":237,"./lib/array.js":239,"./lib/function.js":240,"./lib/json.js":241,"./lib/object.js":242,"./lib/promise.js":243,"./lib/string.js":244}],239:[function(require,module,exports){
-module.exports=require(21)
-},{"polyfill/polyfill-base.js":248}],240:[function(require,module,exports){
-module.exports=require(218)
-},{"polyfill/polyfill-base.js":248}],241:[function(require,module,exports){
-module.exports=require(219)
-},{"polyfill/polyfill-base.js":248}],242:[function(require,module,exports){
-module.exports=require(13)
-},{"js-ext/extra/hashmap.js":236,"polyfill/polyfill-base.js":248}],243:[function(require,module,exports){
-module.exports=require(42)
-},{"polyfill":248}],244:[function(require,module,exports){
-module.exports=require(23)
-},{}],245:[function(require,module,exports){
-module.exports=require(14)
-},{}],246:[function(require,module,exports){
-module.exports=require(45)
-},{}],247:[function(require,module,exports){
-module.exports=require(15)
-},{}],248:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":245,"./lib/window.console.js":247}],249:[function(require,module,exports){
-(function (process,Buffer){
-"use strict";
-
-/**
- * Wrapper for built-in http.js to emulate the browser XMLHttpRequest object.
- *
- * This can be used with JS designed for browsers to improve reuse of code and
- * allow the use of existing libraries.
- *
- * Usage: include("XMLHttpRequest.js") and use XMLHttpRequest per W3C specs.
- *
- * @author Dan DeFelippi <dan@driverdan.com>
- * @contributor David Ellis <d.f.ellis@ieee.org>
- * @license MIT
- */
-
-var Url = require("url"),
-    spawn = require("child_process").spawn,
-    fs = require('fs'),
-    XmlDOMParser = require('xmldom').DOMParser;
-
-exports.XMLHttpRequest = function() {
-  /**
-   * Private variables
-   */
-  var self = this;
-  var http = require('http');
-  var https = require('https');
-
-  // Holds http.js objects
-  var request;
-  var response;
-
-  // Request settings
-  var settings = {};
-
-  // Disable header blacklist.
-  // Not part of XHR specs.
-  var disableHeaderCheck = false;
-
-  // Set some default headers
-  var defaultHeaders = {
-    "User-Agent": "node-XMLHttpRequest",
-    "Accept": "*/*"
-  };
-
-  var headers = defaultHeaders;
-
-  // These headers are not user setable.
-  // The following are allowed but banned in the spec:
-  // * user-agent
-  var forbiddenRequestHeaders = [
-    "accept-charset",
-    "accept-encoding",
-    "access-control-request-headers",
-    "access-control-request-method",
-    "connection",
-    "content-length",
-    "content-transfer-encoding",
-    "cookie",
-    "cookie2",
-    "date",
-    "expect",
-    "host",
-    "keep-alive",
-    "origin",
-    "referer",
-    "te",
-    "trailer",
-    "transfer-encoding",
-    "upgrade",
-    "via"
-  ];
-
-  // These request methods are not allowed
-  var forbiddenRequestMethods = [
-    "TRACE",
-    "TRACK",
-    "CONNECT"
-  ];
-
-  // Send flag
-  var sendFlag = false;
-  // Error flag, used when errors occur or abort is called
-  var errorFlag = false;
-
-  // Event listeners
-  var listeners = {};
-
-  /**
-   * Constants
-   */
-
-  this.UNSENT = 0;
-  this.OPENED = 1;
-  this.HEADERS_RECEIVED = 2;
-  this.LOADING = 3;
-  this.DONE = 4;
-
-  /**
-   * Public vars
-   */
-
-  // Current state
-  this.readyState = this.UNSENT;
-
-  // default ready state change handler in case one is not set or is set late
-  this.onreadystatechange = null;
-
-  // Result & response
-  this.responseText = "";
-  this.responseXML = null;
-  this.status = null;
-  this.statusText = null;
-
-  /**
-   * Private methods
-   */
-
-  var isXMLRequest = function() {
-      return /^text\/xml/.test(response.headers['content-type']);
-  };
-
-  /**
-   * Check if the specified header is allowed.
-   *
-   * @param string header Header to validate
-   * @return boolean False if not allowed, otherwise true
-   */
-  var isAllowedHttpHeader = function(header) {
-    return disableHeaderCheck || (header && forbiddenRequestHeaders.indexOf(header.toLowerCase()) === -1);
-  };
-
-  /**
-   * Check if the specified method is allowed.
-   *
-   * @param string method Request method to validate
-   * @return boolean False if not allowed, otherwise true
-   */
-  var isAllowedHttpMethod = function(method) {
-    return (method && forbiddenRequestMethods.indexOf(method) === -1);
-  };
-
-  /**
-   * Public methods
-   */
-
-  /**
-   * Open the connection. Currently supports local server requests.
-   *
-   * @param string method Connection method (eg GET, POST)
-   * @param string url URL for the connection.
-   * @param boolean async Asynchronous connection. Default is true.
-   * @param string user Username for basic authentication (optional)
-   * @param string password Password for basic authentication (optional)
-   */
-  this.open = function(method, url, async, user, password) {
-    this.abort();
-    errorFlag = false;
-
-    // Check for valid request method
-    if (!isAllowedHttpMethod(method)) {
-      throw "SecurityError: Request method not allowed";
-    }
-
-    settings = {
-      "method": method,
-      "url": url.toString(),
-      "async": (typeof async !== "boolean" ? true : async),
-      "user": user || null,
-      "password": password || null
-    };
-
-    setState(this.OPENED);
-  };
-
-  /**
-   * Disables or enables isAllowedHttpHeader() check the request. Enabled by default.
-   * This does not conform to the W3C spec.
-   *
-   * @param boolean state Enable or disable header checking.
-   */
-  this.setDisableHeaderCheck = function(state) {
-    disableHeaderCheck = state;
-  };
-
-  /**
-   * Sets a header for the request.
-   *
-   * @param string header Header name
-   * @param string value Header value
-   */
-  this.setRequestHeader = function(header, value) {
-    if (this.readyState != this.OPENED) {
-      throw "INVALID_STATE_ERR: setRequestHeader can only be called when state is OPEN";
-    }
-    if (!isAllowedHttpHeader(header)) {
-      console.warn('Refused to set unsafe header "' + header + '"');
-      return;
-    }
-    if (sendFlag) {
-      throw "INVALID_STATE_ERR: send flag is true";
-    }
-    headers[header] = value;
-  };
-
-  /**
-   * Gets a header from the server response.
-   *
-   * @param string header Name of header to get.
-   * @return string Text of the header or null if it doesn't exist.
-   */
-  this.getResponseHeader = function(header) {
-    if (typeof header === "string" && this.readyState > this.OPENED && response.headers[header.toLowerCase()] && !errorFlag) {
-      return response.headers[header.toLowerCase()];
-    }
-
-    return null;
-  };
-
-  /**
-   * Gets all the response headers.
-   *
-   * @return string A string with all response headers separated by CR+LF
-   */
-  this.getAllResponseHeaders = function() {
-    if (this.readyState < this.HEADERS_RECEIVED || errorFlag) {
-      return "";
-    }
-    var result = "";
-
-    for (var i in response.headers) {
-      // Cookie headers are excluded
-      if (i !== "set-cookie" && i !== "set-cookie2") {
-        result += i + ": " + response.headers[i] + "\r\n";
-      }
-    }
-    return result.substr(0, result.length - 2);
-  };
-
-  /**
-   * Gets a request header
-   *
-   * @param string name Name of header to get
-   * @return string Returns the request header or empty string if not set
-   */
-  this.getRequestHeader = function(name) {
-    // @TODO Make this case insensitive
-    if (typeof name === "string" && headers[name]) {
-      return headers[name];
-    }
-
-    return "";
-  };
-
-  /**
-   * Sends the request to the server.
-   *
-   * @param string data Optional data to send as request body.
-   */
-  this.send = function(data) {
-    if (this.readyState != this.OPENED) {
-      throw "INVALID_STATE_ERR: connection must be opened before send() is called";
-    }
-
-    if (sendFlag) {
-      throw "INVALID_STATE_ERR: send has already been called";
-    }
-
-    var ssl = false, local = false;
-    var url = Url.parse(settings.url);
-    var host, responseHandler, errorHandler;
-    // Determine the server
-    switch (url.protocol) {
-      case 'https:':
-        ssl = true;
-        host = url.hostname;
-        break;
-
-      case 'http:':
-        host = url.hostname;
-        break;
-
-      case 'file:':
-        local = true;
-        break;
-
-      case undefined:
-      case '':
-        host = "localhost";
-        break;
-
-      default:
-        throw "Protocol not supported.";
-    }
-
-    // Load files off the local filesystem (file://)
-    if (local) {
-      if (settings.method !== "GET") {
-        throw "XMLHttpRequest: Only GET method is supported";
-      }
-
-      if (settings.async) {
-        fs.readFile(url.pathname, 'utf8', function(error, data) {
-          if (error) {
-            self.handleError(error);
-          } else {
-            self.status = 200;
-            self.responseText = data;
-            self.responseXML = isXMLRequest() ? new XmlDOMParser().parseFromString(data) : null;
-            setState(self.DONE);
-          }
-        });
-      } else {
-        try {
-          this.responseText = fs.readFileSync(url.pathname, 'utf8');
-          self.responseXML = isXMLRequest() ? new XmlDOMParser().parseFromString(this.responseText) : null;
-          this.status = 200;
-          setState(self.DONE);
-        } catch(e) {
-          this.handleError(e);
-        }
-      }
-
-      return;
-    }
-
-    // Default to port 80. If accessing localhost on another port be sure
-    // to use http://localhost:port/path
-    var port = url.port || (ssl ? 443 : 80);
-    // Add query string if one is used
-    var uri = url.pathname + (url.search ? url.search : '');
-
-    // Set the Host header or the server may reject the request
-    headers.Host = host;
-    if (!((ssl && port === 443) || port === 80)) {
-      headers.Host += ':' + url.port;
-    }
-
-    // Set Basic Auth if necessary
-    if (settings.user) {
-      if (typeof settings.password == "undefined") {
-        settings.password = "";
-      }
-      var authBuf = new Buffer(settings.user + ":" + settings.password);
-      headers.Authorization = "Basic " + authBuf.toString("base64");
-    }
-
-    // Set content length header
-    if (settings.method === "GET" || settings.method === "HEAD") {
-      data = null;
-    } else if (data) {
-      headers["Content-Length"] = Buffer.isBuffer(data) ? data.length : Buffer.byteLength(data);
-
-      if (!headers["Content-Type"]) {
-        headers["Content-Type"] = "text/plain;charset=UTF-8";
-      }
-    } else if (settings.method === "POST") {
-      // For a post with no data set Content-Length: 0.
-      // This is required by buggy servers that don't meet the specs.
-      headers["Content-Length"] = 0;
-    }
-
-    var options = {
-      host: host,
-      port: port,
-      path: uri,
-      method: settings.method,
-      headers: headers,
-      agent: false
-    };
-
-    // Reset error flag
-    errorFlag = false;
-
-    // Handle async requests
-    if (settings.async) {
-      // Use the proper protocol
-      var doRequest = ssl ? https.request : http.request;
-
-      // Request is being sent, set send flag
-      sendFlag = true;
-
-      // As per spec, this is called here for historical reasons.
-      self.dispatchEvent("readystatechange");
-
-      // Handler for the response
-      responseHandler = function(resp) {
-        // Set response var to the response we got back
-        // This is so it remains accessable outside this scope
-        response = resp;
-        // Check for redirect
-        // @TODO Prevent looped redirects
-        if (response.statusCode === 302 || response.statusCode === 303 || response.statusCode === 307) {
-          // Change URL to the redirect location
-          settings.url = response.headers.location;
-          var url = Url.parse(settings.url);
-          // Set host var in case it's used later
-          host = url.hostname;
-          // Options for the new request
-          var newOptions = {
-            hostname: url.hostname,
-            port: url.port,
-            path: url.path,
-            method: response.statusCode === 303 ? 'GET' : settings.method,
-            headers: headers
-          };
-
-          // Issue the new request
-          request = doRequest(newOptions, responseHandler).on('error', errorHandler);
-          request.end();
-          // @TODO Check if an XHR event needs to be fired here
-          return;
-        }
-
-        response.setEncoding("utf8");
-
-        setState(self.HEADERS_RECEIVED);
-        self.status = response.statusCode;
-
-        response.on('data', function(chunk) {
-          // Make sure there's some data
-          if (chunk) {
-            self.responseText += chunk;
-          }
-          // Don't emit state changes if the connection has been aborted.
-          if (sendFlag) {
-            setState(self.LOADING);
-          }
-        });
-
-        response.on('end', function() {
-          if (sendFlag) {
-            self.responseXML = isXMLRequest() ? new XmlDOMParser().parseFromString(self.responseText) : null;
-            // Discard the 'end' event if the connection has been aborted
-            setState(self.DONE);
-            sendFlag = false;
-          }
-        });
-
-        response.on('error', function(error) {
-          self.handleError(error);
-        });
-      };
-
-      // Error handler for the request
-      errorHandler = function(error) {
-        self.handleError(error);
-      };
-
-      // Create the request
-      request = doRequest(options, responseHandler).on('error', errorHandler);
-
-      // Node 0.4 and later won't accept empty data. Make sure it's needed.
-      if (data) {
-        request.write(data);
-      }
-
-      request.end();
-
-      self.dispatchEvent("loadstart");
-    } else { // Synchronous
-      // Create a temporary file for communication with the other Node process
-      var contentFile = ".node-xmlhttprequest-content-" + process.pid;
-      var syncFile = ".node-xmlhttprequest-sync-" + process.pid;
-      fs.writeFileSync(syncFile, "", "utf8");
-      // The async request the other Node process executes
-      var execString = "var http = require('http'), https = require('https'), fs = require('fs');" +
-        "var doRequest = http" + (ssl ? "s" : "") + ".request;" +
-        "var options = " + JSON.stringify(options) + ";" +
-        "var responseText = '';" +
-        "var req = doRequest(options, function(response) {" +
-        "response.setEncoding('utf8');" +
-        "response.on('data', function(chunk) {" +
-        "  responseText += chunk;" +
-        "});" +
-        "response.on('end', function() {" +
-        "fs.writeFileSync('" + contentFile + "', 'NODE-XMLHTTPREQUEST-STATUS:' + response.statusCode + ',' + responseText, 'utf8');" +
-        "fs.unlinkSync('" + syncFile + "');" +
-        "});" +
-        "response.on('error', function(error) {" +
-        "fs.writeFileSync('" + contentFile + "', 'NODE-XMLHTTPREQUEST-ERROR:' + JSON.stringify(error), 'utf8');" +
-        "fs.unlinkSync('" + syncFile + "');" +
-        "});" +
-        "}).on('error', function(error) {" +
-        "fs.writeFileSync('" + contentFile + "', 'NODE-XMLHTTPREQUEST-ERROR:' + JSON.stringify(error), 'utf8');" +
-        "fs.unlinkSync('" + syncFile + "');" +
-        "});" +
-        (data ? "req.write('" + data.replace(/'/g, "\\'") + "');":"") +
-        "req.end();";
-      // Start the other Node Process, executing this string
-      var syncProc = spawn(process.argv[0], ["-e", execString]);
-/*jshint noempty:true */
-      // Wait while the sync file is empty
-      while (fs.existsSync(syncFile)) {}
-/*jshint noempty:false */
-      self.responseText = fs.readFileSync(contentFile, 'utf8');
-      self.responseXML = isXMLRequest() ? new XmlDOMParser().parseFromString(self.responseText) : null;
-      // Kill the child process once the file has data
-      syncProc.stdin.end();
-      // Remove the temporary file
-      fs.unlinkSync(contentFile);
-      if (self.responseText.match(/^NODE-XMLHTTPREQUEST-ERROR:/)) {
-        // If the file returned an error, handle it
-        var errorObj = self.responseText.replace(/^NODE-XMLHTTPREQUEST-ERROR:/, "");
-        self.handleError(errorObj);
-      } else {
-        // If the file returned okay, parse its data and move to the DONE state
-        self.status = self.responseText.replace(/^NODE-XMLHTTPREQUEST-STATUS:([0-9]*),.*/, "$1");
-        self.responseText = self.responseText.replace(/^NODE-XMLHTTPREQUEST-STATUS:[0-9]*,(.*)/, "$1");
-        setState(self.DONE);
-      }
-    }
-  };
-
-  /**
-   * Called when an error is encountered to deal with it.
-   */
-  this.handleError = function(error) {
-    this.status = 503;
-    this.statusText = error;
-    this.responseText = error.stack;
-    errorFlag = true;
-    setState(this.DONE);
-  };
-
-  /**
-   * Aborts a request.
-   */
-  this.abort = function() {
-    if (request) {
-      request.abort();
-      request = null;
-    }
-
-    headers = defaultHeaders;
-    this.responseText = "";
-    this.responseXML = "";
-
-    errorFlag = true;
-
-    if (this.readyState !== this.UNSENT && (this.readyState !== this.OPENED || sendFlag) && this.readyState !== this.DONE) {
-      sendFlag = false;
-      setState(this.DONE);
-    }
-    this.readyState = this.UNSENT;
-  };
-
-  /**
-   * Adds an event listener. Preferred method of binding to events.
-   */
-  this.addEventListener = function(event, callback) {
-    if (!(event in listeners)) {
-      listeners[event] = [];
-    }
-    // Currently allows duplicate callbacks. Should it?
-    listeners[event].push(callback);
-  };
-
-  /**
-   * Remove an event callback that has already been bound.
-   * Only works on the matching funciton, cannot be a copy.
-   */
-  this.removeEventListener = function(event, callback) {
-    if (event in listeners) {
-      // Filter will return a new array with the callback removed
-      listeners[event] = listeners[event].filter(function(ev) {
-        return ev !== callback;
-      });
-    }
-  };
-
-  /**
-   * Dispatch any events, including both "on" methods and events attached using addEventListener.
-   */
-  this.dispatchEvent = function(event) {
-    if (typeof self["on" + event] === "function") {
-      self["on" + event]();
-    }
-    if (event in listeners) {
-      for (var i = 0, len = listeners[event].length; i < len; i++) {
-        listeners[event][i].call(self);
-      }
-    }
-  };
-
-  /**
-   * Changes readyState and calls onreadystatechange.
-   *
-   * @param int state New state
-   */
-  var setState = function(state) {
-    if ((self.readyState !== state) || (settings.async && (self.readyState===self.LOADING))) {
-      self.readyState = state;
-
-      if (settings.async || self.readyState < self.OPENED || self.readyState === self.DONE) {
-          self.dispatchEvent("readystatechange");
-      }
-
-      if (settings.async && (self.readyState===self.LOADING)) {
-          self.dispatchEvent("progress");
-      }
-
-      if (self.readyState === self.DONE && !errorFlag) {
-          self.dispatchEvent("load");
-          // @TODO figure out InspectorInstrumentation::didLoadXHR(cookie)
-          self.dispatchEvent("loadend");
-      }
-    }
-
-  };
-};
-
-}).call(this,require('_process'),require("buffer").Buffer)
-},{"_process":329,"buffer":318,"child_process":317,"fs":317,"http":322,"https":326,"url":347,"xmldom":306}],250:[function(require,module,exports){
-"use strict";
-
-/**
- * Emulation of browser `window` and `dom`. Just enough to make ITSA work.
- *
- *
- * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
- * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
- *
- * @module node-win
- * @class window
- * @static
-*/
-
-require('js-ext/lib/array.js');
-
-var xmlhttprequest = require('./lib/XMLHttpRequest.js').XMLHttpRequest,
-    xmlDOMParser = require('xmldom').DOMParser,
-	Url = require('url'),
-    used = {},
-    vNodeParser = /(?:(^|#|\.)([^#\.\[\]]+))|(\[.+?\])/g,
-    count, doc, win, getHTML, reset;
-    EventTypes = {
-		MouseEvents: function () {
-			this.initMouseEvent = function (type, bubbles, cancelable, view, detail,
-					screenX, screenY, clientX, clientY,
-					ctrlKey, altKey, shiftKey, metaKey,
-					button, relatedTarget) {
-				count('initMouseEvent');
-				this.ev = {
-					type:type,
-					bubbles:bubbles,
-					cancelable:cancelable,
-					view:view,
-					detail:detail,
-					screenX:screenX,
-					screenY:screenY,
-					clientX:clientX,
-					clientY:clientY,
-					ctrlKey:ctrlKey,
-					altKey:altKey,
-					shiftKey:shiftKey,
-					metaKey:metaKey,
-					button:button,
-					relatedTarget:relatedTarget
-				};
-			};
-		}
-	};
-
-count = function (method) {
-	if (!used[method]) {
-		used[method] = 1;
-	} else {
-		used[method] += 1;
-	}
-};
-
-getHTML = function (node) {
-	var prop, val,
-		style, styles = [],
-		html = '';
-
-	if (!node.nodeName && node.nodeValue) {
-		// For text nodes, I return the uppercase text
-		// so that you can tell the parts generated at the server
-		// from the normal lowercase of the actual app when run on the client
-		return node.nodeValue.toUpperCase();
-	}
-	html += '<' + node.nodeName;
-	for (prop in node) {
-		val = node[prop];
-
-		// Ignore functions, those will be revived on the client side.
-		if (typeof val == 'function') continue;
-		switch (prop) {
-		case 'nodeName':
-		case 'parentNode':
-		case 'childNodes':
-		case 'pathname':
-		case 'search':
-			continue;
-		case 'checked':
-			if (val == 'false') continue;
-			break;
-		case 'href':
-			val = node.pathname;
-			break;
-		case 'className':
-			prop = 'class';
-			break;
-		case 'style':
-			if (val) {
-				for (style in val) {
-					if (val[style]) {
-						styles.push(style + ': ' + val[style]);
-					}
-				}
-				if (!styles.length) {
-					continue;
-				}
-				val = styles.join(';');
-			}
-			break;
-		}
-		html += ' ' + prop + '="' + val.replace('"', '\\"') + '"';
-	}
-
-	if (node.childNodes.length) {
-		html += '>' + node.childNodes.reduce(function (prev, node) {
-			return prev + getHTML(node);
-		}, '') + '</' + node.nodeName + '>';
-	}
-	else {
-		// I don't know why Mithril assigns the content of textareas
-		// to its value attribute instead of the innerHTML property.
-		// Since it doesn't have children, the closing tag has to be forced.
-		if (node.nodeName == 'TEXTAREA') {
-			html += '></TEXTAREA>';
-		} else {
-			html += '/>';
-		}
-	}
-	return html;
-};
-
-
-win = {
-    cancelAnimationFrame: function() {
-
-    },
-
-    console: require('polyfill/lib/window.console.js'),
-
-    CSSStyleDeclaration: {},
-
-	document: doc,
-
-    DOMParser: xmlDOMParser,
-
-    HTMLCollection: Array,
-
-    location: {},
-
-	navigator: {
-		userAgent: 'fake',
-		stats: {
-			clear: function () {
-				used = {};
-			},
-			get: function () {
-				return used;
-			}
-		},
-		reset: reset,
-		getHTML: function () {
-			return getHTML(doc.body);
-		},
-		navigate: function (url) {
-			var u = Url.parse(url, false, true);
-			window.location.search = u.search || '';
-			window.location.pathname = u.pathname || '';
-			window.location.hash = u.hash || '';
-		}
-	},
-
-    NodeList: Array,
-
-	performance: function () {
-		var timestamp = 50;
-		this.$elapse = function(amount) {
-			timestamp += amount;
-		};
-		this.now = function() {
-			return timestamp;
-		};
-	},
-
-	requestAnimationFrame: function(callback) {
-		var instance = this;
-		instance.requestAnimationFrame.$callback = callback;
-		instance.requestAnimationFrame.$resolve = function() {
-			instance.requestAnimationFrame.$callback && instance.requestAnimationFrame.$callback();
-			instance.requestAnimationFrame.$callback = null;
-			instance.performance.$elapse(20);
-		};
-	},
-
-    XMLHttpRequest: xmlhttprequest
-
-};
-
-reset = function () {
-	var body = doc.createElement('body');
-	win.location.search = "?/";
-	win.location.pathname = "/";
-	win.location.hash = "";
-	win.history = {};
-	win.history.pushState = function(data, title, url) {
-		win.location.pathname = win.location.search = win.location.hash = url;
-	},
-	win.history.replaceState = function(data, title, url) {
-		win.location.pathname = win.location.search = win.location.hash = url;
-	};
-	doc.appendChild(body);
-	doc.body = body;
-};
-
-reset();
-
-module.exports = win;
-},{"./lib/XMLHttpRequest.js":249,"js-ext/lib/array.js":251,"polyfill/lib/window.console.js":256,"url":347,"xmldom":306}],251:[function(require,module,exports){
-module.exports=require(21)
-},{"polyfill/polyfill-base.js":254}],252:[function(require,module,exports){
-module.exports=require(14)
-},{}],253:[function(require,module,exports){
-module.exports=require(15)
-},{}],254:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":252,"./lib/window.console.js":253}],255:[function(require,module,exports){
-module.exports=require(14)
-},{}],256:[function(require,module,exports){
-module.exports=require(15)
-},{}],257:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":255,"./lib/window.console.js":256}],258:[function(require,module,exports){
-module.exports=require(30)
-},{"./lib/idgenerator.js":259,"./lib/timers.js":260}],259:[function(require,module,exports){
-module.exports=require(31)
-},{"js-ext/extra/hashmap.js":236,"polyfill/polyfill-base.js":263}],260:[function(require,module,exports){
-module.exports=require(32)
-},{"polyfill/polyfill-base.js":263}],261:[function(require,module,exports){
-module.exports=require(14)
-},{}],262:[function(require,module,exports){
-module.exports=require(15)
-},{}],263:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":261,"./lib/window.console.js":262}],264:[function(require,module,exports){
-module.exports=require(36)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],265:[function(require,module,exports){
-module.exports=require(11)
-},{"../lib/object.js":269,"js-ext/extra/hashmap.js":266,"polyfill/polyfill-base.js":275}],266:[function(require,module,exports){
-module.exports=require(12)
-},{}],267:[function(require,module,exports){
-module.exports=require(39)
-},{"../lib/array.js":268,"../lib/object.js":269,"./classes.js":265,"js-ext/extra/hashmap.js":266,"polyfill/lib/weakmap.js":273}],268:[function(require,module,exports){
-module.exports=require(21)
-},{"polyfill/polyfill-base.js":275}],269:[function(require,module,exports){
-module.exports=require(13)
-},{"js-ext/extra/hashmap.js":266,"polyfill/polyfill-base.js":275}],270:[function(require,module,exports){
-module.exports=require(42)
-},{"polyfill":275}],271:[function(require,module,exports){
-module.exports=require(23)
-},{}],272:[function(require,module,exports){
-module.exports=require(14)
-},{}],273:[function(require,module,exports){
-module.exports=require(45)
-},{}],274:[function(require,module,exports){
-module.exports=require(15)
-},{}],275:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":272,"./lib/window.console.js":274}],276:[function(require,module,exports){
-module.exports=require(48)
-},{}],277:[function(require,module,exports){
-module.exports=require(49)
-},{"../bin/local-hashmap.js":276}],278:[function(require,module,exports){
-module.exports=require(50)
-},{"../bin/local-hashmap.js":276}],279:[function(require,module,exports){
-module.exports=require(51)
-},{"../bin/local-hashmap.js":276}],280:[function(require,module,exports){
-module.exports=require(14)
-},{}],281:[function(require,module,exports){
-module.exports=require(15)
-},{}],282:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":280,"./lib/window.console.js":281}],283:[function(require,module,exports){
-module.exports=require(30)
-},{"./lib/idgenerator.js":284,"./lib/timers.js":285}],284:[function(require,module,exports){
-module.exports=require(31)
-},{"js-ext/extra/hashmap.js":266,"polyfill/polyfill-base.js":288}],285:[function(require,module,exports){
-module.exports=require(32)
-},{"polyfill/polyfill-base.js":288}],286:[function(require,module,exports){
-module.exports=require(14)
-},{}],287:[function(require,module,exports){
-module.exports=require(15)
-},{}],288:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":286,"./lib/window.console.js":287}],289:[function(require,module,exports){
-module.exports=require(61)
-},{"./lib/sizes.js":290}],290:[function(require,module,exports){
-module.exports=require(62)
-},{"js-ext/extra/hashmap.js":291,"js-ext/lib/object.js":292}],291:[function(require,module,exports){
-module.exports=require(12)
-},{}],292:[function(require,module,exports){
-module.exports=require(13)
-},{"js-ext/extra/hashmap.js":291,"polyfill/polyfill-base.js":295}],293:[function(require,module,exports){
-module.exports=require(14)
-},{}],294:[function(require,module,exports){
-module.exports=require(15)
-},{}],295:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":293,"./lib/window.console.js":294}],296:[function(require,module,exports){
-module.exports=require(68)
-},{"js-ext/extra/hashmap.js":266,"js-ext/lib/object.js":269,"js-ext/lib/string.js":271,"polyfill":282,"polyfill/extra/transition.js":277,"polyfill/extra/vendorCSS.js":279}],297:[function(require,module,exports){
-module.exports=require(69)
-},{"js-ext/extra/hashmap.js":266,"js-ext/lib/object.js":269,"polyfill":282}],298:[function(require,module,exports){
-module.exports=require(70)
-},{"js-ext/extra/hashmap.js":266,"js-ext/lib/object.js":269,"js-ext/lib/string.js":271,"polyfill":282}],299:[function(require,module,exports){
-module.exports=require(71)
-},{"js-ext/extra/hashmap.js":266,"js-ext/lib/object.js":269,"js-ext/lib/string.js":271,"polyfill":282}],300:[function(require,module,exports){
-(function (global){
-"use strict";
-
-/**
- * Provides several methods that override native Element-methods to work with the vdom.
- *
- *
- * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
- * <br>
- * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
- *
- * @module vdom
- * @submodule extend-element
- * @class Element
- * @since 0.0.1
-*/
-
-
-require('../css/element.css');
-require('js-ext/lib/object.js');
-require('js-ext/lib/string.js');
-require('js-ext/lib/promise.js');
-require('polyfill');
-
-var createHashMap = require('js-ext/extra/hashmap.js').createMap;
-
-module.exports = function (window) {
-
-    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
-
-    if (window._ITSAmodules.ExtendElement) {
-        return; // ExtendElement was already created
-    }
-
-    // prevent double definition:
-    window._ITSAmodules.ExtendElement = true;
-
-    var NAME = '[extend-element]: ',
-        ElementArray = require('./element-array.js')(window),
-        domNodeToVNode = require('./node-parser.js')(window),
-        htmlToVNodes = require('./html-parser.js')(window),
-        vNodeProto = require('./vnode.js')(window),
-        NS = require('./vdom-ns.js')(window),
-        RUNNING_ON_NODE = (typeof global !== 'undefined') && (global.window!==window),
-        TRANSITION = 'transition',
-        TRANSFORM = 'transform',
-        BROWSERS_SUPPORT_PSEUDO_TRANS = false, // set true as soon as they do
-        SUPPORTS_PSEUDO_TRANS = null, // is a life check --> is irrelevant as long BROWSERS_SUPPORT_PSEUDO_TRANS === false
-        VENDOR_CSS = require('polyfill/extra/vendorCSS.js')(window),
-        generateVendorCSSProp = VENDOR_CSS.generator,
-        VENDOR_CSS_PROPERTIES = VENDOR_CSS.cssProps,
-        VENDOR_TRANSFORM_PROPERTY = generateVendorCSSProp(TRANSFORM),
-        VENDOR_TRANSITION_PROPERTY = require('polyfill/extra/transition.js')(window), // DO NOT use TRANSITION-variable here --> browserify cannot deal this
-        EV_TRANSITION_END = require('polyfill/extra/transitionend.js')(window),
-        _BEFORE = ':before',
-        _AFTER = ':before',
-        extractor = require('./attribute-extractor.js')(window),
-        UTILS = require('utils'),
-        later = UTILS.laterSilent,
-        async = UTILS.asyncSilent,
-        idGenerator = UTILS.idGenerator,
-        DOCUMENT = window.document,
-        nodeids = NS.nodeids,
-        arrayIndexOf = Array.prototype.indexOf,
-        I_PARCEL = 'I-PARCEL',
-        POSITION = 'position',
-        ITSA_ = 'itsa-',
-        BLOCK = ITSA_+'block',
-        BORDERBOX = ITSA_+'borderbox',
-        NO_TRANS = ITSA_+'notrans',
-        NO_TRANS2 = NO_TRANS+'2', // needed to prevent removal of NO_TRANS when still needed `notrans`
-        INVISIBLE = ITSA_+'invisible',
-        INVISIBLE_RELATIVE = INVISIBLE+'-relative',
-        INVISIBLE_UNFOCUSABLE = INVISIBLE+'-unfocusable',
-        HIDDEN = ITSA_+'hidden',
-        REGEXP_NODE_ID = /^#\S+$/,
-        LEFT = 'left',
-        TOP = 'top',
-        BORDER = 'border',
-        WIDTH = 'width',
-        HEIGHT = 'height',
-        STRING = 'string',
-        CLASS = 'class',
-        STYLE = 'style',
-        OVERFLOW = 'overflow',
-        SCROLL = 'scroll',
-        BORDER_LEFT_WIDTH = BORDER+'-left-'+WIDTH,
-        BORDER_RIGHT_WIDTH = BORDER+'-right-'+WIDTH,
-        BORDER_TOP_WIDTH = BORDER+'-top-'+WIDTH,
-        BORDER_BOTTOM_WIDTH = BORDER+'-bottom-'+WIDTH,
-        NUMBER = 'number',
-        PX = 'px',
-        SET = 'set',
-        TOGGLE = 'toggle',
-        REPLACE = 'replace',
-        REMOVE = 'remove',
-        _STARTSTYLE = '_startStyle',
-        setupObserver,
-        SIBLING_MATCH_CHARACTER = createHashMap({
-            '+': true,
-            '~': true
-        }),
-        NON_CLONABLE_STYLES = createHashMap({
-            absolute: true,
-            hidden: true,
-            block: true
-        }),
-        // CSS_PROPS_TO_CALCULATE should not be a hashMap, but an object --> we need to iterate with .each
-        CSS_PROPS_TO_CALCULATE = { // http://www.w3.org/TR/css3-transitions/#animatable-css
-            backgroundColor: true,
-            backgroundPositionX: true,
-            backgroundPositionY: true,
-            borderBottomColor: true,
-            borderBottomWidth: true,
-            borderLeftColor: true,
-            borderLeftWidth: true,
-            borderRightColor: true,
-            borderRightWidth: true,
-            borderTopColor: true,
-            borderTopWidth: true,
-            borderSpacing: true,
-            bottom: true,
-            clip: true,
-            color: true,
-            fontSize: true,
-            fontWeight: true,
-            height: true,
-            left: true,
-            letterSpacing: true,
-            lineHeight: true,
-            marginBottom: true,
-            marginTop: true,
-            marginLeft: true,
-            marginRight: true,
-            maxHeight: true,
-            maxWidth: true,
-            minHeight: true,
-            minWidth: true,
-            opacity: true,
-            outlineColor: true,
-            outlineWidth: true,
-            paddingBottom: true,
-            paddingTop: true,
-            paddingLeft: true,
-            paddingRight: true,
-            right: true,
-            textIndent: true,
-            textShadow: true,
-            verticalAlign: true,
-            // visibility: true,  DO NOT use visibility!
-            width: true,
-            wordSpacing: true,
-            zIndex: true
-        },
-        // CSS_PROPS_TO_CALCULATE.transform is set later on by the vendor specific transform-property
-        htmlToVFragments = function(html, nameSpace) {
-            var vnodes = htmlToVNodes(html, vNodeProto, nameSpace),
-                len = vnodes.length,
-                vnode, i, bkpAttrs, bkpVChildNodes;
-            for (i=0; i<len; i++) {
-                vnode = vnodes[i];
-                if (vnode.nodeType===1) {
-                    // same tag --> only update what is needed
-                    bkpAttrs = vnode.attrs;
-                    bkpVChildNodes = vnode.vChildNodes;
-
-                    // reset, to force creation of inner domNodes:
-                    vnode.attrs = {};
-                    vnode.vChildNodes = [];
-
-                    // next: sync the vnodes:
-                    vnode._setAttrs(bkpAttrs);
-                    vnode._setChildNodes(bkpVChildNodes);
-                }
-                else {
-                    vnode.domNode.nodeValue = vnode.text;
-                }
-            }
-            return {
-                isFragment: true,
-                vnodes: vnodes
-            };
-        },
-        toCamelCase = function(input) {
-            input || (input='');
-            return input.replace(/-(.)/g, function(match, group) {
-                return group.toUpperCase();
-            });
-        },
-        fromCamelCase = function(input) {
-            input || (input='');
-            return input.replace(/[a-z]([A-Z])/g, function(match, group) {
-                return match[0]+'-'+group.toLowerCase();
-            });
-        },
-        getVendorCSS = function(cssProperties) {
-            var uniqueProps = {},
-                i, len, prop, safeProperty, uniqueSafeProperty;
-            len = cssProperties.length;
-            for (i=len-1; i>=0; i--) {
-                // set the right property, but also dedupe when there are multiple same vendor-properties
-                prop = cssProperties[i];
-                safeProperty = prop.property;
-                if (safeProperty) {
-                    safeProperty = fromCamelCase(safeProperty);
-                    uniqueSafeProperty = safeProperty+'#'+prop.pseudo;
-                    VENDOR_CSS_PROPERTIES[safeProperty] || (safeProperty=generateVendorCSSProp(safeProperty));
-                    if (uniqueProps[uniqueSafeProperty]) {
-                        cssProperties.splice(i, 1);
-                    }
-                    else {
-                        uniqueProps[uniqueSafeProperty] = true;
-                        prop.property = safeProperty;
-                    }
-                }
-            }
-            return cssProperties;
-        },
-        vendorSupportsPseudoTrans = function() {
-            // DO NOT CHANGE THIS FUNCTION!
-            // it does exactly what it should do:
-            // Sarari seems to support speudo transmisions, however it calculates css-properties wrong when they are 'undefined'
-            // within a specific node, while the 'non-pseudo' is defined.
-            // This would lead into a wrong calculation (too many) of the number of expected transitionend-events
-            // Thus, this feature is disabled in some specific browsers
-            if (SUPPORTS_PSEUDO_TRANS) {
-                return SUPPORTS_PSEUDO_TRANS;
-            }
-            var cssnode, node, nodeParent;
-            DOCUMENT.body.prepend('<style id="vendorSupportsPseudoTrans_css" type="text/css">#vendorSupportsPseudoTransParent {background-color:#F00;} #vendorSupportsPseudoTrans {background-color:#00F;}</style>');
-            DOCUMENT.body.prepend('<div id="vendorSupportsPseudoTransParent"><div id="vendorSupportsPseudoTrans"></div></div>');
-            node = DOCUMENT.getElement('#vendorSupportsPseudoTrans');
-            nodeParent = DOCUMENT.getElement('#vendorSupportsPseudoTransParent');
-            cssnode = DOCUMENT.getElement('#vendorSupportsPseudoTrans_css');
-            SUPPORTS_PSEUDO_TRANS = node.getStyle('background-color')!==node.getStyle('background-color', ':before');
-            cssnode.remove();
-            nodeParent.remove();
-            return SUPPORTS_PSEUDO_TRANS;
-        },
-        getTransPromise = function(node, hasTransitionedStyle, removalPromise, afterTransEventsNeeded, transitionProperties, maxtranstime) {
-            var promise, fallback;
-            afterTransEventsNeeded || (afterTransEventsNeeded=1);
-            if (hasTransitionedStyle) {
-                promise = new window.Promise(function(fulfill) {
-                    var afterTrans = function(e) {
-                        var finishedProperty = e.propertyName,
-                            index;
-                        if (finishedProperty) {
-                            // some browsers support this feature: now we can exactly determine what promise to fulfill
-                            delete transitionProperties[finishedProperty];
-                            // in case of shorthand properties (such as padding) allmost all browsers
-                            // fire multiple detailed events (http://www.smashingmagazine.com/2013/04/26/css3-transitions-thank-god-specification/).
-                            // therefore, we also must delete the shortcut property when a detailed property gets fired:
-                            index = finishedProperty.indexOf('-');
-                            if (index!==-1) {
-                                finishedProperty = finishedProperty.substr(0, index);
-                                delete transitionProperties[finishedProperty];
-                            }
-                            // now fulfill when empty:
-                            if (transitionProperties.isEmpty()) {
-                                fallback.cancel();
-                                console.log('Transition fulfilled');
-                                node.removeEventListener(EV_TRANSITION_END, afterTrans, true);
-                                fulfill();
-                            }
-                        }
-                        else {
-                            // in cae the browser doesn't support e.propertyName, we need to countdown:
-                            if (--afterTransEventsNeeded<=0) {
-                                fallback.cancel();
-                                node.removeEventListener(EV_TRANSITION_END, afterTrans, true);
-                                console.log('Transition fulfilled by counting nr. of endTransition events');
-                                fulfill();
-                            }
-                        }
-                    };
-                    if (EV_TRANSITION_END===undefined) {
-                        // no transition supported
-                        console.log('No endTransition events supported: transition fulfilled');
-                        fulfill();
-                    }
-                    else {
-                        node.addEventListener(EV_TRANSITION_END, afterTrans, true);
-                        fallback = later(function(){
-                            console.log('Transition fulfilled by timer');
-                            fulfill();
-                        }, maxtranstime*1000+50); // extra 50 ms, after all, it is a fallback, we don't want it to take over the original end-transition-events
-                    }
-                });
-                removalPromise && (promise=window.Promise.finishAll([promise, removalPromise]));
-            }
-            else {
-                promise = removalPromise || window.Promise.resolve();
-            }
-            return promise;
-        },
-        getClassTransPromise = function(node, method, className, extraData1, extraData2) {
-            // first. check if the final node has a transitioned property.
-            // If not, then return as fulfilled. If so, then check for all the transitioned properties,
-            // if there is any who changes its calculated value. If not, then return as fulfilled. If so, then setup
-            // the evenlistener
-            var resolvedPromise = window.Promise.resolve(),
-                currentInlineCSS = [],
-                finalInlineCSS = [],
-                finalNode, getsTransitioned, originalCSS, finalCSS, transPropertiesElement, transPropertiesBefore, transPropertiesAfter, bkpFreezedData1, endIntermediate,
-                promise, finalCSS_before, finalCSS_after, transpromise, manipulated, getCurrentProperties, currentProperties, bkpNodeData, bkpFreezed, cleanup,
-                originalCSS_before, originalCSS_after, searchTrans, generateInlineCSS, finalStyle, unFreeze, freezedExtraData1, startStyle, unfreezePromise,
-                transprops, transpropsBefore, transpropsAfter, time1, time2;
-
-            time1 = Date.now();
-            bkpNodeData = idGenerator('bkpNode');
-            bkpFreezed = idGenerator('bkpFreezed');
-            bkpFreezedData1 = idGenerator('bkpFreezedData1');
-            if ((method===TOGGLE) && !extraData1) {
-                // because -when toggling- the future current node-class might have been changed:
-                freezedExtraData1 = !node.hasClass(className);
-            }
-            unFreeze = function(options) {
-                var bkpFreezedStyle = node.getData(bkpFreezed),
-                    finish = options && options.finish,
-                    cancel = options && options.cancel,
-                    transitioned = !finish;
-                bkpFreezedData1 = node.getData(bkpFreezedData1);
-                if (bkpFreezedStyle!==undefined) {
-                    if (finish || cancel) {
-                        node.setClass(NO_TRANS2);
-                    }
-                    else {
-                        node.setData(_STARTSTYLE, bkpFreezedStyle);
-                    }
-                    if (!cancel) {
-                        switch(method) {
-                            case SET:
-                                unfreezePromise = node.setClass(className, transitioned);
-                            break;
-                            case REPLACE:
-                                unfreezePromise = node.replaceClass(extraData1, className, extraData2, transitioned);
-                            break;
-                            case REMOVE:
-                                unfreezePromise = node.removeClass(className, transitioned);
-                            break;
-                            case TOGGLE:
-                                unfreezePromise = node.toggleClass(className, (bkpFreezedData1===undefined) ? extraData1 : bkpFreezedData1, transitioned);
-                            break;
-                        }
-                    }
-                    else {
-                        unfreezePromise = resolvedPromise;
-                    }
-                    async(function() {
-                        node.removeData(bkpFreezed);
-                        node.removeData(bkpFreezedData1);
-                    });
-                    if (finish || cancel) {
-                        finalStyle = finalNode.getAttr(STYLE);
-                        node.setAttr(STYLE, finalStyle);
-                        later(function() { // not just async --> it seems we need more time
-                            node.removeClass(NO_TRANS2);
-                        }, 50);
-                        unfreezePromise = resolvedPromise;
-                    }
-                    return unfreezePromise;
-                }
-                return promise;
-            };
-
-            resolvedPromise.cancel = function() { /* NOOP for compatibility */ };
-            resolvedPromise.freeze = function() { return window.Promise.resolve(0); /* compatibility */ };
-            resolvedPromise.unfreeze = unFreeze;
-            resolvedPromise.finish = function() { /* NOOP for compatibility */ };
-            if (EV_TRANSITION_END===undefined) {
-                return resolvedPromise;
-            }
-            cleanup = function() {
-                // we manipulate the classes as they should be, before returning the original inline style:
-                // all without Promise-return!
-                if (!promise.cancelled && !promise.frozen) {
-                    switch(method) {
-                        case SET:
-                            node.setClass(className);
-                        break;
-                        case REPLACE:
-                            node.replaceClass(extraData1, className, extraData2);
-                        break;
-                        case REMOVE:
-                            node.removeClass(className);
-                        break;
-                        case TOGGLE:
-                            node.toggleClass(className, extraData1);
-                        break;
-                    }
-                }
-                // last transitionrun: reset the inline css:
-                finalStyle = finalNode.getAttr(STYLE);
-                if (!promise.frozen) {
-                    node.removeData(bkpFreezed);
-                    node.removeData(bkpFreezedData1);
-                    node.setClass(NO_TRANS2);
-                    node.setAttr(STYLE, finalStyle);
-                }
-                else {
-                    node.setData(bkpFreezed, finalStyle);
-                }
-                node.removeData(bkpNodeData);
-                finalNode.remove();
-                async(function() {
-                    node.removeClass(NO_TRANS2);
-                    promise.fulfill();
-                });
-            };
-            endIntermediate = function(type) {
-                if (!promise.isFulfilled) {
-                    manipulated = true;
-                    node.setData(bkpFreezedData1, freezedExtraData1);
-                    currentProperties = getCurrentProperties(node, transprops);
-                    node.setClass(NO_TRANS2);
-                    node.setInlineStyles(currentProperties, false, true);
-                    if (BROWSERS_SUPPORT_PSEUDO_TRANS) {
-                        node.setInlineStyles(getCurrentProperties(node, transpropsBefore, ':before'), false, true);
-                        node.setInlineStyles(getCurrentProperties(node, transpropsAfter, ':after'), false, true);
-                    }
-                    // also force to set the style on the node outside the vdom --> by forcing this
-                    // we won't run into the situation where the vdom doesn't change the dom because the style didn';'t change:
-                    node._setAttribute(STYLE, node.getAttr(STYLE));
-                    Object.defineProperty(promise, 'isFulfilled', {
-                        configurable: false,
-                        enumerable: false,
-                        writable: false,
-                        value: true
-                    });
-                    Object.defineProperty(promise, type, {
-                        configurable: false,
-                        enumerable: false,
-                        writable: false,
-                        value: true
-                    });
-                    if (transpromise) {
-                        transpromise.reject(); // prevent transitionpromise to set its own final values after finishing
-                    }
-                    else {
-                        // in case `transpromise` wasn't setup yet:
-                        async(function() {
-                            transpromise.reject(); // prevent transitionpromise to set its own final values after finishing
-                        });
-                    }
-                }
-                time2 || (time2=Date.now());
-                return new window.Promise(function(resolve) {
-                    async(function() {
-                        resolve(time2-time1);
-                    });
-                });
-            };
-            searchTrans = function(CSS1, CSS2, transProperties) {
-                var allTrans = !!transProperties.all,
-                    searchObject = allTrans ? CSS_PROPS_TO_CALCULATE : transProperties,
-                    transprops = {};
-
-                searchObject.each(function(transProp, key) {
-                    // transProp will always be a vendor-specific property already
-                    key = toCamelCase(key);
-                    if (CSS1[key]!==CSS2[key]) {
-                        transprops[key] = true;
-                    }
-                });
-                return (transprops.size()>0) ? transprops : null;
-            };
-            generateInlineCSS = function(group, transProperties, CSS1, CSS2) {
-                transProperties.each(function(value, key) {
-                    var prop1 = {property: key, value: CSS1[key]},
-                        prop2 = {property: key, value: CSS2[key]};
-                    if (group) {
-                        prop1.pseudo = group;
-                        prop2.pseudo = group;
-                    }
-                    currentInlineCSS[currentInlineCSS.length] = prop1;
-                    finalInlineCSS[finalInlineCSS.length] = prop2;
-                });
-            };
-
-            getCurrentProperties = function(node, transProperties, group) {
-                var props = [],
-                    styles = window.getComputedStyle(node, group);
-                transProperties.each(function(value, property) {
-                    // if property is vendor-specific transition, or transform, than we reset it to the current vendor
-                    props.push({
-                        property: property,
-                        value: styles[toCamelCase(property)],
-                        pseudo: group
-                    });
-                });
-                return props;
-            };
-
-            finalNode = node.cloneNode(true);
-            finalNode.setClass(NO_TRANS2);
-            finalNode.setClass(INVISIBLE_UNFOCUSABLE);
-            node.setData(bkpNodeData, finalNode);
-
-            startStyle = node.getData(_STARTSTYLE);
-            if (startStyle!==undefined) {
-                finalNode.setAttr(STYLE, startStyle);
-                node.removeData(_STARTSTYLE);
-            }
-
-            switch(method) {
-                case SET:
-                    finalNode.setClass(className);
-                break;
-                case REPLACE:
-                    finalNode.replaceClass(extraData1, className, extraData2);
-                break;
-                case REMOVE:
-                    finalNode.removeClass(className);
-                break;
-                case TOGGLE:
-                    finalNode.toggleClass(className, extraData1);
-                break;
-            }
-            // insert in the dom, to make its style calculatable:
-            DOCUMENT.body.append(finalNode);
-
-            // check the css-property `transition`
-            finalNode.removeClass(NO_TRANS2);
-            transPropertiesElement = finalNode.getStyle(TRANSITION);
-            transPropertiesBefore = finalNode.getStyle(TRANSITION, _BEFORE);
-            transPropertiesAfter = finalNode.getStyle(TRANSITION, _AFTER);
-            finalNode.setClass(NO_TRANS2);
-            getsTransitioned = false;
-            if (!RUNNING_ON_NODE && ((transPropertiesElement.size()>0) || (transPropertiesBefore.size()>0) || (transPropertiesAfter.size()>0))) {
-                // when code comes here, there are one or more properties that can be transitioned
-                // check if their values differ from the original node
-                originalCSS = window.getComputedStyle(node);
-                originalCSS_before = window.getComputedStyle(node, _BEFORE);
-                originalCSS_after = window.getComputedStyle(node, _AFTER);
-                finalCSS = window.getComputedStyle(finalNode);
-                finalCSS_before = window.getComputedStyle(finalNode, _BEFORE);
-                finalCSS_after = window.getComputedStyle(finalNode, _AFTER);
-/*jshint boss:true */
-                if (transprops=searchTrans(originalCSS, finalCSS, transPropertiesElement)) {
-/*jshint boss:false */
-                    getsTransitioned = true;
-                    generateInlineCSS(null, transprops, originalCSS, finalCSS);
-                }
-                if (BROWSERS_SUPPORT_PSEUDO_TRANS && vendorSupportsPseudoTrans()) {
-/*jshint boss:true */
-                    if (transpropsBefore=searchTrans(originalCSS_before, finalCSS_before, transPropertiesBefore)) {
-/*jshint boss:false */
-                        getsTransitioned = true;
-                        generateInlineCSS(_BEFORE, transpropsBefore, originalCSS_before, finalCSS_before);
-                    }
-/*jshint boss:true */
-                    if (transpropsAfter=searchTrans(originalCSS_after, finalCSS_after, transPropertiesAfter)) {
-/*jshint boss:false */
-                        getsTransitioned = true;
-                        generateInlineCSS(_AFTER, transpropsAfter, originalCSS_after, finalCSS_after);
-                    }
-                }
-            }
-            if (getsTransitioned) {
-                // to force the transitioned items to work, we will set their calculated inline values for both at the start as well
-                // as on the end of the transition.
-                // set the original css inline:
-                promise = window.Promise.manage();
-                promise.finally(function() {
-                    time2 || (time2=Date.now());
-                });
-                node.setClass(NO_TRANS2);
-                node.setInlineStyles(currentInlineCSS, false, true);
-                async(function() {
-                    if (!manipulated) {
-                        node.removeClass(NO_TRANS2);
-                        transpromise = node.setInlineStyles(finalInlineCSS, true, true);
-                        transpromise.finally(function() {
-                            // async `setAttr` --> only fulfill when the DOM has been updated
-                            async(function() {
-                                cleanup();
-                            });
-                        });
-                    }
-                });
-
-                promise.cancel = function() {
-                    return endIntermediate('cancelled');
-                };
-
-                promise.freeze = function() {
-                    return endIntermediate('frozen');
-                };
-
-                promise.finish = function() {
-                    return endIntermediate('finished');
-                };
-
-                promise.unfreeze = unFreeze;
-
-                return promise;
-            }
-            else {
-                switch(method) {
-                    case SET:
-                        node.setClass(className);
-                    break;
-                    case REPLACE:
-                        node.replaceClass(extraData1, className, extraData2);
-                    break;
-                    case REMOVE:
-                        node.removeClass(className);
-                    break;
-                    case TOGGLE:
-                        node.toggleClass(className, extraData1);
-                    break;
-                }
-                node.removeData(bkpNodeData);
-                finalNode.remove();
-            }
-
-            return resolvedPromise;
-        },
-        classListProto = {
-            add: function(className) {
-                // we do not use the property className, but setAttribute, because setAttribute can be hacked by other modules like `vdom`
-                // note: `this` is the returned object which is NOT the Elementinstance
-                var thisobject = this,
-                    element = thisobject.element,
-                    doSet = function(cl) {
-                        var clName = element.vnode.attrs[CLASS] || '';
-                        // we do not use the property className, but setAttribute, because setAttribute can be hacked by other modules like `vdom`
-                        thisobject.contains(cl) || (element.setAttribute(CLASS, clName+((clName.length>0) ? ' ' : '') + cl));
-                    };
-                if (typeof className === STRING) {
-                    doSet(className);
-                }
-                else if (Array.isArray(className)) {
-                    className.forEach(doSet);
-                }
-            },
-            remove: function(className) {
-                var element = this.element,
-                    doRemove = function(cl) {
-                        var clName = element.vnode.attrs[CLASS] || '',
-                            regexp = new RegExp('(?:^|\\s+)' + cl + '(?:\\s+|$)', 'g');
-                        // we do not use the property className, but setAttribute, because setAttribute can be hacked by other modules like `vdom`
-                        // note: `this` is the returned object which is NOT the Elementinstance
-                        element.setAttribute(CLASS, clName.replace(regexp, ' ').trim());
-                    };
-                if (typeof className === STRING) {
-                    doRemove(className);
-                }
-                else if (Array.isArray(className)) {
-                    className.forEach(doRemove);
-                }
-                (element.vnode.attrs[CLASS]==='') && element.removeAttr(CLASS);
-            },
-            toggle: function(className, forceState) {
-                // we do not use the property className, but setAttribute, because setAttribute can be hacked by other modules like `vdom`
-                // note: `this` is the returned object which is NOT the Elementinstance
-                var thisobject = this,
-                    doToggle = function(cl) {
-                        if (typeof forceState === 'boolean') {
-                            forceState ? thisobject.add(cl) : thisobject.remove(cl);
-                        }
-                        else {
-                            thisobject.contains(cl) ? thisobject.remove(cl) : thisobject.add(cl);
-                        }
-                    };
-                if (typeof className === STRING) {
-                    doToggle(className);
-                }
-                else if (Array.isArray(className)) {
-                    className.forEach(doToggle);
-                }
-            },
-            contains: function(className) {
-                // we do not use the property className, but setAttribute, because setAttribute can be hacked by other modules like `vdom`
-                // note: `this` is the returned object which is NOT the Elementinstance.
-                // May be an Array of classNames, which all needs to be present.
-                return this.element.vnode.hasClass(className);
-            },
-            item: function(index) {
-                var items = this.element.vnode.attrs['class'].split(' ');
-                return items[index];
-            },
-            _init: function(element) {
-                this.element = element;
-            }
-        },
-        treeWalkerProto = {
-            _init: function(element, whatToShow, filter) {
-                var instance = this;
-                if (typeof filter !== 'function') {
-                    // check if it is a NodeFilter-object
-                    filter && filter.acceptNode && (filter=filter.acceptNode);
-                }
-                (typeof filter==='function') || (filter=null);
-                instance.vNodePointer = element.vnode;
-                instance._root = element;
-                whatToShow || (whatToShow=-1); // -1 equals NodeFilter.SHOW_ALL
-                (whatToShow===-1) && (whatToShow=133);
-                instance._whatToShow = whatToShow; // making it accessable for the getter `whatToShow`
-                instance._filter = filter; // making it accessable for the getter `filter`
-            },
-            _match: function(vnode, forcedVisible) {
-                var whatToShow = this._whatToShow,
-                    filter = this._filter,
-                    showElement = ((whatToShow & 1)!==0),
-                    showComment = ((whatToShow & 128)!==0),
-                    showText = ((whatToShow & 4)!==0),
-                    typeMatch = (showElement && (vnode.nodeType===1)) || (showComment && (vnode.nodeType===8)) || (showText && (vnode.nodeType===3)),
-                    visibleMatch = !forcedVisible || (window.getComputedStyle(vnode.domNode).display!=='none'),
-                    funcMatch = filter ? filter(vnode.domNode) : true;
-                return typeMatch && visibleMatch && funcMatch;
-            },
-            firstChild: function() {
-                var instance = this,
-                    foundVNode = instance.vNodePointer.vFirstChild;
-                while (foundVNode && !instance._match(foundVNode)) {
-                    foundVNode = foundVNode.vNext;
-                }
-                foundVNode && (instance.vNodePointer=foundVNode);
-                return foundVNode && foundVNode.domNode;
-            },
-            lastChild: function() {
-                var instance = this,
-                    foundVNode = instance.vNodePointer.vLastChild;
-                while (foundVNode && !instance._match(foundVNode)) {
-                    foundVNode = foundVNode.vPrevious;
-                }
-                foundVNode && (instance.vNodePointer=foundVNode);
-                return foundVNode && foundVNode.domNode;
-            },
-            nextNode: function() {
-                var instance = this,
-                    foundVNode = instance.vNodePointer.vNext;
-                while (foundVNode && !instance._match(foundVNode, true)) {
-                    foundVNode = foundVNode.vNext;
-                }
-                foundVNode && (instance.vNodePointer=foundVNode);
-                return foundVNode && foundVNode.domNode;
-            },
-            nextSibling: function() {
-                var instance = this,
-                    foundVNode = instance.vNodePointer.vNext;
-                while (foundVNode && !instance._match(foundVNode)) {
-                    foundVNode = foundVNode.vNext;
-                }
-                foundVNode && (instance.vNodePointer=foundVNode);
-                return foundVNode && foundVNode.domNode;
-            },
-            parentNode: function() {
-                var instance = this,
-                    foundVNode = instance.vNodePointer.vParent;
-                (foundVNode!==instance._root) && (instance.vNodePointer=foundVNode);
-                return foundVNode && foundVNode.domNode;
-            },
-            previousNode: function() {
-                var instance = this,
-                    foundVNode = instance.vNodePointer.vPrevious;
-                while (foundVNode && !instance._match(foundVNode, true)) {
-                    foundVNode = foundVNode.vPrevious;
-                }
-                foundVNode && (instance.vNodePointer=foundVNode);
-                return foundVNode && foundVNode.domNode;
-            },
-            previousSibling: function() {
-                var instance = this,
-                    foundVNode = instance.vNodePointer.vPrevious;
-                while (foundVNode && !instance._match(foundVNode)) {
-                    foundVNode = foundVNode.vPrevious;
-                }
-                foundVNode && (instance.vNodePointer=foundVNode);
-                return foundVNode && foundVNode.domNode;
-            }
-        };
-
-    require('window-ext')(window);
-
-    Object.defineProperties(treeWalkerProto, {
-        'currentNode': {
-            get: function() {
-                return this.vNodePointer.domNode;
-            }
-        },
-        'filter': {
-            get: function() {
-                return this._filter;
-            }
-        },
-        'root': {
-            get: function() {
-                return this._root;
-            }
-        },
-        'whatToShow': {
-            get: function() {
-                return this._whatToShow;
-            }
-        }
-    });
-
-    // NOTE: `vnode` should be a property of Node, NOT Element
-    /**
-     * Reference to the vnode-object that represents the Node
-     *
-     * (will autogenerate a vnode, should it not exists)
-     *
-     * @for Node
-     * @property vnode
-     * @type vnode
-     * @since 0.0.1
-     */
-    Object.defineProperty(window.Node.prototype, 'vnode', {
-       get: function() {
-            var instance = this,
-                vnode = instance._vnode,
-                parentNode, parentVNode, index;
-            if (!vnode) {
-                vnode = instance._vnode = domNodeToVNode(instance);
-                parentNode = instance.parentNode;
-                 // parentNode.vnode will be an existing vnode, because it runs through the same getter
-                // it will only be `null` if `html` is not virtualised
-                parentVNode = parentNode && parentNode.vnode;
-                if (parentVNode) {
-                    // set the vnode at the right position of its children:
-                    index = arrayIndexOf.call(parentNode.childNodes, instance);
-                    vnode._moveToParent(parentVNode, index);
-                }
-            }
-            return vnode;
-        },
-        set: function() {} // NOOP but needs to be there, otherwise we could clone any domNodes
-    });
-
-    CSS_PROPS_TO_CALCULATE[VENDOR_TRANSFORM_PROPERTY] = true;
-    CSS_PROPS_TO_CALCULATE[generateVendorCSSProp(TRANSFORM+'-origin')] = true;
-    CSS_PROPS_TO_CALCULATE[generateVendorCSSProp('perspective')] = true;
-
-    (function(ElementPrototype) {
-
-        /**
-        * Determines the number of transitionend-events there will occur
-        * @method _getEvtTransEndCount
-        * @private
-        * @since 0.0.1
-        */
-        ElementPrototype._getEvtTransEndCount = function(cssProperties) {
-            var transitions = this.getStyle(TRANSITION),
-                timing = {},
-                duration, delay, time;
-            transitions.each(function(transition) {
-                if (!cssProperties || (cssProperties[transition.property])) {
-                    duration = transition.duration || 0;
-                    delay = transition.delay || 0;
-                    time = (duration+delay);
-                    timing[time] = true;
-                }
-            });
-            return timing.size();
-        };
-
-        /**
-        * Returns cascaded "transition" style of all transition-properties. `Cascaded` means: the actual present style,
-        * the way it is visible (calculated through the DOM-tree).
-        *
-        * Note1: When "transition" is set inline, ONLY inline transtition is active!
-        * Thus, if parentNode has "transition: width 2s" and inline has "transition: height 3s", then the transition
-        * will be "transition: height 3s" --> returning "undefined" for transitionProperty=width.
-        * Note2: in case of "transition: all" --> these values will be returned for every "transitionProperty" (even when querying "width")
-        *
-        * @method _getTransitionAll
-        * @param transitionProperty {String} transform property that is queried, f.e. "width", or "all"
-        * @param [pseudo] {String} to query pseudo-element, fe: `:before` or `:first-line`
-        * @return {Object} the transition-object, with the properties:
-        * <ul>
-        *     <li>duration {Number}</li>
-        *     <li>timingFunction {String}</li>
-        *     <li>delay {Number}</li>
-        * </ul>
-        * @private
-        * @since 0.0.1
-        */
-        ElementPrototype._getTransitionAll = function(pseudo) {
-            var instance = this,
-                transProperty, transDuration, transTimingFunction, transDelay, transPropertySplitted, property,
-                transitions, transDurationSplitted, transTimingFunctionSplitted, transDelaySplitted, i, len, duration;
-            // first look at inline transition:
-            transitions = instance.getInlineTransition(null, pseudo);
-            if (transitions) {
-                return transitions;
-            }
-            // no inline transitions over here --> calculate using getStyle
-            transitions = {};
-            transProperty = instance.getStyle(VENDOR_TRANSITION_PROPERTY+'Property', pseudo);
-            transDuration = instance.getStyle(VENDOR_TRANSITION_PROPERTY+'Duration', pseudo);
-            transTimingFunction = instance.getStyle(VENDOR_TRANSITION_PROPERTY+'TimingFunction', pseudo);
-            transDelay = instance.getStyle(VENDOR_TRANSITION_PROPERTY+'Delay', pseudo);
-            if (transProperty) {
-                transPropertySplitted = transProperty && transProperty.split(',');
-                transDurationSplitted = transDuration.split(',');
-                transTimingFunctionSplitted = transTimingFunction.split(',');
-                transDelaySplitted = transDelay.split(',');
-                len = transPropertySplitted.length;
-                for (i=0; i<len; i++) {
-                    property = transPropertySplitted[i];
-                    duration = transTimingFunctionSplitted[i];
-                    if ((property!=='none') && (duration!=='0s')) {
-                        if (property!=='all') {
-                            property = VENDOR_CSS_PROPERTIES[property] || generateVendorCSSProp(property);
-                        }
-                        transitions[property] = {
-                            duration: parseFloat(transDurationSplitted[i]),
-                            timingFunction: duration,
-                            delay: parseFloat(transDelaySplitted[i])
-                        };
-                    }
-                }
-            }
-            return transitions;
-        };
-
-       /**
-        * Appends an Element or an Element's string-representation at the end of Element's innerHTML, or before the `refElement`.
-        *
-        * @for Element
-        * @method append
-        * @param content {Element|ElementArray|String} content to append
-        * @param [escape] {Boolean} whether to insert `escaped` content, leading it into only text inserted
-        * @param [refElement] {Element} reference Element where the content should be appended
-        * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
-        * @return {Element} the created Element (or the last when multiple)
-        * @since 0.0.1
-        */
-        ElementPrototype.append = function(content, escape, refElement, silent) {
-            var instance = this,
-                vnode = instance.vnode,
                 prevSuppress = DOCUMENT._suppressMutationEvents || false,
                 i, len, item, createdElement, vnodes, vRefElement,
             doAppend = function(oneItem) {
@@ -20973,7 +11144,7 @@ for (j=0; j<len2; j++) {
 * @since 0.0.1
 */
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../css/element.css":264,"./attribute-extractor.js":296,"./element-array.js":297,"./html-parser.js":301,"./node-parser.js":302,"./vdom-ns.js":303,"./vnode.js":304,"js-ext/extra/hashmap.js":266,"js-ext/lib/object.js":269,"js-ext/lib/promise.js":270,"js-ext/lib/string.js":271,"polyfill":282,"polyfill/extra/transition.js":277,"polyfill/extra/transitionend.js":278,"polyfill/extra/vendorCSS.js":279,"utils":283,"window-ext":289}],301:[function(require,module,exports){
+},{"../css/element.css":36,"./attribute-extractor.js":68,"./element-array.js":69,"./html-parser.js":73,"./node-parser.js":74,"./vdom-ns.js":75,"./vnode.js":76,"js-ext/extra/hashmap.js":38,"js-ext/lib/object.js":41,"js-ext/lib/promise.js":42,"js-ext/lib/string.js":43,"polyfill":54,"polyfill/extra/transition.js":49,"polyfill/extra/transitionend.js":50,"polyfill/extra/vendorCSS.js":51,"utils":55,"window-ext":61}],73:[function(require,module,exports){
 "use strict";
 
 /**
@@ -21323,11 +11494,308 @@ module.exports = function (window) {
     return htmlToVNodes;
 
 };
-},{"./attribute-extractor.js":296,"./vdom-ns.js":303,"js-ext/extra/hashmap.js":266,"js-ext/lib/object.js":269,"polyfill":282}],302:[function(require,module,exports){
-arguments[4][74][0].apply(exports,arguments)
-},{"./attribute-extractor.js":296,"./vdom-ns.js":303,"./vnode.js":304,"js-ext/extra/hashmap.js":266,"js-ext/lib/object.js":269,"polyfill":282}],303:[function(require,module,exports){
-module.exports=require(148)
-},{"js-ext/extra/hashmap.js":266,"js-ext/lib/object.js":269,"polyfill":282}],304:[function(require,module,exports){
+},{"./attribute-extractor.js":68,"./vdom-ns.js":75,"js-ext/extra/hashmap.js":38,"js-ext/lib/object.js":41,"polyfill":54}],74:[function(require,module,exports){
+"use strict";
+
+/**
+ * Exports `domNodeToVNode` which transforms dom-nodes into vnodes.
+ *
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i><br>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ * @module vdom
+ * @submodule node-parser
+ * @since 0.0.1
+*/
+
+require('polyfill');
+require('js-ext/lib/object.js');
+
+var createHashMap = require('js-ext/extra/hashmap.js').createMap;
+
+module.exports = function (window) {
+
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
+
+    if (window._ITSAmodules.NodeParser) {
+        return window._ITSAmodules.NodeParser; // NodeParser was already created
+    }
+
+    var NS = require('./vdom-ns.js')(window),
+        escapeEntities = NS.EscapeEntities,
+        extractor = require('./attribute-extractor.js')(window),
+        xmlNS = NS.xmlNS,
+        voidElements = NS.voidElements,
+        nonVoidElements = NS.nonVoidElements,
+        vNodeProto = require('./vnode.js')(window),
+        /**
+         * Transforms a dom-node into a vnode.
+         *
+         * @method domNodeToVNode
+         * @param domNode {Node} The dom-node to be transformed
+         * @param [parentVNode] {vnode} the parent-vnode that belongs to the dom-node
+         * @return {vnode} the vnode-representation of the dom-node
+         * @since 0.0.1
+         */
+        domNodeToVNode = window._ITSAmodules.NodeParser = function(domNode, parentVNode) {
+            var nodeType = domNode.nodeType,
+                vnode, attributes, attr, i, len, childNodes, domChildNode, vChildNodes, tag,
+                childVNode, extractClass, extractStyle, attributeName;
+            if (!NS.VALID_NODE_TYPES[nodeType]) {
+                // only process ElementNodes, TextNodes and CommentNodes
+                return;
+            }
+            vnode = Object.create(vNodeProto);
+
+            // set properties:
+            vnode.domNode = domNode;
+            // create circular reference:
+            vnode.domNode._vnode = vnode;
+
+            parentVNode && (vnode.ns=parentVNode.ns);
+            vnode.nodeType = nodeType;
+            vnode.vParent = parentVNode;
+
+            if (nodeType===1) {
+                // ElementNode
+                tag = vnode.tag = domNode.nodeName; // is always uppercase
+                vnode.isItag = ((tag[0]==='I') && (tag[1]==='-'));
+                vnode.ns = xmlNS[tag] || vnode.ns;
+
+                vnode.attrs = {};
+
+                attributes = domNode.attributes;
+                len = attributes.length;
+                for (i=0; i<len; i++) {
+                    attr = attributes[i];
+                    // always store the `is` attribute in lowercase:
+                    attributeName = ((attr.name.length===2) && (attr.name.toLowerCase()==='is')) ? 'is' : attr.name;
+                    vnode.attrs[attributeName] = String(attr.value);
+                }
+
+                vnode.id = vnode.attrs.id;
+
+                extractClass = extractor.extractClass(vnode.attrs['class']);
+                extractClass.attrClass && (vnode.attrs['class']=extractClass.attrClass);
+                vnode.classNames = extractClass.classNames;
+
+                extractStyle = extractor.extractStyle(vnode.attrs.style);
+                extractStyle.attrStyle && (vnode.attrs.style=extractStyle.attrStyle);
+                vnode.styles = extractStyle.styles;
+
+                if (voidElements[tag]) {
+                    vnode.isVoid = true;
+                }
+                else if (nonVoidElements[tag]) {
+                    vnode.isVoid = false;
+                }
+                else {
+                    (vnode.isVoid=!(new RegExp('</'+tag+'>$', 'i')).test(domNode.outerHTML)) ? (voidElements[tag]=true) : (nonVoidElements[tag]=true);
+                }
+
+                if (!vnode.isVoid) {
+                    // in case of 'SCRIPT' or 'STYLE' tags --> just use the innertext, all other tags need to be extracted
+                    if (NS.SCRIPT_OR_STYLE_TAG[tag]) {
+                        vnode.text = domNode.textContent;
+                    }
+                    else {
+                        vChildNodes = vnode.vChildNodes = [];
+                        childNodes = domNode.childNodes;
+                        len = childNodes.length;
+                        for (i=0; i<len; i++) {
+                            domChildNode = childNodes[i];
+                            childVNode = domNodeToVNode(domChildNode, vnode);
+                            vChildNodes[vChildNodes.length] = childVNode;
+                        }
+                    }
+                }
+            }
+            else {
+                // TextNode or CommentNode
+                vnode.text = escapeEntities(domNode.nodeValue);
+            }
+            // store vnode's id:
+            vnode.storeId();
+            return vnode;
+        };
+
+    return domNodeToVNode;
+
+};
+},{"./attribute-extractor.js":68,"./vdom-ns.js":75,"./vnode.js":76,"js-ext/extra/hashmap.js":38,"js-ext/lib/object.js":41,"polyfill":54}],75:[function(require,module,exports){
+/**
+ * Creates a Namespace that can be used accros multiple vdom-modules to share information.
+ *
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+ * <br>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ *
+ * @module vdom
+ * @submodule vdom-ns
+ * @class NS-vdom
+ * @since 0.0.1
+*/
+
+"use strict";
+
+require('js-ext/lib/object.js');
+require('polyfill');
+
+var createHashMap = require('js-ext/extra/hashmap.js').createMap,
+    // for escaping entoties inside domNode.nodeValue, we need this trick: https://code.google.com/p/jslibs/wiki/JavascriptTips
+/*jshint proto:true */
+    ENTITY_TO_CODE = { __proto__: null,
+        apos:0x0027,quot:0x0022,amp:0x0026,lt:0x003C,gt:0x003E,nbsp:0x00A0,iexcl:0x00A1,cent:0x00A2,pound:0x00A3,
+        curren:0x00A4,yen:0x00A5,brvbar:0x00A6,sect:0x00A7,uml:0x00A8,copy:0x00A9,ordf:0x00AA,laquo:0x00AB,
+        not:0x00AC,shy:0x00AD,reg:0x00AE,macr:0x00AF,deg:0x00B0,plusmn:0x00B1,sup2:0x00B2,sup3:0x00B3,
+        acute:0x00B4,micro:0x00B5,para:0x00B6,middot:0x00B7,cedil:0x00B8,sup1:0x00B9,ordm:0x00BA,raquo:0x00BB,
+        frac14:0x00BC,frac12:0x00BD,frac34:0x00BE,iquest:0x00BF,Agrave:0x00C0,Aacute:0x00C1,Acirc:0x00C2,Atilde:0x00C3,
+        Auml:0x00C4,Aring:0x00C5,AElig:0x00C6,Ccedil:0x00C7,Egrave:0x00C8,Eacute:0x00C9,Ecirc:0x00CA,Euml:0x00CB,
+        Igrave:0x00CC,Iacute:0x00CD,Icirc:0x00CE,Iuml:0x00CF,ETH:0x00D0,Ntilde:0x00D1,Ograve:0x00D2,Oacute:0x00D3,
+        Ocirc:0x00D4,Otilde:0x00D5,Ouml:0x00D6,times:0x00D7,Oslash:0x00D8,Ugrave:0x00D9,Uacute:0x00DA,Ucirc:0x00DB,
+        Uuml:0x00DC,Yacute:0x00DD,THORN:0x00DE,szlig:0x00DF,agrave:0x00E0,aacute:0x00E1,acirc:0x00E2,atilde:0x00E3,
+        auml:0x00E4,aring:0x00E5,aelig:0x00E6,ccedil:0x00E7,egrave:0x00E8,eacute:0x00E9,ecirc:0x00EA,euml:0x00EB,
+        igrave:0x00EC,iacute:0x00ED,icirc:0x00EE,iuml:0x00EF,eth:0x00F0,ntilde:0x00F1,ograve:0x00F2,oacute:0x00F3,
+        ocirc:0x00F4,otilde:0x00F5,ouml:0x00F6,divide:0x00F7,oslash:0x00F8,ugrave:0x00F9,uacute:0x00FA,ucirc:0x00FB,
+        uuml:0x00FC,yacute:0x00FD,thorn:0x00FE,yuml:0x00FF,OElig:0x0152,oelig:0x0153,Scaron:0x0160,scaron:0x0161,
+        Yuml:0x0178,fnof:0x0192,circ:0x02C6,tilde:0x02DC,Alpha:0x0391,Beta:0x0392,Gamma:0x0393,Delta:0x0394,
+        Epsilon:0x0395,Zeta:0x0396,Eta:0x0397,Theta:0x0398,Iota:0x0399,Kappa:0x039A,Lambda:0x039B,Mu:0x039C,
+        Nu:0x039D,Xi:0x039E,Omicron:0x039F,Pi:0x03A0,Rho:0x03A1,Sigma:0x03A3,Tau:0x03A4,Upsilon:0x03A5,
+        Phi:0x03A6,Chi:0x03A7,Psi:0x03A8,Omega:0x03A9,alpha:0x03B1,beta:0x03B2,gamma:0x03B3,delta:0x03B4,
+        epsilon:0x03B5,zeta:0x03B6,eta:0x03B7,theta:0x03B8,iota:0x03B9,kappa:0x03BA,lambda:0x03BB,mu:0x03BC,
+        nu:0x03BD,xi:0x03BE,omicron:0x03BF,pi:0x03C0,rho:0x03C1,sigmaf:0x03C2,sigma:0x03C3,tau:0x03C4,
+        upsilon:0x03C5,phi:0x03C6,chi:0x03C7,psi:0x03C8,omega:0x03C9,thetasym:0x03D1,upsih:0x03D2,piv:0x03D6,
+        ensp:0x2002,emsp:0x2003,thinsp:0x2009,zwnj:0x200C,zwj:0x200D,lrm:0x200E,rlm:0x200F,ndash:0x2013,
+        mdash:0x2014,lsquo:0x2018,rsquo:0x2019,sbquo:0x201A,ldquo:0x201C,rdquo:0x201D,bdquo:0x201E,dagger:0x2020,
+        Dagger:0x2021,bull:0x2022,hellip:0x2026,permil:0x2030,prime:0x2032,Prime:0x2033,lsaquo:0x2039,rsaquo:0x203A,
+        oline:0x203E,frasl:0x2044,euro:0x20AC,image:0x2111,weierp:0x2118,real:0x211C,trade:0x2122,alefsym:0x2135,
+        larr:0x2190,uarr:0x2191,rarr:0x2192,darr:0x2193,harr:0x2194,crarr:0x21B5,lArr:0x21D0,uArr:0x21D1,
+        rArr:0x21D2,dArr:0x21D3,hArr:0x21D4,forall:0x2200,part:0x2202,exist:0x2203,empty:0x2205,nabla:0x2207,
+        isin:0x2208,notin:0x2209,ni:0x220B,prod:0x220F,sum:0x2211,minus:0x2212,lowast:0x2217,radic:0x221A,
+        prop:0x221D,infin:0x221E,ang:0x2220,and:0x2227,or:0x2228,cap:0x2229,cup:0x222A,int:0x222B,
+        there4:0x2234,sim:0x223C,cong:0x2245,asymp:0x2248,ne:0x2260,equiv:0x2261,le:0x2264,ge:0x2265,
+        sub:0x2282,sup:0x2283,nsub:0x2284,sube:0x2286,supe:0x2287,oplus:0x2295,otimes:0x2297,perp:0x22A5,
+        sdot:0x22C5,lceil:0x2308,rceil:0x2309,lfloor:0x230A,rfloor:0x230B,lang:0x2329,rang:0x232A,loz:0x25CA,
+        spades:0x2660,clubs:0x2663,hearts:0x2665,diams:0x2666
+    },
+/*jshint proto:false */
+    charToEntity = {},
+    entityName;
+
+for (entityName in ENTITY_TO_CODE) {
+    charToEntity[String.fromCharCode(ENTITY_TO_CODE[entityName])] = entityName;
+}
+
+module.exports = function (window) {
+    var NS;
+
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
+
+    if (window._ITSAmodules.VDOM_NS) {
+        return window._ITSAmodules.VDOM_NS; // VDOM_NS was already created
+    }
+
+    NS = window._ITSAmodules.VDOM_NS = createHashMap();
+
+    /**
+     * Reference to the VElement of document.body (gets its value as soon as it gets refered to)
+     *
+     * @property body
+     * @default null
+     * @type VElement
+     * @since 0.0.1
+     */
+    NS.body = null;
+
+    NS.xmlNS = createHashMap({
+        SVG: 'http://www.w3.org/2000/svg',
+        XBL: 'http://www.mozilla.org/xbl',
+        XUL: 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul',
+        MATH: 'http://www.w3.org/1998/Math/MathML',
+        XLINK: 'http://www.w3.org/1999/xlink'
+    });
+
+    /**
+     * A hash with all node'ids (of all the domnodes that have an id). The value is a reference to an VElement.
+     *
+     * @property nodeids
+     * @default {}
+     * @type Object
+     * @since 0.0.1
+     */
+    NS.nodeids || (NS.nodeids=createHashMap());
+
+    /**
+     * A hash with all encountered non-void Elements
+     *
+     * @property nonVoidElements
+     * @default {}
+     * @type Object
+     * @since 0.0.1
+     */
+    NS.nonVoidElements || (NS.nonVoidElements=createHashMap());
+
+    /**
+     * A hash to identify what tagNames are equal to `SCRIPT` or `STYLE`.
+     *
+     * @property SCRIPT_OR_STYLE_TAG
+     * @default {SCRIPT: true, STYLE: true}
+     * @type Object
+     * @since 0.0.1
+     */
+    NS.SCRIPT_OR_STYLE_TAG = createHashMap({
+        SCRIPT: true,
+        STYLE: true
+    });
+
+    /**
+     * A hash with all nodeTypes that should be captured by the vDOM.
+     *
+     * @property VALID_NODE_TYPES
+     * @default {1: true, 3: true, 8: true}
+     * @type Object
+     * @since 0.0.1
+     */
+    NS.VALID_NODE_TYPES = createHashMap({
+        1: true,
+        3: true,
+        8: true
+    });
+
+    /**
+     * A hash with all encountered void Elements
+     *
+     * @property voidElements
+     * @default {}
+     * @type Object
+     * @since 0.0.1
+     */
+    NS.voidElements || (NS.voidElements=createHashMap());
+
+    NS.UnescapeEntities = function(str) {
+        return str.replace(
+            /&(.+?);/g,
+            function(str, ent) {
+                return String.fromCharCode( ent[0]!=='#' ? ENTITY_TO_CODE[ent] : (ent[1]==='x' ? parseInt(ent.substr(2),16) : parseInt(ent.substr(1)) ) );
+            }
+        );
+    };
+
+    NS.EscapeEntities = function(str) {
+        return str.replace(
+            /[^\x20-\x7E]/g,
+            function(str) {
+                return charToEntity[str] ? '&'+charToEntity[str]+';' : str;
+            }
+        );
+    };
+
+    return NS;
+};
+},{"js-ext/extra/hashmap.js":38,"js-ext/lib/object.js":41,"polyfill":54}],76:[function(require,module,exports){
 "use strict";
 
 /**
@@ -21380,7 +11848,7 @@ module.exports = function (window) {
 
         // cleanup memory after 1 minute: removed nodes SHOULD NOT be accessed afterwards
         // because vnode would be recalculated and might be different from before
-        DESTROY_DELAY = 3000,
+        DESTROY_DELAY = 60000,
 
         unescapeEntities = NS.UnescapeEntities,
         NTH_CHILD_REGEXP = /^(?:(\d*)[n|N])([\+|\-](\d+))?$/, // an+b
@@ -22192,7 +12660,6 @@ module.exports = function (window) {
         for (i=0; i<len; i++) {
             vChild = children[i];
             vChild._emit(EV_REMOVED);
-            _emitDestroyChildren(vChild);
         }
     };
 
@@ -22572,7 +13039,13 @@ module.exports = function (window) {
                 vChildNodes = instance.vChildNodes,
                 len, i, vChildNode, vParent, treeNodes;
             if (!instance.destroyed) {
-                silent || instance._emit(EV_REMOVED);
+                if (!silent) {
+                    // Because we don't wannt to hold down UI-experience (many descendant nodes may be removed),
+                    // we generate EV_REMOVED emission in a future eventcycle:
+                    later(function() {
+                        instance._emit(EV_REMOVED);
+                    }, 5);
+                }
                 Object.protectedProp(instance, 'destroyed', true);
 
                 // first: determine the dom-tree, which module `event-dom` needs to determine where the node was before it was destroyed:
@@ -22697,6 +13170,8 @@ module.exports = function (window) {
             }
             silent = !!DOCUMENT._suppressMutationEvents;
             if (!silent && !instance.destroyed) {
+                // Because we don't wannt to hold down UI-experience (many descendant nodes may be removed),
+                // we generate EV_REMOVED emission in a future eventcycle:
                 mutationEvents = MUTATION_EVENTS.get(instance) || {};
                 if (attribute) {
                     attrMutations = mutationEvents[evt] || [];
@@ -22721,13 +13196,10 @@ module.exports = function (window) {
                     mutationEvents[evt] = true;
                 }
                 MUTATION_EVENTS.set(instance, mutationEvents);
+
                 // now set all parent to have a nodecontentchange:
-                vParent = instance;
-/*jshint boss:true */
-                while (vParent=vParent.vParent) {
-/*jshint boss:false */
-                    vParent._emit(EV_CONTENT_CHANGE);
-                }
+                vParent = instance.vParent;
+                vParent && vParent._emit(EV_CONTENT_CHANGE);
 
                 // in case of removal we need to emit EV_REMOVED for all children right now
                 // for they will be actually removed silently after a delay of 1 minute
@@ -23149,9 +13621,6 @@ module.exports = function (window) {
                 if (i < newLength) {
                     newChild = newVChildNodes[i];
                     newChild.vParent || (newChild.vParent=instance);
-
-console.info('switch: '+NODESWITCH[oldChild.nodeType][newChild.nodeType]);
-
 /*jshint boss:true */
                     switch (nodeswitch=NODESWITCH[oldChild.nodeType][newChild.nodeType]) {
 /*jshint boss:false */
@@ -23183,7 +13652,6 @@ console.info('switch: '+NODESWITCH[oldChild.nodeType][newChild.nodeType]);
                                     // we might need to set the class `itag-rendered` when the attributeData says so:
                                     // this happens when an itag gets refreshed with an unrendered definition
                                     if (oldChild._data.itagRendered && !newChild.hasClass('itag-rendered')) {
-console.info('redefine the .itsa-rendered class');
                                         newChild.classNames['itag-rendered'] = true;
                                         if (newChild.attrs[CLASS]) {
                                             newChild.attrs[CLASS] = newChild.attrs[CLASS] + ' '+'itag-rendered';
@@ -23219,7 +13687,6 @@ console.info('redefine the .itsa-rendered class');
                                     DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(prevSuppress);
                                 }
                                 else {
-console.info(oldChild.tag+' going to set childnodes');
                                     oldChild._setAttrs(newChild.attrs);
                                     // next: sync the vChildNodes:
                                     oldChild._setChildNodes(newChild.vChildNodes);
@@ -23295,7 +13762,6 @@ console.info(oldChild.tag+' going to set childnodes');
             for (i = len; i < newLength; i++) {
                 newChild = newVChildNodes[i];
                 newChild.vParent = instance;
-console.info('adding nodeswith nodeType: '+newChild.nodeType);
                 switch (newChild.nodeType) {
                     case 1: // Element
                         bkpAttrs = newChild.attrs;
@@ -23839,9 +14305,5451 @@ console.info('adding nodeswith nodeType: '+newChild.nodeType);
     return vNodeProto;
 
 };
-},{"./attribute-extractor.js":296,"./html-parser.js":301,"./vdom-ns.js":303,"js-ext/extra/hashmap.js":266,"js-ext/extra/lightmap.js":267,"js-ext/lib/array.js":268,"js-ext/lib/object.js":269,"js-ext/lib/string.js":271,"polyfill":282,"utils/lib/timers.js":285}],305:[function(require,module,exports){
-arguments[4][77][0].apply(exports,arguments)
-},{"./partials/element-plugin.js":298,"./partials/extend-document.js":299,"./partials/extend-element.js":300,"./partials/node-parser.js":302,"js-ext/extra/hashmap.js":266,"js-ext/lib/object.js":269}],306:[function(require,module,exports){
+},{"./attribute-extractor.js":68,"./html-parser.js":73,"./vdom-ns.js":75,"js-ext/extra/hashmap.js":38,"js-ext/extra/lightmap.js":39,"js-ext/lib/array.js":40,"js-ext/lib/object.js":41,"js-ext/lib/string.js":43,"polyfill":54,"utils/lib/timers.js":57}],77:[function(require,module,exports){
+"use strict";
+
+require('js-ext/lib/object.js');
+
+var createHashMap = require('js-ext/extra/hashmap.js').createMap;
+
+module.exports = function (window) {
+
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
+
+    if (window._ITSAmodules.VDOM) {
+        return window._ITSAmodules.VDOM; // VDOM was already created
+    }
+
+    var DOCUMENT = window.document, vdom;
+
+    if (DOCUMENT.doctype.name==='html') {
+        require('./partials/extend-element.js')(window);
+        require('./partials/extend-document.js')(window);
+        // now parsing and virtualize the complete DOM:
+        require('./partials/node-parser.js')(window)(DOCUMENT.documentElement);
+        vdom = {
+            Plugins: require('./partials/element-plugin.js')(window)
+        };
+        // if there is any Element with inline `transform` that is not compatible with the current browser:
+        // we can revert it into the right `transform`, because the vdom knows the right transform-name:
+        DOCUMENT.getAll('[style*="transform:"]').forEach(function(node) {
+            var vnode = node.vnode,
+                rightStyle = vnode.attrs.style;
+            // delete current definition, so that reset will do an update:
+            delete vnode.attrs.style;
+            // now reset:
+            vnode._setAttr('style', rightStyle);
+        });
+    }
+    else {
+        // if no HTML, then return an empty Plugin-object
+        vdom = {Plugins: {}};
+    }
+
+    window._ITSAmodules.VDOM = vdom;
+
+    return vdom;
+};
+},{"./partials/element-plugin.js":70,"./partials/extend-document.js":71,"./partials/extend-element.js":72,"./partials/node-parser.js":74,"js-ext/extra/hashmap.js":38,"js-ext/lib/object.js":41}],78:[function(require,module,exports){
+"use strict";
+
+/**
+ * Integrates mobile-events to event-dom. more about DOM-events:
+ * http://www.smashingmagazine.com/2013/11/12/an-introduction-to-dom-events/
+ *
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ * @example
+ * Event = require('event-mobile')(window);
+ *
+ * @module event
+ * @submodule event-mobile
+ * @class Event
+ * @since 0.0.1
+*/
+
+var NAME = '[event-mobile]: ';
+
+module.exports = function (window) {
+    /**
+     * The (only) Hammer-instance that `Event` uses. It is bound to the `body`-element.
+     *
+     * @property hammertime
+     * @type Hammer-instance
+     * @since 0.0.1
+     */
+    var Event = require('event-dom')(window),
+        document = window.document,
+        Hammer = require('./lib/hammer-2.0.4.js')(window),
+        hammertime = Event.hammertime = new Hammer(document.body),
+        singletap, doubletap, tripletap;
+
+    if (window._ITSAmodules.EventMobile) {
+        return Event; // Event was already extended
+    }
+
+    // create reference to the HammerClass:
+    /**
+     * Adds the `Hammer`-class to Event, so it can be used from within Event.
+     *
+     * @property Hammer
+     * @type Hammer
+     * @since 0.0.1
+     */
+    Event.Hammer = Hammer;
+
+    // now we extend HammerJS with 2 events: doubletap and tripletap:
+    doubletap = new Hammer.Tap({ event: 'doubletap', taps: 2 });
+    tripletap = new Hammer.Tap({ event: 'tripletap', taps: 3 });
+    hammertime.add([
+        doubletap,
+        tripletap
+    ]);
+
+    // we want to recognize this simulatenous, so a doubletap and trippletap will be detected even while a tap has been recognized.
+    // the tap event will be emitted on every tap
+    singletap = hammertime.get('tap');
+    doubletap.recognizeWith(singletap);
+    tripletap.recognizeWith([doubletap, singletap]);
+
+    // patch Hammer.Manager.prototype.emit --> it shouldn't emit to its own listeners,
+    // but to our eventsystem. Inspired from Jorik Tangelder's own jquery plugin: https://github.com/hammerjs/jquery.hammer.js
+    Hammer.Manager.prototype.emit = function(type, data) {
+        if (type==='hammer.input') {
+            return;
+        }
+        console.log(NAME, 'emit '+type);
+        // label the eventobject by being a Hammer-event
+        // is not being used internally, but we would like
+        // to inform the subscribers
+        data._isHammer = true;
+        data.type = type;
+
+        // Emitting 'ParcelaEvent:eventmobile' --> its defaultFn is defined inside `event-dom`
+        // which will transport the event through the special dom-cycle
+        /**
+         * Is emitted whenever hammerjs detects a gestureevent.
+         * By emitting its original event through ParcelaEvent:eventmobile, `event-dom`
+         * will catch it and process it through the dom-event cycle.
+         *
+         * @event ParcelaEvent:eventmobile
+         * @param e {Object} eventobject
+         * @since 0.1
+        **/
+        Event._domCallback(data);
+    };
+
+    Hammer.Manager.prototype.set = (function(originalSet) {
+        return function(options) {
+            delete options.domEvents; // we don't want the user make Hammer fire domevents
+            originalSet.call(this, options);
+        };
+    })(Hammer.Manager.prototype.set);
+
+    // store module:
+    window._ITSAmodules.EventMobile = Event;
+
+    return Event;
+};
+
+},{"./lib/hammer-2.0.4.js":79,"event-dom":80}],79:[function(require,module,exports){
+/* Changes mad to native hammerjs:
+ *
+ * Wrapped "(function(window, DOCUMENT, exportName, undefined) {"
+ * is replaced by wrapped: "module.exports = function (window) {" and "return Hammer;"
+ *
+ * Created variables: DOCUMENT=window.DOCUMENT and exportName='Hammer'
+ * replaced 'DOCUMENT' by DOCUMENT furtheron in the code (ondly while word and case-sensitive)
+ *
+ * required laterSilent = require('utils').laterSilent
+ * Changed the function "setTimeoutContext" into using laterSilent instead of setTimeout
+*/
+
+module.exports = function (window) {
+
+    'use strict';
+    var DOCUMENT = window.document,
+        exportName = 'Hammer',
+        laterSilent = require('utils').laterSilent,
+        VENDOR_PREFIXES = ['', 'webkit', 'moz', 'MS', 'ms', 'o'],
+        TEST_ELEMENT = DOCUMENT.createElement('div'),
+        TYPE_FUNCTION = 'function',
+        round = Math.round,
+        abs = Math.abs,
+        now = Date.now;
+
+    /**
+     * set a timeout with a given scope
+     * @param {Function} fn
+     * @param {Number} timeout
+     * @param {Object} context
+     * @returns {number}
+     */
+    function setTimeoutContext(fn, timeout, context) {
+        return laterSilent(bindFn(fn, context), timeout);
+    }
+
+    /**
+     * if the argument is an array, we want to execute the fn on each entry
+     * if it aint an array we don't want to do a thing.
+     * this is used by all the methods that accept a single and array argument.
+     * @param {*|Array} arg
+     * @param {String} fn
+     * @param {Object} [context]
+     * @returns {Boolean}
+     */
+    function invokeArrayArg(arg, fn, context) {
+        if (Array.isArray(arg)) {
+            each(arg, context[fn], context);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * walk objects and arrays
+     * @param {Object} obj
+     * @param {Function} iterator
+     * @param {Object} context
+     */
+    function each(obj, iterator, context) {
+        var i;
+
+        if (!obj) {
+            return;
+        }
+
+        if (obj.forEach) {
+            obj.forEach(iterator, context);
+        } else if (obj.length !== undefined) {
+            i = 0;
+            while (i < obj.length) {
+                iterator.call(context, obj[i], i, obj);
+                i++;
+            }
+        } else {
+            for (i in obj) {
+                obj.hasOwnProperty(i) && iterator.call(context, obj[i], i, obj);
+            }
+        }
+    }
+
+    /**
+     * extend object.
+     * means that properties in dest will be overwritten by the ones in src.
+     * @param {Object} dest
+     * @param {Object} src
+     * @param {Boolean} [merge]
+     * @returns {Object} dest
+     */
+    function extend(dest, src, merge) {
+        var keys = Object.keys(src);
+        var i = 0;
+        while (i < keys.length) {
+            if (!merge || (merge && dest[keys[i]] === undefined)) {
+                dest[keys[i]] = src[keys[i]];
+            }
+            i++;
+        }
+        return dest;
+    }
+
+    /**
+     * merge the values from src in the dest.
+     * means that properties that exist in dest will not be overwritten by src
+     * @param {Object} dest
+     * @param {Object} src
+     * @returns {Object} dest
+     */
+    function merge(dest, src) {
+        return extend(dest, src, true);
+    }
+
+    /**
+     * simple class inheritance
+     * @param {Function} child
+     * @param {Function} base
+     * @param {Object} [properties]
+     */
+    function inherit(child, base, properties) {
+        var baseP = base.prototype,
+            childP;
+
+        childP = child.prototype = Object.create(baseP);
+        childP.constructor = child;
+        childP._super = baseP;
+
+        if (properties) {
+            extend(childP, properties);
+        }
+    }
+
+    /**
+     * simple function bind
+     * @param {Function} fn
+     * @param {Object} context
+     * @returns {Function}
+     */
+    function bindFn(fn, context) {
+        return function boundFn() {
+            return fn.apply(context, arguments);
+        };
+    }
+
+    /**
+     * let a boolean value also be a function that must return a boolean
+     * this first item in args will be used as the context
+     * @param {Boolean|Function} val
+     * @param {Array} [args]
+     * @returns {Boolean}
+     */
+    function boolOrFn(val, args) {
+        if (typeof val == TYPE_FUNCTION) {
+            return val.apply(args ? args[0] || undefined : undefined, args);
+        }
+        return val;
+    }
+
+    /**
+     * use the val2 when val1 is undefined
+     * @param {*} val1
+     * @param {*} val2
+     * @returns {*}
+     */
+    function ifUndefined(val1, val2) {
+        return (val1 === undefined) ? val2 : val1;
+    }
+
+    /**
+     * addEventListener with multiple events at once
+     * @param {EventTarget} target
+     * @param {String} types
+     * @param {Function} handler
+     */
+    function addEventListeners(target, types, handler) {
+        each(splitStr(types), function(type) {
+            target.addEventListener(type, handler, false);
+        });
+    }
+
+    /**
+     * removeEventListener with multiple events at once
+     * @param {EventTarget} target
+     * @param {String} types
+     * @param {Function} handler
+     */
+    function removeEventListeners(target, types, handler) {
+        each(splitStr(types), function(type) {
+            target.removeEventListener(type, handler, false);
+        });
+    }
+
+    /**
+     * find if a node is in the given parent
+     * @method hasParent
+     * @param {HTMLElement} node
+     * @param {HTMLElement} parent
+     * @return {Boolean} found
+     */
+    function hasParent(node, parent) {
+        while (node) {
+            if (node == parent) {
+                return true;
+            }
+            node = node.parentNode;
+        }
+        return false;
+    }
+
+    /**
+     * small indexOf wrapper
+     * @param {String} str
+     * @param {String} find
+     * @returns {Boolean} found
+     */
+    function inStr(str, find) {
+        return str.indexOf(find) > -1;
+    }
+
+    /**
+     * split string on whitespace
+     * @param {String} str
+     * @returns {Array} words
+     */
+    function splitStr(str) {
+        return str.trim().split(/\s+/g);
+    }
+
+    /**
+     * find if a array contains the object using indexOf or a simple polyFill
+     * @param {Array} src
+     * @param {String} find
+     * @param {String} [findByKey]
+     * @return {Boolean|Number} false when not found, or the index
+     */
+    function inArray(src, find, findByKey) {
+        if (src.indexOf && !findByKey) {
+            return src.indexOf(find);
+        } else {
+            var i = 0;
+            while (i < src.length) {
+                if ((findByKey && src[i][findByKey] == find) || (!findByKey && src[i] === find)) {
+                    return i;
+                }
+                i++;
+            }
+            return -1;
+        }
+    }
+
+    /**
+     * convert array-like objects to real arrays
+     * @param {Object} obj
+     * @returns {Array}
+     */
+    function toArray(obj) {
+        return Array.prototype.slice.call(obj, 0);
+    }
+
+    /**
+     * unique array with objects based on a key (like 'id') or just by the array's value
+     * @param {Array} src [{id:1},{id:2},{id:1}]
+     * @param {String} [key]
+     * @param {Boolean} [sort=False]
+     * @returns {Array} [{id:1},{id:2}]
+     */
+    function uniqueArray(src, key, sort) {
+        var results = [];
+        var values = [];
+        var i = 0;
+
+        while (i < src.length) {
+            var val = key ? src[i][key] : src[i];
+            if (inArray(values, val) < 0) {
+                results.push(src[i]);
+            }
+            values[i] = val;
+            i++;
+        }
+
+        if (sort) {
+            if (!key) {
+                results = results.sort();
+            } else {
+                results = results.sort(function sortUniqueArray(a, b) {
+                    return a[key] > b[key];
+                });
+            }
+        }
+
+        return results;
+    }
+
+    /**
+     * get the prefixed property
+     * @param {Object} obj
+     * @param {String} property
+     * @returns {String|Undefined} prefixed
+     */
+    function prefixed(obj, property) {
+        var prefix, prop;
+        var camelProp = property[0].toUpperCase() + property.slice(1);
+
+        var i = 0;
+        while (i < VENDOR_PREFIXES.length) {
+            prefix = VENDOR_PREFIXES[i];
+            prop = (prefix) ? prefix + camelProp : property;
+
+            if (prop in obj) {
+                return prop;
+            }
+            i++;
+        }
+        return undefined;
+    }
+
+    /**
+     * get a unique id
+     * @returns {number} uniqueId
+     */
+    var _uniqueId = 1;
+    function uniqueId() {
+        return _uniqueId++;
+    }
+
+    /**
+     * get the window object of an element
+     * @param {HTMLElement} element
+     * @returns {DocumentView|Window}
+     */
+    function getWindowForElement(element) {
+        var doc = element.ownerDocument;
+        return (doc.defaultView || doc.parentWindow);
+    }
+
+    var MOBILE_REGEX = /mobile|tablet|ip(ad|hone|od)|android/i;
+
+    var SUPPORT_TOUCH = ('ontouchstart' in window);
+    var SUPPORT_POINTER_EVENTS = prefixed(window, 'PointerEvent') !== undefined;
+    var SUPPORT_ONLY_TOUCH = SUPPORT_TOUCH && MOBILE_REGEX.test(navigator.userAgent);
+
+    var INPUT_TYPE_TOUCH = 'touch';
+    var INPUT_TYPE_PEN = 'pen';
+    var INPUT_TYPE_MOUSE = 'mouse';
+    var INPUT_TYPE_KINECT = 'kinect';
+
+    var COMPUTE_INTERVAL = 25;
+
+    var INPUT_START = 1;
+    var INPUT_MOVE = 2;
+    var INPUT_END = 4;
+    var INPUT_CANCEL = 8;
+
+    var DIRECTION_NONE = 1;
+    var DIRECTION_LEFT = 2;
+    var DIRECTION_RIGHT = 4;
+    var DIRECTION_UP = 8;
+    var DIRECTION_DOWN = 16;
+
+    var DIRECTION_HORIZONTAL = DIRECTION_LEFT | DIRECTION_RIGHT;
+    var DIRECTION_VERTICAL = DIRECTION_UP | DIRECTION_DOWN;
+    var DIRECTION_ALL = DIRECTION_HORIZONTAL | DIRECTION_VERTICAL;
+
+    var PROPS_XY = ['x', 'y'];
+    var PROPS_CLIENT_XY = ['clientX', 'clientY'];
+
+    /**
+     * create new input type manager
+     * @param {Manager} manager
+     * @param {Function} callback
+     * @returns {Input}
+     * @constructor
+     */
+    function Input(manager, callback) {
+        var self = this;
+        this.manager = manager;
+        this.callback = callback;
+        this.element = manager.element;
+        this.target = manager.options.inputTarget;
+
+        // smaller wrapper around the handler, for the scope and the enabled state of the manager,
+        // so when disabled the input events are completely bypassed.
+        this.domHandler = function(ev) {
+            if (boolOrFn(manager.options.enable, [manager])) {
+                self.handler(ev);
+            }
+        };
+
+        this.init();
+
+    }
+
+    Input.prototype = {
+        /**
+         * should handle the inputEvent data and trigger the callback
+         * @virtual
+         */
+        handler: function() { },
+
+        /**
+         * bind the events
+         */
+        init: function() {
+            this.evEl && addEventListeners(this.element, this.evEl, this.domHandler);
+            this.evTarget && addEventListeners(this.target, this.evTarget, this.domHandler);
+            this.evWin && addEventListeners(getWindowForElement(this.element), this.evWin, this.domHandler);
+        },
+
+        /**
+         * unbind the events
+         */
+        destroy: function() {
+            this.evEl && removeEventListeners(this.element, this.evEl, this.domHandler);
+            this.evTarget && removeEventListeners(this.target, this.evTarget, this.domHandler);
+            this.evWin && removeEventListeners(getWindowForElement(this.element), this.evWin, this.domHandler);
+        }
+    };
+
+    /**
+     * create new input type manager
+     * called by the Manager constructor
+     * @param {Hammer} manager
+     * @returns {Input}
+     */
+    function createInputInstance(manager) {
+        var Type;
+        var inputClass = manager.options.inputClass;
+
+        if (inputClass) {
+            Type = inputClass;
+        } else if (SUPPORT_POINTER_EVENTS) {
+            Type = PointerEventInput;
+        } else if (SUPPORT_ONLY_TOUCH) {
+            Type = TouchInput;
+        } else if (!SUPPORT_TOUCH) {
+            Type = MouseInput;
+        } else {
+            Type = TouchMouseInput;
+        }
+        return new (Type)(manager, inputHandler);
+    }
+
+    /**
+     * handle input events
+     * @param {Manager} manager
+     * @param {String} eventType
+     * @param {Object} input
+     */
+    function inputHandler(manager, eventType, input) {
+        var pointersLen = input.pointers.length;
+        var changedPointersLen = input.changedPointers.length;
+        var isFirst = (eventType & INPUT_START && (pointersLen - changedPointersLen === 0));
+        var isFinal = (eventType & (INPUT_END | INPUT_CANCEL) && (pointersLen - changedPointersLen === 0));
+
+        input.isFirst = !!isFirst;
+        input.isFinal = !!isFinal;
+
+        if (isFirst) {
+            manager.session = {};
+        }
+
+        // source event is the normalized value of the domEvents
+        // like 'touchstart, mouseup, pointerdown'
+        input.eventType = eventType;
+
+        // compute scale, rotation etc
+        computeInputData(manager, input);
+
+        // emit secret event
+        manager.emit('hammer.input', input);
+
+        manager.recognize(input);
+        manager.session.prevInput = input;
+    }
+
+    /**
+     * extend the data with some usable properties like scale, rotate, velocity etc
+     * @param {Object} manager
+     * @param {Object} input
+     */
+    function computeInputData(manager, input) {
+        var session = manager.session;
+        var pointers = input.pointers;
+        var pointersLength = pointers.length;
+
+        // store the first input to calculate the distance and direction
+        if (!session.firstInput) {
+            session.firstInput = simpleCloneInputData(input);
+        }
+
+        // to compute scale and rotation we need to store the multiple touches
+        if (pointersLength > 1 && !session.firstMultiple) {
+            session.firstMultiple = simpleCloneInputData(input);
+        } else if (pointersLength === 1) {
+            session.firstMultiple = false;
+        }
+
+        var firstInput = session.firstInput;
+        var firstMultiple = session.firstMultiple;
+        var offsetCenter = firstMultiple ? firstMultiple.center : firstInput.center;
+
+        var center = input.center = getCenter(pointers);
+        input.timeStamp = now();
+        input.deltaTime = input.timeStamp - firstInput.timeStamp;
+
+        input.angle = getAngle(offsetCenter, center);
+        input.distance = getDistance(offsetCenter, center);
+
+        computeDeltaXY(session, input);
+        input.offsetDirection = getDirection(input.deltaX, input.deltaY);
+
+        input.scale = firstMultiple ? getScale(firstMultiple.pointers, pointers) : 1;
+        input.rotation = firstMultiple ? getRotation(firstMultiple.pointers, pointers) : 0;
+
+        computeIntervalInputData(session, input);
+
+        // find the correct target
+        var target = manager.element;
+        if (hasParent(input.srcEvent.target, target)) {
+            target = input.srcEvent.target;
+        }
+        input.target = target;
+    }
+
+    function computeDeltaXY(session, input) {
+        var center = input.center;
+        var offset = session.offsetDelta || {};
+        var prevDelta = session.prevDelta || {};
+        var prevInput = session.prevInput || {};
+
+        if (input.eventType === INPUT_START || prevInput.eventType === INPUT_END) {
+            prevDelta = session.prevDelta = {
+                x: prevInput.deltaX || 0,
+                y: prevInput.deltaY || 0
+            };
+
+            offset = session.offsetDelta = {
+                x: center.x,
+                y: center.y
+            };
+        }
+
+        input.deltaX = prevDelta.x + (center.x - offset.x);
+        input.deltaY = prevDelta.y + (center.y - offset.y);
+    }
+
+    /**
+     * velocity is calculated every x ms
+     * @param {Object} session
+     * @param {Object} input
+     */
+    function computeIntervalInputData(session, input) {
+        var last = session.lastInterval || input,
+            deltaTime = input.timeStamp - last.timeStamp,
+            velocity, velocityX, velocityY, direction;
+
+        if (input.eventType != INPUT_CANCEL && (deltaTime > COMPUTE_INTERVAL || last.velocity === undefined)) {
+            var deltaX = last.deltaX - input.deltaX;
+            var deltaY = last.deltaY - input.deltaY;
+
+            var v = getVelocity(deltaTime, deltaX, deltaY);
+            velocityX = v.x;
+            velocityY = v.y;
+            velocity = (abs(v.x) > abs(v.y)) ? v.x : v.y;
+            direction = getDirection(deltaX, deltaY);
+
+            session.lastInterval = input;
+        } else {
+            // use latest velocity info if it doesn't overtake a minimum period
+            velocity = last.velocity;
+            velocityX = last.velocityX;
+            velocityY = last.velocityY;
+            direction = last.direction;
+        }
+
+        input.velocity = velocity;
+        input.velocityX = velocityX;
+        input.velocityY = velocityY;
+        input.direction = direction;
+    }
+
+    /**
+     * create a simple clone from the input used for storage of firstInput and firstMultiple
+     * @param {Object} input
+     * @returns {Object} clonedInputData
+     */
+    function simpleCloneInputData(input) {
+        // make a simple copy of the pointers because we will get a reference if we don't
+        // we only need clientXY for the calculations
+        var pointers = [];
+        var i = 0;
+        while (i < input.pointers.length) {
+            pointers[i] = {
+                clientX: round(input.pointers[i].clientX),
+                clientY: round(input.pointers[i].clientY)
+            };
+            i++;
+        }
+
+        return {
+            timeStamp: now(),
+            pointers: pointers,
+            center: getCenter(pointers),
+            deltaX: input.deltaX,
+            deltaY: input.deltaY
+        };
+    }
+
+    /**
+     * get the center of all the pointers
+     * @param {Array} pointers
+     * @return {Object} center contains `x` and `y` properties
+     */
+    function getCenter(pointers) {
+        var pointersLength = pointers.length;
+
+        // no need to loop when only one touch
+        if (pointersLength === 1) {
+            return {
+                x: round(pointers[0].clientX),
+                y: round(pointers[0].clientY)
+            };
+        }
+
+        var x = 0,
+            y = 0,
+            i = 0;
+        while (i < pointersLength) {
+            x += pointers[i].clientX;
+            y += pointers[i].clientY;
+            i++;
+        }
+
+        return {
+            x: round(x / pointersLength),
+            y: round(y / pointersLength)
+        };
+    }
+
+    /**
+     * calculate the velocity between two points. unit is in px per ms.
+     * @param {Number} deltaTime
+     * @param {Number} x
+     * @param {Number} y
+     * @return {Object} velocity `x` and `y`
+     */
+    function getVelocity(deltaTime, x, y) {
+        return {
+            x: x / deltaTime || 0,
+            y: y / deltaTime || 0
+        };
+    }
+
+    /**
+     * get the direction between two points
+     * @param {Number} x
+     * @param {Number} y
+     * @return {Number} direction
+     */
+    function getDirection(x, y) {
+        if (x === y) {
+            return DIRECTION_NONE;
+        }
+
+        if (abs(x) >= abs(y)) {
+            return x > 0 ? DIRECTION_LEFT : DIRECTION_RIGHT;
+        }
+        return y > 0 ? DIRECTION_UP : DIRECTION_DOWN;
+    }
+
+    /**
+     * calculate the absolute distance between two points
+     * @param {Object} p1 {x, y}
+     * @param {Object} p2 {x, y}
+     * @param {Array} [props] containing x and y keys
+     * @return {Number} distance
+     */
+    function getDistance(p1, p2, props) {
+        if (!props) {
+            props = PROPS_XY;
+        }
+        var x = p2[props[0]] - p1[props[0]],
+            y = p2[props[1]] - p1[props[1]];
+
+        return Math.sqrt((x * x) + (y * y));
+    }
+
+    /**
+     * calculate the angle between two coordinates
+     * @param {Object} p1
+     * @param {Object} p2
+     * @param {Array} [props] containing x and y keys
+     * @return {Number} angle
+     */
+    function getAngle(p1, p2, props) {
+        if (!props) {
+            props = PROPS_XY;
+        }
+        var x = p2[props[0]] - p1[props[0]],
+            y = p2[props[1]] - p1[props[1]];
+        return Math.atan2(y, x) * 180 / Math.PI;
+    }
+
+    /**
+     * calculate the rotation degrees between two pointersets
+     * @param {Array} start array of pointers
+     * @param {Array} end array of pointers
+     * @return {Number} rotation
+     */
+    function getRotation(start, end) {
+        return getAngle(end[1], end[0], PROPS_CLIENT_XY) - getAngle(start[1], start[0], PROPS_CLIENT_XY);
+    }
+
+    /**
+     * calculate the scale factor between two pointersets
+     * no scale is 1, and goes down to 0 when pinched together, and bigger when pinched out
+     * @param {Array} start array of pointers
+     * @param {Array} end array of pointers
+     * @return {Number} scale
+     */
+    function getScale(start, end) {
+        return getDistance(end[0], end[1], PROPS_CLIENT_XY) / getDistance(start[0], start[1], PROPS_CLIENT_XY);
+    }
+
+    var MOUSE_INPUT_MAP = {
+        mousedown: INPUT_START,
+        mousemove: INPUT_MOVE,
+        mouseup: INPUT_END
+    };
+
+    var MOUSE_ELEMENT_EVENTS = 'mousedown';
+    var MOUSE_WINDOW_EVENTS = 'mousemove mouseup';
+
+    /**
+     * Mouse events input
+     * @constructor
+     * @extends Input
+     */
+    function MouseInput() {
+        this.evEl = MOUSE_ELEMENT_EVENTS;
+        this.evWin = MOUSE_WINDOW_EVENTS;
+
+        this.allow = true; // used by Input.TouchMouse to disable mouse events
+        this.pressed = false; // mousedown state
+
+        Input.apply(this, arguments);
+    }
+
+    inherit(MouseInput, Input, {
+        /**
+         * handle mouse events
+         * @param {Object} ev
+         */
+        handler: function MEhandler(ev) {
+            var eventType = MOUSE_INPUT_MAP[ev.type];
+
+            // on start we want to have the left mouse button down
+            if (eventType & INPUT_START && ev.button === 0) {
+                this.pressed = true;
+            }
+
+            if (eventType & INPUT_MOVE && ev.which !== 1) {
+                eventType = INPUT_END;
+            }
+
+            // mouse must be down, and mouse events are allowed (see the TouchMouse input)
+            if (!this.pressed || !this.allow) {
+                return;
+            }
+
+            if (eventType & INPUT_END) {
+                this.pressed = false;
+            }
+
+            this.callback(this.manager, eventType, {
+                pointers: [ev],
+                changedPointers: [ev],
+                pointerType: INPUT_TYPE_MOUSE,
+                srcEvent: ev
+            });
+        }
+    });
+
+    var POINTER_INPUT_MAP = {
+        pointerdown: INPUT_START,
+        pointermove: INPUT_MOVE,
+        pointerup: INPUT_END,
+        pointercancel: INPUT_CANCEL,
+        pointerout: INPUT_CANCEL
+    };
+
+    // in IE10 the pointer types is defined as an enum
+    var IE10_POINTER_TYPE_ENUM = {
+        2: INPUT_TYPE_TOUCH,
+        3: INPUT_TYPE_PEN,
+        4: INPUT_TYPE_MOUSE,
+        5: INPUT_TYPE_KINECT // see https://twitter.com/jacobrossi/status/480596438489890816
+    };
+
+    var POINTER_ELEMENT_EVENTS = 'pointerdown';
+    var POINTER_WINDOW_EVENTS = 'pointermove pointerup pointercancel';
+
+    // IE10 has prefixed support, and case-sensitive
+    if (window.MSPointerEvent) {
+        POINTER_ELEMENT_EVENTS = 'MSPointerDown';
+        POINTER_WINDOW_EVENTS = 'MSPointerMove MSPointerUp MSPointerCancel';
+    }
+
+    /**
+     * Pointer events input
+     * @constructor
+     * @extends Input
+     */
+    function PointerEventInput() {
+        this.evEl = POINTER_ELEMENT_EVENTS;
+        this.evWin = POINTER_WINDOW_EVENTS;
+
+        Input.apply(this, arguments);
+
+        this.store = (this.manager.session.pointerEvents = []);
+    }
+
+    inherit(PointerEventInput, Input, {
+        /**
+         * handle mouse events
+         * @param {Object} ev
+         */
+        handler: function PEhandler(ev) {
+            var store = this.store;
+            var removePointer = false;
+
+            var eventTypeNormalized = ev.type.toLowerCase().replace('ms', '');
+            var eventType = POINTER_INPUT_MAP[eventTypeNormalized];
+            var pointerType = IE10_POINTER_TYPE_ENUM[ev.pointerType] || ev.pointerType;
+
+            var isTouch = (pointerType == INPUT_TYPE_TOUCH);
+
+            // start and mouse must be down
+            if (eventType & INPUT_START && (ev.button === 0 || isTouch)) {
+                store.push(ev);
+            } else if (eventType & (INPUT_END | INPUT_CANCEL)) {
+                removePointer = true;
+            }
+
+            // get index of the event in the store
+            // it not found, so the pointer hasn't been down (so it's probably a hover)
+            var storeIndex = inArray(store, ev.pointerId, 'pointerId');
+            if (storeIndex < 0) {
+                return;
+            }
+
+            // update the event in the store
+            store[storeIndex] = ev;
+
+            this.callback(this.manager, eventType, {
+                pointers: store,
+                changedPointers: [ev],
+                pointerType: pointerType,
+                srcEvent: ev
+            });
+
+            if (removePointer) {
+                // remove from the store
+                store.splice(storeIndex, 1);
+            }
+        }
+    });
+
+    var TOUCH_INPUT_MAP = {
+        touchstart: INPUT_START,
+        touchmove: INPUT_MOVE,
+        touchend: INPUT_END,
+        touchcancel: INPUT_CANCEL
+    };
+
+    var TOUCH_TARGET_EVENTS = 'touchstart touchmove touchend touchcancel';
+
+    /**
+     * Touch events input
+     * @constructor
+     * @extends Input
+     */
+    function TouchInput() {
+        this.evTarget = TOUCH_TARGET_EVENTS;
+        this.targetIds = {};
+
+        Input.apply(this, arguments);
+    }
+
+    inherit(TouchInput, Input, {
+        /**
+         * handle touch events
+         * @param {Object} ev
+         */
+        handler: function TEhandler(ev) {
+            var type = TOUCH_INPUT_MAP[ev.type];
+            var touches = getTouches.call(this, ev, type);
+            if (!touches) {
+                return;
+            }
+
+            this.callback(this.manager, type, {
+                pointers: touches[0],
+                changedPointers: touches[1],
+                pointerType: INPUT_TYPE_TOUCH,
+                srcEvent: ev
+            });
+        }
+    });
+
+    /**
+     * @this {TouchInput}
+     * @param {Object} ev
+     * @param {Number} type flag
+     * @returns {undefined|Array} [all, changed]
+     */
+    function getTouches(ev, type) {
+        var allTouches = toArray(ev.touches);
+        var targetIds = this.targetIds;
+
+        // when there is only one touch, the process can be simplified
+        if (type & (INPUT_START | INPUT_MOVE) && allTouches.length === 1) {
+            targetIds[allTouches[0].identifier] = true;
+            return [allTouches, allTouches];
+        }
+
+        var i,
+            targetTouches = toArray(ev.targetTouches),
+            changedTouches = toArray(ev.changedTouches),
+            changedTargetTouches = [];
+
+        // collect touches
+        if (type === INPUT_START) {
+            i = 0;
+            while (i < targetTouches.length) {
+                targetIds[targetTouches[i].identifier] = true;
+                i++;
+            }
+        }
+
+        // filter changed touches to only contain touches that exist in the collected target ids
+        i = 0;
+        while (i < changedTouches.length) {
+            if (targetIds[changedTouches[i].identifier]) {
+                changedTargetTouches.push(changedTouches[i]);
+            }
+
+            // cleanup removed touches
+            if (type & (INPUT_END | INPUT_CANCEL)) {
+                delete targetIds[changedTouches[i].identifier];
+            }
+            i++;
+        }
+
+        if (!changedTargetTouches.length) {
+            return;
+        }
+
+        return [
+            // merge targetTouches with changedTargetTouches so it contains ALL touches, including 'end' and 'cancel'
+            uniqueArray(targetTouches.concat(changedTargetTouches), 'identifier', true),
+            changedTargetTouches
+        ];
+    }
+
+    /**
+     * Combined touch and mouse input
+     *
+     * Touch has a higher priority then mouse, and while touching no mouse events are allowed.
+     * This because touch devices also emit mouse events while doing a touch.
+     *
+     * @constructor
+     * @extends Input
+     */
+    function TouchMouseInput() {
+        Input.apply(this, arguments);
+
+        var handler = bindFn(this.handler, this);
+        this.touch = new TouchInput(this.manager, handler);
+        this.mouse = new MouseInput(this.manager, handler);
+    }
+
+    inherit(TouchMouseInput, Input, {
+        /**
+         * handle mouse and touch events
+         * @param {Hammer} manager
+         * @param {String} inputEvent
+         * @param {Object} inputData
+         */
+        handler: function TMEhandler(manager, inputEvent, inputData) {
+            var isTouch = (inputData.pointerType == INPUT_TYPE_TOUCH),
+                isMouse = (inputData.pointerType == INPUT_TYPE_MOUSE);
+
+            // when we're in a touch event, so  block all upcoming mouse events
+            // most mobile browser also emit mouseevents, right after touchstart
+            if (isTouch) {
+                this.mouse.allow = false;
+            } else if (isMouse && !this.mouse.allow) {
+                return;
+            }
+
+            // reset the allowMouse when we're done
+            if (inputEvent & (INPUT_END | INPUT_CANCEL)) {
+                this.mouse.allow = true;
+            }
+
+            this.callback(manager, inputEvent, inputData);
+        },
+
+        /**
+         * remove the event listeners
+         */
+        destroy: function destroy() {
+            this.touch.destroy();
+            this.mouse.destroy();
+        }
+    });
+
+    var PREFIXED_TOUCH_ACTION = prefixed(TEST_ELEMENT.style, 'touchAction');
+    var NATIVE_TOUCH_ACTION = PREFIXED_TOUCH_ACTION !== undefined;
+
+    // magical touchAction value
+    var TOUCH_ACTION_COMPUTE = 'compute';
+    var TOUCH_ACTION_AUTO = 'auto';
+    var TOUCH_ACTION_MANIPULATION = 'manipulation'; // not implemented
+    var TOUCH_ACTION_NONE = 'none';
+    var TOUCH_ACTION_PAN_X = 'pan-x';
+    var TOUCH_ACTION_PAN_Y = 'pan-y';
+
+    /**
+     * Touch Action
+     * sets the touchAction property or uses the js alternative
+     * @param {Manager} manager
+     * @param {String} value
+     * @constructor
+     */
+    function TouchAction(manager, value) {
+        this.manager = manager;
+        this.set(value);
+    }
+
+    TouchAction.prototype = {
+        /**
+         * set the touchAction value on the element or enable the polyfill
+         * @param {String} value
+         */
+        set: function(value) {
+            // find out the touch-action by the event handlers
+            if (value == TOUCH_ACTION_COMPUTE) {
+                value = this.compute();
+            }
+
+            if (NATIVE_TOUCH_ACTION) {
+                this.manager.element.style[PREFIXED_TOUCH_ACTION] = value;
+            }
+            this.actions = value.toLowerCase().trim();
+        },
+
+        /**
+         * just re-set the touchAction value
+         */
+        update: function() {
+            this.set(this.manager.options.touchAction);
+        },
+
+        /**
+         * compute the value for the touchAction property based on the recognizer's settings
+         * @returns {String} value
+         */
+        compute: function() {
+            var actions = [];
+            each(this.manager.recognizers, function(recognizer) {
+                if (boolOrFn(recognizer.options.enable, [recognizer])) {
+                    actions = actions.concat(recognizer.getTouchAction());
+                }
+            });
+            return cleanTouchActions(actions.join(' '));
+        },
+
+        /**
+         * this method is called on each input cycle and provides the preventing of the browser behavior
+         * @param {Object} input
+         */
+        preventDefaults: function(input) {
+            // not needed with native support for the touchAction property
+            if (NATIVE_TOUCH_ACTION) {
+                return;
+            }
+
+            var srcEvent = input.srcEvent;
+            var direction = input.offsetDirection;
+
+            // if the touch action did prevented once this session
+            if (this.manager.session.prevented) {
+                srcEvent.preventDefault();
+                return;
+            }
+
+            var actions = this.actions;
+            var hasNone = inStr(actions, TOUCH_ACTION_NONE);
+            var hasPanY = inStr(actions, TOUCH_ACTION_PAN_Y);
+            var hasPanX = inStr(actions, TOUCH_ACTION_PAN_X);
+
+            if (hasNone ||
+                (hasPanY && direction & DIRECTION_HORIZONTAL) ||
+                (hasPanX && direction & DIRECTION_VERTICAL)) {
+                return this.preventSrc(srcEvent);
+            }
+        },
+
+        /**
+         * call preventDefault to prevent the browser's default behavior (scrolling in most cases)
+         * @param {Object} srcEvent
+         */
+        preventSrc: function(srcEvent) {
+            this.manager.session.prevented = true;
+            srcEvent.preventDefault();
+        }
+    };
+
+    /**
+     * when the touchActions are collected they are not a valid value, so we need to clean things up. *
+     * @param {String} actions
+     * @returns {*}
+     */
+    function cleanTouchActions(actions) {
+        // none
+        if (inStr(actions, TOUCH_ACTION_NONE)) {
+            return TOUCH_ACTION_NONE;
+        }
+
+        var hasPanX = inStr(actions, TOUCH_ACTION_PAN_X);
+        var hasPanY = inStr(actions, TOUCH_ACTION_PAN_Y);
+
+        // pan-x and pan-y can be combined
+        if (hasPanX && hasPanY) {
+            return TOUCH_ACTION_PAN_X + ' ' + TOUCH_ACTION_PAN_Y;
+        }
+
+        // pan-x OR pan-y
+        if (hasPanX || hasPanY) {
+            return hasPanX ? TOUCH_ACTION_PAN_X : TOUCH_ACTION_PAN_Y;
+        }
+
+        // manipulation
+        if (inStr(actions, TOUCH_ACTION_MANIPULATION)) {
+            return TOUCH_ACTION_MANIPULATION;
+        }
+
+        return TOUCH_ACTION_AUTO;
+    }
+
+    /**
+     * Recognizer flow explained; *
+     * All recognizers have the initial state of POSSIBLE when a input session starts.
+     * The definition of a input session is from the first input until the last input, with all it's movement in it. *
+     * Example session for mouse-input: mousedown -> mousemove -> mouseup
+     *
+     * On each recognizing cycle (see Manager.recognize) the .recognize() method is executed
+     * which determines with state it should be.
+     *
+     * If the recognizer has the state FAILED, CANCELLED or RECOGNIZED (equals ENDED), it is reset to
+     * POSSIBLE to give it another change on the next cycle.
+     *
+     *               Possible
+     *                  |
+     *            +-----+---------------+
+     *            |                     |
+     *      +-----+-----+               |
+     *      |           |               |
+     *   Failed      Cancelled          |
+     *                          +-------+------+
+     *                          |              |
+     *                      Recognized       Began
+     *                                         |
+     *                                      Changed
+     *                                         |
+     *                                  Ended/Recognized
+     */
+    var STATE_POSSIBLE = 1;
+    var STATE_BEGAN = 2;
+    var STATE_CHANGED = 4;
+    var STATE_ENDED = 8;
+    var STATE_RECOGNIZED = STATE_ENDED;
+    var STATE_CANCELLED = 16;
+    var STATE_FAILED = 32;
+
+    /**
+     * Recognizer
+     * Every recognizer needs to extend from this class.
+     * @constructor
+     * @param {Object} options
+     */
+    function Recognizer(options) {
+        this.id = uniqueId();
+
+        this.manager = null;
+        this.options = merge(options || {}, this.defaults);
+
+        // default is enable true
+        this.options.enable = ifUndefined(this.options.enable, true);
+
+        this.state = STATE_POSSIBLE;
+
+        this.simultaneous = {};
+        this.requireFail = [];
+    }
+
+    Recognizer.prototype = {
+        /**
+         * @virtual
+         * @type {Object}
+         */
+        defaults: {},
+
+        /**
+         * set options
+         * @param {Object} options
+         * @return {Recognizer}
+         */
+        set: function(options) {
+            extend(this.options, options);
+
+            // also update the touchAction, in case something changed about the directions/enabled state
+            this.manager && this.manager.touchAction.update();
+            return this;
+        },
+
+        /**
+         * recognize simultaneous with an other recognizer.
+         * @param {Recognizer} otherRecognizer
+         * @returns {Recognizer} this
+         */
+        recognizeWith: function(otherRecognizer) {
+            if (invokeArrayArg(otherRecognizer, 'recognizeWith', this)) {
+                return this;
+            }
+
+            var simultaneous = this.simultaneous;
+            otherRecognizer = getRecognizerByNameIfManager(otherRecognizer, this);
+            if (!simultaneous[otherRecognizer.id]) {
+                simultaneous[otherRecognizer.id] = otherRecognizer;
+                otherRecognizer.recognizeWith(this);
+            }
+            return this;
+        },
+
+        /**
+         * drop the simultaneous link. it doesnt remove the link on the other recognizer.
+         * @param {Recognizer} otherRecognizer
+         * @returns {Recognizer} this
+         */
+        dropRecognizeWith: function(otherRecognizer) {
+            if (invokeArrayArg(otherRecognizer, 'dropRecognizeWith', this)) {
+                return this;
+            }
+
+            otherRecognizer = getRecognizerByNameIfManager(otherRecognizer, this);
+            delete this.simultaneous[otherRecognizer.id];
+            return this;
+        },
+
+        /**
+         * recognizer can only run when an other is failing
+         * @param {Recognizer} otherRecognizer
+         * @returns {Recognizer} this
+         */
+        requireFailure: function(otherRecognizer) {
+            if (invokeArrayArg(otherRecognizer, 'requireFailure', this)) {
+                return this;
+            }
+
+            var requireFail = this.requireFail;
+            otherRecognizer = getRecognizerByNameIfManager(otherRecognizer, this);
+            if (inArray(requireFail, otherRecognizer) === -1) {
+                requireFail.push(otherRecognizer);
+                otherRecognizer.requireFailure(this);
+            }
+            return this;
+        },
+
+        /**
+         * drop the requireFailure link. it does not remove the link on the other recognizer.
+         * @param {Recognizer} otherRecognizer
+         * @returns {Recognizer} this
+         */
+        dropRequireFailure: function(otherRecognizer) {
+            if (invokeArrayArg(otherRecognizer, 'dropRequireFailure', this)) {
+                return this;
+            }
+
+            otherRecognizer = getRecognizerByNameIfManager(otherRecognizer, this);
+            var index = inArray(this.requireFail, otherRecognizer);
+            if (index > -1) {
+                this.requireFail.splice(index, 1);
+            }
+            return this;
+        },
+
+        /**
+         * has require failures boolean
+         * @returns {boolean}
+         */
+        hasRequireFailures: function() {
+            return this.requireFail.length > 0;
+        },
+
+        /**
+         * if the recognizer can recognize simultaneous with an other recognizer
+         * @param {Recognizer} otherRecognizer
+         * @returns {Boolean}
+         */
+        canRecognizeWith: function(otherRecognizer) {
+            return !!this.simultaneous[otherRecognizer.id];
+        },
+
+        /**
+         * You should use `tryEmit` instead of `emit` directly to check
+         * that all the needed recognizers has failed before emitting.
+         * @param {Object} input
+         */
+        emit: function(input) {
+            var self = this;
+            var state = this.state;
+
+            function emit(withState) {
+                self.manager.emit(self.options.event + (withState ? stateStr(state) : ''), input);
+            }
+
+            // 'panstart' and 'panmove'
+            if (state < STATE_ENDED) {
+                emit(true);
+            }
+
+            emit(); // simple 'eventName' events
+
+            // panend and pancancel
+            if (state >= STATE_ENDED) {
+                emit(true);
+            }
+        },
+
+        /**
+         * Check that all the require failure recognizers has failed,
+         * if true, it emits a gesture event,
+         * otherwise, setup the state to FAILED.
+         * @param {Object} input
+         */
+        tryEmit: function(input) {
+            if (this.canEmit()) {
+                return this.emit(input);
+            }
+            // it's failing anyway
+            this.state = STATE_FAILED;
+        },
+
+        /**
+         * can we emit?
+         * @returns {boolean}
+         */
+        canEmit: function() {
+            var i = 0;
+            while (i < this.requireFail.length) {
+                if (!(this.requireFail[i].state & (STATE_FAILED | STATE_POSSIBLE))) {
+                    return false;
+                }
+                i++;
+            }
+            return true;
+        },
+
+        /**
+         * update the recognizer
+         * @param {Object} inputData
+         */
+        recognize: function(inputData) {
+            // make a new copy of the inputData
+            // so we can change the inputData without messing up the other recognizers
+            var inputDataClone = extend({}, inputData);
+
+            // is is enabled and allow recognizing?
+            if (!boolOrFn(this.options.enable, [this, inputDataClone])) {
+                this.reset();
+                this.state = STATE_FAILED;
+                return;
+            }
+
+            // reset when we've reached the end
+            if (this.state & (STATE_RECOGNIZED | STATE_CANCELLED | STATE_FAILED)) {
+                this.state = STATE_POSSIBLE;
+            }
+
+            this.state = this.process(inputDataClone);
+
+            // the recognizer has recognized a gesture
+            // so trigger an event
+            if (this.state & (STATE_BEGAN | STATE_CHANGED | STATE_ENDED | STATE_CANCELLED)) {
+                this.tryEmit(inputDataClone);
+            }
+        },
+
+        /**
+         * return the state of the recognizer
+         * the actual recognizing happens in this method
+         * @virtual
+         * @param {Object} inputData
+         * @returns {Const} STATE
+         */
+        process: function(inputData) { }, // jshint ignore:line
+
+        /**
+         * return the preferred touch-action
+         * @virtual
+         * @returns {Array}
+         */
+        getTouchAction: function() { },
+
+        /**
+         * called when the gesture isn't allowed to recognize
+         * like when another is being recognized or it is disabled
+         * @virtual
+         */
+        reset: function() { }
+    };
+
+    /**
+     * get a usable string, used as event postfix
+     * @param {Const} state
+     * @returns {String} state
+     */
+    function stateStr(state) {
+        if (state & STATE_CANCELLED) {
+            return 'cancel';
+        } else if (state & STATE_ENDED) {
+            return 'end';
+        } else if (state & STATE_CHANGED) {
+            return 'move';
+        } else if (state & STATE_BEGAN) {
+            return 'start';
+        }
+        return '';
+    }
+
+    /**
+     * direction cons to string
+     * @param {Const} direction
+     * @returns {String}
+     */
+    function directionStr(direction) {
+        if (direction == DIRECTION_DOWN) {
+            return 'down';
+        } else if (direction == DIRECTION_UP) {
+            return 'up';
+        } else if (direction == DIRECTION_LEFT) {
+            return 'left';
+        } else if (direction == DIRECTION_RIGHT) {
+            return 'right';
+        }
+        return '';
+    }
+
+    /**
+     * get a recognizer by name if it is bound to a manager
+     * @param {Recognizer|String} otherRecognizer
+     * @param {Recognizer} recognizer
+     * @returns {Recognizer}
+     */
+    function getRecognizerByNameIfManager(otherRecognizer, recognizer) {
+        var manager = recognizer.manager;
+        if (manager) {
+            return manager.get(otherRecognizer);
+        }
+        return otherRecognizer;
+    }
+
+    /**
+     * This recognizer is just used as a base for the simple attribute recognizers.
+     * @constructor
+     * @extends Recognizer
+     */
+    function AttrRecognizer() {
+        Recognizer.apply(this, arguments);
+    }
+
+    inherit(AttrRecognizer, Recognizer, {
+        /**
+         * @namespace
+         * @memberof AttrRecognizer
+         */
+        defaults: {
+            /**
+             * @type {Number}
+             * @default 1
+             */
+            pointers: 1
+        },
+
+        /**
+         * Used to check if it the recognizer receives valid input, like input.distance > 10.
+         * @memberof AttrRecognizer
+         * @param {Object} input
+         * @returns {Boolean} recognized
+         */
+        attrTest: function(input) {
+            var optionPointers = this.options.pointers;
+            return optionPointers === 0 || input.pointers.length === optionPointers;
+        },
+
+        /**
+         * Process the input and return the state for the recognizer
+         * @memberof AttrRecognizer
+         * @param {Object} input
+         * @returns {*} State
+         */
+        process: function(input) {
+            var state = this.state;
+            var eventType = input.eventType;
+
+            var isRecognized = state & (STATE_BEGAN | STATE_CHANGED);
+            var isValid = this.attrTest(input);
+
+            // on cancel input and we've recognized before, return STATE_CANCELLED
+            if (isRecognized && (eventType & INPUT_CANCEL || !isValid)) {
+                return state | STATE_CANCELLED;
+            } else if (isRecognized || isValid) {
+                if (eventType & INPUT_END) {
+                    return state | STATE_ENDED;
+                } else if (!(state & STATE_BEGAN)) {
+                    return STATE_BEGAN;
+                }
+                return state | STATE_CHANGED;
+            }
+            return STATE_FAILED;
+        }
+    });
+
+    /**
+     * Pan
+     * Recognized when the pointer is down and moved in the allowed direction.
+     * @constructor
+     * @extends AttrRecognizer
+     */
+    function PanRecognizer() {
+        AttrRecognizer.apply(this, arguments);
+
+        this.pX = null;
+        this.pY = null;
+    }
+
+    inherit(PanRecognizer, AttrRecognizer, {
+        /**
+         * @namespace
+         * @memberof PanRecognizer
+         */
+        defaults: {
+            event: 'pan',
+            threshold: 10,
+            pointers: 1,
+            direction: DIRECTION_ALL
+        },
+
+        getTouchAction: function() {
+            var direction = this.options.direction;
+            var actions = [];
+            if (direction & DIRECTION_HORIZONTAL) {
+                actions.push(TOUCH_ACTION_PAN_Y);
+            }
+            if (direction & DIRECTION_VERTICAL) {
+                actions.push(TOUCH_ACTION_PAN_X);
+            }
+            return actions;
+        },
+
+        directionTest: function(input) {
+            var options = this.options;
+            var hasMoved = true;
+            var distance = input.distance;
+            var direction = input.direction;
+            var x = input.deltaX;
+            var y = input.deltaY;
+
+            // lock to axis?
+            if (!(direction & options.direction)) {
+                if (options.direction & DIRECTION_HORIZONTAL) {
+                    direction = (x === 0) ? DIRECTION_NONE : (x < 0) ? DIRECTION_LEFT : DIRECTION_RIGHT;
+                    hasMoved = x != this.pX;
+                    distance = Math.abs(input.deltaX);
+                } else {
+                    direction = (y === 0) ? DIRECTION_NONE : (y < 0) ? DIRECTION_UP : DIRECTION_DOWN;
+                    hasMoved = y != this.pY;
+                    distance = Math.abs(input.deltaY);
+                }
+            }
+            input.direction = direction;
+            return hasMoved && distance > options.threshold && direction & options.direction;
+        },
+
+        attrTest: function(input) {
+            return AttrRecognizer.prototype.attrTest.call(this, input) &&
+                (this.state & STATE_BEGAN || (!(this.state & STATE_BEGAN) && this.directionTest(input)));
+        },
+
+        emit: function(input) {
+            this.pX = input.deltaX;
+            this.pY = input.deltaY;
+
+            var direction = directionStr(input.direction);
+            if (direction) {
+                this.manager.emit(this.options.event + direction, input);
+            }
+
+            this._super.emit.call(this, input);
+        }
+    });
+
+    /**
+     * Pinch
+     * Recognized when two or more pointers are moving toward (zoom-in) or away from each other (zoom-out).
+     * @constructor
+     * @extends AttrRecognizer
+     */
+    function PinchRecognizer() {
+        AttrRecognizer.apply(this, arguments);
+    }
+
+    inherit(PinchRecognizer, AttrRecognizer, {
+        /**
+         * @namespace
+         * @memberof PinchRecognizer
+         */
+        defaults: {
+            event: 'pinch',
+            threshold: 0,
+            pointers: 2
+        },
+
+        getTouchAction: function() {
+            return [TOUCH_ACTION_NONE];
+        },
+
+        attrTest: function(input) {
+            return this._super.attrTest.call(this, input) &&
+                (Math.abs(input.scale - 1) > this.options.threshold || this.state & STATE_BEGAN);
+        },
+
+        emit: function(input) {
+            this._super.emit.call(this, input);
+            if (input.scale !== 1) {
+                var inOut = input.scale < 1 ? 'in' : 'out';
+                this.manager.emit(this.options.event + inOut, input);
+            }
+        }
+    });
+
+    /**
+     * Press
+     * Recognized when the pointer is down for x ms without any movement.
+     * @constructor
+     * @extends Recognizer
+     */
+    function PressRecognizer() {
+        Recognizer.apply(this, arguments);
+
+        this._timer = null;
+        this._input = null;
+    }
+
+    inherit(PressRecognizer, Recognizer, {
+        /**
+         * @namespace
+         * @memberof PressRecognizer
+         */
+        defaults: {
+            event: 'press',
+            pointers: 1,
+            time: 500, // minimal time of the pointer to be pressed
+            threshold: 5 // a minimal movement is ok, but keep it low
+        },
+
+        getTouchAction: function() {
+            return [TOUCH_ACTION_AUTO];
+        },
+
+        process: function(input) {
+            var options = this.options;
+            var validPointers = input.pointers.length === options.pointers;
+            var validMovement = input.distance < options.threshold;
+            var validTime = input.deltaTime > options.time;
+
+            this._input = input;
+
+            // we only allow little movement
+            // and we've reached an end event, so a tap is possible
+            if (!validMovement || !validPointers || (input.eventType & (INPUT_END | INPUT_CANCEL) && !validTime)) {
+                this.reset();
+            } else if (input.eventType & INPUT_START) {
+                this.reset();
+                this._timer = setTimeoutContext(function() {
+                    this.state = STATE_RECOGNIZED;
+                    this.tryEmit();
+                }, options.time, this);
+            } else if (input.eventType & INPUT_END) {
+                return STATE_RECOGNIZED;
+            }
+            return STATE_FAILED;
+        },
+
+        reset: function() {
+            clearTimeout(this._timer);
+        },
+
+        emit: function(input) {
+            if (this.state !== STATE_RECOGNIZED) {
+                return;
+            }
+
+            if (input && (input.eventType & INPUT_END)) {
+                this.manager.emit(this.options.event + 'up', input);
+            } else {
+                this._input.timeStamp = now();
+                this.manager.emit(this.options.event, this._input);
+            }
+        }
+    });
+
+    /**
+     * Rotate
+     * Recognized when two or more pointer are moving in a circular motion.
+     * @constructor
+     * @extends AttrRecognizer
+     */
+    function RotateRecognizer() {
+        AttrRecognizer.apply(this, arguments);
+    }
+
+    inherit(RotateRecognizer, AttrRecognizer, {
+        /**
+         * @namespace
+         * @memberof RotateRecognizer
+         */
+        defaults: {
+            event: 'rotate',
+            threshold: 0,
+            pointers: 2
+        },
+
+        getTouchAction: function() {
+            return [TOUCH_ACTION_NONE];
+        },
+
+        attrTest: function(input) {
+            return this._super.attrTest.call(this, input) &&
+                (Math.abs(input.rotation) > this.options.threshold || this.state & STATE_BEGAN);
+        }
+    });
+
+    /**
+     * Swipe
+     * Recognized when the pointer is moving fast (velocity), with enough distance in the allowed direction.
+     * @constructor
+     * @extends AttrRecognizer
+     */
+    function SwipeRecognizer() {
+        AttrRecognizer.apply(this, arguments);
+    }
+
+    inherit(SwipeRecognizer, AttrRecognizer, {
+        /**
+         * @namespace
+         * @memberof SwipeRecognizer
+         */
+        defaults: {
+            event: 'swipe',
+            threshold: 10,
+            velocity: 0.65,
+            direction: DIRECTION_HORIZONTAL | DIRECTION_VERTICAL,
+            pointers: 1
+        },
+
+        getTouchAction: function() {
+            return PanRecognizer.prototype.getTouchAction.call(this);
+        },
+
+        attrTest: function(input) {
+            var direction = this.options.direction;
+            var velocity;
+
+            if (direction & (DIRECTION_HORIZONTAL | DIRECTION_VERTICAL)) {
+                velocity = input.velocity;
+            } else if (direction & DIRECTION_HORIZONTAL) {
+                velocity = input.velocityX;
+            } else if (direction & DIRECTION_VERTICAL) {
+                velocity = input.velocityY;
+            }
+
+            return this._super.attrTest.call(this, input) &&
+                direction & input.direction &&
+                input.distance > this.options.threshold &&
+                abs(velocity) > this.options.velocity && input.eventType & INPUT_END;
+        },
+
+        emit: function(input) {
+            var direction = directionStr(input.direction);
+            if (direction) {
+                this.manager.emit(this.options.event + direction, input);
+            }
+
+            this.manager.emit(this.options.event, input);
+        }
+    });
+
+    /**
+     * A tap is ecognized when the pointer is doing a small tap/click. Multiple taps are recognized if they occur
+     * between the given interval and position. The delay option can be used to recognize multi-taps without firing
+     * a single tap.
+     *
+     * The eventData from the emitted event contains the property `tapCount`, which contains the amount of
+     * multi-taps being recognized.
+     * @constructor
+     * @extends Recognizer
+     */
+    function TapRecognizer() {
+        Recognizer.apply(this, arguments);
+
+        // previous time and center,
+        // used for tap counting
+        this.pTime = false;
+        this.pCenter = false;
+
+        this._timer = null;
+        this._input = null;
+        this.count = 0;
+    }
+
+    inherit(TapRecognizer, Recognizer, {
+        /**
+         * @namespace
+         * @memberof PinchRecognizer
+         */
+        defaults: {
+            event: 'tap',
+            pointers: 1,
+            taps: 1,
+            interval: 300, // max time between the multi-tap taps
+            time: 250, // max time of the pointer to be down (like finger on the screen)
+            threshold: 2, // a minimal movement is ok, but keep it low
+            posThreshold: 10 // a multi-tap can be a bit off the initial position
+        },
+
+        getTouchAction: function() {
+            return [TOUCH_ACTION_MANIPULATION];
+        },
+
+        process: function(input) {
+            var options = this.options;
+
+            var validPointers = input.pointers.length === options.pointers;
+            var validMovement = input.distance < options.threshold;
+            var validTouchTime = input.deltaTime < options.time;
+
+            this.reset();
+
+            if ((input.eventType & INPUT_START) && (this.count === 0)) {
+                return this.failTimeout();
+            }
+
+            // we only allow little movement
+            // and we've reached an end event, so a tap is possible
+            if (validMovement && validTouchTime && validPointers) {
+                if (input.eventType != INPUT_END) {
+                    return this.failTimeout();
+                }
+
+                var validInterval = this.pTime ? (input.timeStamp - this.pTime < options.interval) : true;
+                var validMultiTap = !this.pCenter || getDistance(this.pCenter, input.center) < options.posThreshold;
+
+                this.pTime = input.timeStamp;
+                this.pCenter = input.center;
+
+                if (!validMultiTap || !validInterval) {
+                    this.count = 1;
+                } else {
+                    this.count += 1;
+                }
+
+                this._input = input;
+
+                // if tap count matches we have recognized it,
+                // else it has began recognizing...
+                var tapCount = this.count % options.taps;
+                if (tapCount === 0) {
+                    // no failing requirements, immediately trigger the tap event
+                    // or wait as long as the multitap interval to trigger
+                    if (!this.hasRequireFailures()) {
+                        return STATE_RECOGNIZED;
+                    } else {
+                        this._timer = setTimeoutContext(function() {
+                            this.state = STATE_RECOGNIZED;
+                            this.tryEmit();
+                        }, options.interval, this);
+                        return STATE_BEGAN;
+                    }
+                }
+            }
+            return STATE_FAILED;
+        },
+
+        failTimeout: function() {
+            this._timer = setTimeoutContext(function() {
+                this.state = STATE_FAILED;
+            }, this.options.interval, this);
+            return STATE_FAILED;
+        },
+
+        reset: function() {
+            clearTimeout(this._timer);
+        },
+
+        emit: function() {
+            if (this.state == STATE_RECOGNIZED ) {
+                this._input.tapCount = this.count;
+                this.manager.emit(this.options.event, this._input);
+            }
+        }
+    });
+
+    /**
+     * Simple way to create an manager with a default set of recognizers.
+     * @param {HTMLElement} element
+     * @param {Object} [options]
+     * @constructor
+     */
+    function Hammer(element, options) {
+        options = options || {};
+        options.recognizers = ifUndefined(options.recognizers, Hammer.defaults.preset);
+        return new Manager(element, options);
+    }
+
+    /**
+     * @const {string}
+     */
+    Hammer.VERSION = '2.0.3';
+
+    /**
+     * default settings
+     * @namespace
+     */
+    Hammer.defaults = {
+        /**
+         * set if DOM events are being triggered.
+         * But this is slower and unused by simple implementations, so disabled by default.
+         * @type {Boolean}
+         * @default false
+         */
+        domEvents: false,
+
+        /**
+         * The value for the touchAction property/fallback.
+         * When set to `compute` it will magically set the correct value based on the added recognizers.
+         * @type {String}
+         * @default compute
+         */
+        touchAction: TOUCH_ACTION_COMPUTE,
+
+        /**
+         * @type {Boolean}
+         * @default true
+         */
+        enable: true,
+
+        /**
+         * EXPERIMENTAL FEATURE -- can be removed/changed
+         * Change the parent input target element.
+         * If Null, then it is being set the to main element.
+         * @type {Null|EventTarget}
+         * @default null
+         */
+        inputTarget: null,
+
+        /**
+         * force an input class
+         * @type {Null|Function}
+         * @default null
+         */
+        inputClass: null,
+
+        /**
+         * Default recognizer setup when calling `Hammer()`
+         * When creating a new Manager these will be skipped.
+         * @type {Array}
+         */
+        preset: [
+            // RecognizerClass, options, [recognizeWith, ...], [requireFailure, ...]
+            [RotateRecognizer, { enable: false }],
+            [PinchRecognizer, { enable: false }, ['rotate']],
+            [SwipeRecognizer,{ direction: DIRECTION_HORIZONTAL }],
+            [PanRecognizer, { direction: DIRECTION_HORIZONTAL }, ['swipe']],
+            [TapRecognizer],
+            [TapRecognizer, { event: 'doubletap', taps: 2 }, ['tap']],
+            [PressRecognizer]
+        ],
+
+        /**
+         * Some CSS properties can be used to improve the working of Hammer.
+         * Add them to this method and they will be set when creating a new Manager.
+         * @namespace
+         */
+        cssProps: {
+            /**
+             * Disables text selection to improve the dragging gesture. Mainly for desktop browsers.
+             * @type {String}
+             * @default 'none'
+             */
+            userSelect: 'none',
+
+            /**
+             * Disable the Windows Phone grippers when pressing an element.
+             * @type {String}
+             * @default 'none'
+             */
+            touchSelect: 'none',
+
+            /**
+             * Disables the default callout shown when you touch and hold a touch target.
+             * On iOS, when you touch and hold a touch target such as a link, Safari displays
+             * a callout containing information about the link. This property allows you to disable that callout.
+             * @type {String}
+             * @default 'none'
+             */
+            touchCallout: 'none',
+
+            /**
+             * Specifies whether zooming is enabled. Used by IE10>
+             * @type {String}
+             * @default 'none'
+             */
+            contentZooming: 'none',
+
+            /**
+             * Specifies that an entire element should be draggable instead of its contents. Mainly for desktop browsers.
+             * @type {String}
+             * @default 'none'
+             */
+            userDrag: 'none',
+
+            /**
+             * Overrides the highlight color shown when the user taps a link or a JavaScript
+             * clickable element in iOS. This property obeys the alpha value, if specified.
+             * @type {String}
+             * @default 'rgba(0,0,0,0)'
+             */
+            tapHighlightColor: 'rgba(0,0,0,0)'
+        }
+    };
+
+    var STOP = 1;
+    var FORCED_STOP = 2;
+
+    /**
+     * Manager
+     * @param {HTMLElement} element
+     * @param {Object} [options]
+     * @constructor
+     */
+    function Manager(element, options) {
+        options = options || {};
+
+        this.options = merge(options, Hammer.defaults);
+        this.options.inputTarget = this.options.inputTarget || element;
+
+        this.handlers = {};
+        this.session = {};
+        this.recognizers = [];
+
+        this.element = element;
+        this.input = createInputInstance(this);
+        this.touchAction = new TouchAction(this, this.options.touchAction);
+
+        toggleCssProps(this, true);
+
+        each(options.recognizers, function(item) {
+            var recognizer = this.add(new (item[0])(item[1]));
+            item[2] && recognizer.recognizeWith(item[2]);
+            item[3] && recognizer.requireFailure(item[3]);
+        }, this);
+    }
+
+    Manager.prototype = {
+        /**
+         * set options
+         * @param {Object} options
+         * @returns {Manager}
+         */
+        set: function(options) {
+            extend(this.options, options);
+
+            // Options that need a little more setup
+            if (options.touchAction) {
+                this.touchAction.update();
+            }
+            if (options.inputTarget) {
+                // Clean up existing event listeners and reinitialize
+                this.input.destroy();
+                this.input.target = options.inputTarget;
+                this.input.init();
+            }
+            return this;
+        },
+
+        /**
+         * stop recognizing for this session.
+         * This session will be discarded, when a new [input]start event is fired.
+         * When forced, the recognizer cycle is stopped immediately.
+         * @param {Boolean} [force]
+         */
+        stop: function(force) {
+            this.session.stopped = force ? FORCED_STOP : STOP;
+        },
+
+        /**
+         * run the recognizers!
+         * called by the inputHandler function on every movement of the pointers (touches)
+         * it walks through all the recognizers and tries to detect the gesture that is being made
+         * @param {Object} inputData
+         */
+        recognize: function(inputData) {
+            var session = this.session;
+            if (session.stopped) {
+                return;
+            }
+
+            // run the touch-action polyfill
+            this.touchAction.preventDefaults(inputData);
+
+            var recognizer;
+            var recognizers = this.recognizers;
+
+            // this holds the recognizer that is being recognized.
+            // so the recognizer's state needs to be BEGAN, CHANGED, ENDED or RECOGNIZED
+            // if no recognizer is detecting a thing, it is set to `null`
+            var curRecognizer = session.curRecognizer;
+
+            // reset when the last recognizer is recognized
+            // or when we're in a new session
+            if (!curRecognizer || (curRecognizer && curRecognizer.state & STATE_RECOGNIZED)) {
+                curRecognizer = session.curRecognizer = null;
+            }
+
+            var i = 0;
+            while (i < recognizers.length) {
+                recognizer = recognizers[i];
+
+                // find out if we are allowed try to recognize the input for this one.
+                // 1.   allow if the session is NOT forced stopped (see the .stop() method)
+                // 2.   allow if we still haven't recognized a gesture in this session, or the this recognizer is the one
+                //      that is being recognized.
+                // 3.   allow if the recognizer is allowed to run simultaneous with the current recognized recognizer.
+                //      this can be setup with the `recognizeWith()` method on the recognizer.
+                if (session.stopped !== FORCED_STOP && ( // 1
+                        !curRecognizer || recognizer == curRecognizer || // 2
+                        recognizer.canRecognizeWith(curRecognizer))) { // 3
+                    recognizer.recognize(inputData);
+                } else {
+                    recognizer.reset();
+                }
+
+                // if the recognizer has been recognizing the input as a valid gesture, we want to store this one as the
+                // current active recognizer. but only if we don't already have an active recognizer
+                if (!curRecognizer && recognizer.state & (STATE_BEGAN | STATE_CHANGED | STATE_ENDED)) {
+                    curRecognizer = session.curRecognizer = recognizer;
+                }
+                i++;
+            }
+        },
+
+        /**
+         * get a recognizer by its event name.
+         * @param {Recognizer|String} recognizer
+         * @returns {Recognizer|Null}
+         */
+        get: function(recognizer) {
+            if (recognizer instanceof Recognizer) {
+                return recognizer;
+            }
+
+            var recognizers = this.recognizers;
+            for (var i = 0; i < recognizers.length; i++) {
+                if (recognizers[i].options.event == recognizer) {
+                    return recognizers[i];
+                }
+            }
+            return null;
+        },
+
+        /**
+         * add a recognizer to the manager
+         * existing recognizers with the same event name will be removed
+         * @param {Recognizer} recognizer
+         * @returns {Recognizer|Manager}
+         */
+        add: function(recognizer) {
+            if (invokeArrayArg(recognizer, 'add', this)) {
+                return this;
+            }
+
+            // remove existing
+            var existing = this.get(recognizer.options.event);
+            if (existing) {
+                this.remove(existing);
+            }
+
+            this.recognizers.push(recognizer);
+            recognizer.manager = this;
+
+            this.touchAction.update();
+            return recognizer;
+        },
+
+        /**
+         * remove a recognizer by name or instance
+         * @param {Recognizer|String} recognizer
+         * @returns {Manager}
+         */
+        remove: function(recognizer) {
+            if (invokeArrayArg(recognizer, 'remove', this)) {
+                return this;
+            }
+
+            var recognizers = this.recognizers;
+            recognizer = this.get(recognizer);
+            recognizers.splice(inArray(recognizers, recognizer), 1);
+
+            this.touchAction.update();
+            return this;
+        },
+
+        /**
+         * bind event
+         * @param {String} events
+         * @param {Function} handler
+         * @returns {EventEmitter} this
+         */
+        on: function(events, handler) {
+            var handlers = this.handlers;
+            each(splitStr(events), function(event) {
+                handlers[event] = handlers[event] || [];
+                handlers[event].push(handler);
+            });
+            return this;
+        },
+
+        /**
+         * unbind event, leave emit blank to remove all handlers
+         * @param {String} events
+         * @param {Function} [handler]
+         * @returns {EventEmitter} this
+         */
+        off: function(events, handler) {
+            var handlers = this.handlers;
+            each(splitStr(events), function(event) {
+                if (!handler) {
+                    delete handlers[event];
+                } else {
+                    handlers[event].splice(inArray(handlers[event], handler), 1);
+                }
+            });
+            return this;
+        },
+
+        /**
+         * emit event to the listeners
+         * @param {String} event
+         * @param {Object} data
+         */
+        emit: function(event, data) {
+            // we also want to trigger dom events
+            if (this.options.domEvents) {
+                triggerDomEvent(event, data);
+            }
+
+            // no handlers, so skip it all
+            var handlers = this.handlers[event] && this.handlers[event].slice();
+            if (!handlers || !handlers.length) {
+                return;
+            }
+
+            data.type = event;
+            data.preventDefault = function() {
+                data.srcEvent.preventDefault();
+            };
+
+            var i = 0;
+            while (i < handlers.length) {
+                handlers[i](data);
+                i++;
+            }
+        },
+
+        /**
+         * destroy the manager and unbinds all events
+         * it doesn't unbind dom events, that is the user own responsibility
+         */
+        destroy: function() {
+            this.element && toggleCssProps(this, false);
+
+            this.handlers = {};
+            this.session = {};
+            this.input.destroy();
+            this.element = null;
+        }
+    };
+
+    /**
+     * add/remove the css properties as defined in manager.options.cssProps
+     * @param {Manager} manager
+     * @param {Boolean} add
+     */
+    function toggleCssProps(manager, add) {
+        var element = manager.element;
+        each(manager.options.cssProps, function(value, name) {
+            element.style[prefixed(element.style, name)] = add ? value : '';
+        });
+    }
+
+    /**
+     * trigger dom event
+     * @param {String} event
+     * @param {Object} data
+     */
+    function triggerDomEvent(event, data) {
+        var gestureEvent = DOCUMENT.createEvent('Event');
+        gestureEvent.initEvent(event, true, true);
+        gestureEvent.gesture = data;
+        data.target.dispatchEvent(gestureEvent);
+    }
+
+    extend(Hammer, {
+        INPUT_START: INPUT_START,
+        INPUT_MOVE: INPUT_MOVE,
+        INPUT_END: INPUT_END,
+        INPUT_CANCEL: INPUT_CANCEL,
+
+        STATE_POSSIBLE: STATE_POSSIBLE,
+        STATE_BEGAN: STATE_BEGAN,
+        STATE_CHANGED: STATE_CHANGED,
+        STATE_ENDED: STATE_ENDED,
+        STATE_RECOGNIZED: STATE_RECOGNIZED,
+        STATE_CANCELLED: STATE_CANCELLED,
+        STATE_FAILED: STATE_FAILED,
+
+        DIRECTION_NONE: DIRECTION_NONE,
+        DIRECTION_LEFT: DIRECTION_LEFT,
+        DIRECTION_RIGHT: DIRECTION_RIGHT,
+        DIRECTION_UP: DIRECTION_UP,
+        DIRECTION_DOWN: DIRECTION_DOWN,
+        DIRECTION_HORIZONTAL: DIRECTION_HORIZONTAL,
+        DIRECTION_VERTICAL: DIRECTION_VERTICAL,
+        DIRECTION_ALL: DIRECTION_ALL,
+
+        Manager: Manager,
+        Input: Input,
+        TouchAction: TouchAction,
+
+        TouchInput: TouchInput,
+        MouseInput: MouseInput,
+        PointerEventInput: PointerEventInput,
+        TouchMouseInput: TouchMouseInput,
+
+        Recognizer: Recognizer,
+        AttrRecognizer: AttrRecognizer,
+        Tap: TapRecognizer,
+        Pan: PanRecognizer,
+        Swipe: SwipeRecognizer,
+        Pinch: PinchRecognizer,
+        Rotate: RotateRecognizer,
+        Press: PressRecognizer,
+
+        on: addEventListeners,
+        off: removeEventListeners,
+        each: each,
+        merge: merge,
+        extend: extend,
+        inherit: inherit,
+        bindFn: bindFn,
+        prefixed: prefixed
+    });
+
+    return Hammer;
+
+};
+
+},{"utils":152}],80:[function(require,module,exports){
+module.exports=require(6)
+},{"event":84,"js-ext/extra/hashmap.js":94,"js-ext/lib/array.js":95,"js-ext/lib/object.js":96,"js-ext/lib/string.js":97,"polyfill/polyfill-base.js":103,"utils":104,"vdom":151}],81:[function(require,module,exports){
+module.exports=require(7)
+},{"js-ext/extra/hashmap.js":86,"js-ext/lib/object.js":87,"polyfill/polyfill-base.js":93}],82:[function(require,module,exports){
+module.exports=require(8)
+},{"./index.js":84}],83:[function(require,module,exports){
+module.exports=require(9)
+},{"./index.js":84,"js-ext/extra/classes.js":85,"js-ext/lib/object.js":87}],84:[function(require,module,exports){
+module.exports=require(10)
+},{"./event-base.js":81,"./event-emitter.js":82,"./event-listener.js":83}],85:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":87,"js-ext/extra/hashmap.js":86,"polyfill/polyfill-base.js":90}],86:[function(require,module,exports){
+module.exports=require(12)
+},{}],87:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":86,"polyfill/polyfill-base.js":90}],88:[function(require,module,exports){
+module.exports=require(14)
+},{}],89:[function(require,module,exports){
+module.exports=require(15)
+},{}],90:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":88,"./lib/window.console.js":89}],91:[function(require,module,exports){
+module.exports=require(14)
+},{}],92:[function(require,module,exports){
+module.exports=require(15)
+},{}],93:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":91,"./lib/window.console.js":92}],94:[function(require,module,exports){
+module.exports=require(12)
+},{}],95:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":100}],96:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":94,"polyfill/polyfill-base.js":100}],97:[function(require,module,exports){
+module.exports=require(23)
+},{}],98:[function(require,module,exports){
+module.exports=require(14)
+},{}],99:[function(require,module,exports){
+module.exports=require(15)
+},{}],100:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":98,"./lib/window.console.js":99}],101:[function(require,module,exports){
+module.exports=require(14)
+},{}],102:[function(require,module,exports){
+module.exports=require(15)
+},{}],103:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":101,"./lib/window.console.js":102}],104:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":105,"./lib/timers.js":106}],105:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":94,"polyfill/polyfill-base.js":109}],106:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":109}],107:[function(require,module,exports){
+module.exports=require(14)
+},{}],108:[function(require,module,exports){
+module.exports=require(15)
+},{}],109:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":107,"./lib/window.console.js":108}],110:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],111:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":115,"js-ext/extra/hashmap.js":112,"polyfill/polyfill-base.js":121}],112:[function(require,module,exports){
+module.exports=require(12)
+},{}],113:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":114,"../lib/object.js":115,"./classes.js":111,"js-ext/extra/hashmap.js":112,"polyfill/lib/weakmap.js":119}],114:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":121}],115:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":112,"polyfill/polyfill-base.js":121}],116:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":121}],117:[function(require,module,exports){
+module.exports=require(23)
+},{}],118:[function(require,module,exports){
+module.exports=require(14)
+},{}],119:[function(require,module,exports){
+module.exports=require(45)
+},{}],120:[function(require,module,exports){
+module.exports=require(15)
+},{}],121:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":118,"./lib/window.console.js":120}],122:[function(require,module,exports){
+module.exports=require(48)
+},{}],123:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":122}],124:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":122}],125:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":122}],126:[function(require,module,exports){
+module.exports=require(14)
+},{}],127:[function(require,module,exports){
+module.exports=require(15)
+},{}],128:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":126,"./lib/window.console.js":127}],129:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":130,"./lib/timers.js":131}],130:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":112,"polyfill/polyfill-base.js":134}],131:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":134}],132:[function(require,module,exports){
+module.exports=require(14)
+},{}],133:[function(require,module,exports){
+module.exports=require(15)
+},{}],134:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":132,"./lib/window.console.js":133}],135:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":136}],136:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":137,"js-ext/lib/object.js":138}],137:[function(require,module,exports){
+module.exports=require(12)
+},{}],138:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":137,"polyfill/polyfill-base.js":141}],139:[function(require,module,exports){
+module.exports=require(14)
+},{}],140:[function(require,module,exports){
+module.exports=require(15)
+},{}],141:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":139,"./lib/window.console.js":140}],142:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":112,"js-ext/lib/object.js":115,"js-ext/lib/string.js":117,"polyfill":128,"polyfill/extra/transition.js":123,"polyfill/extra/vendorCSS.js":125}],143:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":112,"js-ext/lib/object.js":115,"polyfill":128}],144:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":112,"js-ext/lib/object.js":115,"js-ext/lib/string.js":117,"polyfill":128}],145:[function(require,module,exports){
+module.exports=require(71)
+},{"js-ext/extra/hashmap.js":112,"js-ext/lib/object.js":115,"js-ext/lib/string.js":117,"polyfill":128}],146:[function(require,module,exports){
+module.exports=require(72)
+},{"../css/element.css":110,"./attribute-extractor.js":142,"./element-array.js":143,"./html-parser.js":147,"./node-parser.js":148,"./vdom-ns.js":149,"./vnode.js":150,"js-ext/extra/hashmap.js":112,"js-ext/lib/object.js":115,"js-ext/lib/promise.js":116,"js-ext/lib/string.js":117,"polyfill":128,"polyfill/extra/transition.js":123,"polyfill/extra/transitionend.js":124,"polyfill/extra/vendorCSS.js":125,"utils":129,"window-ext":135}],147:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":142,"./vdom-ns.js":149,"js-ext/extra/hashmap.js":112,"js-ext/lib/object.js":115,"polyfill":128}],148:[function(require,module,exports){
+module.exports=require(74)
+},{"./attribute-extractor.js":142,"./vdom-ns.js":149,"./vnode.js":150,"js-ext/extra/hashmap.js":112,"js-ext/lib/object.js":115,"polyfill":128}],149:[function(require,module,exports){
+module.exports=require(75)
+},{"js-ext/extra/hashmap.js":112,"js-ext/lib/object.js":115,"polyfill":128}],150:[function(require,module,exports){
+module.exports=require(76)
+},{"./attribute-extractor.js":142,"./html-parser.js":147,"./vdom-ns.js":149,"js-ext/extra/hashmap.js":112,"js-ext/extra/lightmap.js":113,"js-ext/lib/array.js":114,"js-ext/lib/object.js":115,"js-ext/lib/string.js":117,"polyfill":128,"utils/lib/timers.js":131}],151:[function(require,module,exports){
+module.exports=require(77)
+},{"./partials/element-plugin.js":144,"./partials/extend-document.js":145,"./partials/extend-element.js":146,"./partials/node-parser.js":148,"js-ext/extra/hashmap.js":112,"js-ext/lib/object.js":115}],152:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":153,"./lib/timers.js":154}],153:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":316,"polyfill/polyfill-base.js":157}],154:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":157}],155:[function(require,module,exports){
+module.exports=require(14)
+},{}],156:[function(require,module,exports){
+module.exports=require(15)
+},{}],157:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":155,"./lib/window.console.js":156}],158:[function(require,module,exports){
+"use strict";
+
+require('js-ext/lib/object.js');
+require('polyfill');
+
+/**
+ *
+ *
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ * @module focusmanager
+ * @class FocusManager
+ * @since 0.0.1
+*/
+
+var NAME = '[focusmanager]: ',
+    async = require('utils').async,
+    createHashMap = require('js-ext/extra/hashmap.js').createMap,
+    DEFAULT_SELECTOR = 'input, button, select, textarea, .focusable',
+    // SPECIAL_KEYS needs to be a native Object --> we need .some()
+    SPECIAL_KEYS = {
+        shift: 'shiftKey',
+        ctrl: 'ctrlKey',
+        cmd: 'metaKey',
+        alt: 'altKey'
+    },
+    DEFAULT_KEYUP = 'shift+9',
+    DEFAULT_KEYDOWN = '9',
+    FM_SELECTION = 'fm-selection',
+    FM_SELECTION_START = FM_SELECTION+'start',
+    FM_SELECTION_END = FM_SELECTION+'end',
+    FOCUSSED = 'focussed';
+
+module.exports = function (window) {
+
+    var DOCUMENT = window.document,
+        nodePlugin, FocusManager, Event, nextFocusNode, searchFocusNode, markAsFocussed, getFocusManagerSelector, setupEvents, defineFocusEvent;
+
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
+
+    require('window-ext')(window);
+/*jshint boss:true */
+    if (FocusManager=window._ITSAmodules.FocusManager) {
+/*jshint boss:false */
+        return FocusManager; // FocusManager was already created
+    }
+
+    nodePlugin = require('vdom')(window).Plugins.nodePlugin;
+    Event = require('event-dom')(window);
+
+    getFocusManagerSelector = function(focusContainerNode) {
+        var selector = focusContainerNode.getAttr('fm-manage');
+        (selector.toLowerCase()==='true') && (selector=DEFAULT_SELECTOR);
+        return selector;
+    };
+
+    nextFocusNode = function(e, keyCode, actionkey, focusContainerNode, sourceNode, selector, downwards) {
+        console.log(NAME+'nextFocusNode');
+        var keys, lastIndex, i, specialKeysMatch, specialKey, len, enterPressedOnInput, primaryButtons,
+            inputType, foundNode, formNode, primaryonenter, noloop;
+        keys = actionkey.split('+');
+        len = keys.length;
+        lastIndex = len - 1;
+
+        if ((keyCode===13) && (sourceNode.getTagName()==='INPUT')) {
+            inputType = sourceNode.getAttr('type').toLowerCase();
+            enterPressedOnInput = (inputType==='text') || (inputType==='password');
+        }
+
+        if (enterPressedOnInput) {
+            // check if we need to press the primary button - if available
+/*jshint boss:true */
+            if ((primaryonenter=sourceNode.getAttr('fm-primaryonenter')) && (primaryonenter.toLowerCase()==='true')) {
+/*jshint boss:false */
+                primaryButtons = focusContainerNode.getAll('button.pure-button-primary');
+                primaryButtons.some(function(buttonNode) {
+                    buttonNode.matches(selector) && (foundNode=buttonNode);
+                    return foundNode;
+                });
+                if (foundNode) {
+                    async(function() {
+                        Event.emit(foundNode, 'UI:click');
+                        // _buttonPressed make event-dom to simulate a pressed button for 200ms
+                        Event.emit(foundNode, 'UI:tap', {_buttonPressed: true});
+                        // if the button is of type `submit`, then try to submit the form
+                        formNode = foundNode.inside('form');
+                        formNode && formNode.submit();
+                    });
+                    return foundNode;
+                }
+            }
+        }
+        // double == --> keyCode is number, keys is a string
+        if (enterPressedOnInput || (keyCode==keys[lastIndex])) {
+            // posible keyup --> check if special characters match:
+            specialKeysMatch = true;
+            SPECIAL_KEYS.some(function(value) {
+                specialKeysMatch = !e[value];
+                return !specialKeysMatch;
+            });
+            for (i=lastIndex-1; (i>=0) && !specialKeysMatch; i--) {
+                specialKey = keys[i].toLowerCase();
+                specialKeysMatch = e[SPECIAL_KEYS[specialKey]];
+            }
+        }
+        if (specialKeysMatch) {
+            noloop = focusContainerNode.getAttr('fm-noloop');
+            noloop = noloop && (noloop.toLowerCase()==='true');
+            if (downwards) {
+                return sourceNode.next(selector) || (noloop ? sourceNode.last(selector) : sourceNode.first(selector));
+            }
+            else {
+                return sourceNode.previous(selector) || (noloop ? sourceNode.first(selector) : sourceNode.last(selector));
+            }
+        }
+        return false;
+    };
+
+    markAsFocussed = function(focusContainerNode, node) {
+        console.log(NAME+'markAsFocussed');
+        var selector = getFocusManagerSelector(focusContainerNode),
+            index = focusContainerNode.getAll(selector).indexOf(node) || 0;
+        // we also need to set the appropriate nodeData, so that when the itags re-render,
+        // they don't reset this particular information
+        focusContainerNode.getAll('[fm-lastitem]')
+                          .removeAttrs(['fm-lastitem', 'tabindex'], true)
+                          .removeData('fm-tabindex');
+
+        // also store the lastitem's index --> in case the node gets removed,
+        // or re-rendering itags which don't have the attribute-data.
+        // otherwise, a refocus on the container will set the focus to the nearest item
+        focusContainerNode.setData('fm-lastitem-bkp', index);
+        node.setData('fm-tabindex', true);
+
+        node.setAttrs([
+            {name: 'tabindex', value: '0'},
+            {name: 'fm-lastitem', value: true}
+        ]);
+    };
+
+    searchFocusNode = function(initialNode) {
+        console.log(NAME+'searchFocusNode');
+        var focusContainerNode = initialNode.hasAttr('fm-manage') ? initialNode : initialNode.inside('[fm-manage]'),
+            focusNode, alwaysDefault, fmAlwaysDefault, selector, allFocusableNodes, index;
+
+        if (focusContainerNode) {
+            if (initialNode.matches(getFocusManagerSelector(focusContainerNode))) {
+                markAsFocussed(focusContainerNode, initialNode);
+                focusNode = initialNode;
+            }
+            else {
+                // find the right node that should get focus
+/*jshint boss:true */
+                alwaysDefault = ((fmAlwaysDefault=focusContainerNode.getAttr('fm-alwaysdefault')) && (fmAlwaysDefault.toLowerCase()==='true'));
+/*jshint boss:false */
+                alwaysDefault && (focusNode=focusContainerNode.getElement('[fm-defaultitem="true"]'));
+                if (!focusNode) {
+                    // search for last item
+                    focusNode = focusContainerNode.getElement('[fm-lastitem="true"]');
+                    if (!focusNode) {
+                        // set `selector` right now: we might use it later on even when index is undefined
+                        selector = getFocusManagerSelector(focusContainerNode);
+                        // look at the lastitemindex of the focuscontainer
+                        index = focusContainerNode.getData('fm-lastitem-bkp');
+                        if (index!==undefined) {
+                            allFocusableNodes = focusContainerNode.getAll(selector);
+                            focusNode = allFocusableNodes[index];
+                        }
+                    }
+                }
+                // still not found and alwaysDefault was falsy: try the defualt node:
+                !focusNode && !alwaysDefault && (focusNode=focusContainerNode.getElement('[fm-defaultitem="true"]'));
+                // still not found: try the first focussable node (which we might find inside `allFocusableNodes`:
+                !focusNode && (focusNode = allFocusableNodes ? allFocusableNodes[0] : focusContainerNode.getElement(selector));
+                if (focusNode) {
+                    markAsFocussed(focusContainerNode, focusNode);
+                }
+                else {
+                    focusNode = initialNode;
+                }
+            }
+        }
+        else {
+            focusNode = initialNode;
+        }
+        return focusNode;
+    };
+
+    setupEvents = function() {
+
+        Event.before('keydown', function(e) {
+            console.log(NAME+'before keydown-event');
+            var focusContainerNode,
+                sourceNode = e.target,
+                node = sourceNode.getParent(),
+                selector, keyCode, actionkey, focusNode;
+
+            focusContainerNode = sourceNode.inside('[fm-manage]');
+            if (focusContainerNode) {
+                // key was pressed inside a focusmanagable container
+                selector = getFocusManagerSelector(focusContainerNode);
+                keyCode = e.keyCode;
+
+                // first check for keydown:
+                actionkey = node.getAttr('fm-keydown') || DEFAULT_KEYDOWN;
+                focusNode = nextFocusNode(e, keyCode, actionkey, focusContainerNode, sourceNode, selector, true);
+                if (!focusNode) {
+                    // check for keyup:
+                    actionkey = node.getAttr('fm-keyup') || DEFAULT_KEYUP;
+                    focusNode = nextFocusNode(e, keyCode, actionkey, focusContainerNode, sourceNode, selector);
+                }
+                if (focusNode) {
+                    e.preventDefaultContinue();
+                    e.preventRender(); // don't double render --> focus does this
+                    // prevent default action --> we just want to re-focus, but we DO want afterlisteners
+                    // to be handled in the after-listener: someone else might want to halt the keydown event.
+                    sourceNode.matches(selector) && (e._focusNode=focusNode);
+                }
+            }
+        });
+
+        Event.after('keydown', function(e) {
+            console.log(NAME+'after keydown-event');
+            var focusNode = e._focusNode;
+            if (focusNode && focusNode.focus) {
+                e.preventRender(); // don't double render --> focus does this
+                focusNode.focus();
+            }
+        });
+
+        Event.after('blur', function(e) {
+            console.log(NAME+'after blur-event');
+            var node = e.target,
+                body = DOCUMENT.body;
+            if (node && node.removeAttr) {
+                do {
+                    // we also need to set the appropriate nodeData, so that when the itags re-render,
+                    // they don't reset this particular information
+                    node.removeData(FOCUSSED);
+                    node.removeClass(FOCUSSED, null, null, true);
+                    node = (node===body) ? null : node.getParent();
+                } while (node);
+            }
+        });
+
+        Event.after('focus', function(e) {
+            console.log(NAME+'after focus-event');
+            var node = e.target,
+                body = DOCUMENT.body;
+            if (node && node.setClass) {
+                do {
+                    // we also need to set the appropriate nodeData, so that when the itags re-render,
+                    // they don't reset this particular information
+                    node.setData(FOCUSSED, true);
+                    node.setClass(FOCUSSED, null, null, true);
+                    node = (node===body) ? null : node.getParent();
+                } while (node);
+            }
+        });
+
+        // focus-fix for keeping focus when a mouse gets down for a longer time
+        Event.after(['mousedown', 'press'], function(e) {
+            console.log(NAME+'after focus-event');
+            var node = e.target;
+            if (!node.hasFocus()) {
+                e.preventRender(); // don't double render --> focus does this
+                node.focus();
+            }
+        }, 'button');
+
+        Event.after(['tap', 'click'], function(e) {
+            console.log(NAME+'after tap-event');
+            var focusNode = e.target,
+                focusContainerNode;
+
+            if (focusNode && focusNode.inside) {
+                focusContainerNode = focusNode.hasAttr('fm-manage') ? focusNode : focusNode.inside('[fm-manage]');
+            }
+            if (focusContainerNode) {
+                if ((focusNode===focusContainerNode) || !focusNode.matches(getFocusManagerSelector(focusContainerNode))) {
+                    focusNode = searchFocusNode(focusNode);
+                }
+                if (focusNode.hasFocus()) {
+                    markAsFocussed(focusContainerNode, focusNode);
+                }
+                else {
+                    e.preventRender(); // don't double render --> focus does this
+                    focusNode.focus();
+                }
+            }
+        });
+
+        Event.after(['keypress', 'mouseup', 'panup', 'mousedown', 'pandown'], function(e) {
+            console.log(NAME+'after '+e.type+'-event');
+            var focusContainerNode,
+                sourceNode = e.target,
+                selector;
+
+            focusContainerNode = sourceNode.inside('[fm-manage]');
+            if (focusContainerNode) {
+                // key was pressed inside a focusmanagable container
+                selector = getFocusManagerSelector(focusContainerNode);
+                if (sourceNode.matches(selector)) {
+                    sourceNode.setAttr(FM_SELECTION_START, sourceNode.selectionStart || '0')
+                              .setAttr(FM_SELECTION_END, sourceNode.selectionEnd || '0');
+                }
+            }
+        }, 'input[type="text"], textarea');
+
+        Event.after('focus', function(e) {
+            console.log(NAME+'after focus-event');
+            var focusContainerNode,
+                sourceNode = e.target,
+                selector, selectionStart, selectionEnd;
+
+            focusContainerNode = sourceNode.inside('[fm-manage]');
+            if (focusContainerNode) {
+                // key was pressed inside a focusmanagable container
+                selector = getFocusManagerSelector(focusContainerNode);
+                if (sourceNode.matches(selector)) {
+                    // cautious: fm-selectionstart can be 0 --> which would lead into a falsy value
+                    selectionStart = sourceNode.getAttr(FM_SELECTION_START);
+                    (selectionStart===undefined) && (selectionStart=sourceNode.getValue().length);
+                    selectionEnd = Math.max(sourceNode.getAttr(FM_SELECTION_END) || selectionStart, selectionStart);
+                    sourceNode.selectionEnd = selectionEnd;
+                    sourceNode.selectionStart = selectionStart;
+                    markAsFocussed(focusContainerNode, sourceNode);
+                }
+            }
+        }, 'input[type="text"], textarea');
+
+    };
+
+    setupEvents();
+
+    window._ITSAmodules.FocusManager = FocusManager = nodePlugin.definePlugin('fm', {manage: 'true'});
+
+    defineFocusEvent = function(customevent) {
+        Event.defineEvent(customevent)
+             .defaultFn(function(e) {
+                 var node = e.target,
+                     leftScroll = window.getScrollLeft(),
+                     topScroll = window.getScrollTop();
+                 node._focus();
+                 // reset winscroll:
+                 window.scrollTo(leftScroll, topScroll);
+                 // make sure the node is inside the viewport:
+                 // node.forceIntoView();
+             });
+    };
+
+    (function(HTMLElementPrototype) {
+
+        HTMLElementPrototype._focus = HTMLElementPrototype.focus;
+        HTMLElementPrototype.focus = function() {
+            console.log(NAME+'focus');
+            /**
+             * In case of a manual focus (node.focus()) the node will fire an `manualfocus`-event
+             * which can be prevented.
+             * @event manualfocus
+            */
+            var focusNode = searchFocusNode(this),
+                emitterName = focusNode._emitterName,
+                customevent = emitterName+':manualfocus';
+            Event._ce[customevent] || defineFocusEvent(customevent);
+            focusNode.emit('manualfocus');
+        };
+
+    }(window.HTMLElement.prototype));
+
+
+    return FocusManager;
+};
+},{"event-dom":159,"js-ext/extra/hashmap.js":231,"js-ext/lib/object.js":232,"polyfill":238,"utils":239,"vdom":286,"window-ext":287}],159:[function(require,module,exports){
+"use strict";
+
+/**
+ * Integrates DOM-events to event. more about DOM-events:
+ * http://www.smashingmagazine.com/2013/11/12/an-introduction-to-dom-events/
+ *
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ * @example
+ * Event = require('event-dom')(window);
+ *
+ * @module event
+ * @submodule event-dom
+ * @class Event
+ * @since 0.0.1
+*/
+
+
+var NAME = '[event-dom]: ',
+    Event = require('event'),
+    laterSilent = require('utils').laterSilent,
+    createHashMap = require('js-ext/extra/hashmap.js').createMap,
+    OUTSIDE = 'outside',
+    REGEXP_NODE_ID = /^#\S+$/,
+    REGEXP_EXTRACT_NODE_ID = /#(\S+)/,
+    REGEXP_UI_OUTSIDE = /^.+outside$/,
+    TIME_BTN_PRESSED = 200,
+    PURE_BUTTON_ACTIVE = 'pure-button-active',
+    UI = 'UI:',
+    NODE = 'node',
+    REMOVE = 'remove',
+    INSERT = 'insert',
+    CHANGE = 'change',
+    ATTRIBUTE = 'attribute',
+    CLICK = 'click',
+    RIGHTCLICK = 'right'+CLICK,
+    CENTERCLICK = 'center'+CLICK,
+    EV_REMOVED = UI+NODE+REMOVE,
+    EV_INSERTED = UI+NODE+INSERT,
+    EV_CONTENT_CHANGE = UI+NODE+'content'+CHANGE,
+    EV_ATTRIBUTE_REMOVED = UI+ATTRIBUTE+REMOVE,
+    EV_ATTRIBUTE_CHANGED = UI+ATTRIBUTE+CHANGE,
+    EV_ATTRIBUTE_INSERTED = UI+ATTRIBUTE+INSERT,
+    mutationEventsDefined = false,
+
+    /*
+     * Internal hash containing all DOM-events that are listened for (at `document`).
+     *
+     * DOMEvents = {
+     *     'click': callbackFn,
+     *     'mousemove': callbackFn,
+     *     'keypress': callbackFn
+     * }
+     *
+     * @property DOMEvents
+     * @default {}
+     * @type Object
+     * @private
+     * @since 0.0.1
+    */
+    DOMEvents = {};
+
+    require('js-ext/lib/string.js');
+    require('js-ext/lib/array.js');
+    require('js-ext/lib/object.js');
+    require('polyfill/polyfill-base.js');
+
+module.exports = function (window) {
+    var DOCUMENT = window.document,
+        _domSelToFunc, _evCallback, _findCurrentTargets, _preProcessor, _setupEvents, _setupMutationListener, _teardownMutationListener,
+        _setupDomListener, _teardownDomListener, SORT, _sortFunc, _sortFuncReversed, _getSubscribers, _selToFunc, MUTATION_EVENTS;
+
+    require('vdom')(window);
+
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
+
+    if (window._ITSAmodules.EventDom) {
+        return Event; // Event was already extended
+    }
+
+    MUTATION_EVENTS = [EV_REMOVED, EV_INSERTED, EV_CONTENT_CHANGE, EV_ATTRIBUTE_REMOVED, , EV_ATTRIBUTE_CHANGED, EV_ATTRIBUTE_INSERTED];
+
+    /*
+     * Transfprms the selector to a valid function
+     *
+     * @method _evCallback
+     * @param customEvent {String} the customEvent that is transported to the eventsystem
+     * @param subscriber {Object} subscriber
+     * @param subscriber.o {Object} context
+     * @param subscriber.cb {Function} callbackFn
+     * @param subscriber.f {Function|String} filter
+     * @private
+     * @since 0.0.1
+     */
+    _selToFunc = function(customEvent, subscriber) {
+        Event._sellist.some(function(selFn) {
+            return selFn(customEvent, subscriber);
+        });
+    };
+
+    /*
+     * Creates a filterfunction out of a css-selector. To be used for catching any dom-element, without restrictions
+     * of any context (like Parcels can --> Parcel.Event uses _parcelSelToDom instead)
+     * On "non-outside" events, subscriber.t is set to the node that first matches the selector
+     * so it can be used to set as e.target in the final subscriber
+     *
+     * @method _domSelToFunc
+     * @param customEvent {String} the customEvent that is transported to the eventsystem
+     * @param subscriber {Object} subscriber
+     * @param subscriber.o {Object} context
+     * @param subscriber.cb {Function} callbackFn
+     * @param subscriber.f {Function|String} filter
+     * @private
+     * @since 0.0.1
+     */
+    _domSelToFunc = function(customEvent, subscriber) {
+        // this stage is runned during subscription
+        var outsideEvent = REGEXP_UI_OUTSIDE.test(customEvent),
+            selector = subscriber.f,
+            context = subscriber.o,
+            vnode = subscriber.o.vnode,
+            isCustomElement = vnode && vnode.isItag,
+            isParcel = isCustomElement && (vnode.tag==='I-PARCEL'),
+            nodeid, byExactId;
+
+        console.log(NAME, '_domSelToFunc type of selector = '+typeof selector);
+        // note: selector could still be a function: in case another subscriber
+        // already changed it.
+        if ((!selector && !isCustomElement) || (typeof selector === 'function')) {
+            subscriber.n || (subscriber.n = isCustomElement ? context : DOCUMENT);
+            return true;
+        }
+        selector || (selector='');
+
+        nodeid = selector.match(REGEXP_EXTRACT_NODE_ID);
+        nodeid ? (subscriber.nId=nodeid[1]) : (subscriber.n=isCustomElement ? context : DOCUMENT);
+        byExactId = REGEXP_NODE_ID.test(selector);
+
+        subscriber.f = function(e) {
+            // this stage is runned when the event happens
+            console.log(NAME, '_domSelToFunc inside filter. selector: '+selector);
+            var node = e.target,
+                vnode = node.vnode,
+                character1 = selector && selector.substr(1),
+                match = false;
+            if (!isCustomElement || isParcel || subscriber.o.contains(node)) {
+                if (selector==='') {
+                    match = true;
+                }
+                else {
+                    // e.target is the most deeply node in the dom-tree that caught the event
+                    // our listener uses `selector` which might be a node higher up the tree.
+                    // we will reset e.target to this node (if there is a match)
+                    // note that e.currentTarget will always be `document` --> we're not interested in that
+                    // also, we don't check for `node`, but for node.matchesSelector: the highest level `document`
+                    // is not null, yet it doesn;t have .matchesSelector so it would fail
+                    if (vnode) {
+                        // we go through the vdom
+                        if (!vnode.removedFromDOM) {
+                            while (vnode && !match) {
+                                console.log(NAME, '_domSelToFunc inside filter check match using the vdom');
+                                match = byExactId ? (vnode.id===character1) : vnode.matchesSelector(selector);
+                                // if there is a match, then set
+                                // e.target to the target that matches the selector
+                                if (match && !outsideEvent) {
+                                    subscriber.t = vnode.domNode;
+                                }
+                                vnode = vnode.vParent;
+                            }
+                        }
+                    }
+                    else {
+                        // we go through the dom
+                        while (node.matchesSelector && !match) {
+                            console.log(NAME, '_domSelToFunc inside filter check match using the dom');
+                            match = byExactId ? (node.id===character1) : node.matchesSelector(selector);
+                            // if there is a match, then set
+                            // e.target to the target that matches the selector
+                            if (match && !outsideEvent) {
+                                subscriber.t = node;
+                            }
+                            node = node.parentNode;
+                        }
+                    }
+                }
+            }
+            console.log(NAME, '_domSelToFunc filter returns '+(!outsideEvent ? match : !match));
+            return !outsideEvent ? match : !match;
+        };
+        return true;
+    };
+
+    // at this point, we need to find out what are the current node-refs. whenever there is
+    // a filter that starts with `#` --> in those cases we have a bubble-chain, because the selector isn't
+    // set up with `document` at its root.
+    // we couldn't do this at time of subscribtion, for the nodes might not be there at that time.
+    // however, we only need to do this once: we store the value if we find them
+    // no problem when the nodes leave the dom later: the previous filter wouldn't pass
+    _findCurrentTargets = function(subscribers) {
+        console.log(NAME, '_findCurrentTargets');
+        subscribers.forEach(
+            function(subscriber) {
+                console.log(NAME, '_findCurrentTargets for single subscriber. nId: '+subscriber.nId);
+                subscriber.nId && (subscriber.n=DOCUMENT.getElementById(subscriber.nId, true));
+            }
+        );
+    };
+
+    /*
+     * Generates an event through our Event-system. Does the actual transportation from DOM-events
+     * into our Eventsystem. It also looks at the response of our Eventsystem: if our system
+     * halts or preventDefaults the customEvent, then the original DOM-event will be preventDefaulted.
+     *
+     * @method _evCallback
+     * @param e {Object} eventobject
+     * @private
+     * @since 0.0.1
+     */
+    _evCallback = function(e) {
+        console.log(NAME, '_evCallback');
+        var allSubscribers = Event._subs,
+            eType = e.type,
+            eventobject, subs, wildcard_named_subs, named_wildcard_subs, wildcard_wildcard_subs, subsOutside,
+            subscribers, eventobjectOutside, wildcard_named_subsOutside, customEvent, eventName, which;
+
+        eventName = eType;
+        // first: a `click` event might be needed to transformed into `rightclick`:
+        if (eventName===CLICK) {
+            which = e.which;
+            (which===2) && (eventName=CENTERCLICK);
+            (which===3) && (eventName=RIGHTCLICK);
+        }
+
+        customEvent = 'UI:'+eventName;
+
+        subs = allSubscribers[customEvent];
+        wildcard_named_subs = allSubscribers['*:'+eventName];
+        named_wildcard_subs = allSubscribers['UI:*'];
+        wildcard_wildcard_subs = allSubscribers['*:*'];
+
+        // Emit the dom-event though our eventsystem:
+        // NOTE: emit() needs to be synchronous! otherwise we wouldn't be able
+        // to preventDefault in time
+        //
+        // e = eventobject from the DOM-event OR gesture-event
+        // eventobject = eventobject from our Eventsystem, which get returned by calling `emit()`
+
+        // now so the work:
+        subscribers = _getSubscribers(e, true, subs, wildcard_named_subs, named_wildcard_subs, wildcard_wildcard_subs);
+        eventobject = Event._emit(e.target, customEvent, e, subscribers, [], _preProcessor, false, true);
+
+        // now check outside subscribers
+        subsOutside = allSubscribers[customEvent+OUTSIDE];
+        wildcard_named_subsOutside = allSubscribers['*:'+eventName+OUTSIDE];
+        subscribers = _getSubscribers(e, true, subsOutside, wildcard_named_subsOutside);
+        eventobjectOutside = Event._emit(e.target, customEvent+OUTSIDE, e, subscribers, [], _preProcessor, false, true);
+
+        // if eventobject was preventdefaulted or halted: take appropriate action on
+        // the original dom-event. Note: only the original event can caused this, not the outsideevent
+        // stopPropagation on the original eventobject has no impact on our eventsystem, but who know who else is watching...
+        // be carefull though: not all gesture events have e.stopPropagation
+        eventobject.status.halted && e.stopPropagation && e.stopPropagation();
+        // now we might need to preventDefault the original event.
+        // be carefull though: not all gesture events have e.preventDefault
+        if ((eventobject.status.halted || eventobject.status.defaultPrevented || eventobject.status.defaultPreventedContinue) && e.preventDefault) {
+            e.preventDefault();
+        }
+
+        if (eventobject.status.ok) {
+            // last step: invoke the aftersubscribers
+            // we need to do this asynchronous: this way we pass them AFTER the DOM-event's defaultFn
+            // also make sure to paas-in the payload of the manipulated eventobject
+            subscribers = _getSubscribers(e, false, subs, wildcard_named_subs, named_wildcard_subs, wildcard_wildcard_subs);
+            (subscribers.length>0) && laterSilent(Event._emit.bind(Event, e.target, customEvent, eventobject, [], subscribers, _preProcessor, true), 10);
+
+            // now check outside subscribers
+            subscribers = _getSubscribers(e, false, subsOutside, wildcard_named_subsOutside);
+            (subscribers.length>0) && laterSilent(Event._emit.bind(Event, e.target, customEvent+OUTSIDE, eventobjectOutside, [], subscribers, _preProcessor, true), 10);
+        }
+    };
+
+    /*
+     * Creates an array of subscribers in the right order, conform their position in the DOM.
+     * Only subscribers that match the filter are involved.
+     *
+     * @method _getSubscribers
+     * @param e {Object} eventobject
+     * @param before {Boolean} whether it is a before- or after-subscriber
+     * @param subs {Array} array with subscribers
+     * @param wildcard_named_subs {Array} array with subscribers
+     * @param named_wildcard_subs {Array} array with subscribers
+     * @param wildcard_wildcard_subs {Array} array with subscribers
+     * @private
+     * @since 0.0.1
+     */
+    _getSubscribers = function(e, before, subs, wildcard_named_subs, named_wildcard_subs, wildcard_wildcard_subs) {
+        var subscribers = [],
+            beforeOrAfter = before ? 'b' : 'a',
+            saveConcat = function(extrasubs) {
+                extrasubs && extrasubs[beforeOrAfter] && (subscribers=subscribers.concat(extrasubs[beforeOrAfter]));
+            };
+        saveConcat(subs);
+        saveConcat(wildcard_named_subs);
+        saveConcat(named_wildcard_subs);
+        saveConcat(wildcard_wildcard_subs);
+        if (subscribers.length>0) {
+            subscribers = function(array, testFunc) {
+                // quickest way to filter an array: see http://jsperf.com/array-filter-performance/4
+                var filtered = array.slice(0), i;
+                for (i=array.length-1; i>=0; i--) {
+                    console.log(NAME, 'filtercheck for subscriber');
+                    testFunc(array[i]) || filtered.splice(i, 1);
+                }
+                return filtered;
+            }(subscribers, function(subscriber) {return (!subscriber.f || subscriber.f.call(subscriber.o, e));});
+            if (subscribers.length>0) {
+                _findCurrentTargets(subscribers);
+                // sorting, based upon the sortFn
+                subscribers.sort(SORT);
+            }
+        }
+        return subscribers;
+    };
+
+    /*
+     * Sets e.target, e.currentTarget and e.sourceTarget for the single subscriber.
+     * Needs to be done for evenry single subscriber, because with a single event, these values change for each subscriber
+     *
+     * @method _preProcessor
+     * @param subscriber {Object} subscriber
+     * @param subscriber.o {Object} context
+     * @param subscriber.cb {Function} callbackFn
+     * @param subscriber.f {Function|String} filter
+     * @param e {Object} eventobject
+     * @private
+     * @since 0.0.1
+     */
+    _preProcessor = function(subscriber, e) {
+        console.log(NAME, '_preProcessor');
+        // inside the aftersubscribers, we may need exit right away.
+        // this would be the case whenever stopPropagation or stopImmediatePropagation was called
+        // in case the subscribernode equals the node on which stopImmediatePropagation was called: return true
+        var propagationStopped, immediatePropagationStopped,
+            targetnode = (subscriber.t || subscriber.n);
+
+        immediatePropagationStopped = e.status.immediatePropagationStopped;
+        if (immediatePropagationStopped && ((immediatePropagationStopped===targetnode) || !immediatePropagationStopped.contains(targetnode))) {
+            console.log(NAME, '_preProcessor will return true because of immediatePropagationStopped');
+            return true;
+        }
+        // in case the subscribernode does not fall within or equals the node on which stopPropagation was called: return true
+        propagationStopped = e.status.propagationStopped;
+        if (propagationStopped && (propagationStopped!==targetnode) && !propagationStopped.contains(targetnode)) {
+            console.log(NAME, '_preProcessor will return true because of propagationStopped');
+            return true;
+        }
+
+        e.currentTarget = subscriber.n;
+        // now we might need to set e.target to the right node:
+        // the filterfunction might have found the true domnode that should act as e.target
+        // and set it at subscriber.t
+        // also, we need to backup the original e.target: this one should be reset when
+        // we encounter a subscriber with its own filterfunction instead of selector
+        if (subscriber.t) {
+            e.sourceTarget || (e.sourceTarget=e.target);
+            e.target = subscriber.t;
+        }
+        else {
+            e.sourceTarget && (e.target=e.sourceTarget);
+        }
+        return false;
+    };
+
+    /*
+     * Transports DOM-events to the Event-system. Catches events at their most early stage:
+     * their capture-phase. When these events happen, a new customEvent is generated by our own
+     * Eventsystem, by calling _evCallback(). This way we keep DOM-events and our Eventsystem completely separated.
+     *
+     * @method _setupDomListener
+     * @param customEvent {String} the customEvent that is transported to the eventsystem
+     * @param subscriber {Object} subscriber
+     * @param subscriber.o {Object} context
+     * @param subscriber.cb {Function} callbackFn
+     * @param subscriber.f {Function|String} filter
+     * @private
+     * @since 0.0.1
+     */
+    _setupDomListener = function(customEvent, subscriber) {
+        console.log(NAME, '_setupDomListener');
+        var eventSplitted = customEvent.split(':'),
+            eventName = eventSplitted[1],
+            outsideEvent = REGEXP_UI_OUTSIDE.test(eventName);
+
+        // be careful: anyone could also register an `outside`-event.
+        // in those cases, the DOM-listener must be set up without `outside`
+        outsideEvent && (eventName=eventName.substring(0, eventName.length-7));
+
+        // if eventName equals `mouseover` or `mouseleave` then we quit:
+        // people should use `mouseover` and `mouseout`
+        if ((eventName==='mouseenter') || (eventName==='mouseleave')) {
+            console.warn(NAME, 'Subscription to '+eventName+' not supported, use mouseover and mouseout: this eventsystem uses these non-noisy so they act as mouseenter and mouseleave');
+            return;
+        }
+
+        // now transform the subscriber's filter from css-string into a filterfunction
+        _selToFunc(customEvent, subscriber);
+
+        // already registered? then return, also return if someone registered for UI:*
+        if (DOMEvents[eventName] || (eventName==='*')) {
+            // cautious: one might have registered the event, but not yet the outsideevent.
+            // in that case: save this setting:
+            outsideEvent && (DOMEvents[eventName+OUTSIDE]=true);
+            return;
+        }
+
+        DOMEvents[eventName] = true;
+        outsideEvent && (DOMEvents[eventName+OUTSIDE]=true);
+        // one exception: windowresize should listen to the window-object
+        if (eventName==='resize') {
+            window.addEventListener(eventName, _evCallback);
+        }
+        else {
+            ((eventName===RIGHTCLICK) || (eventName===CENTERCLICK)) && (eventName=CLICK);
+            // important: set the third argument `true` so we listen to the capture-phase.
+            DOCUMENT.addEventListener(eventName, _evCallback, true);
+        }
+    };
+
+    _setupEvents = function() {
+
+        // make sure disabled buttons don't work:
+        Event.before(['click', 'tap'], function(e) {
+            e.preventDefault();
+        }, '.pure-button-disabled, button[disabled]');
+
+        // make sure that a focussed button which recieves an keypress also fires the `tap`-event
+        // note: the `click`-event will always be fired by the browser
+        Event.before(
+            'keydown',
+            function(e) {
+                e._buttonPressed = true;
+                Event.emit(e.target, 'UI:tap', e);
+            },
+            function(e) {
+                var keyCode = e.keyCode;
+                return (e.target.getTagName()==='BUTTON') && ((keyCode===13) || (keyCode===32));
+            }
+        );
+
+        // make sure that a focussed button which recieves an keypress also fires the `tap`-event
+        // note: the `click`-event will always be fired by the browser
+        Event.after(
+            'tap',
+            function(e) {
+                var buttonNode = e.target;
+                if (e._buttonPressed) {
+                    buttonNode.setClass(PURE_BUTTON_ACTIVE);
+                    // even if the node isn't in the DOM, we can still try to manipulate it:
+                    // the vdom makes sure no errors occur when the node is already removed
+                    laterSilent(buttonNode.removeClass.bind(buttonNode, PURE_BUTTON_ACTIVE), TIME_BTN_PRESSED);
+                }
+            }
+        );
+
+    };
+
+    _setupMutationListener = function() {
+        DOCUMENT.hasMutationSubs = true;
+        if (!mutationEventsDefined) {
+            Event.defineEvent(EV_REMOVED).unPreventable().noRender();
+            Event.defineEvent(EV_INSERTED).unPreventable().noRender();
+            Event.defineEvent(EV_CONTENT_CHANGE).unPreventable().noRender();
+            Event.defineEvent(EV_ATTRIBUTE_REMOVED).unPreventable().noRender();
+            Event.defineEvent(EV_ATTRIBUTE_CHANGED).unPreventable().noRender();
+            Event.defineEvent(EV_ATTRIBUTE_INSERTED).unPreventable().noRender();
+            mutationEventsDefined = true;
+        }
+    };
+
+    /*
+     *
+     * @method _sortFunc
+     * @param customEvent {String}
+     * @private
+     * @return {Function|undefined} sortable function
+     * @since 0.0.1
+     */
+    _sortFunc = function(subscriberOne, subscriberTwo) {
+        return (subscriberTwo.t || subscriberTwo.n).contains(subscriberOne.t || subscriberOne.n) ? -1 : 1;
+    };
+
+    /*
+     *
+     * @method _sortFunc
+     * @param customEvent {String}
+     * @private
+     * @return {Function|undefined} sortable function
+     * @since 0.0.1
+     */
+    _sortFuncReversed = function(subscriberOne, subscriberTwo) {
+        return (subscriberOne.t || subscriberOne.n).contains(subscriberTwo.t || subscriberTwo.n) ? 1 : -1;
+    };
+
+    /*
+     * Removes DOM-eventsubscribers from document when they are no longer needed.
+     *
+     * @method _teardownDomListener
+     * @param customEvent {String} the customEvent that is transported to the eventsystem
+     * @private
+     * @since 0.0.2
+     */
+    _teardownDomListener = function(customEvent) {
+        var customEventWithoutOutside = customEvent.endsWith(OUTSIDE) ? customEvent.substr(0, customEvent.length-7) : customEvent,
+            eventSplitted = customEventWithoutOutside.split(':'),
+            eventName = eventSplitted[1],
+            stillInUse;
+
+        if ((customEventWithoutOutside===CLICK) || (customEventWithoutOutside===RIGHTCLICK) || (customEventWithoutOutside===CENTERCLICK)) {
+            stillInUse = Event._subs[CLICK] ||
+                         Event._subs[CLICK+OUTSIDE];
+                         Event._subs[RIGHTCLICK] ||
+                         Event._subs[RIGHTCLICK+OUTSIDE],
+                         Event._subs[CENTERCLICK] ||
+                         Event._subs[CENTERCLICK+OUTSIDE];
+            eventName = CLICK;
+        }
+        else {
+            stillInUse = Event._subs[customEventWithoutOutside] || Event._subs[customEventWithoutOutside+OUTSIDE];
+        }
+        if (!stillInUse) {
+            console.log(NAME, '_teardownDomListener '+customEvent);
+            // remove eventlistener from `document`
+            // one exeption: windowresize should listen to the window-object
+            if (eventName==='resize') {
+                window.removeEventListener(eventName, _evCallback);
+            }
+            else {
+                // important: set the third argument `true` so we listen to the capture-phase.
+                DOCUMENT.removeEventListener(eventName, _evCallback, true);
+            }
+            delete DOMEvents[eventName];
+        }
+    };
+
+    _teardownMutationListener = function() {
+        if (!Event._subs[EV_REMOVED] &&
+            !Event._subs[EV_INSERTED] &&
+            !Event._subs[EV_CONTENT_CHANGE] &&
+            !Event._subs[EV_ATTRIBUTE_REMOVED] &&
+            !Event._subs[EV_ATTRIBUTE_CHANGED] &&
+            !Event._subs[EV_ATTRIBUTE_INSERTED]
+        ) {
+            DOCUMENT.hasMutationSubs = false;
+        }
+    };
+
+    // Now a very tricky one:
+    // Some browsers do an array.sort down-top instead of top-down.
+    // In those cases we need another sortFn, for the position on an equal match should fall
+    // behind instead of before (which is the case on top-down sort)
+    [1,2].sort(function(a /*, b */) {
+        SORT || (SORT=(a===2) ? _sortFuncReversed : _sortFunc);
+    });
+
+    // Now we do some initialization in order to make DOM-events work:
+
+    // Notify when someone subscribes to an UI:* event
+    // if so: then we might need to define a customEvent for it:
+    // alse define the specific DOM-methods that can be called on the eventobject: `stopPropagation` and `stopImmediatePropagation`
+    Event.notify(UI+'*', _setupDomListener, Event)
+         ._setEventObjProperty('stopPropagation', function() {this.status.ok || (this.status.propagationStopped = this.target);})
+         ._setEventObjProperty('stopImmediatePropagation', function() {this.status.ok || (this.status.immediatePropagationStopped = this.target);});
+
+    // Notify when someone subscribes to any event at all --> we might need to transform the filterFn from a selector into a true fnction
+    // this is already done automaticly by _setupDomListener fo UI:* events
+    Event.notify('*:*', function(customEvent, subscriber) {
+        var eventSplitted = customEvent.split(':'),
+            emitterName = eventSplitted[0];
+        if ((emitterName!=='UI') && (typeof subscriber.f==='string')) {
+            // now transform the subscriber's filter from css-string into a filterfunction
+            _selToFunc(customEvent, subscriber);
+        }
+    }, Event);
+
+    // Notify when someone detaches an UI:* event
+    // if so: then we might need to detach the native listener on `document`
+    Event.notifyDetach(UI+'*', _teardownDomListener, Event);
+
+    Event._sellist = [_domSelToFunc];
+
+    _setupEvents();
+
+    // making HTMLElement to be able to emit using event-emitter:
+    (function(HTMLElementPrototype) {
+        HTMLElementPrototype.merge(Event.Emitter('UI'));
+    }(window.HTMLElement.prototype));
+
+
+    // Notify when someone subscribes to an UI:* event
+    // if so: then we might need to define a customEvent for it:
+    // alse define the specific DOM-methods that can be called on the eventobject: `stopPropagation` and `stopImmediatePropagation`
+    Event.notify(MUTATION_EVENTS, _setupMutationListener, Event);
+
+    // Notify when someone detaches an UI:* event
+    // if so: then we might need to detach the native listener on `document`
+    Event.notifyDetach(MUTATION_EVENTS, _teardownMutationListener, Event);
+
+    // Note: window.document has no prototype
+    DOCUMENT.suppressMutationEvents = function(suppress) {
+        this._suppressMutationEvents = suppress;
+    };
+
+    // Event._domCallback is the only method that is added to Event.
+    // We need to do this, because `event-mobile` needs access to the same method.
+    // We could have done without this method and instead listen for a custom-event to handle
+    // Mobile events, however, that would lead into 2 eventcycli which isn't performant.
+
+   /**
+    * Does the actual transportation from DOM-events into the Eventsystem. It also looks at the response of
+    * the Eventsystem: on e.halt() or e.preventDefault(), the original DOM-event will be preventDefaulted.
+    *
+    * @method _domCallback
+    * @param eventName {String} the customEvent that is transported to the eventsystem
+    * @param e {Object} eventobject
+    * @private
+    * @since 0.0.1
+    */
+    Event._domCallback = function(e) {
+        _evCallback(e);
+    };
+
+    // store module:
+    window._ITSAmodules.EventDom = Event;
+    return Event;
+};
+
+},{"event":163,"js-ext/extra/hashmap.js":173,"js-ext/lib/array.js":174,"js-ext/lib/object.js":175,"js-ext/lib/string.js":176,"polyfill/polyfill-base.js":182,"utils":183,"vdom":230}],160:[function(require,module,exports){
+module.exports=require(7)
+},{"js-ext/extra/hashmap.js":165,"js-ext/lib/object.js":166,"polyfill/polyfill-base.js":172}],161:[function(require,module,exports){
+module.exports=require(8)
+},{"./index.js":163}],162:[function(require,module,exports){
+module.exports=require(9)
+},{"./index.js":163,"js-ext/extra/classes.js":164,"js-ext/lib/object.js":166}],163:[function(require,module,exports){
+module.exports=require(10)
+},{"./event-base.js":160,"./event-emitter.js":161,"./event-listener.js":162}],164:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":166,"js-ext/extra/hashmap.js":165,"polyfill/polyfill-base.js":169}],165:[function(require,module,exports){
+module.exports=require(12)
+},{}],166:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":165,"polyfill/polyfill-base.js":169}],167:[function(require,module,exports){
+module.exports=require(14)
+},{}],168:[function(require,module,exports){
+module.exports=require(15)
+},{}],169:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":167,"./lib/window.console.js":168}],170:[function(require,module,exports){
+module.exports=require(14)
+},{}],171:[function(require,module,exports){
+module.exports=require(15)
+},{}],172:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":170,"./lib/window.console.js":171}],173:[function(require,module,exports){
+module.exports=require(12)
+},{}],174:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":179}],175:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":173,"polyfill/polyfill-base.js":179}],176:[function(require,module,exports){
+module.exports=require(23)
+},{}],177:[function(require,module,exports){
+module.exports=require(14)
+},{}],178:[function(require,module,exports){
+module.exports=require(15)
+},{}],179:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":177,"./lib/window.console.js":178}],180:[function(require,module,exports){
+module.exports=require(14)
+},{}],181:[function(require,module,exports){
+module.exports=require(15)
+},{}],182:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":180,"./lib/window.console.js":181}],183:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":184,"./lib/timers.js":185}],184:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":173,"polyfill/polyfill-base.js":188}],185:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":188}],186:[function(require,module,exports){
+module.exports=require(14)
+},{}],187:[function(require,module,exports){
+module.exports=require(15)
+},{}],188:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":186,"./lib/window.console.js":187}],189:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],190:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":194,"js-ext/extra/hashmap.js":191,"polyfill/polyfill-base.js":200}],191:[function(require,module,exports){
+module.exports=require(12)
+},{}],192:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":193,"../lib/object.js":194,"./classes.js":190,"js-ext/extra/hashmap.js":191,"polyfill/lib/weakmap.js":198}],193:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":200}],194:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":191,"polyfill/polyfill-base.js":200}],195:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":200}],196:[function(require,module,exports){
+module.exports=require(23)
+},{}],197:[function(require,module,exports){
+module.exports=require(14)
+},{}],198:[function(require,module,exports){
+module.exports=require(45)
+},{}],199:[function(require,module,exports){
+module.exports=require(15)
+},{}],200:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":197,"./lib/window.console.js":199}],201:[function(require,module,exports){
+module.exports=require(48)
+},{}],202:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":201}],203:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":201}],204:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":201}],205:[function(require,module,exports){
+module.exports=require(14)
+},{}],206:[function(require,module,exports){
+module.exports=require(15)
+},{}],207:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":205,"./lib/window.console.js":206}],208:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":209,"./lib/timers.js":210}],209:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":191,"polyfill/polyfill-base.js":213}],210:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":213}],211:[function(require,module,exports){
+module.exports=require(14)
+},{}],212:[function(require,module,exports){
+module.exports=require(15)
+},{}],213:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":211,"./lib/window.console.js":212}],214:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":215}],215:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":216,"js-ext/lib/object.js":217}],216:[function(require,module,exports){
+module.exports=require(12)
+},{}],217:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":216,"polyfill/polyfill-base.js":220}],218:[function(require,module,exports){
+module.exports=require(14)
+},{}],219:[function(require,module,exports){
+module.exports=require(15)
+},{}],220:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":218,"./lib/window.console.js":219}],221:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":191,"js-ext/lib/object.js":194,"js-ext/lib/string.js":196,"polyfill":207,"polyfill/extra/transition.js":202,"polyfill/extra/vendorCSS.js":204}],222:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":191,"js-ext/lib/object.js":194,"polyfill":207}],223:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":191,"js-ext/lib/object.js":194,"js-ext/lib/string.js":196,"polyfill":207}],224:[function(require,module,exports){
+module.exports=require(71)
+},{"js-ext/extra/hashmap.js":191,"js-ext/lib/object.js":194,"js-ext/lib/string.js":196,"polyfill":207}],225:[function(require,module,exports){
+module.exports=require(72)
+},{"../css/element.css":189,"./attribute-extractor.js":221,"./element-array.js":222,"./html-parser.js":226,"./node-parser.js":227,"./vdom-ns.js":228,"./vnode.js":229,"js-ext/extra/hashmap.js":191,"js-ext/lib/object.js":194,"js-ext/lib/promise.js":195,"js-ext/lib/string.js":196,"polyfill":207,"polyfill/extra/transition.js":202,"polyfill/extra/transitionend.js":203,"polyfill/extra/vendorCSS.js":204,"utils":208,"window-ext":214}],226:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":221,"./vdom-ns.js":228,"js-ext/extra/hashmap.js":191,"js-ext/lib/object.js":194,"polyfill":207}],227:[function(require,module,exports){
+module.exports=require(74)
+},{"./attribute-extractor.js":221,"./vdom-ns.js":228,"./vnode.js":229,"js-ext/extra/hashmap.js":191,"js-ext/lib/object.js":194,"polyfill":207}],228:[function(require,module,exports){
+module.exports=require(75)
+},{"js-ext/extra/hashmap.js":191,"js-ext/lib/object.js":194,"polyfill":207}],229:[function(require,module,exports){
+module.exports=require(76)
+},{"./attribute-extractor.js":221,"./html-parser.js":226,"./vdom-ns.js":228,"js-ext/extra/hashmap.js":191,"js-ext/extra/lightmap.js":192,"js-ext/lib/array.js":193,"js-ext/lib/object.js":194,"js-ext/lib/string.js":196,"polyfill":207,"utils/lib/timers.js":210}],230:[function(require,module,exports){
+module.exports=require(77)
+},{"./partials/element-plugin.js":223,"./partials/extend-document.js":224,"./partials/extend-element.js":225,"./partials/node-parser.js":227,"js-ext/extra/hashmap.js":191,"js-ext/lib/object.js":194}],231:[function(require,module,exports){
+module.exports=require(12)
+},{}],232:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":231,"polyfill/polyfill-base.js":235}],233:[function(require,module,exports){
+module.exports=require(14)
+},{}],234:[function(require,module,exports){
+module.exports=require(15)
+},{}],235:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":233,"./lib/window.console.js":234}],236:[function(require,module,exports){
+module.exports=require(14)
+},{}],237:[function(require,module,exports){
+module.exports=require(15)
+},{}],238:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":236,"./lib/window.console.js":237}],239:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":240,"./lib/timers.js":241}],240:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":231,"polyfill/polyfill-base.js":244}],241:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":244}],242:[function(require,module,exports){
+module.exports=require(14)
+},{}],243:[function(require,module,exports){
+module.exports=require(15)
+},{}],244:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":242,"./lib/window.console.js":243}],245:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],246:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":250,"js-ext/extra/hashmap.js":247,"polyfill/polyfill-base.js":256}],247:[function(require,module,exports){
+module.exports=require(12)
+},{}],248:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":249,"../lib/object.js":250,"./classes.js":246,"js-ext/extra/hashmap.js":247,"polyfill/lib/weakmap.js":254}],249:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":256}],250:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":247,"polyfill/polyfill-base.js":256}],251:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":256}],252:[function(require,module,exports){
+module.exports=require(23)
+},{}],253:[function(require,module,exports){
+module.exports=require(14)
+},{}],254:[function(require,module,exports){
+module.exports=require(45)
+},{}],255:[function(require,module,exports){
+module.exports=require(15)
+},{}],256:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":253,"./lib/window.console.js":255}],257:[function(require,module,exports){
+module.exports=require(48)
+},{}],258:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":257}],259:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":257}],260:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":257}],261:[function(require,module,exports){
+module.exports=require(14)
+},{}],262:[function(require,module,exports){
+module.exports=require(15)
+},{}],263:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":261,"./lib/window.console.js":262}],264:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":265,"./lib/timers.js":266}],265:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":247,"polyfill/polyfill-base.js":269}],266:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":269}],267:[function(require,module,exports){
+module.exports=require(14)
+},{}],268:[function(require,module,exports){
+module.exports=require(15)
+},{}],269:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":267,"./lib/window.console.js":268}],270:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":271}],271:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":272,"js-ext/lib/object.js":273}],272:[function(require,module,exports){
+module.exports=require(12)
+},{}],273:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":272,"polyfill/polyfill-base.js":276}],274:[function(require,module,exports){
+module.exports=require(14)
+},{}],275:[function(require,module,exports){
+module.exports=require(15)
+},{}],276:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":274,"./lib/window.console.js":275}],277:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":247,"js-ext/lib/object.js":250,"js-ext/lib/string.js":252,"polyfill":263,"polyfill/extra/transition.js":258,"polyfill/extra/vendorCSS.js":260}],278:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":247,"js-ext/lib/object.js":250,"polyfill":263}],279:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":247,"js-ext/lib/object.js":250,"js-ext/lib/string.js":252,"polyfill":263}],280:[function(require,module,exports){
+module.exports=require(71)
+},{"js-ext/extra/hashmap.js":247,"js-ext/lib/object.js":250,"js-ext/lib/string.js":252,"polyfill":263}],281:[function(require,module,exports){
+module.exports=require(72)
+},{"../css/element.css":245,"./attribute-extractor.js":277,"./element-array.js":278,"./html-parser.js":282,"./node-parser.js":283,"./vdom-ns.js":284,"./vnode.js":285,"js-ext/extra/hashmap.js":247,"js-ext/lib/object.js":250,"js-ext/lib/promise.js":251,"js-ext/lib/string.js":252,"polyfill":263,"polyfill/extra/transition.js":258,"polyfill/extra/transitionend.js":259,"polyfill/extra/vendorCSS.js":260,"utils":264,"window-ext":270}],282:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":277,"./vdom-ns.js":284,"js-ext/extra/hashmap.js":247,"js-ext/lib/object.js":250,"polyfill":263}],283:[function(require,module,exports){
+module.exports=require(74)
+},{"./attribute-extractor.js":277,"./vdom-ns.js":284,"./vnode.js":285,"js-ext/extra/hashmap.js":247,"js-ext/lib/object.js":250,"polyfill":263}],284:[function(require,module,exports){
+module.exports=require(75)
+},{"js-ext/extra/hashmap.js":247,"js-ext/lib/object.js":250,"polyfill":263}],285:[function(require,module,exports){
+module.exports=require(76)
+},{"./attribute-extractor.js":277,"./html-parser.js":282,"./vdom-ns.js":284,"js-ext/extra/hashmap.js":247,"js-ext/extra/lightmap.js":248,"js-ext/lib/array.js":249,"js-ext/lib/object.js":250,"js-ext/lib/string.js":252,"polyfill":263,"utils/lib/timers.js":266}],286:[function(require,module,exports){
+module.exports=require(77)
+},{"./partials/element-plugin.js":279,"./partials/extend-document.js":280,"./partials/extend-element.js":281,"./partials/node-parser.js":283,"js-ext/extra/hashmap.js":247,"js-ext/lib/object.js":250}],287:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":288}],288:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":289,"js-ext/lib/object.js":290}],289:[function(require,module,exports){
+module.exports=require(12)
+},{}],290:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":289,"polyfill/polyfill-base.js":293}],291:[function(require,module,exports){
+module.exports=require(14)
+},{}],292:[function(require,module,exports){
+module.exports=require(15)
+},{}],293:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":291,"./lib/window.console.js":292}],294:[function(require,module,exports){
+(function (global){
+/**
+ * Provides core IO-functionality.
+ *
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ * @module io
+ * @class IO
+*/
+
+"use strict";
+
+require('polyfill/polyfill-base.js');
+require('js-ext');
+
+var NAME = '[io]: ',
+    GET = 'GET',
+    createHashMap = require('js-ext/extra/hashmap.js').createMap,
+    asyncSilent = require('utils').asyncSilent,
+    DEF_REQ_TIMEOUT = 300000, // don't create an ever-lasting request: always quit after 5 minutes
+    BODY_METHODS = createHashMap({
+        POST: 1,
+        PUT: 1
+    }),
+    CONTENT_TYPE = 'Content-Type',
+    MIME_JSON = 'application/json',
+    DEF_CONTENT_TYPE_POST = 'application/x-www-form-urlencoded; charset=UTF-8',
+    ERROR_NO_XHR = 'no valid xhr transport-mechanism available',
+    REQUEST_TIMEOUT = 'Request-timeout',
+    UNKNOW_ERROR = 'Unknown response-error',
+    XHR_ERROR = 'XHR Error',
+    ABORTED = 'Request aborted',
+    NO_XHR = 'No valid xhr found on this browser';
+
+module.exports = function (window) {
+
+    // to prevent multiple IO instances
+    // (which might happen: http://nodejs.org/docs/latest/api/modules.html#modules_module_caching_caveats)
+    // we make sure IO is defined only once. Therefore we bind it to `window` and return it if created before
+    // We need a singleton IO, because submodules might merge in. You can't have them merging
+    // into some other IO-instance than which is used.
+    var Glob = (typeof global !== 'undefined' ? global : /* istanbul ignore next */ this);
+
+    Glob._ITSAmodules || Object.protectedProp(Glob, '_ITSAmodules', createHashMap());
+
+    if (Glob._ITSAmodules.IO) {
+        return Glob._ITSAmodules.IO;
+    }
+
+    var ENCODE_URI_COMPONENT = encodeURIComponent,
+        IO;
+
+    IO = {
+        config: {},
+
+        //===============================================================================================
+        // private methods:
+        //===============================================================================================
+
+        _xhrList: [],
+
+        /**
+         * Initializes the xhr-instance, based on the config-params.
+         * This method is the standard way of doing xhr-requests without processing streams.
+         *
+         * @method _initXHR
+         * @param xhr {Object} xhr-instance
+         * @param options {Object}
+         *    @param [options.url] {String} The url to which the request is sent.
+         *    @param [options.method='GET'] {String} The HTTP method to use.
+         *    can be ignored, even if streams are used --> the returned Promise will always hold all data
+         *    @param [options.sync=false] {boolean} By default, all requests are sent asynchronously. To send synchronous requests, set to true.
+         *           This feature only works in the browser: nodejs will always perform asynchronous requests.
+         *    @param [options.data] {Object} Data to be sent to the server, either to be used by `query-params` or `body`.
+         *    @param [options.headers] {Object} HTTP request headers.
+         *    @param [options.responseType] {String} Force the response type.
+         *    @param [options.timeout=3000] {number} to timeout the request, leading into a rejected Promise.
+         *    @param [options.withCredentials=false] {boolean} Whether or not to send credentials on the request.
+         * @param fulfill {Function} reference to xhr-promise's fulfill-function
+         * @param reject {Function} reference to xhr-promise's reject-function
+         * @param promise {Promise} the xhr-promise which will be extended with the `abort()`-method
+         * @private
+        */
+        _initXHR: function (xhr, options, promise) {
+            console.log(NAME, '_initXHR');
+            var instance = this,
+                url = options.url,
+                method = options.method || GET,
+                headers = options.headers || {}, // all request will get some headers
+                async = !options.sync,
+                data = options.data,
+                reject = promise.reject;
+            // xhr will be null in case of a CORS-request when no CORS is possible
+            if (!xhr) {
+                console.error(NAME, '_initXHR fails: '+ERROR_NO_XHR);
+                reject(new Error(ERROR_NO_XHR));
+                return;
+            }
+            console.log(NAME, '_initXHR succesfully created '+(xhr._isXHR2 ? 'XMLHttpRequest2' : (xhr._isXDR ? 'XDomainRequest' : 'XMLHttpRequest1'))+'-instance');
+
+            // method-name should be in uppercase:
+            method = method.toUpperCase();
+
+            // in case of BODY-method: eliminate any data behind querystring:
+            // else: append data-object behind querystring
+            if (BODY_METHODS[method]) {
+                url = url.split('?'); // now url is an array
+                url = url[0]; // now url is a String again
+            }
+            else if (data) {
+                url += ((url.indexOf('?') > 0) ? '&' : '?') + instance._toQueryString(data);
+            }
+
+            xhr.open(method, url, async);
+            // xhr.responseType = options.responseType || 'text';
+            options.withCredentials && (xhr.withCredentials=true);
+
+
+            // more initialisation might be needed by extended modules:
+            instance._xhrInitList.each(
+                function(fn) {
+                    fn(xhr, promise, headers, method);
+                }
+            );
+
+            // send the request:
+            xhr.send((BODY_METHODS[method] && data) ? (((headers[CONTENT_TYPE]===MIME_JSON) || xhr._isXDR) ? JSON.stringify(data) : instance._toQueryString(data)) : null);
+
+            console.log(NAME, 'xhr send to '+url+' with method '+method);
+
+            // now add xhr.abort() to the promise, so we can call from within the returned promise-instance
+            promise.abort = function() {
+                console.log(NAME, 'xhr aborted');
+                reject(new Error(ABORTED));
+                xhr._aborted = true; // must be set: IE9 won't allow to read anything on xhr after being aborted
+                xhr.abort();
+            };
+
+            // in case synchronous transfer: force an xhr.onreadystatechange:
+            async || xhr.onreadystatechange();
+        },
+
+        /**
+         * Adds the `headers`-object to `xhr`-headers.
+         *
+         * @method _setHeaders
+         * @param xhr {Object} containing the xhr-instance
+         * @param headers {Object} containing all headers
+         * @param method {String} the request-method used
+         * @private
+        */
+        _setHeaders: function(xhr, promise, headers, method) {
+            // XDR cannot set requestheaders, only XHR:
+            if (!xhr._isXDR) {
+                console.log(NAME, '_setHeaders');
+                var name;
+                if ((method!=='POST') && (method!=='PUT')) {
+                    // force GET-request to make a request instead of using cache (like IE does):
+                    headers['If-Modified-Since'] = 'Wed, 15 Nov 1995 01:00:00 GMT';
+                    // header 'Content-Type' should only be set with POST or PUT requests:
+                    delete headers[CONTENT_TYPE];
+                }
+                // set all headers
+                for (name in headers) {
+                    xhr.setRequestHeader(name, headers[name]);
+                }
+
+                // in case of POST or PUT method: always make sure 'Content-Type' is specified
+                ((method!=='POST') && (method!=='PUT')) || (headers && (CONTENT_TYPE in headers)) || xhr.setRequestHeader(CONTENT_TYPE, DEF_CONTENT_TYPE_POST);
+            }
+        },
+
+        /**
+         * Adds 2 methods on the xhr-instance which are used by xhr when events occur:
+         *
+         * xhr.onreadystatechange()
+         * xhr.ontimeout()  // only XMLHttpRequest2
+         *
+         * These events are responsible for making the Promise resolve.
+         * @method _setReadyHandle
+         * @param xhr {Object} containing the xhr-instance
+         * @param fulfill {Function} reference to the Promise fulfill-function
+         * @param reject {Function} reference to the Promise reject-function
+         * @private
+        */
+        _setReadyHandle: function(xhr, promise) {
+            console.log(NAME, '_setReadyHandle');
+            // for XDomainRequest, we need 'onload' instead of 'onreadystatechange'
+            xhr.onreadystatechange = function() {
+                // CANNOT console xhr.responseText here! IE9 will throw an error:
+                // you can only acces it after (xhr.readyState===4)
+                // also check xhr._aborted --> IE9 comes here after aborted and will throw an error when reading xhr's native properties
+                if (!xhr._aborted && (xhr.readyState===4)) {
+                    clearTimeout(xhr._timer);
+                    if ((xhr.status>=200) && (xhr.status<300)) {
+                        console.log(NAME, 'xhr.onreadystatechange will fulfill xhr-instance: '+xhr.responseText);
+                        // In case streamback function is set, but when no intermediate stream-data was send
+                        // (or in case of XDR: below 2kb it doesn't call onprogress)
+                        // --> we might need to call onprogress ourselve.
+                        if (xhr._isStream && !xhr._gotstreamed) {
+                            xhr.onprogress(xhr.responseText);
+                        }
+                        promise.fulfill(xhr);
+                    }
+                    else {
+                        console.warn(NAME, 'xhr.onreadystatechange will reject xhr-instance: '+xhr.statusText);
+                        promise.reject(new Error(xhr.statusText || UNKNOW_ERROR+' '+xhr.status));
+                    }
+                }
+            };
+            xhr.onerror = function() {
+                clearTimeout(xhr._timer);
+                promise.reject(new Error(XHR_ERROR));
+            };
+        },
+
+        /**
+         * Stringifies an object into one string with every pair separated by `&`
+         *
+         * @method _toQueryString
+         * @param data {Object} containing key-value pairs
+         * @return {String} stringified presentation of the object, with every pair separated by `&`
+         * @private
+        */
+        _toQueryString: function(data) {
+            var paramArray = [],
+                key, value;
+        // TODO: use `object` module
+            for (key in data) {
+                value = data[key];
+                key = ENCODE_URI_COMPONENT(key);
+                paramArray.push((value === null) ? key : (key + '=' + ENCODE_URI_COMPONENT(value)));
+            }
+            console.log(NAME, '_toQueryString --> '+paramArray.join('&'));
+            return paramArray.join('&');
+        },
+
+        /**
+         * Sends a HTTP request to the server and returns a Promise with an additional .abort() method to cancel the request.
+         * This method is the standard way of doing xhr-requests without processing streams.
+         *
+         * @method request
+         * @param options {Object}
+         *    @param [options.url] {String} The url to which the request is sent.
+         *    @param [options.method='GET'] {String} The HTTP method to use.
+         *    can be ignored, even if streams are used --> the returned Promise will always hold all data
+         *    @param [options.sync=false] {boolean} By default, all requests are sent asynchronously. To send synchronous requests, set to true.
+         *    @param [options.data] {Object} Data to be sent to the server, either to be used by `query-params` or `body`.
+         *    @param [options.headers] {Object} HTTP request headers.
+         *    @param [options.responseType] {String} Force the response type.
+         *    @param [options.timeout=3000] {number} to timeout the request, leading into a rejected Promise.
+         *    @param [options.withCredentials=false] {boolean} Whether or not to send credentials on the request.
+         *    @param [options.streamback] {Function} callbackfunction in case you want to process streams (needs io-stream module).
+         * @return {Promise} Promise holding the request. Has an additional .abort() method to cancel the request.
+         * <ul>
+         *     <li>on success: xhr {XMLHttpRequest1|XMLHttpRequest2} xhr-response</li>
+         *     <li>on failure: reason {Error}</li>
+         * </ul>
+        */
+        request: function(options) {
+            console.log(NAME, 'request');
+            var instance = this,
+                props = {},
+                xhr, promise;
+            options || (options={});
+            promise = Promise.manage(options.streamback);
+
+            xhr = new window.XMLHttpRequest();
+            props._isXHR2 = ('withCredentials' in xhr) || (window.navigator.userAgent==='fake');
+            // it could be other modules like io-cors or io-stream have subscribed
+            // xhr might be changed, also private properties might be extended
+            instance._xhrList.each(
+                function(fn) {
+                    xhr = fn(xhr, props, options, promise);
+                }
+            );
+            if (!xhr) {
+                return Promise.reject(NO_XHR);
+            }
+            xhr.merge(props);
+            console.log(NAME, 'request creating xhr of type: '+ (props._isXHR2 ? 'XMLHttpRequest2' : (props._isXDR ? 'XDomainRequest' : 'XMLHttpRequest1')));
+            console.log(NAME, 'CORS-IE: '+ props._CORS_IE + ', canStream: '+props._canStream);
+
+            // Don't use xhr.timeout --> IE<10 throws an error when set xhr.timeout
+            // We use a timer that aborts the request
+            Object.defineProperty(xhr, '_timer', {
+                configurable: false,
+                enumerable: false,
+                writable: false,
+                value: setTimeout(function() {
+                           promise.reject(new Error(REQUEST_TIMEOUT));
+                           xhr._aborted = true; // must be set: IE9 won't allow to read anything on xhr after being aborted
+                           xhr.abort();
+                       }, options.timeout || instance.config.timeout || DEF_REQ_TIMEOUT)
+            });
+
+            instance._initXHR(xhr, options, promise);
+
+            // to make any routine informed for the end of xhr.
+            // to make sure they get informed after aother routines have handled the response,
+            // we go async
+            promise.then(function() {
+                asyncSilent(function() {
+                    instance._final.forEach(function(finallySubscriber) {
+                        finallySubscriber(xhr);
+                    });
+                });
+            });
+
+            return promise;
+        },
+
+        /**
+         * Adds a subscriber to the finalization-cycle, which happens after the xhr finishes.
+         * Only gets invoked on fulfilled io.
+         *
+         * @method finalize
+         * @param finallySubscriber {Function} callback to be invoked
+         *        Function recieves `xhr` as its only argument
+         * @return {Object} handler with a `detach()`-method which can be used to detach the subscriber
+         * @since 0.0.1
+         */
+        finalize: function (finallySubscriber) {
+            console.log(NAME, 'finalize');
+            var finalHash = this._final;
+            finalHash.push(finallySubscriber);
+            return {
+                detach: function() {
+                    console.log(NAME, 'detach finalizer');
+                    var index = finalHash.indexOf(finallySubscriber);
+                    (index===-1) || finalHash.splice(index, 1);
+                }
+            };
+        }
+
+    };
+
+    /**
+     * Internal list of finalize-subscribers which are invoked at the end of a successful xhr,
+     * Is an array of function-references.
+     *
+     * @property _final
+     * @default []
+     * @type Array
+     * @private
+     * @since 0.0.1
+    */
+    Object.protectedProp(IO, '_final', []);
+
+    IO._xhrInitList = [
+        IO._setReadyHandle,
+        IO._setHeaders
+    ];
+
+    Glob._ITSAmodules.IO = IO;
+
+    return IO;
+};
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"js-ext":296,"js-ext/extra/hashmap.js":295,"polyfill/polyfill-base.js":308,"utils":309}],295:[function(require,module,exports){
+module.exports=require(12)
+},{}],296:[function(require,module,exports){
+require('./lib/function.js');
+require('./lib/object.js');
+require('./lib/string.js');
+require('./lib/array.js');
+require('./lib/json.js');
+require('./lib/promise.js');
+},{"./lib/array.js":297,"./lib/function.js":298,"./lib/json.js":299,"./lib/object.js":300,"./lib/promise.js":301,"./lib/string.js":302}],297:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":305}],298:[function(require,module,exports){
+/**
+ *
+ * Pollyfils for often used functionality for Functions
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ * @module js-ext
+ * @submodule lib/function.js
+ * @class Function
+ *
+*/
+
+"use strict";
+
+require('polyfill/polyfill-base.js');
+
+var NAME = '[Function]: ';
+
+(function(FunctionPrototype) {
+	/**
+	 * Sets the context of which the function will be execute. in the
+	 * supplied object's context, optionally adding any additional
+	 * supplied parameters to the end of the arguments the function
+	 * is executed with.
+	 *
+	 * @method rbind
+	 * @param [context] {Object} the execution context.
+	 *        The value is ignored if the bound function is constructed using the new operator.
+	 * @param [args*] {any} args* 0..n arguments to append to the end of
+	 *        arguments collection supplied to the function.
+	 * @return {function} the wrapped function.
+	 */
+	FunctionPrototype.rbind = function (context /*, args* */ ) {
+		console.log(NAME+'rbind');
+		var thisFunction = this,
+			arrayArgs,
+			slice = Array.prototype.slice;
+		context || (context = this);
+		if (arguments.length > 1) {
+			// removing `context` (first item) by slicing it out:
+			arrayArgs = slice.call(arguments, 1);
+		}
+
+		return (arrayArgs ?
+			function () {
+				// over here, `arguments` will be the "new" arguments when the final function is called!
+				return thisFunction.apply(context, slice.call(arguments, 0).concat(arrayArgs));
+			} :
+			function () {
+				// over here, `arguments` will be the "new" arguments when the final function is called!
+				return thisFunction.apply(context, arguments);
+			}
+		);
+	};
+
+}(Function.prototype));
+
+},{"polyfill/polyfill-base.js":305}],299:[function(require,module,exports){
+/**
+ *
+ * Pollyfils for often used functionality for Arrays
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ * @module js-ext
+ * @submodule lib/array.js
+ * @class Array
+ *
+ */
+
+"use strict";
+
+require('polyfill/polyfill-base.js');
+
+var REVIVER = function(key, value) {
+    return ((typeof value==='string') && value.toDate()) || value;
+};
+
+JSON.parseWithDate = function(stringifiedObj) {
+    return this.parse(stringifiedObj, REVIVER);
+};
+},{"polyfill/polyfill-base.js":305}],300:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":295,"polyfill/polyfill-base.js":305}],301:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":305}],302:[function(require,module,exports){
+module.exports=require(23)
+},{}],303:[function(require,module,exports){
+module.exports=require(14)
+},{}],304:[function(require,module,exports){
+module.exports=require(15)
+},{}],305:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":303,"./lib/window.console.js":304}],306:[function(require,module,exports){
+module.exports=require(14)
+},{}],307:[function(require,module,exports){
+module.exports=require(15)
+},{}],308:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":306,"./lib/window.console.js":307}],309:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":310,"./lib/timers.js":311}],310:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":295,"polyfill/polyfill-base.js":314}],311:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":314}],312:[function(require,module,exports){
+module.exports=require(14)
+},{}],313:[function(require,module,exports){
+module.exports=require(15)
+},{}],314:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":312,"./lib/window.console.js":313}],315:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":322,"js-ext/extra/hashmap.js":316,"polyfill/polyfill-base.js":328}],316:[function(require,module,exports){
+module.exports=require(12)
+},{}],317:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":319,"../lib/object.js":322,"./classes.js":315,"js-ext/extra/hashmap.js":316,"polyfill/lib/weakmap.js":326}],318:[function(require,module,exports){
+"use strict";
+
+require('./lib/function.js');
+require('./lib/object.js');
+require('./lib/string.js');
+require('./lib/array.js');
+require('./lib/json.js');
+require('./lib/promise.js');
+
+module.exports = {
+    createHashMap: require('./extra/hashmap.js').createMap,
+    Classes: require('./extra/classes.js'),
+    LightMap: require('./extra/lightmap.js')
+};
+},{"./extra/classes.js":315,"./extra/hashmap.js":316,"./extra/lightmap.js":317,"./lib/array.js":319,"./lib/function.js":320,"./lib/json.js":321,"./lib/object.js":322,"./lib/promise.js":323,"./lib/string.js":324}],319:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":328}],320:[function(require,module,exports){
+module.exports=require(298)
+},{"polyfill/polyfill-base.js":328}],321:[function(require,module,exports){
+module.exports=require(299)
+},{"polyfill/polyfill-base.js":328}],322:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":316,"polyfill/polyfill-base.js":328}],323:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":328}],324:[function(require,module,exports){
+module.exports=require(23)
+},{}],325:[function(require,module,exports){
+module.exports=require(14)
+},{}],326:[function(require,module,exports){
+module.exports=require(45)
+},{}],327:[function(require,module,exports){
+module.exports=require(15)
+},{}],328:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":325,"./lib/window.console.js":327}],329:[function(require,module,exports){
+(function (process,Buffer){
+"use strict";
+
+/**
+ * Wrapper for built-in http.js to emulate the browser XMLHttpRequest object.
+ *
+ * This can be used with JS designed for browsers to improve reuse of code and
+ * allow the use of existing libraries.
+ *
+ * Usage: include("XMLHttpRequest.js") and use XMLHttpRequest per W3C specs.
+ *
+ * @author Dan DeFelippi <dan@driverdan.com>
+ * @contributor David Ellis <d.f.ellis@ieee.org>
+ * @license MIT
+ */
+
+var Url = require("url"),
+    spawn = require("child_process").spawn,
+    fs = require('fs'),
+    XmlDOMParser = require('xmldom').DOMParser;
+
+exports.XMLHttpRequest = function() {
+  /**
+   * Private variables
+   */
+  var self = this;
+  var http = require('http');
+  var https = require('https');
+
+  // Holds http.js objects
+  var request;
+  var response;
+
+  // Request settings
+  var settings = {};
+
+  // Disable header blacklist.
+  // Not part of XHR specs.
+  var disableHeaderCheck = false;
+
+  // Set some default headers
+  var defaultHeaders = {
+    "User-Agent": "node-XMLHttpRequest",
+    "Accept": "*/*"
+  };
+
+  var headers = defaultHeaders;
+
+  // These headers are not user setable.
+  // The following are allowed but banned in the spec:
+  // * user-agent
+  var forbiddenRequestHeaders = [
+    "accept-charset",
+    "accept-encoding",
+    "access-control-request-headers",
+    "access-control-request-method",
+    "connection",
+    "content-length",
+    "content-transfer-encoding",
+    "cookie",
+    "cookie2",
+    "date",
+    "expect",
+    "host",
+    "keep-alive",
+    "origin",
+    "referer",
+    "te",
+    "trailer",
+    "transfer-encoding",
+    "upgrade",
+    "via"
+  ];
+
+  // These request methods are not allowed
+  var forbiddenRequestMethods = [
+    "TRACE",
+    "TRACK",
+    "CONNECT"
+  ];
+
+  // Send flag
+  var sendFlag = false;
+  // Error flag, used when errors occur or abort is called
+  var errorFlag = false;
+
+  // Event listeners
+  var listeners = {};
+
+  /**
+   * Constants
+   */
+
+  this.UNSENT = 0;
+  this.OPENED = 1;
+  this.HEADERS_RECEIVED = 2;
+  this.LOADING = 3;
+  this.DONE = 4;
+
+  /**
+   * Public vars
+   */
+
+  // Current state
+  this.readyState = this.UNSENT;
+
+  // default ready state change handler in case one is not set or is set late
+  this.onreadystatechange = null;
+
+  // Result & response
+  this.responseText = "";
+  this.responseXML = null;
+  this.status = null;
+  this.statusText = null;
+
+  /**
+   * Private methods
+   */
+
+  var isXMLRequest = function() {
+      return /^text\/xml/.test(response.headers['content-type']);
+  };
+
+  /**
+   * Check if the specified header is allowed.
+   *
+   * @param string header Header to validate
+   * @return boolean False if not allowed, otherwise true
+   */
+  var isAllowedHttpHeader = function(header) {
+    return disableHeaderCheck || (header && forbiddenRequestHeaders.indexOf(header.toLowerCase()) === -1);
+  };
+
+  /**
+   * Check if the specified method is allowed.
+   *
+   * @param string method Request method to validate
+   * @return boolean False if not allowed, otherwise true
+   */
+  var isAllowedHttpMethod = function(method) {
+    return (method && forbiddenRequestMethods.indexOf(method) === -1);
+  };
+
+  /**
+   * Public methods
+   */
+
+  /**
+   * Open the connection. Currently supports local server requests.
+   *
+   * @param string method Connection method (eg GET, POST)
+   * @param string url URL for the connection.
+   * @param boolean async Asynchronous connection. Default is true.
+   * @param string user Username for basic authentication (optional)
+   * @param string password Password for basic authentication (optional)
+   */
+  this.open = function(method, url, async, user, password) {
+    this.abort();
+    errorFlag = false;
+
+    // Check for valid request method
+    if (!isAllowedHttpMethod(method)) {
+      throw "SecurityError: Request method not allowed";
+    }
+
+    settings = {
+      "method": method,
+      "url": url.toString(),
+      "async": (typeof async !== "boolean" ? true : async),
+      "user": user || null,
+      "password": password || null
+    };
+
+    setState(this.OPENED);
+  };
+
+  /**
+   * Disables or enables isAllowedHttpHeader() check the request. Enabled by default.
+   * This does not conform to the W3C spec.
+   *
+   * @param boolean state Enable or disable header checking.
+   */
+  this.setDisableHeaderCheck = function(state) {
+    disableHeaderCheck = state;
+  };
+
+  /**
+   * Sets a header for the request.
+   *
+   * @param string header Header name
+   * @param string value Header value
+   */
+  this.setRequestHeader = function(header, value) {
+    if (this.readyState != this.OPENED) {
+      throw "INVALID_STATE_ERR: setRequestHeader can only be called when state is OPEN";
+    }
+    if (!isAllowedHttpHeader(header)) {
+      console.warn('Refused to set unsafe header "' + header + '"');
+      return;
+    }
+    if (sendFlag) {
+      throw "INVALID_STATE_ERR: send flag is true";
+    }
+    headers[header] = value;
+  };
+
+  /**
+   * Gets a header from the server response.
+   *
+   * @param string header Name of header to get.
+   * @return string Text of the header or null if it doesn't exist.
+   */
+  this.getResponseHeader = function(header) {
+    if (typeof header === "string" && this.readyState > this.OPENED && response.headers[header.toLowerCase()] && !errorFlag) {
+      return response.headers[header.toLowerCase()];
+    }
+
+    return null;
+  };
+
+  /**
+   * Gets all the response headers.
+   *
+   * @return string A string with all response headers separated by CR+LF
+   */
+  this.getAllResponseHeaders = function() {
+    if (this.readyState < this.HEADERS_RECEIVED || errorFlag) {
+      return "";
+    }
+    var result = "";
+
+    for (var i in response.headers) {
+      // Cookie headers are excluded
+      if (i !== "set-cookie" && i !== "set-cookie2") {
+        result += i + ": " + response.headers[i] + "\r\n";
+      }
+    }
+    return result.substr(0, result.length - 2);
+  };
+
+  /**
+   * Gets a request header
+   *
+   * @param string name Name of header to get
+   * @return string Returns the request header or empty string if not set
+   */
+  this.getRequestHeader = function(name) {
+    // @TODO Make this case insensitive
+    if (typeof name === "string" && headers[name]) {
+      return headers[name];
+    }
+
+    return "";
+  };
+
+  /**
+   * Sends the request to the server.
+   *
+   * @param string data Optional data to send as request body.
+   */
+  this.send = function(data) {
+    if (this.readyState != this.OPENED) {
+      throw "INVALID_STATE_ERR: connection must be opened before send() is called";
+    }
+
+    if (sendFlag) {
+      throw "INVALID_STATE_ERR: send has already been called";
+    }
+
+    var ssl = false, local = false;
+    var url = Url.parse(settings.url);
+    var host, responseHandler, errorHandler;
+    // Determine the server
+    switch (url.protocol) {
+      case 'https:':
+        ssl = true;
+        host = url.hostname;
+        break;
+
+      case 'http:':
+        host = url.hostname;
+        break;
+
+      case 'file:':
+        local = true;
+        break;
+
+      case undefined:
+      case '':
+        host = "localhost";
+        break;
+
+      default:
+        throw "Protocol not supported.";
+    }
+
+    // Load files off the local filesystem (file://)
+    if (local) {
+      if (settings.method !== "GET") {
+        throw "XMLHttpRequest: Only GET method is supported";
+      }
+
+      if (settings.async) {
+        fs.readFile(url.pathname, 'utf8', function(error, data) {
+          if (error) {
+            self.handleError(error);
+          } else {
+            self.status = 200;
+            self.responseText = data;
+            self.responseXML = isXMLRequest() ? new XmlDOMParser().parseFromString(data) : null;
+            setState(self.DONE);
+          }
+        });
+      } else {
+        try {
+          this.responseText = fs.readFileSync(url.pathname, 'utf8');
+          self.responseXML = isXMLRequest() ? new XmlDOMParser().parseFromString(this.responseText) : null;
+          this.status = 200;
+          setState(self.DONE);
+        } catch(e) {
+          this.handleError(e);
+        }
+      }
+
+      return;
+    }
+
+    // Default to port 80. If accessing localhost on another port be sure
+    // to use http://localhost:port/path
+    var port = url.port || (ssl ? 443 : 80);
+    // Add query string if one is used
+    var uri = url.pathname + (url.search ? url.search : '');
+
+    // Set the Host header or the server may reject the request
+    headers.Host = host;
+    if (!((ssl && port === 443) || port === 80)) {
+      headers.Host += ':' + url.port;
+    }
+
+    // Set Basic Auth if necessary
+    if (settings.user) {
+      if (typeof settings.password == "undefined") {
+        settings.password = "";
+      }
+      var authBuf = new Buffer(settings.user + ":" + settings.password);
+      headers.Authorization = "Basic " + authBuf.toString("base64");
+    }
+
+    // Set content length header
+    if (settings.method === "GET" || settings.method === "HEAD") {
+      data = null;
+    } else if (data) {
+      headers["Content-Length"] = Buffer.isBuffer(data) ? data.length : Buffer.byteLength(data);
+
+      if (!headers["Content-Type"]) {
+        headers["Content-Type"] = "text/plain;charset=UTF-8";
+      }
+    } else if (settings.method === "POST") {
+      // For a post with no data set Content-Length: 0.
+      // This is required by buggy servers that don't meet the specs.
+      headers["Content-Length"] = 0;
+    }
+
+    var options = {
+      host: host,
+      port: port,
+      path: uri,
+      method: settings.method,
+      headers: headers,
+      agent: false
+    };
+
+    // Reset error flag
+    errorFlag = false;
+
+    // Handle async requests
+    if (settings.async) {
+      // Use the proper protocol
+      var doRequest = ssl ? https.request : http.request;
+
+      // Request is being sent, set send flag
+      sendFlag = true;
+
+      // As per spec, this is called here for historical reasons.
+      self.dispatchEvent("readystatechange");
+
+      // Handler for the response
+      responseHandler = function(resp) {
+        // Set response var to the response we got back
+        // This is so it remains accessable outside this scope
+        response = resp;
+        // Check for redirect
+        // @TODO Prevent looped redirects
+        if (response.statusCode === 302 || response.statusCode === 303 || response.statusCode === 307) {
+          // Change URL to the redirect location
+          settings.url = response.headers.location;
+          var url = Url.parse(settings.url);
+          // Set host var in case it's used later
+          host = url.hostname;
+          // Options for the new request
+          var newOptions = {
+            hostname: url.hostname,
+            port: url.port,
+            path: url.path,
+            method: response.statusCode === 303 ? 'GET' : settings.method,
+            headers: headers
+          };
+
+          // Issue the new request
+          request = doRequest(newOptions, responseHandler).on('error', errorHandler);
+          request.end();
+          // @TODO Check if an XHR event needs to be fired here
+          return;
+        }
+
+        response.setEncoding("utf8");
+
+        setState(self.HEADERS_RECEIVED);
+        self.status = response.statusCode;
+
+        response.on('data', function(chunk) {
+          // Make sure there's some data
+          if (chunk) {
+            self.responseText += chunk;
+          }
+          // Don't emit state changes if the connection has been aborted.
+          if (sendFlag) {
+            setState(self.LOADING);
+          }
+        });
+
+        response.on('end', function() {
+          if (sendFlag) {
+            self.responseXML = isXMLRequest() ? new XmlDOMParser().parseFromString(self.responseText) : null;
+            // Discard the 'end' event if the connection has been aborted
+            setState(self.DONE);
+            sendFlag = false;
+          }
+        });
+
+        response.on('error', function(error) {
+          self.handleError(error);
+        });
+      };
+
+      // Error handler for the request
+      errorHandler = function(error) {
+        self.handleError(error);
+      };
+
+      // Create the request
+      request = doRequest(options, responseHandler).on('error', errorHandler);
+
+      // Node 0.4 and later won't accept empty data. Make sure it's needed.
+      if (data) {
+        request.write(data);
+      }
+
+      request.end();
+
+      self.dispatchEvent("loadstart");
+    } else { // Synchronous
+      // Create a temporary file for communication with the other Node process
+      var contentFile = ".node-xmlhttprequest-content-" + process.pid;
+      var syncFile = ".node-xmlhttprequest-sync-" + process.pid;
+      fs.writeFileSync(syncFile, "", "utf8");
+      // The async request the other Node process executes
+      var execString = "var http = require('http'), https = require('https'), fs = require('fs');" +
+        "var doRequest = http" + (ssl ? "s" : "") + ".request;" +
+        "var options = " + JSON.stringify(options) + ";" +
+        "var responseText = '';" +
+        "var req = doRequest(options, function(response) {" +
+        "response.setEncoding('utf8');" +
+        "response.on('data', function(chunk) {" +
+        "  responseText += chunk;" +
+        "});" +
+        "response.on('end', function() {" +
+        "fs.writeFileSync('" + contentFile + "', 'NODE-XMLHTTPREQUEST-STATUS:' + response.statusCode + ',' + responseText, 'utf8');" +
+        "fs.unlinkSync('" + syncFile + "');" +
+        "});" +
+        "response.on('error', function(error) {" +
+        "fs.writeFileSync('" + contentFile + "', 'NODE-XMLHTTPREQUEST-ERROR:' + JSON.stringify(error), 'utf8');" +
+        "fs.unlinkSync('" + syncFile + "');" +
+        "});" +
+        "}).on('error', function(error) {" +
+        "fs.writeFileSync('" + contentFile + "', 'NODE-XMLHTTPREQUEST-ERROR:' + JSON.stringify(error), 'utf8');" +
+        "fs.unlinkSync('" + syncFile + "');" +
+        "});" +
+        (data ? "req.write('" + data.replace(/'/g, "\\'") + "');":"") +
+        "req.end();";
+      // Start the other Node Process, executing this string
+      var syncProc = spawn(process.argv[0], ["-e", execString]);
+/*jshint noempty:true */
+      // Wait while the sync file is empty
+      while (fs.existsSync(syncFile)) {}
+/*jshint noempty:false */
+      self.responseText = fs.readFileSync(contentFile, 'utf8');
+      self.responseXML = isXMLRequest() ? new XmlDOMParser().parseFromString(self.responseText) : null;
+      // Kill the child process once the file has data
+      syncProc.stdin.end();
+      // Remove the temporary file
+      fs.unlinkSync(contentFile);
+      if (self.responseText.match(/^NODE-XMLHTTPREQUEST-ERROR:/)) {
+        // If the file returned an error, handle it
+        var errorObj = self.responseText.replace(/^NODE-XMLHTTPREQUEST-ERROR:/, "");
+        self.handleError(errorObj);
+      } else {
+        // If the file returned okay, parse its data and move to the DONE state
+        self.status = self.responseText.replace(/^NODE-XMLHTTPREQUEST-STATUS:([0-9]*),.*/, "$1");
+        self.responseText = self.responseText.replace(/^NODE-XMLHTTPREQUEST-STATUS:[0-9]*,(.*)/, "$1");
+        setState(self.DONE);
+      }
+    }
+  };
+
+  /**
+   * Called when an error is encountered to deal with it.
+   */
+  this.handleError = function(error) {
+    this.status = 503;
+    this.statusText = error;
+    this.responseText = error.stack;
+    errorFlag = true;
+    setState(this.DONE);
+  };
+
+  /**
+   * Aborts a request.
+   */
+  this.abort = function() {
+    if (request) {
+      request.abort();
+      request = null;
+    }
+
+    headers = defaultHeaders;
+    this.responseText = "";
+    this.responseXML = "";
+
+    errorFlag = true;
+
+    if (this.readyState !== this.UNSENT && (this.readyState !== this.OPENED || sendFlag) && this.readyState !== this.DONE) {
+      sendFlag = false;
+      setState(this.DONE);
+    }
+    this.readyState = this.UNSENT;
+  };
+
+  /**
+   * Adds an event listener. Preferred method of binding to events.
+   */
+  this.addEventListener = function(event, callback) {
+    if (!(event in listeners)) {
+      listeners[event] = [];
+    }
+    // Currently allows duplicate callbacks. Should it?
+    listeners[event].push(callback);
+  };
+
+  /**
+   * Remove an event callback that has already been bound.
+   * Only works on the matching funciton, cannot be a copy.
+   */
+  this.removeEventListener = function(event, callback) {
+    if (event in listeners) {
+      // Filter will return a new array with the callback removed
+      listeners[event] = listeners[event].filter(function(ev) {
+        return ev !== callback;
+      });
+    }
+  };
+
+  /**
+   * Dispatch any events, including both "on" methods and events attached using addEventListener.
+   */
+  this.dispatchEvent = function(event) {
+    if (typeof self["on" + event] === "function") {
+      self["on" + event]();
+    }
+    if (event in listeners) {
+      for (var i = 0, len = listeners[event].length; i < len; i++) {
+        listeners[event][i].call(self);
+      }
+    }
+  };
+
+  /**
+   * Changes readyState and calls onreadystatechange.
+   *
+   * @param int state New state
+   */
+  var setState = function(state) {
+    if ((self.readyState !== state) || (settings.async && (self.readyState===self.LOADING))) {
+      self.readyState = state;
+
+      if (settings.async || self.readyState < self.OPENED || self.readyState === self.DONE) {
+          self.dispatchEvent("readystatechange");
+      }
+
+      if (settings.async && (self.readyState===self.LOADING)) {
+          self.dispatchEvent("progress");
+      }
+
+      if (self.readyState === self.DONE && !errorFlag) {
+          self.dispatchEvent("load");
+          // @TODO figure out InspectorInstrumentation::didLoadXHR(cookie)
+          self.dispatchEvent("loadend");
+      }
+    }
+
+  };
+};
+
+}).call(this,require('_process'),require("buffer").Buffer)
+},{"_process":409,"buffer":398,"child_process":397,"fs":397,"http":402,"https":406,"url":427,"xmldom":386}],330:[function(require,module,exports){
+"use strict";
+
+/**
+ * Emulation of browser `window` and `dom`. Just enough to make ITSA work.
+ *
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ * @module node-win
+ * @class window
+ * @static
+*/
+
+require('js-ext/lib/array.js');
+
+var xmlhttprequest = require('./lib/XMLHttpRequest.js').XMLHttpRequest,
+    xmlDOMParser = require('xmldom').DOMParser,
+	Url = require('url'),
+    used = {},
+    vNodeParser = /(?:(^|#|\.)([^#\.\[\]]+))|(\[.+?\])/g,
+    count, doc, win, getHTML, reset;
+    EventTypes = {
+		MouseEvents: function () {
+			this.initMouseEvent = function (type, bubbles, cancelable, view, detail,
+					screenX, screenY, clientX, clientY,
+					ctrlKey, altKey, shiftKey, metaKey,
+					button, relatedTarget) {
+				count('initMouseEvent');
+				this.ev = {
+					type:type,
+					bubbles:bubbles,
+					cancelable:cancelable,
+					view:view,
+					detail:detail,
+					screenX:screenX,
+					screenY:screenY,
+					clientX:clientX,
+					clientY:clientY,
+					ctrlKey:ctrlKey,
+					altKey:altKey,
+					shiftKey:shiftKey,
+					metaKey:metaKey,
+					button:button,
+					relatedTarget:relatedTarget
+				};
+			};
+		}
+	};
+
+count = function (method) {
+	if (!used[method]) {
+		used[method] = 1;
+	} else {
+		used[method] += 1;
+	}
+};
+
+getHTML = function (node) {
+	var prop, val,
+		style, styles = [],
+		html = '';
+
+	if (!node.nodeName && node.nodeValue) {
+		// For text nodes, I return the uppercase text
+		// so that you can tell the parts generated at the server
+		// from the normal lowercase of the actual app when run on the client
+		return node.nodeValue.toUpperCase();
+	}
+	html += '<' + node.nodeName;
+	for (prop in node) {
+		val = node[prop];
+
+		// Ignore functions, those will be revived on the client side.
+		if (typeof val == 'function') continue;
+		switch (prop) {
+		case 'nodeName':
+		case 'parentNode':
+		case 'childNodes':
+		case 'pathname':
+		case 'search':
+			continue;
+		case 'checked':
+			if (val == 'false') continue;
+			break;
+		case 'href':
+			val = node.pathname;
+			break;
+		case 'className':
+			prop = 'class';
+			break;
+		case 'style':
+			if (val) {
+				for (style in val) {
+					if (val[style]) {
+						styles.push(style + ': ' + val[style]);
+					}
+				}
+				if (!styles.length) {
+					continue;
+				}
+				val = styles.join(';');
+			}
+			break;
+		}
+		html += ' ' + prop + '="' + val.replace('"', '\\"') + '"';
+	}
+
+	if (node.childNodes.length) {
+		html += '>' + node.childNodes.reduce(function (prev, node) {
+			return prev + getHTML(node);
+		}, '') + '</' + node.nodeName + '>';
+	}
+	else {
+		// I don't know why Mithril assigns the content of textareas
+		// to its value attribute instead of the innerHTML property.
+		// Since it doesn't have children, the closing tag has to be forced.
+		if (node.nodeName == 'TEXTAREA') {
+			html += '></TEXTAREA>';
+		} else {
+			html += '/>';
+		}
+	}
+	return html;
+};
+
+
+win = {
+    cancelAnimationFrame: function() {
+
+    },
+
+    console: require('polyfill/lib/window.console.js'),
+
+    CSSStyleDeclaration: {},
+
+	document: doc,
+
+    DOMParser: xmlDOMParser,
+
+    HTMLCollection: Array,
+
+    location: {},
+
+	navigator: {
+		userAgent: 'fake',
+		stats: {
+			clear: function () {
+				used = {};
+			},
+			get: function () {
+				return used;
+			}
+		},
+		reset: reset,
+		getHTML: function () {
+			return getHTML(doc.body);
+		},
+		navigate: function (url) {
+			var u = Url.parse(url, false, true);
+			window.location.search = u.search || '';
+			window.location.pathname = u.pathname || '';
+			window.location.hash = u.hash || '';
+		}
+	},
+
+    NodeList: Array,
+
+	performance: function () {
+		var timestamp = 50;
+		this.$elapse = function(amount) {
+			timestamp += amount;
+		};
+		this.now = function() {
+			return timestamp;
+		};
+	},
+
+	requestAnimationFrame: function(callback) {
+		var instance = this;
+		instance.requestAnimationFrame.$callback = callback;
+		instance.requestAnimationFrame.$resolve = function() {
+			instance.requestAnimationFrame.$callback && instance.requestAnimationFrame.$callback();
+			instance.requestAnimationFrame.$callback = null;
+			instance.performance.$elapse(20);
+		};
+	},
+
+    XMLHttpRequest: xmlhttprequest
+
+};
+
+reset = function () {
+	var body = doc.createElement('body');
+	win.location.search = "?/";
+	win.location.pathname = "/";
+	win.location.hash = "";
+	win.history = {};
+	win.history.pushState = function(data, title, url) {
+		win.location.pathname = win.location.search = win.location.hash = url;
+	},
+	win.history.replaceState = function(data, title, url) {
+		win.location.pathname = win.location.search = win.location.hash = url;
+	};
+	doc.appendChild(body);
+	doc.body = body;
+};
+
+reset();
+
+module.exports = win;
+},{"./lib/XMLHttpRequest.js":329,"js-ext/lib/array.js":331,"polyfill/lib/window.console.js":336,"url":427,"xmldom":386}],331:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":334}],332:[function(require,module,exports){
+module.exports=require(14)
+},{}],333:[function(require,module,exports){
+module.exports=require(15)
+},{}],334:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":332,"./lib/window.console.js":333}],335:[function(require,module,exports){
+module.exports=require(14)
+},{}],336:[function(require,module,exports){
+module.exports=require(15)
+},{}],337:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":335,"./lib/window.console.js":336}],338:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":339,"./lib/timers.js":340}],339:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":316,"polyfill/polyfill-base.js":343}],340:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":343}],341:[function(require,module,exports){
+module.exports=require(14)
+},{}],342:[function(require,module,exports){
+module.exports=require(15)
+},{}],343:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":341,"./lib/window.console.js":342}],344:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],345:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":349,"js-ext/extra/hashmap.js":346,"polyfill/polyfill-base.js":355}],346:[function(require,module,exports){
+module.exports=require(12)
+},{}],347:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":348,"../lib/object.js":349,"./classes.js":345,"js-ext/extra/hashmap.js":346,"polyfill/lib/weakmap.js":353}],348:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":355}],349:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":346,"polyfill/polyfill-base.js":355}],350:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":355}],351:[function(require,module,exports){
+module.exports=require(23)
+},{}],352:[function(require,module,exports){
+module.exports=require(14)
+},{}],353:[function(require,module,exports){
+module.exports=require(45)
+},{}],354:[function(require,module,exports){
+module.exports=require(15)
+},{}],355:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":352,"./lib/window.console.js":354}],356:[function(require,module,exports){
+module.exports=require(48)
+},{}],357:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":356}],358:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":356}],359:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":356}],360:[function(require,module,exports){
+module.exports=require(14)
+},{}],361:[function(require,module,exports){
+module.exports=require(15)
+},{}],362:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":360,"./lib/window.console.js":361}],363:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":364,"./lib/timers.js":365}],364:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":346,"polyfill/polyfill-base.js":368}],365:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":368}],366:[function(require,module,exports){
+module.exports=require(14)
+},{}],367:[function(require,module,exports){
+module.exports=require(15)
+},{}],368:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":366,"./lib/window.console.js":367}],369:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":370}],370:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":371,"js-ext/lib/object.js":372}],371:[function(require,module,exports){
+module.exports=require(12)
+},{}],372:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":371,"polyfill/polyfill-base.js":375}],373:[function(require,module,exports){
+module.exports=require(14)
+},{}],374:[function(require,module,exports){
+module.exports=require(15)
+},{}],375:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":373,"./lib/window.console.js":374}],376:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":346,"js-ext/lib/object.js":349,"js-ext/lib/string.js":351,"polyfill":362,"polyfill/extra/transition.js":357,"polyfill/extra/vendorCSS.js":359}],377:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":346,"js-ext/lib/object.js":349,"polyfill":362}],378:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":346,"js-ext/lib/object.js":349,"js-ext/lib/string.js":351,"polyfill":362}],379:[function(require,module,exports){
+module.exports=require(71)
+},{"js-ext/extra/hashmap.js":346,"js-ext/lib/object.js":349,"js-ext/lib/string.js":351,"polyfill":362}],380:[function(require,module,exports){
+module.exports=require(72)
+},{"../css/element.css":344,"./attribute-extractor.js":376,"./element-array.js":377,"./html-parser.js":381,"./node-parser.js":382,"./vdom-ns.js":383,"./vnode.js":384,"js-ext/extra/hashmap.js":346,"js-ext/lib/object.js":349,"js-ext/lib/promise.js":350,"js-ext/lib/string.js":351,"polyfill":362,"polyfill/extra/transition.js":357,"polyfill/extra/transitionend.js":358,"polyfill/extra/vendorCSS.js":359,"utils":363,"window-ext":369}],381:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":376,"./vdom-ns.js":383,"js-ext/extra/hashmap.js":346,"js-ext/lib/object.js":349,"polyfill":362}],382:[function(require,module,exports){
+module.exports=require(74)
+},{"./attribute-extractor.js":376,"./vdom-ns.js":383,"./vnode.js":384,"js-ext/extra/hashmap.js":346,"js-ext/lib/object.js":349,"polyfill":362}],383:[function(require,module,exports){
+module.exports=require(75)
+},{"js-ext/extra/hashmap.js":346,"js-ext/lib/object.js":349,"polyfill":362}],384:[function(require,module,exports){
+module.exports=require(76)
+},{"./attribute-extractor.js":376,"./html-parser.js":381,"./vdom-ns.js":383,"js-ext/extra/hashmap.js":346,"js-ext/extra/lightmap.js":347,"js-ext/lib/array.js":348,"js-ext/lib/object.js":349,"js-ext/lib/string.js":351,"polyfill":362,"utils/lib/timers.js":365}],385:[function(require,module,exports){
+module.exports=require(77)
+},{"./partials/element-plugin.js":378,"./partials/extend-document.js":379,"./partials/extend-element.js":380,"./partials/node-parser.js":382,"js-ext/extra/hashmap.js":346,"js-ext/lib/object.js":349}],386:[function(require,module,exports){
 function DOMParser(options){
 	this.options = options ||{locator:{}};
 	
@@ -24098,7 +20006,7 @@ if(typeof require == 'function'){
 	exports.DOMParser = DOMParser;
 }
 
-},{"./dom":307,"./sax":308}],307:[function(require,module,exports){
+},{"./dom":387,"./sax":388}],387:[function(require,module,exports){
 /*
  * DOM Level 2
  * Object DOMException
@@ -25238,7 +21146,7 @@ if(typeof require == 'function'){
 	exports.XMLSerializer = XMLSerializer;
 }
 
-},{}],308:[function(require,module,exports){
+},{}],388:[function(require,module,exports){
 //[4]   	NameStartChar	   ::=   	":" | [A-Z] | "_" | [a-z] | [#xC0-#xD6] | [#xD8-#xF6] | [#xF8-#x2FF] | [#x370-#x37D] | [#x37F-#x1FFF] | [#x200C-#x200D] | [#x2070-#x218F] | [#x2C00-#x2FEF] | [#x3001-#xD7FF] | [#xF900-#xFDCF] | [#xFDF0-#xFFFD] | [#x10000-#xEFFFF]
 //[4a]   	NameChar	   ::=   	NameStartChar | "-" | "." | [0-9] | #xB7 | [#x0300-#x036F] | [#x203F-#x2040]
 //[5]   	Name	   ::=   	NameStartChar (NameChar)*
@@ -25824,7 +21732,7 @@ if(typeof require == 'function'){
 }
 
 
-},{}],309:[function(require,module,exports){
+},{}],389:[function(require,module,exports){
 /*
 * attributes:
 * value, expanded, primary-button
@@ -25841,7 +21749,7 @@ module.exports = function (window) {
     window.ITAGS[itagName] || window.document.createItag(itagName);
 
 };
-},{"itags.core":316,"polyfill/polyfill-base.js":257}],310:[function(require,module,exports){
+},{"itags.core":396,"polyfill/polyfill-base.js":337}],390:[function(require,module,exports){
 /*
 * attributes:
 * value, expanded, primary-button
@@ -25858,9 +21766,9 @@ module.exports = function (window) {
     window.ITAGS[itagName] || window.document.createItag(itagName);
 
 };
-},{"itags.core":316,"polyfill/polyfill-base.js":257}],311:[function(require,module,exports){
+},{"itags.core":396,"polyfill/polyfill-base.js":337}],391:[function(require,module,exports){
 var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-select;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-select:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-select:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\n\ni-select >div {\n    position: relative;\n    z-index: 2;\n    -webkit-transition: opacity 0.1s;\n    -moz-transition: opacity 0.1s;\n    -ms-transition: opacity 0.1s;\n    -o-transition: opacity 0.1s;\n    transition: opacity 0.1s;\n    opacity: 0;\n}\n\ni-select >div.i-select-show {\n    -webkit-transition: opacity 0.3s;\n    -moz-transition: opacity 0.3s;\n    -ms-transition: opacity 0.3s;\n    -o-transition: opacity 0.3s;\n    transition: opacity 0.3s;\n    opacity: 1;\n}\n\ni-select >button.pure-button {\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    -khtml-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    position: relative;\n    padding-right: 1.45em;\n    padding-left: 0;\n    max-width: 8em;\n}\n\ni-select >button div.btntext {\n    margin: 0 0.25em 0 1em;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 8em;\n}\n\ni-select >button div.pointer {\n    border-left: 0.4em solid rgba(0, 0, 0, 0);\n    border-right: 0.4em solid rgba(0, 0, 0, 0);\n    border-top: 0.5em solid #000;\n    right: 0.25em;\n    position: absolute;\n    bottom: 0.2em;\n}\n\ni-select >div >div {\n    position: absolute;\n    left: 0;\n    top: 0;\n    cursor: pointer;\n    border-style: solid;\n    border-width: 0.1em;\n    -webkit-border-radius: 0 0 0.3em 0.3em;\n    -moz-border-radius: 0 0 0.3em 0.3em;\n    border-radius: 0 0 0.3em 0.3em;\n    -webkit-box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n    -moz-box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n    box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n}\n\ni-select ul {\n    font-size: 1.2em;\n    padding: 0 0 0.3em;\n    list-style: none;\n    margin: 0;\n}\n\ni-select li {\n    padding: 0.25em 0.7em;\n}\n\ni-select li.focussed {\n    background-color: #B3D4FF;\n}\n\ni-select li.selected:before {\n    content: '*';\n    margin-left: -0.7em;\n    padding-right: 0.25em;\n}\n\ni-select li:before,\ni-select li:after {\n    content: '';\n    padding: 0;\n    margin: 0;\n}\n\n/* color specification:; */\n\ni-select >div >div {\n    background-color: #FFF;\n    border-color: #000;\n}\n\ni-select li:hover {\n    background-color: #B3D4FF;\n}\n\ni-select > button.pure-button-primary div.pointer {\n    border-top: 0.5em solid #FEFEFE;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],312:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],392:[function(require,module,exports){
 /**
  * Provides several methods that override native Element-methods to work with the vdom.
  *
@@ -25903,7 +21811,7 @@ module.exports = function (window) {
         Event, Itag;
 
     if (!window.ITAGS[itagName]) {
-        Event = require('event-dom')(window);
+        Event = require('event-mobile')(window);
         require('focusmanager')(window);
         require('i-item')(window);
         require('i-head')(window);
@@ -25940,9 +21848,8 @@ module.exports = function (window) {
             // cautious:  all child-elements that have `manualfocus` event are
             // subscribed as well: we NEED to inspect e.target and only continue.
             //
-            // I didn;t figure out why, but it seems we need `later`
+            // I didn't figure out why, but it seems we need `later`
             // in order to make the i-select prevent from acting unpredictable.
-            // maybe because of the responsetime of the click-event
             laterSilent(function() {
                 // if e.target===i-select
                 if ((element.getTagName()==='I-SELECT') && !element.hasClass('focussed')) {
@@ -25962,29 +21869,22 @@ module.exports = function (window) {
 
         // CAUTIOUS: it seems `tap` will be subscribed 8 times!!!
         // TODO: figure out why not once
-        Event.after(['click', 'keydown'], function(e) {
+        Event.after(['tap', 'keydown'], function(e) {
             var element = e.target.getParent(),
-                expanded, value, liNodes, focusNode, model;
-            if ((e.type==='click') || (e.keyCode===40)) {
+                model;
+            if ((e.type==='tap') || (e.keyCode===40)) {
                 (e.keyCode===40) && e.preventDefault();
                 model = element.model;
-                expanded = model.expanded;
-                value = element.model.value;
-                if (!expanded) {
-                    liNodes = element.getAll('ul[fm-manage] > li');
-                    focusNode = liNodes[value-1];
-                    focusNode && focusNode.focus();
-                }
-                model.expanded = !expanded;
+                model.expanded = !model.expanded;
             }
         }, 'i-select > button');
 
         // CAUTIOUS: it seems `tap` will be subscribed 8 times!!!
         // TODO: figure out why not once
-        Event.after(['click', 'keypress'], function(e) {
+        Event.after(['tap', 'keypress'], function(e) {
             var liNode = e.target,
                 element, index, model;
-            if ((e.type==='click') || (e.keyCode===13)) {
+            if ((e.type==='tap') || (e.keyCode===13)) {
                 element = liNode.inside('i-select');
                 model = element.model;
                 index = liNode.getParent().getAll('li').indexOf(liNode);
@@ -26031,18 +21931,9 @@ module.exports = function (window) {
 
         Itag = DOCUMENT.createItag(itagName, {
             /*
-             * Internal hash containing all DOM-events that are listened for (at `document`).
              *
-             * DOMEvents = {
-             *     'click': callbackFn,
-             *     'mousemove': callbackFn,
-             *     'keypress': callbackFn
-             * }
-             *
-             * @property DOMEvents
-             * @default {}
+             * @property attrs
              * @type Object
-             * @private
              * @since 0.0.1
             */
             attrs: {
@@ -26119,13 +22010,12 @@ module.exports = function (window) {
                 // be aware that before ending, this method can run again
                 // if you do, then make sure to handle possible running
                 // async actions well !!!
-console.info('i-select begin sync');
                 var element = this,
                     model = element.model,
                     items = model.items,
                     buttonTexts = model.buttonTexts,
                     value = model.value,
-                    item, content, buttonText, len, i, markValue,
+                    item, content, buttonText, len, i, markValue, ulNode,
                     button, container, itemsContainer, hiddenTimer;
 
                 len = items.length;
@@ -26141,7 +22031,7 @@ console.info('i-select begin sync');
 
                 // rebuild the button:
                 button = element.getElement('button');
-                button.toggleClass('pure-button-primary', model['primary-button']);
+                button.toggleClass('pure-button-primary', !!model['primary-button']);
                 button.getElement('div.btntext').setHTML(buttonText);
 
                 container = element.getElement('>div');
@@ -26149,6 +22039,8 @@ console.info('i-select begin sync');
                 if (model.expanded) {
                     hiddenTimer = container.getData('_hiddenTimer');
                     hiddenTimer && hiddenTimer.cancel();
+                    ulNode = element.getElement('ul[fm-manage]');
+                    ulNode.focus();
                     container.setClass(SHOW);
                     container.removeClass(HIDDEN);
                 }
@@ -26170,18 +22062,17 @@ console.info('i-select begin sync');
 
                 // set the items:
                 itemsContainer.setHTML(content);
-console.info('i-select end sync');
             }
         });
 
-        Itag.setItagDirectEventResponse(['blur', 'keypress']);
+        Itag.setItagDirectEventResponse(['keypress', 'keydown']);
     }
 
     return window.ITAGS[itagName];
 };
-},{"./css/i-select.css":311,"css":4,"event-dom":6,"focusmanager":78,"i-head":309,"i-item":310,"itags.core":316,"js-ext/lib/string.js":244,"polyfill/polyfill-base.js":257,"utils":258}],313:[function(require,module,exports){
+},{"./css/i-select.css":391,"css":4,"event-mobile":78,"focusmanager":158,"i-head":389,"i-item":390,"itags.core":396,"js-ext/lib/string.js":324,"polyfill/polyfill-base.js":337,"utils":338}],393:[function(require,module,exports){
 var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-tabpane;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-tabpane:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-tabpane:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\ni-tabpane {\n    /* make it accept width and height by swith from :inline\" to \"inline-block\"*/\n    display: inline-block;\n    *display: block;\n    *zoom: 1;\n}\n\ni-tabpane >ul {\n    margin:0;\n    padding:0;\n    list-style:none;\n    height: 2.2em;\n    overflow: hidden;\n}\n\ni-tabpane >ul li {\n    display: inline-block;\n    *display: inline; /* IE */\n    *zoom: 1; /* IE */\n    margin-right: 0.25em;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n}\n\ni-tabpane >ul li.pure-button {\n    display: inline-block;\n    *display: inline; /* IE */\n    *zoom: 1; /* IE */\n    margin-right: 0.2em;\n    border-radius: 2px 2px 0 0;\n    border-bottom: none;\n}\n\ni-tabpane >div {\n    height: 100%;\n    margin-top: -2.2em;\n    padding-top: 2.2em;\n}\n\ni-tabpane >div >div.container {\n    border: 1px solid #2647a0;\n    border-top: 5px solid #2647a0;\n    padding: 0.25em 0.5em;\n    height: 100%;\n    width: 100%;\n}\n"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],314:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],394:[function(require,module,exports){
 /*
 * attributes:
 * value, expanded, primary-button
@@ -26201,7 +22092,7 @@ module.exports = function (window) {
         Event, Itag;
 
     if (!window.ITAGS[itagName]) {
-        Event = require('event-dom')(window);
+        Event = require('event-mobile')(window);
         require('focusmanager')(window);
         require('i-item')(window);
         require('i-head')(window);
@@ -26234,6 +22125,12 @@ module.exports = function (window) {
                 liNodes;
             liNodes = ul.getAll('li');
             model.pane = liNodes.indexOf(node) + 1;
+        }, 'i-tabpane > ul li');
+
+        Event.before('tap', function(e) {
+            // don't double render (especialliy not BEFORE the tab changes)
+            // rendering will be done because of the focus-event
+            e.preventRender();
         }, 'i-tabpane > ul li');
 
         Itag = DOCUMENT.createItag(itagName, {
@@ -26341,7 +22238,6 @@ module.exports = function (window) {
                 navContainer.setHTML(content);
 
                 // set the content:
-console.info('SETTING '+panes[index]);
                 container.setHTML(panes[index]);
             }
         });
@@ -26353,9 +22249,9 @@ console.info('SETTING '+panes[index]);
     return window.ITAGS[itagName];
 
 };
-},{"./css/i-tabpane.css":313,"css":4,"event-dom":6,"focusmanager":78,"i-head":309,"i-item":310,"itags.core":316,"js-ext/lib/string.js":244,"polyfill/polyfill-base.js":257}],315:[function(require,module,exports){
+},{"./css/i-tabpane.css":393,"css":4,"event-mobile":78,"focusmanager":158,"i-head":389,"i-item":390,"itags.core":396,"js-ext/lib/string.js":324,"polyfill/polyfill-base.js":337}],395:[function(require,module,exports){
 var css = "span.itag-data {\n    display: none !important;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],316:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],396:[function(require,module,exports){
 (function (global){
 /*jshint proto:true */
 
@@ -26398,7 +22294,7 @@ var NAME = '[itags.core]: ',
     ATTRIBUTE_REMOVE = ATTRIBUTE+REMOVE,
     ATTRIBUTE_CHANGE = ATTRIBUTE+CHANGE,
     ATTRIBUTE_INSERT = ATTRIBUTE+INSERT,
-    DELAYED_EVT_TIME = 1000,
+    DELAYED_EVT_TIME = 500,
     NATIVE_OBJECT_OBSERVE = !!Object.observe,
     /**
      * Internal hash containing the names of members which names should be transformed
@@ -26543,7 +22439,6 @@ module.exports = function (window) {
                 }
                 superInit(constructor || instance.constructor);
                 Object.protectedProp(vnode, 'ce_initialized', true);
-                instance._itagInitialized.fulfill();
             }
             return instance;
         },
@@ -26589,7 +22484,6 @@ module.exports = function (window) {
         * @since 0.0.1
         */
         reInitializeUI: function(constructor) {
-console.info('reInitializeUI');
             var instance = this,
                 vnode = instance.vnode;
             if (vnode.ce_initialized && !vnode.removedFromDOM && !vnode.ce_destroyed) {
@@ -26614,16 +22508,12 @@ console.info('reInitializeUI');
                 attrs = instance._attrs,
                 vnode = instance.vnode;
             if (vnode.ce_initialized && !vnode.removedFromDOM && !vnode.ce_destroyed) {
-console.info('syncUIsyncUIsyncUIsyncUIsyncUIsyncUIsyncUIsyncUI');
-console.info(vnode);
                 vnode._setUnchangableAttrs(attrs);
                 instance._syncUI.apply(instance, arguments);
                 vnode._setUnchangableAttrs(null);
             }
             return instance;
         },
-
-        _itagInitialized: window.Promise.manage(),
 
         /**
          * Internal hash containing the `attrs`-definition which can be set by the itag-declaration.
@@ -26852,42 +22742,39 @@ console.info(vnode);
         * @since 0.0.1
         */
         bindModel: function(element, model) {
-            var stringifiedData, prevContent, observer;
+            var instance = this,
+                stringifiedData, prevContent, observer;
             if (element.isItag()) {
-                element._itagInitialized.then(
-                    function() {
-                        if (NATIVE_OBJECT_OBSERVE) {
-                            observer = element.getData('_observer');
-                            observer && Object.unobserve(element.model, observer);
-                        }
-                        element.model = model;
-                        if (NATIVE_OBJECT_OBSERVE) {
-                            observer = function() {
-                                itagCore.modelToAttrs(element);
-console.info('bindModel observer');
-                                element.syncUI();
-                            };
-                            Object.observe(element.model, observer);
-                            element.setData('_observer', observer);
-                        }
-console.info('bindModel');
-
+                if (NATIVE_OBJECT_OBSERVE) {
+                    observer = element.getData('_observer');
+                    observer && Object.unobserve(element.model, observer);
+                }
+                element.model = model;
+                if (NATIVE_OBJECT_OBSERVE) {
+                    observer = function() {
+                        itagCore.modelToAttrs(element);
                         element.syncUI();
-                        element.itagRendered || element.setRendered();
-                        if (RUNNING_ON_NODE) {
-                            // store the modeldata inside an inner div-node
-                            try {
-                                stringifiedData = JSON.stringify(model);
-                                prevContent = element.getElement('span.itag-data');
-                                prevContent && prevContent.remove();
-                                element.prepend('<span class="itag-data">'+stringifiedData+'</span>');
-                            }
-                            catch(e) {
-                                console.warn(e);
-                            }
-                        }
+                    };
+                    Object.observe(element.model, observer);
+                    element.setData('_observer', observer);
+                }
+                if (!element.vnode.ce_initialized) {
+                    element.initUI(PROTO_SUPPORTED ? null : element.__proto__.constructor);
+                }
+                element.syncUI();
+                element.itagRendered || instance.setRendered(element);
+                if (RUNNING_ON_NODE) {
+                    // store the modeldata inside an inner div-node
+                    try {
+                        stringifiedData = JSON.stringify(model);
+                        prevContent = element.getElement('span.itag-data');
+                        prevContent && prevContent.remove();
+                        element.prepend('<span class="itag-data">'+stringifiedData+'</span>');
                     }
-                );
+                    catch(e) {
+                        console.warn(e);
+                    }
+                }
             }
         },
 
@@ -27057,8 +22944,10 @@ console.info('bindModel');
                 function(e) {
                     var element = e.target;
                     instance.attrsToModel(element);
-console.info('Attributechange event will refresh itags');
-                    NATIVE_OBJECT_OBSERVE || DOCUMENT.refreshItags();
+                    if (!NATIVE_OBJECT_OBSERVE) {
+                        console.info('Attribute mutation-event will refresh itags because of event '+e.type);
+                        DOCUMENT.refreshItags();
+                    }
                     // this affect modeldata, the event.finalizer will sync the UI
                     // AFTER synced, we might need to refocus --> that's why refocussing
                     // is done async.
@@ -27078,13 +22967,13 @@ console.info('Attributechange event will refresh itags');
                         if (!MUTATION_EVENTS[type] && !type.endsWith('outside')) {
                             if (DELAYED_FINALIZE_EVENTS[type]) {
                                 registerDelay || (registerDelay = laterSilent(function() {
-console.info('Event-finalizer will refresh itags');
+                                    console.info('Event-finalizer will refresh itags because of event: '+e.type);
                                     DOCUMENT.refreshItags();
                                     registerDelay = null;
                                 }, DELAYED_EVT_TIME));
                             }
                             else {
-console.info('Event-finalizer will refresh itags');
+                                console.info('Event-finalizer will refresh itags because of event: '+e.type);
                                 DOCUMENT.refreshItags();
                             }
                         }
@@ -27092,7 +22981,7 @@ console.info('Event-finalizer will refresh itags');
                 });
 
                 IO.finalize(function() {
-console.info('IO-finalizer will refresh itags');
+                    console.info('IO-finalizer will refresh itags');
                     allowedToRefreshItags && DOCUMENT.refreshItags();
                 });
 
@@ -27106,7 +22995,7 @@ console.info('IO-finalizer will refresh itags');
                         args[0] = (function(originalFn) {
                             return function() {
                                 originalFn();
-console.info('setTimeOut will refresh itags');
+                                console.info('setTimeOut will refresh itags');
                                 DOCUMENT.refreshItags();
                             };
                         })(args[0]);
@@ -27120,7 +23009,7 @@ console.info('setTimeOut will refresh itags');
                         args[0] = (function(originalFn) {
                             return function() {
                                 originalFn();
-console.info('setInterval will refresh itags');
+                                console.info('setInterval will refresh itags');
                                 DOCUMENT.refreshItags();
                             };
                         })(args[0]);
@@ -27136,7 +23025,7 @@ console.info('setInterval will refresh itags');
                             args[0] = (function(originalFn) {
                                 return function() {
                                     originalFn();
-console.info('setImmediate will refresh itags');
+                                    console.info('setImmediate will refresh itags');
                                     DOCUMENT.refreshItags();
                                 };
                             })(args[0]);
@@ -27166,7 +23055,6 @@ console.info('setImmediate will refresh itags');
                             length = nodeList.length;
                             for (i=0; i<length; i++) {
                                 node = nodeList[i];
-console.info('prototypechange');
                                 node.syncUI();
                             }
                         }
@@ -27192,7 +23080,6 @@ console.info('prototypechange');
                             length = nodeList.length;
                             for (i=0; i<length; i++) {
                                 node = nodeList[i];
-console.info('prototyperemove');
                                 node.syncUI();
                             }
                         }
@@ -27228,7 +23115,6 @@ console.info('prototyperemove');
                             domElement.reInitializeUI(domElement.__proto__.constructor);
                         }
                         else if ('sync' in prototypes) {
-console.info('upgradeElement prototypechange');
                             domElement.syncUI();
                         }
                     },
@@ -27243,7 +23129,6 @@ console.info('upgradeElement prototypechange');
                             domElement.reInitializeUI(domElement.__proto__.constructor);
                         }
                         else if (properties.contains('sync')) {
-console.info('upgradeElement prototyperemove');
                             domElement.syncUI();
                         }
                     },
@@ -27258,21 +23143,20 @@ console.info('upgradeElement prototyperemove');
             // in the next eventcycle:
             asyncSilent(function(){
                 var needsToBind = false;
-                instance.attrsToModel(domElement);
-                domElement.initUI(PROTO_SUPPORTED ? null : domElementConstructor);
-                // only if no modelbinding is needed, we can directly sync and make ready,
+                // only if no modelbinding is needed, we can directly init, sync and make ready,
                 // otherwise we need to make this done by  `bindModel`
                 BINDING_LIST.some(function(value, selector) {
                     domElement.matches(selector) && (needsToBind=true);
                     return needsToBind;
                 });
                 if (!needsToBind) {
+                    instance.attrsToModel(domElement);
+                    domElement.initUI(PROTO_SUPPORTED ? null : domElementConstructor);
                     domElement.syncUI();
                     instance.setRendered(domElement);
                 }
                 if (NATIVE_OBJECT_OBSERVE) {
                     observer = function() {
-console.info('upgradeElement without bindmodel observer');
                         instance.modelToAttrs(domElement);
                         domElement.syncUI();
                     };
@@ -27294,7 +23178,7 @@ console.info('upgradeElement without bindmodel observer');
     */
     manageFocus = function(domElement) {
         var focusManagerNode = domElement.getElement('[focusmanager].focussed');
-        focusManagerNode && focusManagerNode.focus();
+        // focusManagerNode && focusManagerNode.focus();
     };
 
    /**
@@ -27308,6 +23192,21 @@ console.info('upgradeElement without bindmodel observer');
     * @since 0.0.1
     */
     DOCUMENT._createElement = DOCUMENT.createElement;
+
+   /**
+    * Binds a model to the itag-element, making element.model equals the bound model.
+    * Immediately syncs the itag with the new model-data.
+    *
+    * Syncs the new vnode's childNodes with the dom.
+    *
+    * @method bindModel
+    * @param model {Object} the model to bind to the itag-element
+    * @chainable
+    * @since 0.0.1
+    */
+    DOCUMENT.bindModel = function(model, selector, fineGrain) {
+        return DOCUMENT.documentElement.bindModel(model, selector, fineGrain);
+    };
 
    /**
     * Redefinition of document.createElement, enabling creation of itags.
@@ -27325,20 +23224,49 @@ console.info('upgradeElement without bindmodel observer');
         return this._createElement(tag);
     };
 
+    /**
+     * Internal hash containing all DOM-events that are listened for (at `document`).
+     *
+     *
+     * @property createItag
+     * @param itagName {String} The name of the itag-element, starting with `i-`
+     * @param [prototypes] {Object} Hash map of properties to be added to the prototype of the new class.
+     * @param [subClassable=true] {Boolean} whether the Class is subclassable. Can only be set to false on ItagClasses
+     * @type Class
+     * @for document
+     * @since 0.0.1
+    */
+    Object.protectedProp(DOCUMENT, 'createItag', function(itagName, prototypes, subClassable) {
+        return Classes.ItagBaseClass.subClass.call(Classes.ItagBaseClass, itagName, prototypes, null, null, subClassable);
+    });
+
    /**
-    * Binds a model to the itag-element, making element.model equals the bound model.
-    * Immediately syncs the itag with the new model-data.
+    * Refreshes all Itag-elements in the dom by syncing their element.model onto the attributes and calling their `sync`-method.
     *
-    * Syncs the new vnode's childNodes with the dom.
-    *
-    * @method bindModel
-    * @param model {Object} the model to bind to the itag-element
+    * @method refreshItags
     * @chainable
     * @since 0.0.1
     */
-    DOCUMENT.bindModel = function(model, selector, fineGrain) {
-        return DOCUMENT.documentElement.bindModel(model, selector, fineGrain);
+    DOCUMENT.refreshItags = function() {
+        console.info('refreshing Itags');
+        var list = this.getItags(),
+            len = list.length,
+            i, itagElement;
+        allowedToRefreshItags = false; // prevent setTimeout to fall into loop
+        (len===0) || console.info('refreshing Itags');
+        for (i=0; i<len; i++) {
+            itagElement = list[i];
+            // because itagElement could be removed intermediste, we need to check if it's there
+            if (itagElement && itagElement.isRendered && itagElement.isRendered()) {
+                itagCore.modelToAttrs(itagElement);
+                itagElement.syncUI();
+                itagElement.hasClass('focussed') && manageFocus(itagElement);
+            }
+        }
+        allowedToRefreshItags = true;
+        return this;
     };
+
 
     //===============================================================================
     //== patching native prototypes =================================================
@@ -27388,27 +23316,33 @@ console.info('upgradeElement without bindmodel observer');
                 Array.isArray(domEvents) || (domEvents=[domEvents]);
                 domEvents.forEach(function(domEvent) {
                     domEvent.endsWith('outside') && (domEvent=domEvent.substr(0, domEvent.length-7));
-                    if (DEFAULT_DELAYED_FINALIZE_EVENTS[domEvent]) {
-                        itagsThatNeedsEvent[domEvent] || (itagsThatNeedsEvent[domEvent]=[]);
-                        itagsThatNeedsEvent[domEvent].push(itag);
-                        // remove from list in case at least one itag is in the dom:
-                        if (DOCUMENT.getElement(itag, true)) {
-                            delete DELAYED_FINALIZE_EVENTS[domEvent];
-                        }
-                        // add to the list whenever elements are removed and no itag is in the dom anymore:
-                        Event.after(NODE_REMOVE, function() {
-                            var elementThatNeedsEvent;
-                            itagsThatNeedsEvent[domEvent].some(function(oneItag) {
-                                DOCUMENT.getElement(oneItag, true) && (elementThatNeedsEvent=true);
-                                return elementThatNeedsEvent;
-                            });
-                            elementThatNeedsEvent || (DELAYED_FINALIZE_EVENTS[domEvent]=true);
-                        }, itag);
+                    domEvent = domEvent.toLowerCase();
+                    if (domEvent==='blur') {
+                        console.warn('the event "blur" cannot be delayed, for it would lead to extremely many syncing before anything changes which you don\'t need (fe when i-tabpane switches panes)');
+                    }
+                    else {
+                        if (DEFAULT_DELAYED_FINALIZE_EVENTS[domEvent]) {
+                            itagsThatNeedsEvent[domEvent] || (itagsThatNeedsEvent[domEvent]=[]);
+                            itagsThatNeedsEvent[domEvent].push(itag);
+                            // remove from list in case at least one itag is in the dom:
+                            if (DOCUMENT.getElement(itag, true)) {
+                                delete DELAYED_FINALIZE_EVENTS[domEvent];
+                            }
+                            // add to the list whenever elements are removed and no itag is in the dom anymore:
+                            Event.after(NODE_REMOVE, function() {
+                                var elementThatNeedsEvent;
+                                itagsThatNeedsEvent[domEvent].some(function(oneItag) {
+                                    DOCUMENT.getElement(oneItag, true) && (elementThatNeedsEvent=true);
+                                    return elementThatNeedsEvent;
+                                });
+                                elementThatNeedsEvent || (DELAYED_FINALIZE_EVENTS[domEvent]=true);
+                            }, itag);
 
-                        // remove from the list whenever itag is added in the dom:
-                        Event.after(NODE_INSERT, function() {
-                            delete DELAYED_FINALIZE_EVENTS[domEvent];
-                        }, itag);
+                            // remove from the list whenever itag is added in the dom:
+                            Event.after(NODE_INSERT, function() {
+                                delete DELAYED_FINALIZE_EVENTS[domEvent];
+                            }, itag);
+                        }
                     }
                 });
             }
@@ -27709,15 +23643,19 @@ console.info('upgradeElement without bindmodel observer');
                 BINDING_LIST[selector] = true;
                 elements = instance.getAll(selector);
                 elements.forEach(function(element) {
-                    itagCore.bindModel(element, fineGrain ? fineGrain(element, model) : model);
+                    itagCore.bindModel(element, (typeof fineGrain==='function') ? fineGrain(element, model) : model);
                 });
                 listener = Event.after(NODE_INSERT, function(e) {
                     var element = e.target;
-                    itagCore.bindModel(element, fineGrain ? fineGrain(element, model) : model);
-                    element.selfOnceAfter(
+                    itagCore.bindModel(element, (typeof fineGrain==='function') ? fineGrain(element, model) : model);
+                    // element.selfOnceAfter is not available yet: listen through Event:
+                    Event.onceAfter(
                         NODE_REMOVE,
                         function() {
                             listener.detach();
+                        },
+                        function(e) {
+                            return (e.target===element);
                         }
                     );
                 }, selector);
@@ -27902,49 +23840,6 @@ console.info('upgradeElement without bindmodel observer');
         }
     });
 
-    /**
-     * Internal hash containing all DOM-events that are listened for (at `document`).
-     *
-     *
-     * @property createItag
-     * @param itagName {String} The name of the itag-element, starting with `i-`
-     * @param [prototypes] {Object} Hash map of properties to be added to the prototype of the new class.
-     * @param [subClassable=true] {Boolean} whether the Class is subclassable. Can only be set to false on ItagClasses
-     * @type Class
-     * @for document
-     * @since 0.0.1
-    */
-    Object.protectedProp(DOCUMENT, 'createItag', function(itagName, prototypes, subClassable) {
-        return Classes.ItagBaseClass.subClass.call(Classes.ItagBaseClass, itagName, prototypes, null, null, subClassable);
-    });
-
-   /**
-    * Refreshes all Itag-elements in the dom by syncing their element.model onto the attributes and calling their `sync`-method.
-    *
-    * @method refreshItags
-    * @chainable
-    * @since 0.0.1
-    */
-    DOCUMENT.refreshItags = function() {
-        var list = this.getItags(),
-            len = list.length,
-            i, itagElement;
-        allowedToRefreshItags = false; // prevent setTimeout to fall into loop
-console.info('refreshItagsrefreshItagsrefreshItagsrefreshItagsrefreshItags '+len);
-        for (i=0; i<len; i++) {
-            itagElement = list[i];
-            // because itagElement could be removed intermediste, we need to check if it's there
-            if (itagElement && itagElement.isRendered && itagElement.isRendered()) {
-                itagCore.modelToAttrs(itagElement);
-console.info('refreshItags will syncUI of element');
-                itagElement.syncUI();
-                itagElement.hasClass('focussed') && manageFocus(itagElement);
-            }
-        }
-        allowedToRefreshItags = true;
-        return this;
-    };
-
     itagCore.setupWatchers();
     itagCore.setupEmitters();
 
@@ -27968,9 +23863,9 @@ console.info('refreshItags will syncUI of element');
     return itagCore;
 };
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./css/itags.core.css":315,"event-dom":6,"io":214,"js-ext/extra/hashmap.js":236,"js-ext/js-ext.js":238,"polyfill/polyfill-base.js":257,"utils":258,"vdom":305}],317:[function(require,module,exports){
+},{"./css/itags.core.css":395,"event-dom":6,"io":294,"js-ext/extra/hashmap.js":316,"js-ext/js-ext.js":318,"polyfill/polyfill-base.js":337,"utils":338,"vdom":385}],397:[function(require,module,exports){
 
-},{}],318:[function(require,module,exports){
+},{}],398:[function(require,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -29141,7 +25036,7 @@ function assert (test, message) {
   if (!test) throw new Error(message || 'Failed assertion')
 }
 
-},{"base64-js":319,"ieee754":320}],319:[function(require,module,exports){
+},{"base64-js":399,"ieee754":400}],399:[function(require,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
@@ -29263,7 +25158,7 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	exports.fromByteArray = uint8ToBase64
 }(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
 
-},{}],320:[function(require,module,exports){
+},{}],400:[function(require,module,exports){
 exports.read = function(buffer, offset, isLE, mLen, nBytes) {
   var e, m,
       eLen = nBytes * 8 - mLen - 1,
@@ -29349,7 +25244,7 @@ exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128;
 };
 
-},{}],321:[function(require,module,exports){
+},{}],401:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -29654,7 +25549,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],322:[function(require,module,exports){
+},{}],402:[function(require,module,exports){
 var http = module.exports;
 var EventEmitter = require('events').EventEmitter;
 var Request = require('./lib/request');
@@ -29793,7 +25688,7 @@ http.STATUS_CODES = {
     510 : 'Not Extended',               // RFC 2774
     511 : 'Network Authentication Required' // RFC 6585
 };
-},{"./lib/request":323,"events":321,"url":347}],323:[function(require,module,exports){
+},{"./lib/request":403,"events":401,"url":427}],403:[function(require,module,exports){
 var Stream = require('stream');
 var Response = require('./response');
 var Base64 = require('Base64');
@@ -29987,7 +25882,7 @@ var indexOf = function (xs, x) {
     return -1;
 };
 
-},{"./response":324,"Base64":325,"inherits":327,"stream":346}],324:[function(require,module,exports){
+},{"./response":404,"Base64":405,"inherits":407,"stream":426}],404:[function(require,module,exports){
 var Stream = require('stream');
 var util = require('util');
 
@@ -30109,7 +26004,7 @@ var isArray = Array.isArray || function (xs) {
     return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{"stream":346,"util":349}],325:[function(require,module,exports){
+},{"stream":426,"util":429}],405:[function(require,module,exports){
 ;(function () {
 
   var object = typeof exports != 'undefined' ? exports : this; // #8: web workers
@@ -30171,7 +26066,7 @@ var isArray = Array.isArray || function (xs) {
 
 }());
 
-},{}],326:[function(require,module,exports){
+},{}],406:[function(require,module,exports){
 var http = require('http');
 
 var https = module.exports;
@@ -30186,7 +26081,7 @@ https.request = function (params, cb) {
     return http.request.call(this, params, cb);
 }
 
-},{"http":322}],327:[function(require,module,exports){
+},{"http":402}],407:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -30211,12 +26106,12 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],328:[function(require,module,exports){
+},{}],408:[function(require,module,exports){
 module.exports = Array.isArray || function (arr) {
   return Object.prototype.toString.call(arr) == '[object Array]';
 };
 
-},{}],329:[function(require,module,exports){
+},{}],409:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -30281,7 +26176,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],330:[function(require,module,exports){
+},{}],410:[function(require,module,exports){
 (function (global){
 /*! http://mths.be/punycode v1.2.4 by @mathias */
 ;(function(root) {
@@ -30792,7 +26687,7 @@ process.chdir = function (dir) {
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],331:[function(require,module,exports){
+},{}],411:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -30878,7 +26773,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],332:[function(require,module,exports){
+},{}],412:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -30965,16 +26860,16 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],333:[function(require,module,exports){
+},{}],413:[function(require,module,exports){
 'use strict';
 
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
-},{"./decode":331,"./encode":332}],334:[function(require,module,exports){
+},{"./decode":411,"./encode":412}],414:[function(require,module,exports){
 module.exports = require("./lib/_stream_duplex.js")
 
-},{"./lib/_stream_duplex.js":335}],335:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":415}],415:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -31067,7 +26962,7 @@ function forEach (xs, f) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_readable":337,"./_stream_writable":339,"_process":329,"core-util-is":340,"inherits":327}],336:[function(require,module,exports){
+},{"./_stream_readable":417,"./_stream_writable":419,"_process":409,"core-util-is":420,"inherits":407}],416:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -31115,7 +27010,7 @@ PassThrough.prototype._transform = function(chunk, encoding, cb) {
   cb(null, chunk);
 };
 
-},{"./_stream_transform":338,"core-util-is":340,"inherits":327}],337:[function(require,module,exports){
+},{"./_stream_transform":418,"core-util-is":420,"inherits":407}],417:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -32078,7 +27973,7 @@ function indexOf (xs, x) {
 }
 
 }).call(this,require('_process'))
-},{"_process":329,"buffer":318,"core-util-is":340,"events":321,"inherits":327,"isarray":328,"stream":346,"string_decoder/":341}],338:[function(require,module,exports){
+},{"_process":409,"buffer":398,"core-util-is":420,"events":401,"inherits":407,"isarray":408,"stream":426,"string_decoder/":421}],418:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -32290,7 +28185,7 @@ function done(stream, er) {
   return stream.push(null);
 }
 
-},{"./_stream_duplex":335,"core-util-is":340,"inherits":327}],339:[function(require,module,exports){
+},{"./_stream_duplex":415,"core-util-is":420,"inherits":407}],419:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -32681,7 +28576,7 @@ function endWritable(stream, state, cb) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_duplex":335,"_process":329,"buffer":318,"core-util-is":340,"inherits":327,"stream":346}],340:[function(require,module,exports){
+},{"./_stream_duplex":415,"_process":409,"buffer":398,"core-util-is":420,"inherits":407,"stream":426}],420:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -32791,7 +28686,7 @@ function objectToString(o) {
   return Object.prototype.toString.call(o);
 }
 }).call(this,require("buffer").Buffer)
-},{"buffer":318}],341:[function(require,module,exports){
+},{"buffer":398}],421:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -32993,10 +28888,10 @@ function base64DetectIncompleteChar(buffer) {
   return incomplete;
 }
 
-},{"buffer":318}],342:[function(require,module,exports){
+},{"buffer":398}],422:[function(require,module,exports){
 module.exports = require("./lib/_stream_passthrough.js")
 
-},{"./lib/_stream_passthrough.js":336}],343:[function(require,module,exports){
+},{"./lib/_stream_passthrough.js":416}],423:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Readable = exports;
 exports.Writable = require('./lib/_stream_writable.js');
@@ -33004,13 +28899,13 @@ exports.Duplex = require('./lib/_stream_duplex.js');
 exports.Transform = require('./lib/_stream_transform.js');
 exports.PassThrough = require('./lib/_stream_passthrough.js');
 
-},{"./lib/_stream_duplex.js":335,"./lib/_stream_passthrough.js":336,"./lib/_stream_readable.js":337,"./lib/_stream_transform.js":338,"./lib/_stream_writable.js":339}],344:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":415,"./lib/_stream_passthrough.js":416,"./lib/_stream_readable.js":417,"./lib/_stream_transform.js":418,"./lib/_stream_writable.js":419}],424:[function(require,module,exports){
 module.exports = require("./lib/_stream_transform.js")
 
-},{"./lib/_stream_transform.js":338}],345:[function(require,module,exports){
+},{"./lib/_stream_transform.js":418}],425:[function(require,module,exports){
 module.exports = require("./lib/_stream_writable.js")
 
-},{"./lib/_stream_writable.js":339}],346:[function(require,module,exports){
+},{"./lib/_stream_writable.js":419}],426:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -33139,7 +29034,7 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"events":321,"inherits":327,"readable-stream/duplex.js":334,"readable-stream/passthrough.js":342,"readable-stream/readable.js":343,"readable-stream/transform.js":344,"readable-stream/writable.js":345}],347:[function(require,module,exports){
+},{"events":401,"inherits":407,"readable-stream/duplex.js":414,"readable-stream/passthrough.js":422,"readable-stream/readable.js":423,"readable-stream/transform.js":424,"readable-stream/writable.js":425}],427:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -33848,14 +29743,14 @@ function isNullOrUndefined(arg) {
   return  arg == null;
 }
 
-},{"punycode":330,"querystring":333}],348:[function(require,module,exports){
+},{"punycode":410,"querystring":413}],428:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],349:[function(require,module,exports){
+},{}],429:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -34445,7 +30340,7 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":348,"_process":329,"inherits":327}],"itags":[function(require,module,exports){
+},{"./support/isBuffer":428,"_process":409,"inherits":407}],"itags":[function(require,module,exports){
 (function (global){
 /**
  * The ITSA module is an aggregator for all the individual modules that the library uses.
@@ -34475,4 +30370,4 @@ function hasOwnProperty(obj, prop) {
 
 })(global.window || require('node-win'));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"i-head":309,"i-item":310,"i-select":312,"i-tabpane":314,"node-win":250,"utils":258}]},{},[]);
+},{"i-head":389,"i-item":390,"i-select":392,"i-tabpane":394,"node-win":330,"utils":338}]},{},[]);

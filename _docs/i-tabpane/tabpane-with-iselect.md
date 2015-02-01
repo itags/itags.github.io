@@ -44,5 +44,10 @@ intro: ""
 <script src="../../dist/itagsbuild.js"></script>
 <script>
     require('itags');
+    var model = {
+        value: 4,
+        'primary-button': true
+    };
+    document.bindModel(model, 'i-select');
     document.getElement('i-tabpane').focus();
 </script>
