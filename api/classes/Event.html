@@ -101,9 +101,13 @@
             
                 <li><a href="../modules/event.html">event</a></li>
             
+                <li><a href="../modules/event-blurnode.html">event-blurnode</a></li>
+            
                 <li><a href="../modules/event-dom.html">event-dom</a></li>
             
                 <li><a href="../modules/event-emitter.html">event-emitter</a></li>
+            
+                <li><a href="../modules/event-hover.html">event-hover</a></li>
             
                 <li><a href="../modules/event-listener.html">event-listener</a></li>
             
@@ -192,14 +196,14 @@
 
     
         <div class="foundat">
-            Defined in: <a href="../files/site-preview_dist_itagsbuild.js.html#l17383"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:17383</code></a>
+            Defined in: <a href="../files/site-preview_dist_itagsbuild.js.html#l14834"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:14834</code></a>
         </div>
     
 
     
         
-            Module: <a href="../modules/event-dom.html">event-dom</a><br>
-            Parent Module: <a href="../modules/io.html">io</a>
+            Module: <a href="../modules/event-mobile.html">event-mobile</a><br>
+            Parent Module: <a href="../modules/focusmanager.html">focusmanager</a>
         
     
 
@@ -209,7 +213,7 @@
 
 
 <div class="box intro">
-    <p>Integrates DOM-events to event. more about DOM-events:
+    <p>Integrates mobile-events to event-dom. more about DOM-events:
 <a href="http://www.smashingmagazine.com/2013/11/12/an-introduction-to-dom-events/">http://www.smashingmagazine.com/2013/11/12/an-introduction-to-dom-events/</a></p>
 <p><i>Copyright (c) 2014 ITSA - <a href="https://github.com/itsa">https://github.com/itsa</a></i>
 New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">http://choosealicense.com/licenses/bsd-3-clause/</a></p>
@@ -295,20 +299,6 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
                             </li>
                         
                             <li class="index-item method private">
-                                <a href="#method__domCallback">_domCallback</a>
-
-                                
-                                
-                            </li>
-                        
-                            <li class="index-item method private">
-                                <a href="#method__domCallback">_domCallback</a>
-
-                                
-                                
-                            </li>
-                        
-                            <li class="index-item method private">
                                 <a href="#method__invokeSubs">_invokeSubs</a>
 
                                 
@@ -539,6 +529,20 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
                         
                             <li class="index-item method">
                                 <a href="#method_hasParent">hasParent</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
+                                <a href="#method_noDeepDomEvt">noDeepDomEvt</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
+                                <a href="#method_noDeepDomEvt">noDeepDomEvt</a>
 
                                 
                                 
@@ -811,6 +815,24 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
                             </li>
                         
                             <li class="index-item property">
+                                <a href="#property_POLL_INTERVAL">POLL_INTERVAL</a>
+
+                                
+                                    <span class="flag static">static</span>
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item property">
+                                <a href="#property_POLL_INTERVAL">POLL_INTERVAL</a>
+
+                                
+                                    <span class="flag static">static</span>
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item property">
                                 <a href="#property_{string}">{string}</a>
 
                                 
@@ -845,6 +867,20 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
                         
                             <li class="index-item event">
                                 <a href="#event_ParcelaEvent:eventmobile">ParcelaEvent:eventmobile</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item event">
+                                <a href="#event_valuechange">valuechange</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item event">
+                                <a href="#event_valuechange">valuechange</a>
 
                                 
                                 
@@ -942,7 +978,7 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l1292"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1292</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l1745"><code>site&#x2F;dist&#x2F;itagsbuild.js:1745</code></a>
         
         </p>
 
@@ -961,8 +997,8 @@ If <code>emitterName</code> is not defined, <code>UI</code> is assumed.</p>
 <p>Examples of valid customevents:</p>
 <ul>
     <li>&#39;redmodel:save&#39;</li>
-    <li>&#39;UI:click&#39;</li>
-    <li>&#39;click&#39; --&gt; alias for &#39;UI:click&#39;</li>
+    <li>&#39;UI:tap&#39;</li>
+    <li>&#39;tap&#39; --&gt; alias for &#39;UI:tap&#39;</li>
     <li>&#39;<code>*</code>:click&#39; --&gt; careful: will listen to both UIs and non-UI- click-events</li>
     <li>&#39;redmodel:<code>*</code>&#39;</li>
     <li>&#39;<code>*</code>:<code>*</code>&#39;</li>
@@ -1184,7 +1220,7 @@ If <code>emitterName</code> is not defined, <code>UI</code> is assumed.</p>
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l1292"><code>site&#x2F;dist&#x2F;itagsbuild.js:1292</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l1745"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1745</code></a>
         
         </p>
 
@@ -1203,8 +1239,8 @@ If <code>emitterName</code> is not defined, <code>UI</code> is assumed.</p>
 <p>Examples of valid customevents:</p>
 <ul>
     <li>&#39;redmodel:save&#39;</li>
-    <li>&#39;UI:click&#39;</li>
-    <li>&#39;click&#39; --&gt; alias for &#39;UI:click&#39;</li>
+    <li>&#39;UI:tap&#39;</li>
+    <li>&#39;tap&#39; --&gt; alias for &#39;UI:tap&#39;</li>
     <li>&#39;<code>*</code>:click&#39; --&gt; careful: will listen to both UIs and non-UI- click-events</li>
     <li>&#39;redmodel:<code>*</code>&#39;</li>
     <li>&#39;<code>*</code>:<code>*</code>&#39;</li>
@@ -1426,7 +1462,7 @@ If <code>emitterName</code> is not defined, <code>UI</code> is assumed.</p>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l1364"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1364</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l1817"><code>site&#x2F;dist&#x2F;itagsbuild.js:1817</code></a>
         
         </p>
 
@@ -1445,8 +1481,8 @@ If <code>emitterName</code> is not defined, <code>UI</code> is assumed.</p>
 <p>Examples of valid customevents:</p>
 <ul>
     <li>&#39;redmodel:save&#39;</li>
-    <li>&#39;UI:click&#39;</li>
-    <li>&#39;click&#39; --&gt; alias for &#39;UI:click&#39;</li>
+    <li>&#39;UI:tap&#39;</li>
+    <li>&#39;tap&#39; --&gt; alias for &#39;UI:tap&#39;</li>
     <li>&#39;<code>*</code>:click&#39; --&gt; careful: will listen to both UIs and non-UI- click-events</li>
     <li>&#39;redmodel:<code>*</code>&#39;</li>
     <li>&#39;<code>*</code>:<code>*</code>&#39;</li>
@@ -1668,7 +1704,7 @@ If <code>emitterName</code> is not defined, <code>UI</code> is assumed.</p>
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l1364"><code>site&#x2F;dist&#x2F;itagsbuild.js:1364</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l1817"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1817</code></a>
         
         </p>
 
@@ -1687,8 +1723,8 @@ If <code>emitterName</code> is not defined, <code>UI</code> is assumed.</p>
 <p>Examples of valid customevents:</p>
 <ul>
     <li>&#39;redmodel:save&#39;</li>
-    <li>&#39;UI:click&#39;</li>
-    <li>&#39;click&#39; --&gt; alias for &#39;UI:click&#39;</li>
+    <li>&#39;UI:tap&#39;</li>
+    <li>&#39;tap&#39; --&gt; alias for &#39;UI:tap&#39;</li>
     <li>&#39;<code>*</code>:click&#39; --&gt; careful: will listen to both UIs and non-UI- click-events</li>
     <li>&#39;redmodel:<code>*</code>&#39;</li>
     <li>&#39;<code>*</code>:<code>*</code>&#39;</li>
@@ -1871,6 +1907,8 @@ If <code>emitterName</code> is not defined, <code>UI</code> is assumed.</p>
         
             
                 
+                    <p>Provided by the <a href="../modules/event-dom.html">event-dom</a> module.</p>
+                
                 <p>
                 
                 Defined in
@@ -1878,7 +1916,7 @@ If <code>emitterName</code> is not defined, <code>UI</code> is assumed.</p>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l671"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:671</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l762"><code>site&#x2F;dist&#x2F;itagsbuild.js:762</code></a>
         
         </p>
 
@@ -1987,121 +2025,7 @@ the Eventsystem: on e.halt() or e.preventDefault(), the original DOM-event will 
         
             
                 
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/site_dist_itagsbuild.js.html#l671"><code>site&#x2F;dist&#x2F;itagsbuild.js:671</code></a>
-        
-        </p>
-
-
-        
-
-        
-            <p>Available since 0.0.1</p>
-        
-    </div>
-
-    <div class="description">
-        <p>Does the actual transportation from DOM-events into the Eventsystem. It also looks at the response of
-the Eventsystem: on e.halt() or e.preventDefault(), the original DOM-event will be preventDefaulted.</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">eventName</code>
-                        <span class="type"><a href="../classes/String.html" class="crosslink">String</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>the customEvent that is transported to the eventsystem</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">e</code>
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>eventobject</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-
-    
-</div>
-
-                
-                    <div id="method__domCallback" class="method item private">
-    <h3 class="name"><code>_domCallback</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>eventName</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>e</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-
-    
-
-    
-        <span class="flag private">private</span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
+                    <p>Provided by the <a href="../modules/event-dom.html">event-dom</a> module.</p>
                 
                 <p>
                 
@@ -2110,123 +2034,7 @@ the Eventsystem: on e.halt() or e.preventDefault(), the original DOM-event will 
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l18000"><code>site&#x2F;dist&#x2F;itagsbuild.js:18000</code></a>
-        
-        </p>
-
-
-        
-
-        
-            <p>Available since 0.0.1</p>
-        
-    </div>
-
-    <div class="description">
-        <p>Does the actual transportation from DOM-events into the Eventsystem. It also looks at the response of
-the Eventsystem: on e.halt() or e.preventDefault(), the original DOM-event will be preventDefaulted.</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">eventName</code>
-                        <span class="type"><a href="../classes/String.html" class="crosslink">String</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>the customEvent that is transported to the eventsystem</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">e</code>
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>eventobject</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-
-    
-</div>
-
-                
-                    <div id="method__domCallback" class="method item private">
-    <h3 class="name"><code>_domCallback</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>eventName</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>e</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-
-    
-
-    
-        <span class="flag private">private</span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l18000"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:18000</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l762"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:762</code></a>
         
         </p>
 
@@ -2362,7 +2170,7 @@ the Eventsystem: on e.halt() or e.preventDefault(), the original DOM-event will 
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l1657"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1657</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l2110"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:2110</code></a>
         
         </p>
 
@@ -2555,7 +2363,7 @@ the Eventsystem: on e.halt() or e.preventDefault(), the original DOM-event will 
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l1657"><code>site&#x2F;dist&#x2F;itagsbuild.js:1657</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l2110"><code>site&#x2F;dist&#x2F;itagsbuild.js:2110</code></a>
         
         </p>
 
@@ -2693,6 +2501,136 @@ the Eventsystem: on e.halt() or e.preventDefault(), the original DOM-event will 
             
                 <li class="arg">
                     
+                        <code>customEvent</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+
+    
+
+    
+        <span class="flag private">private</span>
+    
+
+    
+
+    
+        <span class="flag static">static</span>
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                    <p>Provided by the <a href="../modules/event.html">event</a> module.</p>
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l2225"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:2225</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Removes subscribers from the multiple customevents. The customEvent must conform the syntax:
+<code>emitterName:eventName</code>. Wildcard <code>*</code> may be used for both <code>emitterName</code> as well as <code>eventName</code>
+If <code>emitterName</code> is not defined, <code>UI</code> is assumed.</p>
+<p>Examples of valid customevents:</p>
+<ul>
+    <li>&#39;redmodel:save&#39;</li>
+    <li>&#39;UI:tap&#39;</li>
+    <li>&#39;tap&#39; --&gt; alias for &#39;UI:tap&#39;</li>
+    <li>&#39;<code>*</code>:click&#39; --&gt; careful: will listen to both UIs and non-UI- click-events</li>
+    <li>&#39;redmodel:<code>*</code>&#39;</li>
+    <li>&#39;<code>*</code>:<code>*</code>&#39;</li>
+</ul>
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">listener</code>
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>Object that creates the subscriber (and will be listening by <code>listener.after(...)</code>)</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">customEvent</code>
+                        <span class="type"><a href="../classes/String.html" class="crosslink">String</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>conform the syntax: <code>emitterName:eventName</code>, wildcard <code>*</code> may be used for both
+       <code>emitterName</code> as well as only <code>eventName</code>, in which case &#39;UI&#39; will become the emmiterName.</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="method__removeSubscriber" class="method item private">
+    <h3 class="name"><code>_removeSubscriber</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>listener</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
                         <code>before</code>
                     
                 </li>
@@ -2744,7 +2682,7 @@ the Eventsystem: on e.halt() or e.preventDefault(), the original DOM-event will 
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l1707"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1707</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l2160"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:2160</code></a>
         
         </p>
 
@@ -2860,6 +2798,136 @@ the Eventsystem: on e.halt() or e.preventDefault(), the original DOM-event will 
             
                 <li class="arg">
                     
+                        <code>customEvent</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+
+    
+
+    
+        <span class="flag private">private</span>
+    
+
+    
+
+    
+        <span class="flag static">static</span>
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                    <p>Provided by the <a href="../modules/event.html">event</a> module.</p>
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site_dist_itagsbuild.js.html#l2225"><code>site&#x2F;dist&#x2F;itagsbuild.js:2225</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Removes subscribers from the multiple customevents. The customEvent must conform the syntax:
+<code>emitterName:eventName</code>. Wildcard <code>*</code> may be used for both <code>emitterName</code> as well as <code>eventName</code>
+If <code>emitterName</code> is not defined, <code>UI</code> is assumed.</p>
+<p>Examples of valid customevents:</p>
+<ul>
+    <li>&#39;redmodel:save&#39;</li>
+    <li>&#39;UI:tap&#39;</li>
+    <li>&#39;tap&#39; --&gt; alias for &#39;UI:tap&#39;</li>
+    <li>&#39;<code>*</code>:click&#39; --&gt; careful: will listen to both UIs and non-UI- click-events</li>
+    <li>&#39;redmodel:<code>*</code>&#39;</li>
+    <li>&#39;<code>*</code>:<code>*</code>&#39;</li>
+</ul>
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">listener</code>
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>Object that creates the subscriber (and will be listening by <code>listener.after(...)</code>)</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">customEvent</code>
+                        <span class="type"><a href="../classes/String.html" class="crosslink">String</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>conform the syntax: <code>emitterName:eventName</code>, wildcard <code>*</code> may be used for both
+       <code>emitterName</code> as well as only <code>eventName</code>, in which case &#39;UI&#39; will become the emmiterName.</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="method__removeSubscriber" class="method item private">
+    <h3 class="name"><code>_removeSubscriber</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>listener</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
                         <code>before</code>
                     
                 </li>
@@ -2911,7 +2979,7 @@ the Eventsystem: on e.halt() or e.preventDefault(), the original DOM-event will 
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l1707"><code>site&#x2F;dist&#x2F;itagsbuild.js:1707</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l2160"><code>site&#x2F;dist&#x2F;itagsbuild.js:2160</code></a>
         
         </p>
 
@@ -2996,266 +3064,6 @@ the Eventsystem: on e.halt() or e.preventDefault(), the original DOM-event will 
                     <div class="param-description">
                         <p>subscriber to the event, when not set, all subscribers of the listener to this customEvent
                   will be removed.</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-
-    
-</div>
-
-                
-                    <div id="method__removeSubscriber" class="method item private">
-    <h3 class="name"><code>_removeSubscriber</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>listener</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>customEvent</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-
-    
-
-    
-        <span class="flag private">private</span>
-    
-
-    
-
-    
-        <span class="flag static">static</span>
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                    <p>Provided by the <a href="../modules/event.html">event</a> module.</p>
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l1772"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1772</code></a>
-        
-        </p>
-
-
-        
-
-        
-            <p>Available since 0.0.1</p>
-        
-    </div>
-
-    <div class="description">
-        <p>Removes subscribers from the multiple customevents. The customEvent must conform the syntax:
-<code>emitterName:eventName</code>. Wildcard <code>*</code> may be used for both <code>emitterName</code> as well as <code>eventName</code>
-If <code>emitterName</code> is not defined, <code>UI</code> is assumed.</p>
-<p>Examples of valid customevents:</p>
-<ul>
-    <li>&#39;redmodel:save&#39;</li>
-    <li>&#39;UI:click&#39;</li>
-    <li>&#39;click&#39; --&gt; alias for &#39;UI:click&#39;</li>
-    <li>&#39;<code>*</code>:click&#39; --&gt; careful: will listen to both UIs and non-UI- click-events</li>
-    <li>&#39;redmodel:<code>*</code>&#39;</li>
-    <li>&#39;<code>*</code>:<code>*</code>&#39;</li>
-</ul>
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">listener</code>
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>Object that creates the subscriber (and will be listening by <code>listener.after(...)</code>)</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">customEvent</code>
-                        <span class="type"><a href="../classes/String.html" class="crosslink">String</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>conform the syntax: <code>emitterName:eventName</code>, wildcard <code>*</code> may be used for both
-       <code>emitterName</code> as well as only <code>eventName</code>, in which case &#39;UI&#39; will become the emmiterName.</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-
-    
-</div>
-
-                
-                    <div id="method__removeSubscriber" class="method item private">
-    <h3 class="name"><code>_removeSubscriber</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>listener</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>customEvent</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-
-    
-
-    
-        <span class="flag private">private</span>
-    
-
-    
-
-    
-        <span class="flag static">static</span>
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                    <p>Provided by the <a href="../modules/event.html">event</a> module.</p>
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/site_dist_itagsbuild.js.html#l1772"><code>site&#x2F;dist&#x2F;itagsbuild.js:1772</code></a>
-        
-        </p>
-
-
-        
-
-        
-            <p>Available since 0.0.1</p>
-        
-    </div>
-
-    <div class="description">
-        <p>Removes subscribers from the multiple customevents. The customEvent must conform the syntax:
-<code>emitterName:eventName</code>. Wildcard <code>*</code> may be used for both <code>emitterName</code> as well as <code>eventName</code>
-If <code>emitterName</code> is not defined, <code>UI</code> is assumed.</p>
-<p>Examples of valid customevents:</p>
-<ul>
-    <li>&#39;redmodel:save&#39;</li>
-    <li>&#39;UI:click&#39;</li>
-    <li>&#39;click&#39; --&gt; alias for &#39;UI:click&#39;</li>
-    <li>&#39;<code>*</code>:click&#39; --&gt; careful: will listen to both UIs and non-UI- click-events</li>
-    <li>&#39;redmodel:<code>*</code>&#39;</li>
-    <li>&#39;<code>*</code>:<code>*</code>&#39;</li>
-</ul>
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">listener</code>
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>Object that creates the subscriber (and will be listening by <code>listener.after(...)</code>)</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">customEvent</code>
-                        <span class="type"><a href="../classes/String.html" class="crosslink">String</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>conform the syntax: <code>emitterName:eventName</code>, wildcard <code>*</code> may be used for both
-       <code>emitterName</code> as well as only <code>eventName</code>, in which case &#39;UI&#39; will become the emmiterName.</p>
 
                     </div>
 
@@ -3326,7 +3134,7 @@ If <code>emitterName</code> is not defined, <code>UI</code> is assumed.</p>
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l1827"><code>site&#x2F;dist&#x2F;itagsbuild.js:1827</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l2280"><code>site&#x2F;dist&#x2F;itagsbuild.js:2280</code></a>
         
         </p>
 
@@ -3446,7 +3254,7 @@ all set to false.</p>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l1827"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1827</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l2280"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:2280</code></a>
         
         </p>
 
@@ -3586,7 +3394,7 @@ all set to false.</p>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l756"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:756</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l1209"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1209</code></a>
         
         </p>
 
@@ -3799,7 +3607,7 @@ all set to false.</p>
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l756"><code>site&#x2F;dist&#x2F;itagsbuild.js:756</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l1209"><code>site&#x2F;dist&#x2F;itagsbuild.js:1209</code></a>
         
         </p>
 
@@ -4012,7 +3820,7 @@ all set to false.</p>
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l783"><code>site&#x2F;dist&#x2F;itagsbuild.js:783</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l1236"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1236</code></a>
         
         </p>
 
@@ -4225,7 +4033,7 @@ all set to false.</p>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l783"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:783</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l1236"><code>site&#x2F;dist&#x2F;itagsbuild.js:1236</code></a>
         
         </p>
 
@@ -4416,7 +4224,7 @@ all set to false.</p>
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l810"><code>site&#x2F;dist&#x2F;itagsbuild.js:810</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l1263"><code>site&#x2F;dist&#x2F;itagsbuild.js:1263</code></a>
         
         </p>
 
@@ -4534,7 +4342,7 @@ This will add a protected property <code>_emitterName</code> to the instance.</p
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l810"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:810</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l1263"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1263</code></a>
         
         </p>
 
@@ -4650,7 +4458,7 @@ This will add a protected property <code>_emitterName</code> to the instance.</p
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l831"><code>site&#x2F;dist&#x2F;itagsbuild.js:831</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l1284"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1284</code></a>
         
         </p>
 
@@ -4784,7 +4592,7 @@ unless you force to assign with <code>.forceAssign()</code></p>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l831"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:831</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l1284"><code>site&#x2F;dist&#x2F;itagsbuild.js:1284</code></a>
         
         </p>
 
@@ -4920,7 +4728,7 @@ unless you force to assign with <code>.forceAssign()</code></p>
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l929"><code>site&#x2F;dist&#x2F;itagsbuild.js:929</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l1382"><code>site&#x2F;dist&#x2F;itagsbuild.js:1382</code></a>
         
         </p>
 
@@ -5041,7 +4849,7 @@ unless you force to assign with <code>.forceAssign()</code></p>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l929"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:929</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l1382"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1382</code></a>
         
         </p>
 
@@ -5156,7 +4964,7 @@ unless you force to assign with <code>.forceAssign()</code></p>
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l947"><code>site&#x2F;dist&#x2F;itagsbuild.js:947</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l1400"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1400</code></a>
         
         </p>
 
@@ -5251,7 +5059,7 @@ unless you force to assign with <code>.forceAssign()</code></p>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l947"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:947</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l1400"><code>site&#x2F;dist&#x2F;itagsbuild.js:1400</code></a>
         
         </p>
 
@@ -5294,6 +5102,198 @@ unless you force to assign with <code>.forceAssign()</code></p>
         </div>
     
 
+    
+
+    
+</div>
+
+                
+                    <div id="method_emit" class="method item">
+    <h3 class="name"><code>emit</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code class="optional">[emitter]</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>customEvent</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>payload</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a> | Undefined</span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+        <span class="flag static">static</span>
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                    <p>Provided by the <a href="../modules/event.html">event</a> module.</p>
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l1424"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1424</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Emits the event <code>eventName</code> on behalf of <code>emitter</code>, which becomes e.target in the eventobject.
+During this process, all subscribers and the defaultFn/preventedFn get an eventobject passed through.
+The eventobject is created with at least these properties:</p>
+<ul>
+    <li>e.target --&gt; source that triggered the event (instance or DOM-node), specified by <code>emitter</code></li>
+    <li>e.type --&gt; eventName</li>
+    <li>e.emitter --&gt; emitterName</li>
+    <li>e.status --&gt; status-information:
+         <ul>
+              <li>e.status.ok --&gt; <code>true|false</code> whether the event got executed (not halted or defaultPrevented)</li>
+              <li>e.status.defaultFn (optional) --&gt; <code>true</code> if any defaultFn got invoked</li>
+              <li>e.status.preventedFn (optional) --&gt; <code>true</code> if any preventedFn got invoked</li>
+              <li>e.status.rendered (optional) --&gt; <code>true</code> the vDOM rendered the dom</li>
+              <li>e.status.halted (optional) --&gt; <code>reason|true</code> if the event got halted and optional the why</li>
+              <li>e.status.defaultPrevented (optional) --&gt;  <code>reason|true</code> if the event got defaultPrevented and optional the why</li>
+              <li>e.status.renderPrevented (optional) --&gt;  <code>reason|true</code> if the event got renderPrevented and optional the why</li>
+         </ul>
+    </li>
+</ul>
+
+<p>The optional <code>payload</code> is merged into the eventobject and could be used by the subscribers and the defaultFn/preventedFn.
+If payload.silent is set true, the subscribers are not getting invoked: only the defaultFn.</p>
+<p>The eventobject also has these methods:</p>
+<ul>
+    <li>e.halt() --&gt; stops immediate all actions: no mer subscribers are invoked, no defaultFn/preventedFn</li>
+    <li>e.preventDefault() --&gt; instead of invoking defaultFn, preventedFn will be invoked. No aftersubscribers</li>
+    <li>e.preventRender() --&gt; by default, any event will trigger the vDOM (if exists) to re-render, this can be prevented by calling e.preventRender()</li>
+</ul>
+
+<p><ul>
+    <li>First, before-subscribers are invoked: this is the place where you might call <code>e.halt()</code>, <code>a.preventDefault()</code> or <code>e.preventRender()</code></li>
+    <li>Next, defaultFn or preventedFn gets invoked, depending on whether e.halt() or a.preventDefault() has been called</li>
+    <li>Next, after-subscribers get invoked (unless e.halt() or a.preventDefault() has been called)</li>
+    <li>Finally, the finalization takes place: any subscribers are invoked, unless e.halt() or a.preventDefault() has been called</li></p>
+<ul>
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name optional">[emitter]</code>
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>instance that emits the events</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">customEvent</code>
+                        <span class="type"><a href="../classes/String.html" class="crosslink">String</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>Full customEvent conform syntax <code>emitterName:eventName</code>.
+       <code>emitterName</code> is available as <strong>e.emitter</strong>, <code>eventName</code> as <strong>e.type</strong>.</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">payload</code>
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>extra payload to be added to the event-object</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a> | Undefined</span>:
+                    
+                    <p>eventobject or undefined when the event was halted or preventDefaulted.</p>
+
+                
+            </div>
+        </div>
     
 
     
@@ -5392,7 +5392,7 @@ unless you force to assign with <code>.forceAssign()</code></p>
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l1486"><code>site&#x2F;dist&#x2F;itagsbuild.js:1486</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l1939"><code>site&#x2F;dist&#x2F;itagsbuild.js:1939</code></a>
         
         </p>
 
@@ -5707,7 +5707,7 @@ If payload.silent is set true, the subscribers are not getting invoked: only the
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l1486"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1486</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l1939"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1939</code></a>
         
         </p>
 
@@ -5992,199 +5992,7 @@ If payload.silent is set true, the subscribers are not getting invoked: only the
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l971"><code>site&#x2F;dist&#x2F;itagsbuild.js:971</code></a>
-        
-        </p>
-
-
-        
-
-        
-            <p>Available since 0.0.1</p>
-        
-    </div>
-
-    <div class="description">
-        <p>Emits the event <code>eventName</code> on behalf of <code>emitter</code>, which becomes e.target in the eventobject.
-During this process, all subscribers and the defaultFn/preventedFn get an eventobject passed through.
-The eventobject is created with at least these properties:</p>
-<ul>
-    <li>e.target --&gt; source that triggered the event (instance or DOM-node), specified by <code>emitter</code></li>
-    <li>e.type --&gt; eventName</li>
-    <li>e.emitter --&gt; emitterName</li>
-    <li>e.status --&gt; status-information:
-         <ul>
-              <li>e.status.ok --&gt; <code>true|false</code> whether the event got executed (not halted or defaultPrevented)</li>
-              <li>e.status.defaultFn (optional) --&gt; <code>true</code> if any defaultFn got invoked</li>
-              <li>e.status.preventedFn (optional) --&gt; <code>true</code> if any preventedFn got invoked</li>
-              <li>e.status.rendered (optional) --&gt; <code>true</code> the vDOM rendered the dom</li>
-              <li>e.status.halted (optional) --&gt; <code>reason|true</code> if the event got halted and optional the why</li>
-              <li>e.status.defaultPrevented (optional) --&gt;  <code>reason|true</code> if the event got defaultPrevented and optional the why</li>
-              <li>e.status.renderPrevented (optional) --&gt;  <code>reason|true</code> if the event got renderPrevented and optional the why</li>
-         </ul>
-    </li>
-</ul>
-
-<p>The optional <code>payload</code> is merged into the eventobject and could be used by the subscribers and the defaultFn/preventedFn.
-If payload.silent is set true, the subscribers are not getting invoked: only the defaultFn.</p>
-<p>The eventobject also has these methods:</p>
-<ul>
-    <li>e.halt() --&gt; stops immediate all actions: no mer subscribers are invoked, no defaultFn/preventedFn</li>
-    <li>e.preventDefault() --&gt; instead of invoking defaultFn, preventedFn will be invoked. No aftersubscribers</li>
-    <li>e.preventRender() --&gt; by default, any event will trigger the vDOM (if exists) to re-render, this can be prevented by calling e.preventRender()</li>
-</ul>
-
-<p><ul>
-    <li>First, before-subscribers are invoked: this is the place where you might call <code>e.halt()</code>, <code>a.preventDefault()</code> or <code>e.preventRender()</code></li>
-    <li>Next, defaultFn or preventedFn gets invoked, depending on whether e.halt() or a.preventDefault() has been called</li>
-    <li>Next, after-subscribers get invoked (unless e.halt() or a.preventDefault() has been called)</li>
-    <li>Finally, the finalization takes place: any subscribers are invoked, unless e.halt() or a.preventDefault() has been called</li></p>
-<ul>
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[emitter]</code>
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>instance that emits the events</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">customEvent</code>
-                        <span class="type"><a href="../classes/String.html" class="crosslink">String</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>Full customEvent conform syntax <code>emitterName:eventName</code>.
-       <code>emitterName</code> is available as <strong>e.emitter</strong>, <code>eventName</code> as <strong>e.type</strong>.</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">payload</code>
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>extra payload to be added to the event-object</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a> | Undefined</span>:
-                    
-                    <p>eventobject or undefined when the event was halted or preventDefaulted.</p>
-
-                
-            </div>
-        </div>
-    
-
-    
-</div>
-
-                
-                    <div id="method_emit" class="method item">
-    <h3 class="name"><code>emit</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code class="optional">[emitter]</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>customEvent</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>payload</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-        <span class="returns-inline">
-            <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a> | Undefined</span>
-        </span>
-    
-
-    
-
-    
-
-    
-
-    
-        <span class="flag static">static</span>
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                    <p>Provided by the <a href="../modules/event.html">event</a> module.</p>
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l971"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:971</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l1424"><code>site&#x2F;dist&#x2F;itagsbuild.js:1424</code></a>
         
         </p>
 
@@ -6362,7 +6170,7 @@ If payload.silent is set true, the subscribers are not getting invoked: only the
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l1032"><code>site&#x2F;dist&#x2F;itagsbuild.js:1032</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l1485"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1485</code></a>
         
         </p>
 
@@ -6475,7 +6283,7 @@ Only get invoked when the cycle was not preventDefaulted or halted.</p>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l1032"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1032</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l1485"><code>site&#x2F;dist&#x2F;itagsbuild.js:1485</code></a>
         
         </p>
 
@@ -6585,8 +6393,6 @@ Only get invoked when the cycle was not preventDefaulted or halted.</p>
         
             
                 
-                    <p>Provided by the <a href="../modules/event-mobile.html">event-mobile</a> module.</p>
-                
                 <p>
                 
                 Defined in
@@ -6594,7 +6400,7 @@ Only get invoked when the cycle was not preventDefaulted or halted.</p>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l14649"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:14649</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l15127"><code>site&#x2F;dist&#x2F;itagsbuild.js:15127</code></a>
         
         </p>
 
@@ -6714,8 +6520,6 @@ Only get invoked when the cycle was not preventDefaulted or halted.</p>
         
             
                 
-                    <p>Provided by the <a href="../modules/event-mobile.html">event-mobile</a> module.</p>
-                
                 <p>
                 
                 Defined in
@@ -6723,7 +6527,7 @@ Only get invoked when the cycle was not preventDefaulted or halted.</p>
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l14649"><code>site&#x2F;dist&#x2F;itagsbuild.js:14649</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l15127"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:15127</code></a>
         
         </p>
 
@@ -6792,6 +6596,238 @@ Only get invoked when the cycle was not preventDefaulted or halted.</p>
                 
             </div>
         </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_noDeepDomEvt" class="method item">
+    <h3 class="name"><code>noDeepDomEvt</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>domEvent</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>e</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <span class="flag chainable">chainable</span>
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                    <p>Provided by the <a href="../modules/event-dom.html">event-dom</a> module.</p>
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site_dist_itagsbuild.js.html#l747"><code>site&#x2F;dist&#x2F;itagsbuild.js:747</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">domEvent</code>
+                        <span class="type"><a href="../classes/String.html" class="crosslink">String</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>the eventName that should be processed without deepsearch</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">e</code>
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>eventobject</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="method_noDeepDomEvt" class="method item">
+    <h3 class="name"><code>noDeepDomEvt</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>domEvent</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>e</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <span class="flag chainable">chainable</span>
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                    <p>Provided by the <a href="../modules/event-dom.html">event-dom</a> module.</p>
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l747"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:747</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">domEvent</code>
+                        <span class="type"><a href="../classes/String.html" class="crosslink">String</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>the eventName that should be processed without deepsearch</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">e</code>
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>eventobject</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
     
 
     
@@ -6864,7 +6900,7 @@ Only get invoked when the cycle was not preventDefaulted or halted.</p>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l1055"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1055</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l1508"><code>site&#x2F;dist&#x2F;itagsbuild.js:1508</code></a>
         
         </p>
 
@@ -7036,7 +7072,7 @@ The module <code>core-event-dom</code> uses <code>notify</code> to auto-define D
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l1055"><code>site&#x2F;dist&#x2F;itagsbuild.js:1055</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l1508"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1508</code></a>
         
         </p>
 
@@ -7208,7 +7244,7 @@ The module <code>core-event-dom</code> uses <code>notify</code> to auto-define D
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l1093"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1093</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l1546"><code>site&#x2F;dist&#x2F;itagsbuild.js:1546</code></a>
         
         </p>
 
@@ -7380,7 +7416,7 @@ The module <code>core-event-dom</code> uses <code>notify</code> to auto-define D
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l1093"><code>site&#x2F;dist&#x2F;itagsbuild.js:1093</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l1546"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1546</code></a>
         
         </p>
 
@@ -7560,7 +7596,7 @@ The module <code>core-event-dom</code> uses <code>notify</code> to auto-define D
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l1131"><code>site&#x2F;dist&#x2F;itagsbuild.js:1131</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l1584"><code>site&#x2F;dist&#x2F;itagsbuild.js:1584</code></a>
         
         </p>
 
@@ -7775,7 +7811,7 @@ No need to <code>detach()</code> (unless you want to undescribe before the first
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l1131"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1131</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l1584"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1584</code></a>
         
         </p>
 
@@ -7990,7 +8026,7 @@ No need to <code>detach()</code> (unless you want to undescribe before the first
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l1175"><code>site&#x2F;dist&#x2F;itagsbuild.js:1175</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l1628"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1628</code></a>
         
         </p>
 
@@ -8205,7 +8241,7 @@ No need to <code>detach()</code> (unless you want to undescribe before the first
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l1175"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1175</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l1628"><code>site&#x2F;dist&#x2F;itagsbuild.js:1628</code></a>
         
         </p>
 
@@ -8392,7 +8428,7 @@ No need to <code>detach()</code> (unless you want to undescribe before the first
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l1219"><code>site&#x2F;dist&#x2F;itagsbuild.js:1219</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l1672"><code>site&#x2F;dist&#x2F;itagsbuild.js:1672</code></a>
         
         </p>
 
@@ -8489,7 +8525,7 @@ When <code>emitterName</code> is not set, ALL event-definitions will be removed.
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l1219"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1219</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l1672"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1672</code></a>
         
         </p>
 
@@ -8586,7 +8622,7 @@ When <code>emitterName</code> is not set, ALL event-definitions will be removed.
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l1249"><code>site&#x2F;dist&#x2F;itagsbuild.js:1249</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l1702"><code>site&#x2F;dist&#x2F;itagsbuild.js:1702</code></a>
         
         </p>
 
@@ -8681,7 +8717,7 @@ When <code>emitterName</code> is not set, ALL event-definitions will be removed.
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l1249"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1249</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l1702"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1702</code></a>
         
         </p>
 
@@ -8776,7 +8812,7 @@ When <code>emitterName</code> is not set, ALL event-definitions will be removed.
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l1262"><code>site&#x2F;dist&#x2F;itagsbuild.js:1262</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l1715"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1715</code></a>
         
         </p>
 
@@ -8871,7 +8907,7 @@ When <code>emitterName</code> is not set, ALL event-definitions will be removed.
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l1262"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1262</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l1715"><code>site&#x2F;dist&#x2F;itagsbuild.js:1715</code></a>
         
         </p>
 
@@ -8966,7 +9002,7 @@ When <code>emitterName</code> is not set, ALL event-definitions will be removed.
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l1275"><code>site&#x2F;dist&#x2F;itagsbuild.js:1275</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l1728"><code>site&#x2F;dist&#x2F;itagsbuild.js:1728</code></a>
         
         </p>
 
@@ -9061,7 +9097,7 @@ When <code>emitterName</code> is not set, ALL event-definitions will be removed.
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l1275"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1275</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l1728"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1728</code></a>
         
         </p>
 
@@ -9145,7 +9181,7 @@ When <code>emitterName</code> is not set, ALL event-definitions will be removed.
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l1847"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1847</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l2300"><code>site&#x2F;dist&#x2F;itagsbuild.js:2300</code></a>
         
         </p>
 
@@ -9160,7 +9196,7 @@ When <code>emitterName</code> is not set, ALL event-definitions will be removed.
         <p>Objecthash containing all defined custom-events
 which has a structure like this:</p>
 <p>_ce = {
-    &#39;UI:click&#39;: {
+    &#39;UI:tap&#39;: {
         preventable: true,
         defaultFn: function(){...},
         preventedFn: function(){...},
@@ -9213,75 +9249,7 @@ which has a structure like this:</p>
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l1847"><code>site&#x2F;dist&#x2F;itagsbuild.js:1847</code></a>
-        
-        </p>
-
-        
-
-        
-            <p>Available since 0.0.1</p>
-        
-    </div>
-
-    <div class="description">
-        <p>Objecthash containing all defined custom-events
-which has a structure like this:</p>
-<p>_ce = {
-    &#39;UI:click&#39;: {
-        preventable: true,
-        defaultFn: function(){...},
-        preventedFn: function(){...},
-        renderPreventable: true
-    },
-    &#39;redmodel:save&#39;: {
-        preventable: true,
-        defaultFn: function(){...},
-        preventedFn: function(){...},
-        renderPreventable: true
-    }
-}</p>
-
-    </div>
-
-    
-        <p><strong>Default:</strong> {}</p>
-    
-
-    
-
-    
-</div>
-
-                
-                    <div id="property__ce" class="property item private">
-    <h3 class="name"><code>_ce</code></h3>
-    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
-
-    
-
-    
-        <span class="flag private">private</span>
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                    <p>Provided by the <a href="../modules/event.html">event</a> module.</p>
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l1879"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1879</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l2332"><code>site&#x2F;dist&#x2F;itagsbuild.js:2332</code></a>
         
         </p>
 
@@ -9302,7 +9270,7 @@ Every item that gets in the array consist by itself of 3 properties:
                                                              f: filter
                                                          };</p>
 <p>_subs = {
-    &#39;UI:click&#39;: {
+    &#39;UI:tap&#39;: {
         b: [
             item,
             item
@@ -9373,7 +9341,75 @@ Every item that gets in the array consist by itself of 3 properties:
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l1879"><code>site&#x2F;dist&#x2F;itagsbuild.js:1879</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l2300"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:2300</code></a>
+        
+        </p>
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Objecthash containing all defined custom-events
+which has a structure like this:</p>
+<p>_ce = {
+    &#39;UI:tap&#39;: {
+        preventable: true,
+        defaultFn: function(){...},
+        preventedFn: function(){...},
+        renderPreventable: true
+    },
+    &#39;redmodel:save&#39;: {
+        preventable: true,
+        defaultFn: function(){...},
+        preventedFn: function(){...},
+        renderPreventable: true
+    }
+}</p>
+
+    </div>
+
+    
+        <p><strong>Default:</strong> {}</p>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="property__ce" class="property item private">
+    <h3 class="name"><code>_ce</code></h3>
+    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
+
+    
+
+    
+        <span class="flag private">private</span>
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                    <p>Provided by the <a href="../modules/event.html">event</a> module.</p>
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l2332"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:2332</code></a>
         
         </p>
 
@@ -9394,7 +9430,7 @@ Every item that gets in the array consist by itself of 3 properties:
                                                              f: filter
                                                          };</p>
 <p>_subs = {
-    &#39;UI:click&#39;: {
+    &#39;UI:tap&#39;: {
         b: [
             item,
             item
@@ -9465,7 +9501,7 @@ Every item that gets in the array consist by itself of 3 properties:
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l1942"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1942</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l2395"><code>site&#x2F;dist&#x2F;itagsbuild.js:2395</code></a>
         
         </p>
 
@@ -9523,7 +9559,7 @@ To add more methods, you can use <code>_setEventObjProperty</code></p>
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l1942"><code>site&#x2F;dist&#x2F;itagsbuild.js:1942</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l2395"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:2395</code></a>
         
         </p>
 
@@ -9581,7 +9617,7 @@ To add more methods, you can use <code>_setEventObjProperty</code></p>
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l1958"><code>site&#x2F;dist&#x2F;itagsbuild.js:1958</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l2411"><code>site&#x2F;dist&#x2F;itagsbuild.js:2411</code></a>
         
         </p>
 
@@ -9596,7 +9632,7 @@ To add more methods, you can use <code>_setEventObjProperty</code></p>
         <p>Objecthash containing all detach-notifiers, keyed by customEvent name.
 This list is maintained by <code>notifyDetach</code> and <code>unNotifyDetach</code></p>
 <p>_detachNotifiers = {
-    &#39;UI:click&#39;: {
+    &#39;UI:tap&#39;: {
         cb:function() {}
         o: {} // context
     },
@@ -9649,7 +9685,7 @@ This list is maintained by <code>notifyDetach</code> and <code>unNotifyDetach</c
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l1958"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1958</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l2411"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:2411</code></a>
         
         </p>
 
@@ -9664,7 +9700,7 @@ This list is maintained by <code>notifyDetach</code> and <code>unNotifyDetach</c
         <p>Objecthash containing all detach-notifiers, keyed by customEvent name.
 This list is maintained by <code>notifyDetach</code> and <code>unNotifyDetach</code></p>
 <p>_detachNotifiers = {
-    &#39;UI:click&#39;: {
+    &#39;UI:tap&#39;: {
         cb:function() {}
         o: {} // context
     },
@@ -9717,7 +9753,7 @@ This list is maintained by <code>notifyDetach</code> and <code>unNotifyDetach</c
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l1930"><code>site&#x2F;dist&#x2F;itagsbuild.js:1930</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l2383"><code>site&#x2F;dist&#x2F;itagsbuild.js:2383</code></a>
         
         </p>
 
@@ -9771,7 +9807,7 @@ Is an array of function-references.</p>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l1930"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1930</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l2383"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:2383</code></a>
         
         </p>
 
@@ -9825,7 +9861,7 @@ Is an array of function-references.</p>
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l1985"><code>site&#x2F;dist&#x2F;itagsbuild.js:1985</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l2438"><code>site&#x2F;dist&#x2F;itagsbuild.js:2438</code></a>
         
         </p>
 
@@ -9840,7 +9876,7 @@ Is an array of function-references.</p>
         <p>Objecthash containing all notifiers, keyed by customEvent name.
 This list is maintained by <code>notify</code> and <code>unNotify</code></p>
 <p>_notifiers = {
-    &#39;UI:click&#39;: {
+    &#39;UI:tap&#39;: {
         cb:function() {}
         o: {} // context
     },
@@ -9893,7 +9929,7 @@ This list is maintained by <code>notify</code> and <code>unNotify</code></p>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l1985"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1985</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l2438"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:2438</code></a>
         
         </p>
 
@@ -9908,7 +9944,7 @@ This list is maintained by <code>notify</code> and <code>unNotify</code></p>
         <p>Objecthash containing all notifiers, keyed by customEvent name.
 This list is maintained by <code>notify</code> and <code>unNotify</code></p>
 <p>_notifiers = {
-    &#39;UI:click&#39;: {
+    &#39;UI:tap&#39;: {
         cb:function() {}
         o: {} // context
     },
@@ -9950,8 +9986,6 @@ This list is maintained by <code>notify</code> and <code>unNotify</code></p>
         
             
                 
-                    <p>Provided by the <a href="../modules/event-mobile.html">event-mobile</a> module.</p>
-                
                 <p>
                 
                 Defined in
@@ -9959,7 +9993,7 @@ This list is maintained by <code>notify</code> and <code>unNotify</code></p>
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l14394"><code>site&#x2F;dist&#x2F;itagsbuild.js:14394</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l14872"><code>site&#x2F;dist&#x2F;itagsbuild.js:14872</code></a>
         
         </p>
 
@@ -9999,8 +10033,6 @@ This list is maintained by <code>notify</code> and <code>unNotify</code></p>
         
             
                 
-                    <p>Provided by the <a href="../modules/event-mobile.html">event-mobile</a> module.</p>
-                
                 <p>
                 
                 Defined in
@@ -10008,7 +10040,7 @@ This list is maintained by <code>notify</code> and <code>unNotify</code></p>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l14394"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:14394</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l14872"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:14872</code></a>
         
         </p>
 
@@ -10048,8 +10080,6 @@ This list is maintained by <code>notify</code> and <code>unNotify</code></p>
         
             
                 
-                    <p>Provided by the <a href="../modules/event-mobile.html">event-mobile</a> module.</p>
-                
                 <p>
                 
                 Defined in
@@ -10057,7 +10087,7 @@ This list is maintained by <code>notify</code> and <code>unNotify</code></p>
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l14376"><code>site&#x2F;dist&#x2F;itagsbuild.js:14376</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l14854"><code>site&#x2F;dist&#x2F;itagsbuild.js:14854</code></a>
         
         </p>
 
@@ -10097,8 +10127,6 @@ This list is maintained by <code>notify</code> and <code>unNotify</code></p>
         
             
                 
-                    <p>Provided by the <a href="../modules/event-mobile.html">event-mobile</a> module.</p>
-                
                 <p>
                 
                 Defined in
@@ -10106,7 +10134,7 @@ This list is maintained by <code>notify</code> and <code>unNotify</code></p>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l14376"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:14376</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l14854"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:14854</code></a>
         
         </p>
 
@@ -10130,6 +10158,112 @@ This list is maintained by <code>notify</code> and <code>unNotify</code></p>
 </div>
 
                 
+                    <div id="property_POLL_INTERVAL" class="property item">
+    <h3 class="name"><code>POLL_INTERVAL</code></h3>
+    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Number" class="crosslink external" target="_blank">Number</a></span>
+
+    
+
+    
+
+    
+
+    
+        <span class="flag static">static</span>
+    
+
+    <div class="meta">
+        
+            
+                
+                    <p>Provided by the <a href="../modules/event-hover.html">event-hover</a> module.</p>
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l918"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:918</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Interval (in milliseconds) at which to poll for changes to the value of an
+element with one or more <code>valuechange</code> subscribers when the user is likely
+to be interacting with it.</p>
+
+    </div>
+
+    
+        <p><strong>Default:</strong> 50</p>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="property_POLL_INTERVAL" class="property item">
+    <h3 class="name"><code>POLL_INTERVAL</code></h3>
+    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Number" class="crosslink external" target="_blank">Number</a></span>
+
+    
+
+    
+
+    
+
+    
+        <span class="flag static">static</span>
+    
+
+    <div class="meta">
+        
+            
+                
+                    <p>Provided by the <a href="../modules/event-hover.html">event-hover</a> module.</p>
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site_dist_itagsbuild.js.html#l918"><code>site&#x2F;dist&#x2F;itagsbuild.js:918</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        <p>Interval (in milliseconds) at which to poll for changes to the value of an
+element with one or more <code>valuechange</code> subscribers when the user is likely
+to be interacting with it.</p>
+
+    </div>
+
+    
+        <p><strong>Default:</strong> 50</p>
+    
+
+    
+
+    
+</div>
+
+                
                     <div id="property_{string}" class="property item">
     <h3 class="name"><code>{string}</code></h3>
     <span class="type">Unknown</span>
@@ -10148,8 +10282,6 @@ This list is maintained by <code>notify</code> and <code>unNotify</code></p>
         
             
                 
-                    <p>Provided by the <a href="../modules/event-mobile.html">event-mobile</a> module.</p>
-                
                 <p>
                 
                 Defined in
@@ -10157,7 +10289,7 @@ This list is maintained by <code>notify</code> and <code>unNotify</code></p>
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l16395"><code>site&#x2F;dist&#x2F;itagsbuild.js:16395</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l16873"><code>site&#x2F;dist&#x2F;itagsbuild.js:16873</code></a>
         
         </p>
 
@@ -10196,8 +10328,6 @@ This list is maintained by <code>notify</code> and <code>unNotify</code></p>
         
             
                 
-                    <p>Provided by the <a href="../modules/event-mobile.html">event-mobile</a> module.</p>
-                
                 <p>
                 
                 Defined in
@@ -10205,7 +10335,7 @@ This list is maintained by <code>notify</code> and <code>unNotify</code></p>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l16395"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:16395</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l16873"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:16873</code></a>
         
         </p>
 
@@ -10252,8 +10382,6 @@ This list is maintained by <code>notify</code> and <code>unNotify</code></p>
         
             
                 
-                    <p>Provided by the <a href="../modules/event-mobile.html">event-mobile</a> module.</p>
-                
                 <p>
                 
                 Defined in
@@ -10261,7 +10389,7 @@ This list is maintained by <code>notify</code> and <code>unNotify</code></p>
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l14432"><code>site&#x2F;dist&#x2F;itagsbuild.js:14432</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l14910"><code>site&#x2F;dist&#x2F;itagsbuild.js:14910</code></a>
         
         </p>
 
@@ -10326,8 +10454,6 @@ will catch it and process it through the dom-event cycle.</p>
         
             
                 
-                    <p>Provided by the <a href="../modules/event-mobile.html">event-mobile</a> module.</p>
-                
                 <p>
                 
                 Defined in
@@ -10335,7 +10461,7 @@ will catch it and process it through the dom-event cycle.</p>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l14432"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:14432</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l14910"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:14910</code></a>
         
         </p>
 
@@ -10369,6 +10495,176 @@ will catch it and process it through the dom-event cycle.</p>
 
                     <div class="param-description">
                         <p>eventobject</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+
+    
+</div>
+
+                
+                    <div id="event_valuechange" class="events item">
+    <h3 class="name"><code>valuechange</code></h3>
+    <span class="type"></span>
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                    <p>Provided by the <a href="../modules/event-hover.html">event-hover</a> module.</p>
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site_dist_itagsbuild.js.html#l1130"><code>site&#x2F;dist&#x2F;itagsbuild.js:1130</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+        <div class="params">
+            <h4>Event Payload:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">e.value</code>
+                        <span class="type"><a href="../classes/String.html" class="crosslink">String</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>new value</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">e.sourceTarget</code>
+                        <span class="type"><a href="../classes/Element.html" class="crosslink">Element</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>Element whare the valuechange occured</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+
+    
+</div>
+
+                
+                    <div id="event_valuechange" class="events item">
+    <h3 class="name"><code>valuechange</code></h3>
+    <span class="type"></span>
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                    <p>Provided by the <a href="../modules/event-hover.html">event-hover</a> module.</p>
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l1130"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:1130</code></a>
+        
+        </p>
+
+        
+
+        
+    </div>
+
+    <div class="description">
+        
+    </div>
+
+    
+        <div class="params">
+            <h4>Event Payload:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">e.value</code>
+                        <span class="type"><a href="../classes/String.html" class="crosslink">String</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>new value</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">e.sourceTarget</code>
+                        <span class="type"><a href="../classes/Element.html" class="crosslink">Element</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>Element whare the valuechange occured</p>
 
                     </div>
 

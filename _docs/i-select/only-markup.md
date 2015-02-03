@@ -13,6 +13,14 @@ intro: ""
     <i-item>item5</i-item>
 </i-select>
 
+<i-select value="2" primary-button="true">
+    <i-item>item1</i-item>
+    <i-item>item2</i-item>
+    <i-item><i-head>item3 header</i-head>item3 content</i-item>
+    <i-item>item4</i-item>
+    <i-item>item5</i-item>
+</i-select>
+
 <p>Code-example:</p>
 
 

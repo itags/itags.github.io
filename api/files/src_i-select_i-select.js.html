@@ -101,9 +101,13 @@
             
                 <li><a href="../modules/event.html">event</a></li>
             
+                <li><a href="../modules/event-blurnode.html">event-blurnode</a></li>
+            
                 <li><a href="../modules/event-dom.html">event-dom</a></li>
             
                 <li><a href="../modules/event-emitter.html">event-emitter</a></li>
+            
+                <li><a href="../modules/event-hover.html">event-hover</a></li>
             
                 <li><a href="../modules/event-listener.html">event-listener</a></li>
             
@@ -213,9 +217,11 @@ require(&#x27;js-ext/lib/string.js&#x27;);
 require(&#x27;css&#x27;);
 require(&#x27;./css/i-select.css&#x27;);
 
-var NATIVE_OBJECT_OBSERVE = !!Object.observe,
-    utils = require(&#x27;utils&#x27;),
-    laterSilent = utils.laterSilent;
+var utils = require(&#x27;utils&#x27;),
+    asyncSilent = utils.asyncSilent,
+    laterSilent = utils.laterSilent,
+    DELAY_BLURCLOSE = 125,
+    SUPPRESS_DELAY = 175;
 
 module.exports = function (window) {
     &quot;use strict&quot;;
@@ -231,6 +237,7 @@ module.exports = function (window) {
 
     if (!window.ITAGS[itagName]) {
         Event = require(&#x27;event-mobile&#x27;)(window);
+        require(&#x27;event-dom/extra/blurnode.js&#x27;)(window);
         require(&#x27;focusmanager&#x27;)(window);
         require(&#x27;i-item&#x27;)(window);
         require(&#x27;i-head&#x27;)(window);
@@ -243,41 +250,13 @@ module.exports = function (window) {
             // so we don&#x27;t bother that
             var element = e.target;
             e.preventDefault();
-            // cautious:  all child-elements that have &#x60;manualfocus&#x60; event are
-            // subscribed as well: we NEED to inspect e.target and only continue
-            // if e.target===i-select
-            e.preventDefault();
             element.itagReady().then(
                 function() {
                     var button = element.getElement(&#x27;button&#x27;);
-                    button &amp;&amp; button.focus();
+                    button &amp;&amp; button.focus(true);
                 }
             );
         });
-
-        Event.after(&#x27;blur&#x27;, function(e) {
-            // the i-select itself is unfocussable, but its button is
-            // we need to patch &#x60;manualfocus&#x60;,
-            // which is emitted on node.focus()
-            // a focus by userinteraction will always appear on the button itself
-            // so we don&#x27;t bother that
-            var element = e.target,
-                model;
-            e.preventRender();
-            // cautious:  all child-elements that have &#x60;manualfocus&#x60; event are
-            // subscribed as well: we NEED to inspect e.target and only continue.
-            //
-            // I didn&#x27;t figure out why, but it seems we need &#x60;later&#x60;
-            // in order to make the i-select prevent from acting unpredictable.
-            laterSilent(function() {
-                // if e.target===i-select
-                if ((element.getTagName()===&#x27;I-SELECT&#x27;) &amp;&amp; !element.hasClass(&#x27;focussed&#x27;)) {
-                    model = element.model;
-                    model.expanded = false;
-                    NATIVE_OBJECT_OBSERVE || DOCUMENT.refreshItags();
-                }
-            },350);
-        }, &#x27;i-select&#x27;);
 
         Event.before(&#x27;keydown&#x27;, function(e) {
             if (e.keyCode===40) {
@@ -286,30 +265,77 @@ module.exports = function (window) {
             }
         }, &#x27;i-select &gt; button&#x27;);
 
-        // CAUTIOUS: it seems &#x60;tap&#x60; will be subscribed 8 times!!!
-        // TODO: figure out why not once
         Event.after([&#x27;tap&#x27;, &#x27;keydown&#x27;], function(e) {
             var element = e.target.getParent(),
-                model;
-            if ((e.type===&#x27;tap&#x27;) || (e.keyCode===40)) {
-                (e.keyCode===40) &amp;&amp; e.preventDefault();
+                e_type = e.type,
+                model, ulNode, liNode, inactive;
+            if ((e_type===&#x27;tap&#x27;) || (e.keyCode===40)) {
                 model = element.model;
-                model.expanded = !model.expanded;
+                if (e.keyCode===40) {
+                    e.preventDefault();
+                    model.expanded = true;
+                }
+                else {
+                    inactive = element.hasData(&#x27;_suppressClose&#x27;);
+                    if (inactive) {
+                        console.warn(&#x27;not reacting to &#x27;+e_type+&#x27;-event: button is in pauzed state&#x27;);
+                        return;
+                    }
+                    model.expanded = !model.expanded;
+                    if (!model.expanded) {
+                        liNode = element.getElement(&#x27;ul[fm-manage] &gt;li[fm-defaultitem]&#x27;);
+                        liNode &amp;&amp; liNode.focus(true);
+                    }
+                }
+                if (model.expanded) {
+                    ulNode = element.getElement(&#x27;ul[fm-manage]&#x27;);
+                    ulNode &amp;&amp; ulNode.focus(true);
+                }
+                if (model.expanded || (e_type===&#x27;tap&#x27;)) {
+                    element.setData(&#x27;_suppressClose&#x27;, true);
+                    laterSilent(function() {
+                        element.removeData(&#x27;_suppressClose&#x27;);
+                    }, SUPPRESS_DELAY);
+                    ulNode = element.getElement(&#x27;ul[fm-manage]&#x27;);
+                    ulNode &amp;&amp; ulNode.focus(true);
+                }
             }
         }, &#x27;i-select &gt; button&#x27;);
 
-        // CAUTIOUS: it seems &#x60;tap&#x60; will be subscribed 8 times!!!
-        // TODO: figure out why not once
         Event.after([&#x27;tap&#x27;, &#x27;keypress&#x27;], function(e) {
             var liNode = e.target,
-                element, index, model;
-            if ((e.type===&#x27;tap&#x27;) || (e.keyCode===13)) {
+                e_type = e.type,
+                element, index, ulNode, model, inactive;
+            if ((e_type===&#x27;tap&#x27;) || (e.keyCode===13)) {
                 element = liNode.inside(&#x27;i-select&#x27;);
                 model = element.model;
-                index = liNode.getParent().getAll(&#x27;li&#x27;).indexOf(liNode);
-                model.expanded = false;
-                model.value = index+1;
-                element.focus();
+                // check for model.expanded --&gt; a hidden selectbox might react on an enterpress
+                if (model.expanded) {
+                    inactive = element.hasData(&#x27;_suppressClose&#x27;);
+                    if (inactive) {
+                        console.warn(&#x27;not reacting to &#x27;+e_type+&#x27;-event: button is in pauzed state&#x27;);
+                        return;
+                    }
+                    model = element.model;
+                    ulNode = liNode.getParent();
+                    index = ulNode.getAll(&#x27;li&#x27;).indexOf(liNode);
+                    model.expanded = false;
+                    model.value = index+1;
+                    if (e_type===&#x27;tap&#x27;) {
+                        element.setData(&#x27;_suppressClose&#x27;, true);
+                        laterSilent(function() {
+                            element.removeData(&#x27;_suppressClose&#x27;);
+                        }, SUPPRESS_DELAY);
+                        ulNode = element.getElement(&#x27;ul[fm-manage]&#x27;);
+                        ulNode &amp;&amp; ulNode.focus(true);
+                    }
+                    // prevent that the focus will be reset to the focusmanager
+                    // when re-synced --&gt; we want the focus on the button:
+                    ulNode.removeClass(&#x27;focussed&#x27;);
+                    asyncSilent(function() {
+                        element.focus(true);
+                    });
+                }
             }
         }, &#x27;i-select ul[fm-manage] &gt; li&#x27;);
 
@@ -389,8 +415,8 @@ module.exports = function (window) {
                     items[items.length] = node.getHTML();
                 });
 
-                element.model.items = items;
-                element.model.buttonTexts = buttonTexts;
+                element.setValueOnce(&#x27;items&#x27;, items);
+                element.setValueOnce(&#x27;buttonTexts&#x27;, buttonTexts);
 
                 // store its current value, so that valueChange-event can fire:
                 element.setData(&#x27;i-select-value&#x27;, element.model.value);
@@ -405,8 +431,34 @@ module.exports = function (window) {
                                &#x27;&lt;ul fm-manage=&quot;li&quot; fm-keyup=&quot;38&quot; fm-keydown=&quot;40&quot; fm-noloop=&quot;true&quot;&gt;&lt;/ul&gt;&#x27;;
                              &#x27;&lt;/div&gt;&#x27;+
                            &#x27;&lt;/div&gt;&#x27;;
+
+                element.setupEvents();
                 // set the content:
                 element.setHTML(content);
+            },
+
+            setupEvents: function() {
+                var element = this;
+                Event.after(&#x27;tapoutside&#x27;, function(e) {
+                    // at the end of the eventstack: give &#x60;tapoutside&#x60; a way to set the &#x27;_suppressClose&#x27;-data when needed
+                    // just async will do
+                    asyncSilent(function() {
+                        if (!element.hasData(&#x27;_suppressClose&#x27;) &amp;&amp; !element.contains(e.sourceTarget)) {
+                            element.model.expanded = false;
+                            DOCUMENT.refreshItags();
+                        }
+                    });
+                }, &#x27;i-select&#x27;);
+                element.selfAfter(&#x27;blurnode&#x27;, function() {
+                    // at the end of the eventstack: give &#x60;blurnode&#x60; a way to set the &#x27;_suppressClose&#x27;-data when needed
+                    // need a bit more time because there is time inbetween the blur vs click events
+                    laterSilent(function() {
+                        if (!element.hasData(&#x27;_suppressClose&#x27;)) {
+                            element.model.expanded = false;
+                            DOCUMENT.refreshItags();
+                        }
+                    }, DELAY_BLURCLOSE);
+                });
             },
 
            /**
@@ -422,6 +474,7 @@ module.exports = function (window) {
             * @since 0.0.1
             */
             sync: function() {
+console.warn(&#x27;syncing i-select&#x27;);
                 // inside sync, YOU CANNOT change attributes which are part of &#x60;attrs&#x60; !!!
                 // those actions will be ignored.
 
@@ -434,7 +487,7 @@ module.exports = function (window) {
                     items = model.items,
                     buttonTexts = model.buttonTexts,
                     value = model.value,
-                    item, content, buttonText, len, i, markValue, ulNode,
+                    item, content, buttonText, len, i, markValue,
                     button, container, itemsContainer, hiddenTimer;
 
                 len = items.length;
@@ -458,8 +511,6 @@ module.exports = function (window) {
                 if (model.expanded) {
                     hiddenTimer = container.getData(&#x27;_hiddenTimer&#x27;);
                     hiddenTimer &amp;&amp; hiddenTimer.cancel();
-                    ulNode = element.getElement(&#x27;ul[fm-manage]&#x27;);
-                    ulNode.focus();
                     container.setClass(SHOW);
                     container.removeClass(HIDDEN);
                 }
@@ -476,11 +527,11 @@ module.exports = function (window) {
                 content = &#x27;&#x27;;
                 for (i=0; i&lt;len; i++) {
                     item = items[i];
-                    content += &#x27;&lt;li&#x27;+((i===markValue) ? &#x27; class=&quot;selected&quot;&#x27; : &#x27;&#x27;)+&#x27;&gt;&#x27;+item+&#x27;&lt;/li&gt;&#x27;;
+                    content += &#x27;&lt;li&#x27;+((i===markValue) ? &#x27; class=&quot;selected&quot; fm-defaultitem=&quot;true&quot;&#x27; : &#x27;&#x27;)+&#x27;&gt;&#x27;+item+&#x27;&lt;/li&gt;&#x27;;
                 }
 
                 // set the items:
-                itemsContainer.setHTML(content);
+                itemsContainer.setHTML(content, true);
             }
         });
 

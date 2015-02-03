@@ -13,7 +13,7 @@ intro: ""
     <i-item>Content first page</i-item>
     <i-item>Content second page</i-item>
     <i-item><i-head>item3 header</i-head>page 3</i-item>
-    <i-item><i-select value="2" primary-button="true"><i-item>item1</i-item><i-item>item2</i-item><i-item><i-head>item3 header</i-head>item3 content</i-item><i-item>item4</i-item><i-item>item5</i-item></i-select></i-item>
+    <i-item><i-select value="2" primary-button="true"><i-item>item1</i-item><i-item>item2</i-item><i-item><i-head>item3 header</i-head>item3 content</i-item><i-item>item4</i-item><i-item>item5</i-item></i-select><i-input reset-value="nobody" placeholder="Say your name">Marco</i-input></i-item>
     <i-item>Content fifth page</i-item>
 </i-tabpane>
 
@@ -50,4 +50,5 @@ intro: ""
     };
     document.bindModel(model, 'i-select');
     document.getElement('i-tabpane').focus();
+
 </script>

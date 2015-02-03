@@ -101,9 +101,13 @@
             
                 <li><a href="../modules/event.html">event</a></li>
             
+                <li><a href="../modules/event-blurnode.html">event-blurnode</a></li>
+            
                 <li><a href="../modules/event-dom.html">event-dom</a></li>
             
                 <li><a href="../modules/event-emitter.html">event-emitter</a></li>
+            
+                <li><a href="../modules/event-hover.html">event-hover</a></li>
             
                 <li><a href="../modules/event-listener.html">event-listener</a></li>
             
@@ -197,6 +201,10 @@ require(&#x27;js-ext/lib/string.js&#x27;);
 require(&#x27;css&#x27;);
 require(&#x27;./css/i-tabpane.css&#x27;);
 
+var utils = require(&#x27;utils&#x27;),
+    asyncSilent = utils.asyncSilent,
+    laterSilent = utils.laterSilent;
+
 module.exports = function (window) {
 
     &quot;use strict&quot;;
@@ -220,10 +228,6 @@ module.exports = function (window) {
             // so we don&#x27;t bother that
             var element = e.target;
             e.preventDefault();
-            // cautious:  all child-elements that have &#x60;manualfocus&#x60; event are
-            // subscribed as well: we NEED to inspect e.target and only continue
-            // if e.target===i-select
-            e.preventDefault();
             element.itagReady().then(
                 function() {
                     var ul = element.getElement(&#x27;&gt;ul&#x27;);
@@ -234,6 +238,7 @@ module.exports = function (window) {
 
         Event.after(&#x27;focus&#x27;, function(e) {
             var node = e.target,
+                type = e.type,
                 ul = node.getParent(),
                 element = ul.getParent(),
                 model = element.model,
@@ -242,8 +247,8 @@ module.exports = function (window) {
             model.pane = liNodes.indexOf(node) + 1;
         }, &#x27;i-tabpane &gt; ul li&#x27;);
 
-        Event.before(&#x27;tap&#x27;, function(e) {
-            // don&#x27;t double render (especialliy not BEFORE the tab changes)
+        Event.before([&#x27;tap&#x27;, &#x27;press&#x27;], function(e) {
+            // don&#x27;t double render (especially not BEFORE the tab changes)
             // rendering will be done because of the focus-event
             e.preventRender();
         }, &#x27;i-tabpane &gt; ul li&#x27;);
@@ -294,8 +299,8 @@ module.exports = function (window) {
                     panes[panes.length] = node.getHTML();
                 });
 
-                element.model.panes = panes;
-                element.model.tabs = tabs;
+                element.setValueOnce(&#x27;panes&#x27;, panes);
+                element.setValueOnce(&#x27;tabs&#x27;, tabs);
 
                 // store its current value, so that valueChange-event can fire:
                 element.setData(&#x27;i-select-pane&#x27;, pane);
@@ -304,6 +309,7 @@ module.exports = function (window) {
                 content = &#x27;&lt;ul fm-manage=&quot;li&quot; fm-keyup=&quot;37&quot; fm-keydown=&quot;39&quot; fm-noloop=&quot;true&quot;&gt;&lt;/ul&gt;&lt;div&gt;&lt;div class=&quot;container&quot;&gt;&lt;/div&gt;&lt;/div&gt;&#x27;;
                 // set the content:
                 element.setHTML(content);
+                element.setContentVisibility(true);
             },
 
            /**
@@ -319,6 +325,7 @@ module.exports = function (window) {
             * @since 0.0.1
             */
             sync: function() {
+console.warn(&#x27;syncing i-tabpane&#x27;);
                 // inside sync, YOU CANNOT change attributes which are part of &#x60;attrs&#x60; !!!
                 // those actions will be ignored.
 
@@ -342,17 +349,18 @@ module.exports = function (window) {
                 for (i=0; i&lt;len; i++) {
                     tabItem = tabs[i];
                     if (i===index) {
-                        content += &#x27;&lt;li class=&quot;pure-button pure-button-active&quot; fm-defaultitem=&quot;true&quot;&gt;&#x27;+tabItem+&#x27;&lt;/li&gt;&#x27;;
+                        content += &#x27;&lt;li class=&quot;pure-button pure-button-active&quot; fm-defaultitem=&quot;true&quot;&gt;&lt;div&gt;&#x27;+tabItem+&#x27;&lt;/div&gt;&lt;/li&gt;&#x27;;
                     }
                     else {
-                        content += &#x27;&lt;li class=&quot;pure-button&quot;&gt;&#x27;+tabItem+&#x27;&lt;/li&gt;&#x27;;
+                        content += &#x27;&lt;li class=&quot;pure-button&quot;&gt;&lt;div&gt;&#x27;+tabItem+&#x27;&lt;/div&gt;&lt;/li&gt;&#x27;;
                     }
                 }
 
                 // set the tabs:
-                navContainer.setHTML(content);
+                navContainer.setHTML(content, true);
 
                 // set the content:
+                // CANNOT be done silently: there can be itags within the pane
                 container.setHTML(panes[index]);
             }
         });
