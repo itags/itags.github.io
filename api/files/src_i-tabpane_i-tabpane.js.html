@@ -201,10 +201,6 @@ require(&#x27;js-ext/lib/string.js&#x27;);
 require(&#x27;css&#x27;);
 require(&#x27;./css/i-tabpane.css&#x27;);
 
-var utils = require(&#x27;utils&#x27;),
-    asyncSilent = utils.asyncSilent,
-    laterSilent = utils.laterSilent;
-
 module.exports = function (window) {
 
     &quot;use strict&quot;;
@@ -238,7 +234,6 @@ module.exports = function (window) {
 
         Event.after(&#x27;focus&#x27;, function(e) {
             var node = e.target,
-                type = e.type,
                 ul = node.getParent(),
                 element = ul.getParent(),
                 model = element.model,

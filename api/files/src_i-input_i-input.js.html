@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>io - Itsa</title>
+    <title>src/i-input/i-input.js - Itsa</title>
     <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -188,52 +188,96 @@
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-                        <h1>io Module</h1>
-<div class="box clearfix meta">
-    
+                        <h1 class="file-heading">File: src/i-input/i-input.js</h1>
 
-    
+<div class="file">
+    <pre class="code prettyprint linenums">
+module.exports = function (window) {
+    &quot;use strict&quot;;
 
-    
-        <div class="foundat">
-            Defined in: <a href="../files/site-preview_dist_itagsbuild.js.html#l17657"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:17657</code></a>
-        </div>
-    
+    require(&#x27;polyfill/polyfill-base.js&#x27;);
+    require(&#x27;./css/i-input.css&#x27;);
 
-    
-</div>
+    var itagCore =  require(&#x27;itags.core&#x27;)(window),
+        itagName = &#x27;i-input&#x27;, // &lt;-- define your own itag-name here
+        DOCUMENT = window.document,
+        Event = require(&#x27;event-dom/extra/valuechange.js&#x27;)(window),
+        Itag;
 
+    if (!window.ITAGS[itagName]) {
 
+        Event.after(&#x27;valuechange&#x27;, function(e) {
+            var newValue = e.value,
+                element = e.target,
+                model = element.model,
+                prevValue = model.value;
 
-<div class="box intro">
-    <p>Provides core IO-functionality.</p>
-<p><i>Copyright (c) 2014 ITSA - <a href="https://github.com/itsa">https://github.com/itsa</a></i>
-New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">http://choosealicense.com/licenses/bsd-3-clause/</a></p>
+            model.value = newValue;
+            /**
+            * Emitted when a the i-select changes its value
+            *
+            * @event i-select:valuechange
+            * @param e {Object} eventobject including:
+            * @param e.target {HtmlElement} the i-input element
+            * @param e.prevValue {String}
+            * @param e.newValue {String}
+            * @since 0.1
+            */
+            element.emit(&#x27;valuechange&#x27;, {
+                prevValue: prevValue,
+                newValue: newValue
+            });
+        }, &#x27;i-select &gt; input&#x27;);
 
-</div>
+        Itag = DOCUMENT.createItag(itagName, {
+            attrs: {
+                &#x27;reset-value&#x27;: &#x27;string&#x27;,
+                &#x27;placeholder&#x27;: &#x27;string&#x27;,
+                &#x27;readonly&#x27;: &#x27;boolean&#x27;,
+                &#x27;fm-lastitem&#x27;: &#x27;boolean&#x27;,
+                &#x27;fm-selectionstart&#x27;: &#x27;number&#x27;,
+                &#x27;fm-selectionend&#x27;: &#x27;number&#x27;
+            },
 
+            init: function() {
+                var element = this,
+                    value = element.getText(),
+                    content;
 
+                element.setValueOnce(&#x27;value&#x27;, value);
 
-<div class="yui3-g">
-    <div class="yui3-u-1-2">
-        
-            <p>This module provides the following classes:</p>
+                // building the template of the itag:
+                content = &#x27;&lt;input&gt;&#x27; + value + &#x27;&lt;/input&gt;&#x27;;
 
-            <ul class="module-classes">
-            
-                <li class="module-class">
-                    <a href="../classes/FocusManager.html">
-                        FocusManager
-                    </a>
-                </li>
-            
-            </ul>
-        
-    </div>
+                // set the content:
+                element.setHTML(content);
+            },
 
-    <div class="yui3-u-1-2">
-        
-    </div>
+            sync: function() {
+                var element = this,
+                    model = element.model,
+                    input = element.getElement(&#x27;&gt;input&#x27;);
+                // it is safe to use setValue --&gt; when the content hasn&#x27;t changed, &#x60;setValue&#x60; doesn&#x27;t do anything
+                input.setValue(model.value);
+                model.placeholder &amp;&amp; input.setAttr(&#x27;placeholder&#x27;, model.placeholder, true);
+                model[&#x27;reset-value&#x27;] &amp;&amp; input.setAttr(&#x27;reset-value&#x27;, model[&#x27;reset-value&#x27;], true);
+            },
+
+            reset: function() {
+                var model = this.model;
+                model.value = model[&#x27;reset-value&#x27;] || &#x27;&#x27;;
+                // no need to call &#x60;refreshItags&#x60; --&gt; the reset()-method doesn&#x27;t come out of the blue
+                // so, the eventsystem will refresh it afterwards
+            }
+        });
+
+        window.ITAGS[itagName] = Itag;
+    }
+
+    return window.ITAGS[itagName];
+};
+
+    </pre>
 </div>
 
                     </div>

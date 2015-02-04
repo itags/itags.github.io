@@ -209,7 +209,7 @@
 
 /*
 * attributes:
-* value, expanded, primary-button, invalid-value
+* value, expanded, invalid-value
 */
 
 require(&#x27;polyfill/polyfill-base.js&#x27;);
@@ -226,14 +226,14 @@ var utils = require(&#x27;utils&#x27;),
 module.exports = function (window) {
     &quot;use strict&quot;;
 
-
     var DEFAULT_INVALID_VALUE = &#x27;choose&#x27;,
-        itagCore =  require(&#x27;itags.core&#x27;)(window),
         itagName = &#x27;i-select&#x27;,
         DOCUMENT = window.document,
         HIDDEN = &#x27;itsa-hidden&#x27;,
         SHOW = &#x27;i-select-show&#x27;,
         Event, Itag;
+
+    require(&#x27;itags.core&#x27;)(window);
 
     if (!window.ITAGS[itagName]) {
         Event = require(&#x27;event-mobile&#x27;)(window);
@@ -343,7 +343,7 @@ module.exports = function (window) {
              .unPreventable()
              .noRender();
 
-        Event.after(&#x27;*:change&#x27;, function(e) {
+        Event.after(itagName+&#x27;:change&#x27;, function(e) {
             var element = e.target,
                 prevValue = element.getData(&#x27;i-select-value&#x27;),
                 model = element.model,
@@ -372,7 +372,7 @@ module.exports = function (window) {
                 });
             }
             element.setData(&#x27;i-select-value&#x27;, newValue);
-        }, itagCore.itagFilter);
+        });
 
         Itag = DOCUMENT.createItag(itagName, {
             /*
@@ -383,7 +383,6 @@ module.exports = function (window) {
             */
             attrs: {
                 expanded: &#x27;boolean&#x27;,
-                &#x27;primary-button&#x27;: &#x27;boolean&#x27;,
                 value: &#x27;string&#x27;,
                 &#x27;invalid-value&#x27;: &#x27;string&#x27;
             },
@@ -422,7 +421,7 @@ module.exports = function (window) {
                 element.setData(&#x27;i-select-value&#x27;, element.model.value);
 
                 // building the template of the itag:
-                content = &#x27;&lt;button class=&quot;pure-button pure-button-bordered&quot;&gt;&lt;div class=&quot;pointer&quot;&gt;&lt;/div&gt;&lt;div class=&quot;btntext&quot;&gt;&lt;/div&gt;&lt;/button&gt;&#x27;;
+                content = &#x27;&lt;button&gt;&lt;div class=&quot;pointer&quot;&gt;&lt;/div&gt;&lt;div class=&quot;btntext&quot;&gt;&lt;/div&gt;&lt;/button&gt;&#x27;;
                 // first: outerdiv which will be relative positioned
                 // next: innerdiv which will be absolute positioned
                 // also: hide the container by default --&gt; updateUI could make it shown
@@ -443,7 +442,8 @@ module.exports = function (window) {
                     // at the end of the eventstack: give &#x60;tapoutside&#x60; a way to set the &#x27;_suppressClose&#x27;-data when needed
                     // just async will do
                     asyncSilent(function() {
-                        if (!element.hasData(&#x27;_suppressClose&#x27;) &amp;&amp; !element.contains(e.sourceTarget)) {
+                        // because we go async, the element might have been destroyed in the meantime
+                        if (!element.isDestroyed() &amp;&amp; !element.hasData(&#x27;_suppressClose&#x27;) &amp;&amp; !element.contains(e.sourceTarget)) {
                             element.model.expanded = false;
                             DOCUMENT.refreshItags();
                         }
@@ -453,7 +453,8 @@ module.exports = function (window) {
                     // at the end of the eventstack: give &#x60;blurnode&#x60; a way to set the &#x27;_suppressClose&#x27;-data when needed
                     // need a bit more time because there is time inbetween the blur vs click events
                     laterSilent(function() {
-                        if (!element.hasData(&#x27;_suppressClose&#x27;)) {
+                        // because we go async, the element might have been destroyed in the meantime
+                        if (!element.isDestroyed() &amp;&amp; !element.hasData(&#x27;_suppressClose&#x27;)) {
                             element.model.expanded = false;
                             DOCUMENT.refreshItags();
                         }
@@ -503,7 +504,6 @@ console.warn(&#x27;syncing i-select&#x27;);
 
                 // rebuild the button:
                 button = element.getElement(&#x27;button&#x27;);
-                button.toggleClass(&#x27;pure-button-primary&#x27;, !!model[&#x27;primary-button&#x27;]);
                 button.getElement(&#x27;div.btntext&#x27;).setHTML(buttonText);
 
                 container = element.getElement(&#x27;&gt;div&#x27;);
