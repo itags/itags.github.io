@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>src/itags.core/itags.core.js - Itsa</title>
+    <title>src/itags.core/itags.core (origineel).js - Itsa</title>
     <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -188,7 +188,7 @@
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-                        <h1 class="file-heading">File: src/itags.core/itags.core.js</h1>
+                        <h1 class="file-heading">File: src/itags.core/itags.core (origineel).js</h1>
 
 <div class="file">
     <pre class="code prettyprint linenums">
@@ -483,6 +483,10 @@ module.exports = function (window) {
 
         contentHidden: true,
 
+        setContentVisibility: function(value) {
+            (typeof value === &#x27;boolean&#x27;) &amp;&amp; (this.contentHidden=!value);
+        },
+
         /**
          * Internal hash containing the &#x60;attrs&#x60;-definition which can be set by the itag-declaration.
          * This hash is used to determine which properties of &#x60;model&#x60; need to sync as an attribute.
@@ -746,20 +750,17 @@ module.exports = function (window) {
         * @method bindModel
         * @param element {HTMLElement} element, which should be an Itag
         * @param model {Object} the model to bind to the itag-element
-        * @param [mergeCurrent=false] {Boolean} when set true, current properties on the iTag that aren&#x27;t defined
-        *                                       in the new model, get merged into the new model.
         * @since 0.0.1
         */
-        bindModel: function(element, model, mergeCurrent) {
+        bindModel: function(element, model) {
             var instance = this,
                 stringifiedData, prevContent, observer;
-            if (element.isItag() &amp;&amp; (element.model!==model)) {
+            if (element.isItag()) {
                 element.removeAttr(&#x27;bound-model&#x27;);
                 if (NATIVE_OBJECT_OBSERVE) {
                     observer = element.getData(&#x27;_observer&#x27;);
                     observer &amp;&amp; Object.unobserve(element.model, observer);
                 }
-                mergeCurrent &amp;&amp; (model.merge(element.model, {full: true}));
                 element.model = model;
                 if (NATIVE_OBJECT_OBSERVE) {
                     observer = function() {
@@ -867,79 +868,6 @@ module.exports = function (window) {
         },
 
        /**
-        * Defines which domevents should lead to a direct sync by the Event-finalizer.
-        * Only needed for events that are in the list set by DEFAULT_DELAYED_FINALIZE_EVENTS:
-        *
-        * &lt;ul&gt;
-        *     &lt;li&gt;mousedown&lt;/li&gt;
-        *     &lt;li&gt;mouseup&lt;/li&gt;
-        *     &lt;li&gt;mousemove&lt;/li&gt;
-        *     &lt;li&gt;panmove&lt;/li&gt;
-        *     &lt;li&gt;panstart&lt;/li&gt;
-        *     &lt;li&gt;panleft&lt;/li&gt;
-        *     &lt;li&gt;panright&lt;/li&gt;
-        *     &lt;li&gt;panup&lt;/li&gt;
-        *     &lt;li&gt;pandown&lt;/li&gt;
-        *     &lt;li&gt;pinchmove&lt;/li&gt;
-        *     &lt;li&gt;rotatemove&lt;/li&gt;
-        *     &lt;li&gt;focus&lt;/li&gt;
-        *     &lt;li&gt;manualfocus&lt;/li&gt;
-        *     &lt;li&gt;keydown&lt;/li&gt;
-        *     &lt;li&gt;keyup&lt;/li&gt;
-        *     &lt;li&gt;keypress&lt;/li&gt;
-        *     &lt;li&gt;blur&lt;/li&gt;
-        *     &lt;li&gt;resize&lt;/li&gt;
-        *     &lt;li&gt;scroll&lt;/li&gt;
-        * &lt;/ul&gt;
-        *
-        * Events that are not in this list don&#x27;t need to be set: they always go through the finalizer immediatly.
-        *
-        * You need to set this if the itag-definition its &#x60;sync&#x60;-method should be updated after one of the events in the list.
-        *
-        * @method setItagDirectEventResponse
-        * @param ItagClass {Class} The ItagClass that wants to register
-        * @param domEvents {Array|String} the domevents that should directly make the itag sync
-        * @since 0.0.1
-        */
-        setDirectEventResponse :function(ItagClass, domEvents) {
-            var itag = ItagClass.$$itag;
-            if (!NATIVE_OBJECT_OBSERVE &amp;&amp; itag) {
-                Array.isArray(domEvents) || (domEvents=[domEvents]);
-                domEvents.forEach(function(domEvent) {
-                    domEvent.endsWith(&#x27;outside&#x27;) &amp;&amp; (domEvent=domEvent.substr(0, domEvent.length-7));
-                    domEvent = domEvent.toLowerCase();
-                    if (domEvent===&#x27;blur&#x27;) {
-                        console.warn(&#x27;the event &quot;blur&quot; cannot be delayed, for it would lead to extremely many syncing before anything changes which you don\&#x27;t need (fe when i-tabpane switches panes)&#x27;);
-                    }
-                    else {
-                        if (DEFAULT_DELAYED_FINALIZE_EVENTS[domEvent]) {
-                            itagsThatNeedsEvent[domEvent] || (itagsThatNeedsEvent[domEvent]=[]);
-                            itagsThatNeedsEvent[domEvent].push(itag);
-                            // remove from list in case at least one itag is in the dom:
-                            if (DOCUMENT.getElement(itag, true)) {
-                                delete DELAYED_FINALIZE_EVENTS[domEvent];
-                            }
-                            // add to the list whenever elements are removed and no itag is in the dom anymore:
-                            Event.after(NODE_REMOVE, function() {
-                                var elementThatNeedsEvent;
-                                itagsThatNeedsEvent[domEvent].some(function(oneItag) {
-                                    DOCUMENT.getElement(oneItag, true) &amp;&amp; (elementThatNeedsEvent=true);
-                                    return elementThatNeedsEvent;
-                                });
-                                elementThatNeedsEvent || (DELAYED_FINALIZE_EVENTS[domEvent]=true);
-                            }, itag);
-
-                            // remove from the list whenever itag is added in the dom:
-                            Event.after(NODE_INSERT, function() {
-                                delete DELAYED_FINALIZE_EVENTS[domEvent];
-                            }, itag);
-                        }
-                    }
-                });
-            }
-        },
-
-       /**
         * Defines the itag-element as being rendered.
         *
         * @method setRendered
@@ -974,10 +902,6 @@ module.exports = function (window) {
             }, this.itagFilter);
         },
 
-        setContentVisibility: function(ItagClass, value) {
-            (typeof value === &#x27;boolean&#x27;) &amp;&amp; ItagClass.mergePrototypes({contentHidden: !value}, true);
-        },
-
        /**
         * Sets up all itag-watchers, giving itags its life behaviour.
         *
@@ -985,7 +909,8 @@ module.exports = function (window) {
         * @since 0.0.1
         */
         setupWatchers: function() {
-            var types = [];
+            var instance = this,
+                types = [];
 
             Event.after(
                 NODE_REMOVE,
@@ -1068,9 +993,7 @@ module.exports = function (window) {
                             }
                         }
                     },
-                    function(e) {
-                        return !!e.target.$$itag;
-                    }
+                    instance.itagFilter
                 );
                 Event.after(
                     &#x27;*:prototyperemove&#x27;,
@@ -1095,9 +1018,7 @@ module.exports = function (window) {
                             }
                         }
                     },
-                    function(e) {
-                        return !!e.target.$$itag;
-                    }
+                    instance.itagFilter
                 );
             }
         },
@@ -1131,9 +1052,7 @@ module.exports = function (window) {
                             domElement.syncUI();
                         }
                     },
-                    function(e) {
-                        return !!e.target.$$itag;
-                    }
+                    instance.itagFilter
                 );
                 domElement.after(
                     &#x27;*:prototyperemove&#x27;,
@@ -1147,9 +1066,7 @@ module.exports = function (window) {
                             domElement.syncUI();
                         }
                     },
-                    function(e) {
-                        return !!e.target.$$itag;
-                    }
+                    instance.itagFilter
                 );
             }
             else {
@@ -1218,16 +1135,11 @@ module.exports = function (window) {
     *
     * @method bindModel
     * @param model {Object} the model to bind to the itag-element
-    * @param selector {String|HTMLElement} a css-selector or an HTMLElement where the data should be bound
-    * @param [mergeCurrent=false] {Boolean} when set true, current properties on the iTag that aren&#x27;t defined
-    *                                       in the new model, get merged into the new model.
-    * @param [fineGrain] {Function} A function that recieves &#x60;model&#x60; as argument and should return a
-    *                               manipulated (subset) of model as new model to be bound
-    * @return {Object} handler with a &#x60;detach()&#x60;-method which can be used to detach the binder
+    * @chainable
     * @since 0.0.1
     */
-    DOCUMENT.bindModel = function(model, selector, mergeCurrent, fineGrain) {
-        return DOCUMENT.documentElement.bindModel(model, selector, mergeCurrent, fineGrain);
+    DOCUMENT.bindModel = function(model, selector, fineGrain) {
+        return DOCUMENT.documentElement.bindModel(model, selector, fineGrain);
     };
 
    /**
@@ -1276,7 +1188,7 @@ module.exports = function (window) {
             list = instance.getItags();
             len = list.length;
             allowedToRefreshItags = false; // prevent setTimeout to fall into loop
-            (len===0) || console.info(&#x27;refreshing Itags&#x27;);
+            (len===0) || console.log(&#x27;refreshing Itags&#x27;);
             for (i=0; i&lt;len; i++) {
                 itagElement = list[i];
                 // because itagElement could be removed intermediate, we need to check if it&#x27;s there
@@ -1310,6 +1222,83 @@ module.exports = function (window) {
     //== patching native prototypes =================================================
     (function(FunctionPrototype) {
         var originalSubClass = FunctionPrototype.subClass;
+
+       /**
+        * Defines which domevents should lead to a direct sync by the Event-finalizer.
+        * Only needed for events that are in the list set by DEFAULT_DELAYED_FINALIZE_EVENTS:
+        *
+        * &lt;ul&gt;
+        *     &lt;li&gt;mousedown&lt;/li&gt;
+        *     &lt;li&gt;mouseup&lt;/li&gt;
+        *     &lt;li&gt;mousemove&lt;/li&gt;
+        *     &lt;li&gt;panmove&lt;/li&gt;
+        *     &lt;li&gt;panstart&lt;/li&gt;
+        *     &lt;li&gt;panleft&lt;/li&gt;
+        *     &lt;li&gt;panright&lt;/li&gt;
+        *     &lt;li&gt;panup&lt;/li&gt;
+        *     &lt;li&gt;pandown&lt;/li&gt;
+        *     &lt;li&gt;pinchmove&lt;/li&gt;
+        *     &lt;li&gt;rotatemove&lt;/li&gt;
+        *     &lt;li&gt;focus&lt;/li&gt;
+        *     &lt;li&gt;manualfocus&lt;/li&gt;
+        *     &lt;li&gt;keydown&lt;/li&gt;
+        *     &lt;li&gt;keyup&lt;/li&gt;
+        *     &lt;li&gt;keypress&lt;/li&gt;
+        *     &lt;li&gt;blur&lt;/li&gt;
+        *     &lt;li&gt;resize&lt;/li&gt;
+        *     &lt;li&gt;scroll&lt;/li&gt;
+        * &lt;/ul&gt;
+        *
+        * Events that are not in this list don&#x27;t need to be set: they always go through the finalizer immediatly.
+        *
+        * You need to set this if the itag-definition its &#x60;sync&#x60;-method should be updated after one of the events in the list.
+        *
+        * @method setItagDirectEventResponse
+        * @param domEvents {Array|String} the domevents that should directly make the itag sync
+        * @chainable
+        * @for Function
+        * @since 0.0.1
+        */
+        FunctionPrototype.setItagDirectEventResponse = function(domEvents) {
+            var instance = this,
+                itag = instance.$$itag;
+            if (!NATIVE_OBJECT_OBSERVE &amp;&amp; itag) {
+                Array.isArray(domEvents) || (domEvents=[domEvents]);
+                domEvents.forEach(function(domEvent) {
+                    domEvent.endsWith(&#x27;outside&#x27;) &amp;&amp; (domEvent=domEvent.substr(0, domEvent.length-7));
+                    domEvent = domEvent.toLowerCase();
+                    if (domEvent===&#x27;blur&#x27;) {
+                        console.warn(&#x27;the event &quot;blur&quot; cannot be delayed, for it would lead to extremely many syncing before anything changes which you don\&#x27;t need (fe when i-tabpane switches panes)&#x27;);
+                    }
+                    else {
+                        if (DEFAULT_DELAYED_FINALIZE_EVENTS[domEvent]) {
+                            itagsThatNeedsEvent[domEvent] || (itagsThatNeedsEvent[domEvent]=[]);
+                            itagsThatNeedsEvent[domEvent].push(itag);
+                            // remove from list in case at least one itag is in the dom:
+                            if (DOCUMENT.getElement(itag, true)) {
+                                delete DELAYED_FINALIZE_EVENTS[domEvent];
+                            }
+                            // add to the list whenever elements are removed and no itag is in the dom anymore:
+                            Event.after(NODE_REMOVE, function() {
+                                var elementThatNeedsEvent;
+                                itagsThatNeedsEvent[domEvent].some(function(oneItag) {
+                                    DOCUMENT.getElement(oneItag, true) &amp;&amp; (elementThatNeedsEvent=true);
+                                    return elementThatNeedsEvent;
+                                });
+                                elementThatNeedsEvent || (DELAYED_FINALIZE_EVENTS[domEvent]=true);
+                            }, itag);
+
+                            // remove from the list whenever itag is added in the dom:
+                            Event.after(NODE_INSERT, function() {
+                                delete DELAYED_FINALIZE_EVENTS[domEvent];
+                            }, itag);
+                        }
+                    }
+                });
+            }
+            return instance;
+        };
+
        /**
          * Backup of the original &#x60;mergePrototypes&#x60;-method.
          *
@@ -1344,8 +1333,7 @@ module.exports = function (window) {
          * @since 0.0.1
         */
         FunctionPrototype.mergePrototypes = function(prototypes, force, silent) {
-            var instance = this,
-                itagEmitterName;
+            var instance = this;
             if (!instance.$$itag) {
                 // default mergePrototypes
                 instance._mergePrototypes.apply(instance, arguments);
@@ -1361,11 +1349,7 @@ module.exports = function (window) {
                 * @param e.force {Boolean} whether existing members are overwritten
                 * @since 0.1
                 */
-                if (!silent) {
-                    // cannot emit on the instance
-                    itagEmitterName = instance.$$itag + (instance.$$pseudo ? &#x27;#&#x27;+instance.$$pseudo : &#x27;&#x27;);
-                    Event.emit(instance, itagEmitterName+&#x27;:prototypechange&#x27;, {prototypes: prototypes, force: !!force});
-                }
+                silent || instance.emit(&#x27;prototypechange&#x27;, {prototypes: prototypes, force: !!force});
             }
             return instance;
         };
@@ -1425,9 +1409,8 @@ module.exports = function (window) {
         * @chainable
         * @since 0.0.1
         */
-        FunctionPrototype.removePrototypes = function(properties, silent) {
-            var instance = this,
-                itagEmitterName;
+        FunctionPrototype.removePrototypes = function(properties) {
+            var instance = this;
             if (!instance.$$itag) {
                 // default mergePrototypes
                 instance._removePrototypes.apply(instance, arguments);
@@ -1442,13 +1425,7 @@ module.exports = function (window) {
                 * @param e.prototypes {Object} Hash prototypes of properties to add to the prototype of this object
                 * @since 0.1
                 */
-
-                if (!silent) {
-                    // cannot emit on the instance
-                    itagEmitterName = instance.$$itag + (instance.$$pseudo ? &#x27;#&#x27;+instance.$$pseudo : &#x27;&#x27;);
-                    Event.emit(instance, itagEmitterName+&#x27;:prototyperemove&#x27;, {properties: properties});
-                }
-                instance.prototype.emit(&#x27;prototyperemove&#x27;, {properties: properties});
+                instance.emit(&#x27;prototyperemove&#x27;, {properties: properties});
             }
             return instance;
         };
@@ -1606,49 +1583,36 @@ module.exports = function (window) {
         *
         * @method bindModel
         * @param model {Object} the model to bind to the itag-element
-        * @param selector {String|HTMLElement} a css-selector or an HTMLElement where the data should be bound
-        * @param [mergeCurrent=false] {Boolean} when set true, current properties on the iTag that aren&#x27;t defined
-        *                                       in the new model, get merged into the new model.
-        * @param [fineGrain] {Function} A function that recieves &#x60;model&#x60; as argument and should return a
-        *                               manipulated (subset) of model as new model to be bound
-        * @return {Object} handler with a &#x60;detach()&#x60;-method which can be used to detach the binder
+        * @chainable
         * @since 0.0.1
         */
-        ElementPrototype.bindModel = function(model, selector, mergeCurrent, fineGrain) {
+        ElementPrototype.bindModel = function(model, selector, fineGrain, removeListener) {
             var instance = this,
-                listener, elements, observer;
+                listener, elements;
             if ((typeof selector === &#x27;string&#x27;) &amp;&amp; (selector.length&gt;0) &amp;&amp; !BINDING_LIST[selector]) {
                 BINDING_LIST[selector] = true;
                 elements = instance.getAll(selector);
                 elements.forEach(function(element) {
-                    itagCore.bindModel(element, (typeof fineGrain===&#x27;function&#x27;) ? fineGrain(element, model) : model, mergeCurrent);
+                    itagCore.bindModel(element, (typeof fineGrain===&#x27;function&#x27;) ? fineGrain(element, model) : model);
                 });
                 listener = Event.after(NODE_INSERT, function(e) {
                     var element = e.target;
-                    itagCore.bindModel(element, (typeof fineGrain===&#x27;function&#x27;) ? fineGrain(element, model) : model, mergeCurrent);
+                    itagCore.bindModel(element, (typeof fineGrain===&#x27;function&#x27;) ? fineGrain(element, model) : model);
+                    // element.selfOnceAfter is not available yet: listen through Event:
+                    removeListener &amp;&amp; Event.onceAfter(
+                        NODE_REMOVE,
+                        function() {
+                            listener.detach();
+                        },
+                        function(e) {
+                            return (e.target===element);
+                        }
+                    );
                 }, selector);
                 return {
                     detach: function() {
                         listener.detach();
-                        if (NATIVE_OBJECT_OBSERVE) {
-                            elements = instance.getAll(selector);
-                            elements.forEach(function(element) {
-                                observer = element.getData(&#x27;_observer&#x27;);
-                                observer &amp;&amp; Object.unobserve(element.model, observer);
-                            });
-                        }
                         delete BINDING_LIST[selector];
-                    }
-                };
-            }
-            else if (selector &amp;&amp; selector._syncUI) {
-                itagCore.bindModel(selector, (typeof fineGrain===&#x27;function&#x27;) ? fineGrain(selector, model) : model, mergeCurrent);
-                return {
-                    detach: function() {
-                        if (NATIVE_OBJECT_OBSERVE) {
-                            observer = selector.getData(&#x27;_observer&#x27;);
-                            observer &amp;&amp; Object.unobserve(selector.model, observer);
-                        }
                     }
                 };
             }

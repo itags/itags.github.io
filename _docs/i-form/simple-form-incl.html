@@ -1,0 +1,82 @@
+
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>Simple i-form</title>
+</head>
+
+<body>
+    <i-form class="i-aligned">
+        <i-select value="2" primary-button="true">
+            <i-item>item1</i-item>
+            <i-item>item2</i-item>
+            <i-item><i-head>item3 header</i-head>item3 content</i-item>
+            <i-item>item4</i-item>
+            <i-item>item5</i-item>
+        </i-select>
+
+        <i-select value="2" primary-button="true">
+            <i-item>item1</i-item>
+            <i-item>item2</i-item>
+            <i-item><i-head>item3 header</i-head>item3 content</i-item>
+            <i-item>item4</i-item>
+            <i-item>item5</i-item>
+        </i-select>
+
+<fieldset>
+<div class="i-group">
+        <label for="name">Username</label>
+        <i-input reset-value="nobody" placeholder="Say your name">Marco</i-input>
+</div>
+<div class="i-group">
+        <label for="name">Username</label>
+        <i-input reset-value="nobody" placeholder="Say your name">Marco</i-input>
+</div>
+<div class="i-group">
+        <label for="name">Username</label>
+        <i-input reset-value="nobody" placeholder="Say your name">Marco</i-input>
+</div>
+</fieldset>
+
+        <i-select value="2" primary-button="true">
+            <i-item>item1</i-item>
+            <i-item>item2</i-item>
+            <i-item><i-head>item3 header</i-head>item3 content</i-item>
+            <i-item>item4</i-item>
+            <i-item>item5</i-item>
+        </i-select>
+
+        <i-input reset-value="nobody" placeholder="Say your name">Marco</i-input>
+
+    </i-form>
+
+    <form class="pure-form pure-form-aligned">
+<fieldset>
+        <div class="pure-control-group">
+            <label for="name">Username</label>
+            <input value="Marco"/>
+        </div>
+        <div class="pure-control-group">
+            <label for="name">Username</label>
+            <input value="Marco"/>
+        </div>
+        <div class="pure-control-group">
+            <label for="name">Username</label>
+            <input value="Marco"/>
+        </div>
+</fieldset>
+        <button class="pure-button">Click me</button>
+        <button class="pure-button">Click me</button>
+        <input value="Marco"/>
+        <button class="pure-button">Click me</button>
+    </form>
+
+    <script src="../../dist/itagsbuild.js"></script>
+    <script>
+        require('itags');
+        document.getElement('i-form').focus();
+    </script>
+</body>
+
+</html>

@@ -204,10 +204,10 @@ require(&#x27;./css/i-tabpane.css&#x27;);
 module.exports = function (window) {
 
     &quot;use strict&quot;;
-    require(&#x27;itags.core&#x27;)(window);
 
     var itagName = &#x27;i-tabpane&#x27;,
         DOCUMENT = window.document,
+        itagCore = require(&#x27;itags.core&#x27;)(window),
         Event, Itag;
 
     if (!window.ITAGS[itagName]) {
@@ -259,7 +259,8 @@ module.exports = function (window) {
              * @since 0.0.1
             */
             attrs: {
-                pane: &#x27;number&#x27;
+                pane: &#x27;number&#x27;,
+                prop: &#x27;string&#x27;
             },
 
            /**
@@ -294,8 +295,8 @@ module.exports = function (window) {
                     panes[panes.length] = node.getHTML();
                 });
 
-                element.setValueOnce(&#x27;panes&#x27;, panes);
-                element.setValueOnce(&#x27;tabs&#x27;, tabs);
+                element.defineWhenUndefined(&#x27;panes&#x27;, panes)
+                       .defineWhenUndefined(&#x27;tabs&#x27;, tabs);
 
                 // store its current value, so that valueChange-event can fire:
                 element.setData(&#x27;i-select-pane&#x27;, pane);
@@ -304,7 +305,6 @@ module.exports = function (window) {
                 content = &#x27;&lt;ul fm-manage=&quot;li&quot; fm-keyup=&quot;37&quot; fm-keydown=&quot;39&quot; fm-noloop=&quot;true&quot;&gt;&lt;/ul&gt;&lt;div&gt;&lt;div class=&quot;container&quot;&gt;&lt;/div&gt;&lt;/div&gt;&#x27;;
                 // set the content:
                 element.setHTML(content);
-                element.setContentVisibility(true);
             },
 
            /**
@@ -339,7 +339,7 @@ console.warn(&#x27;syncing i-tabpane&#x27;);
                     container = element.getElement(&#x27;div.container&#x27;),
                     content = &#x27;&#x27;,
                     i, tabItem, index;
-
+console.info(element.getOuterHTML());
                 index = pane - 1;
                 for (i=0; i&lt;len; i++) {
                     tabItem = tabs[i];
@@ -360,8 +360,10 @@ console.warn(&#x27;syncing i-tabpane&#x27;);
             }
         });
 
-        Itag.setItagDirectEventResponse(&#x27;focus&#x27;);
+        itagCore.setDirectEventResponse(Itag, &#x27;focus&#x27;);
+        itagCore.setContentVisibility(Itag, true);
 
+        window.ITAGS[itagName] = Itag;
     }
 
     return window.ITAGS[itagName];

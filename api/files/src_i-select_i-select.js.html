@@ -229,11 +229,10 @@ module.exports = function (window) {
     var DEFAULT_INVALID_VALUE = &#x27;choose&#x27;,
         itagName = &#x27;i-select&#x27;,
         DOCUMENT = window.document,
+        itagCore = require(&#x27;itags.core&#x27;)(window),
         HIDDEN = &#x27;itsa-hidden&#x27;,
         SHOW = &#x27;i-select-show&#x27;,
-        Event, Itag;
-
-    require(&#x27;itags.core&#x27;)(window);
+        Event, Itag, IFormElement;
 
     if (!window.ITAGS[itagName]) {
         Event = require(&#x27;event-mobile&#x27;)(window);
@@ -241,6 +240,8 @@ module.exports = function (window) {
         require(&#x27;focusmanager&#x27;)(window);
         require(&#x27;i-item&#x27;)(window);
         require(&#x27;i-head&#x27;)(window);
+
+        IFormElement = require(&#x27;i-formelement&#x27;)(window);
 
         Event.before(itagName+&#x27;:manualfocus&#x27;, function(e) {
             // the i-select itself is unfocussable, but its button is
@@ -374,7 +375,7 @@ module.exports = function (window) {
             element.setData(&#x27;i-select-value&#x27;, newValue);
         });
 
-        Itag = DOCUMENT.createItag(itagName, {
+        Itag = IFormElement.subClass(itagName, {
             /*
              *
              * @property attrs
@@ -384,6 +385,7 @@ module.exports = function (window) {
             attrs: {
                 expanded: &#x27;boolean&#x27;,
                 value: &#x27;string&#x27;,
+                prop: &#x27;string&#x27;,
                 &#x27;invalid-value&#x27;: &#x27;string&#x27;
             },
 
@@ -414,8 +416,8 @@ module.exports = function (window) {
                     items[items.length] = node.getHTML();
                 });
 
-                element.setValueOnce(&#x27;items&#x27;, items);
-                element.setValueOnce(&#x27;buttonTexts&#x27;, buttonTexts);
+                element.defineWhenUndefined(&#x27;items&#x27;, items)
+                       .defineWhenUndefined(&#x27;buttonTexts&#x27;, buttonTexts);
 
                 // store its current value, so that valueChange-event can fire:
                 element.setData(&#x27;i-select-value&#x27;, element.model.value);
@@ -442,8 +444,7 @@ module.exports = function (window) {
                     // at the end of the eventstack: give &#x60;tapoutside&#x60; a way to set the &#x27;_suppressClose&#x27;-data when needed
                     // just async will do
                     asyncSilent(function() {
-                        // because we go async, the element might have been destroyed in the meantime
-                        if (!element.isDestroyed() &amp;&amp; !element.hasData(&#x27;_suppressClose&#x27;) &amp;&amp; !element.contains(e.sourceTarget)) {
+                        if (!element.hasData(&#x27;_suppressClose&#x27;) &amp;&amp; !element.contains(e.sourceTarget)) {
                             element.model.expanded = false;
                             DOCUMENT.refreshItags();
                         }
@@ -453,8 +454,7 @@ module.exports = function (window) {
                     // at the end of the eventstack: give &#x60;blurnode&#x60; a way to set the &#x27;_suppressClose&#x27;-data when needed
                     // need a bit more time because there is time inbetween the blur vs click events
                     laterSilent(function() {
-                        // because we go async, the element might have been destroyed in the meantime
-                        if (!element.isDestroyed() &amp;&amp; !element.hasData(&#x27;_suppressClose&#x27;)) {
+                        if (!element.hasData(&#x27;_suppressClose&#x27;)) {
                             element.model.expanded = false;
                             DOCUMENT.refreshItags();
                         }
@@ -535,7 +535,9 @@ console.warn(&#x27;syncing i-select&#x27;);
             }
         });
 
-        Itag.setItagDirectEventResponse([&#x27;keypress&#x27;, &#x27;keydown&#x27;]);
+        itagCore.setDirectEventResponse(Itag, [&#x27;keypress&#x27;, &#x27;keydown&#x27;]);
+
+        window.ITAGS[itagName] = Itag;
     }
 
     return window.ITAGS[itagName];

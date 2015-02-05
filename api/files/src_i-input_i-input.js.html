@@ -198,17 +198,35 @@ module.exports = function (window) {
     require(&#x27;polyfill/polyfill-base.js&#x27;);
     require(&#x27;./css/i-input.css&#x27;);
 
-    var itagCore =  require(&#x27;itags.core&#x27;)(window),
-        itagName = &#x27;i-input&#x27;, // &lt;-- define your own itag-name here
-        DOCUMENT = window.document,
+    var itagName = &#x27;i-input&#x27;, // &lt;-- define your own itag-name here
         Event = require(&#x27;event-dom/extra/valuechange.js&#x27;)(window),
-        Itag;
+        Itag, IFormElement;
+
+    require(&#x27;itags.core&#x27;)(window);
 
     if (!window.ITAGS[itagName]) {
 
+        IFormElement = require(&#x27;i-formelement&#x27;)(window);
+
+        Event.before(itagName+&#x27;:manualfocus&#x27;, function(e) {
+            // the i-select itself is unfocussable, but its button is
+            // we need to patch &#x60;manualfocus&#x60;,
+            // which is emitted on node.focus()
+            // a focus by userinteraction will always appear on the button itself
+            // so we don&#x27;t bother that
+            var element = e.target;
+            e.preventDefault();
+            element.itagReady().then(
+                function() {
+                    var input = element.getElement(&#x27;input&#x27;);
+                    input &amp;&amp; input.focus(true);
+                }
+            );
+        });
+
         Event.after(&#x27;valuechange&#x27;, function(e) {
             var newValue = e.value,
-                element = e.target,
+                element = e.target.getParent(),
                 model = element.model,
                 prevValue = model.value;
 
@@ -227,10 +245,11 @@ module.exports = function (window) {
                 prevValue: prevValue,
                 newValue: newValue
             });
-        }, &#x27;i-select &gt; input&#x27;);
+        }, &#x27;i-input &gt; input&#x27;);
 
-        Itag = DOCUMENT.createItag(itagName, {
+        Itag = IFormElement.subClass(itagName, {
             attrs: {
+                &#x27;prop&#x27;: &#x27;string&#x27;,
                 &#x27;reset-value&#x27;: &#x27;string&#x27;,
                 &#x27;placeholder&#x27;: &#x27;string&#x27;,
                 &#x27;readonly&#x27;: &#x27;boolean&#x27;,
@@ -244,10 +263,10 @@ module.exports = function (window) {
                     value = element.getText(),
                     content;
 
-                element.setValueOnce(&#x27;value&#x27;, value);
+                element.defineWhenUndefined(&#x27;value&#x27;, value);
 
                 // building the template of the itag:
-                content = &#x27;&lt;input&gt;&#x27; + value + &#x27;&lt;/input&gt;&#x27;;
+                content = &#x27;&lt;input value=&quot;&#x27;+value+&#x27;&quot; /&gt;&#x27;;
 
                 // set the content:
                 element.setHTML(content);
