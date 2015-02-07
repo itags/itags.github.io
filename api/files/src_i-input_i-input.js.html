@@ -200,6 +200,7 @@ module.exports = function (window) {
 
     var itagName = &#x27;i-input&#x27;, // &lt;-- define your own itag-name here
         Event = require(&#x27;event-dom/extra/valuechange.js&#x27;)(window),
+        DOCUMENT = window.document,
         Itag, IFormElement;
 
     require(&#x27;itags.core&#x27;)(window);
@@ -219,7 +220,7 @@ module.exports = function (window) {
             element.itagReady().then(
                 function() {
                     var input = element.getElement(&#x27;input&#x27;);
-                    input &amp;&amp; input.focus(true);
+                    input &amp;&amp; input.focus(true, true);
                 }
             );
         });
@@ -229,7 +230,7 @@ module.exports = function (window) {
                 element = e.target.getParent(),
                 model = element.model,
                 prevValue = model.value;
-
+console.warn(&#x27;new value found: &#x27;+newValue);
             model.value = newValue;
             /**
             * Emitted when a the i-select changes its value
@@ -245,6 +246,9 @@ module.exports = function (window) {
                 prevValue: prevValue,
                 newValue: newValue
             });
+            // because &#x60;valuechange&#x60; does no finalize, we need to refresh
+            // the itags manually:
+            DOCUMENT.refreshItags();
         }, &#x27;i-input &gt; input&#x27;);
 
         Itag = IFormElement.subClass(itagName, {
@@ -266,7 +270,7 @@ module.exports = function (window) {
                 element.defineWhenUndefined(&#x27;value&#x27;, value);
 
                 // building the template of the itag:
-                content = &#x27;&lt;input value=&quot;&#x27;+value+&#x27;&quot; /&gt;&#x27;;
+                content = &#x27;&lt;input class=&quot;focusable&quot; value=&quot;&#x27;+value+&#x27;&quot; /&gt;&#x27;;
 
                 // set the content:
                 element.setHTML(content);
@@ -278,8 +282,10 @@ module.exports = function (window) {
                     input = element.getElement(&#x27;&gt;input&#x27;);
                 // it is safe to use setValue --&gt; when the content hasn&#x27;t changed, &#x60;setValue&#x60; doesn&#x27;t do anything
                 input.setValue(model.value);
-                model.placeholder &amp;&amp; input.setAttr(&#x27;placeholder&#x27;, model.placeholder, true);
-                model[&#x27;reset-value&#x27;] &amp;&amp; input.setAttr(&#x27;reset-value&#x27;, model[&#x27;reset-value&#x27;], true);
+
+// model.placeholder &amp;&amp; input.setAttr(&#x27;placeholder&#x27;, model.placeholder, true);
+// model[&#x27;reset-value&#x27;] &amp;&amp; input.setAttr(&#x27;reset-value&#x27;, model[&#x27;reset-value&#x27;], true);
+
             },
 
             reset: function() {

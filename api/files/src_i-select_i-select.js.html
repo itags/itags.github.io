@@ -254,7 +254,7 @@ module.exports = function (window) {
             element.itagReady().then(
                 function() {
                     var button = element.getElement(&#x27;button&#x27;);
-                    button &amp;&amp; button.focus(true);
+                    button &amp;&amp; button.focus(true, true);
                 }
             );
         });
@@ -423,7 +423,7 @@ module.exports = function (window) {
                 element.setData(&#x27;i-select-value&#x27;, element.model.value);
 
                 // building the template of the itag:
-                content = &#x27;&lt;button&gt;&lt;div class=&quot;pointer&quot;&gt;&lt;/div&gt;&lt;div class=&quot;btntext&quot;&gt;&lt;/div&gt;&lt;/button&gt;&#x27;;
+                content = &#x27;&lt;button class=&quot;focusable&quot;&gt;&lt;div class=&quot;pointer&quot;&gt;&lt;/div&gt;&lt;div class=&quot;btntext&quot;&gt;&lt;/div&gt;&lt;/button&gt;&#x27;;
                 // first: outerdiv which will be relative positioned
                 // next: innerdiv which will be absolute positioned
                 // also: hide the container by default --&gt; updateUI could make it shown

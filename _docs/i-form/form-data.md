@@ -13,28 +13,26 @@ intro: ""
     <i-item>item4</i-item>
     <i-item>item5</i-item>
 </i-select>
-<i-select value="2"  prop="selectvalue">
+<i-select value="2" prop="xselectvalue">
     <i-item>item1</i-item>
     <i-item>item2</i-item>
     <i-item><i-head>item3 header</i-head>item3 content</i-item>
     <i-item>item4</i-item>
     <i-item>item5</i-item>
 </i-select>
-<fieldset>
-<div class="i-group">
+<i-formrow>
     <label for="name">Username</label>
     <i-input prop="name" reset-value="nobody" placeholder="Say your name">Marco</i-input>
-</div>
-<div class="i-group">
+</i-formrow>
+<i-formrow>
     <label for="name">Username</label>
     <i-input prop="name" reset-value="nobody" placeholder="Say your name">Marco</i-input>
-</div>
-<div class="i-group">
+</i-formrow>
+<i-formrow>
     <label for="name">Username</label>
     <i-input prop="name" reset-value="nobody" placeholder="Say your name">Marco</i-input>
-</div>
-</fieldset>
-<i-select value="2"  prop="selectvalue">
+</i-formrow>
+<i-select value="2" prop="xselectvalue">
     <i-item>item1</i-item>
     <i-item>item2</i-item>
     <i-item><i-head>item3 header</i-head>item3 content</i-item>
