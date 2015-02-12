@@ -3,17 +3,23 @@ module: i-select
 maintainer: Marco Asbreuk
 title: interact with i-select
 intro: ""
+includeexample: 20em
 ---
-
-
-<i-select value="2" items="["item1","item2","item3","item4","item5"]"></iselect>
 
 <p>Code-example:</p>
 
 
 ```html
 <body>
-    <i-select value="2" items="["item1","item2","item3","item4","item5"]"></iselect>
+    <i-select value="2" class="i-primary">
+    <!--
+        <span>item1</span>
+        <span>item2</span>
+        <span><span is="button">item3 header</span>item3 content</span>
+        <span>item4</span>
+        <span>item5</span>
+    -->
+    </i-select>
 </body>
 ```
 
@@ -21,10 +27,6 @@ intro: ""
 <script src="itagsbuild-min.js"></script>
 <script>
     require('itags');
+    document.getElement('i-select').focus();
 </script>
 ```
-
-<script src="../../dist/itagsbuild.js"></script>
-<script>
-    require('itags');
-</script>

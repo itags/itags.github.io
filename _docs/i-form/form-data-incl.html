@@ -1,0 +1,75 @@
+
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>Simple i-form</title>
+    <style type="text/css">
+        i-form {
+            border: solid 1px #000;
+        }
+        i-form.focussed {
+            border: solid 4px #F00;
+        }
+    </style>
+</head>
+
+<body>
+
+    <i-form class="i-aligned" bound-model="true">
+        <!--
+            <i-select value="2" i-prop="selectvalue">
+                <!==
+                    <span>item1</span>
+                    <span>item2</span>
+                    <span><span is="button">item3 header</span>item3 content</span>
+                    <span>item4</span>
+                    <span>item5</span>
+                ==>
+            </i-select>
+            <i-select value="2" i-prop="selectvalue">
+                <!==
+                    <span>item1</span>
+                    <span>item2</span>
+                    <span><span is="button">item3 header</span>item3 content</span>
+                    <span>item4</span>
+                    <span>item5</span>
+                ==>
+            </i-select>
+            <label for="name">Username</label>
+            <i-input i-prop="name" reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+            <label for="name">Username</label>
+            <i-input i-prop="name" reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+            <label for="name">Username</label>
+            <i-input i-prop="name" reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+            <i-select value="2" i-prop="selectvalue">
+                <!==
+                    <span>item1</span>
+                    <span>item2</span>
+                    <span><span is="button">item3 header</span>item3 content</span>
+                    <span>item4</span>
+                    <span>item5</span>
+                ==>
+            </i-select>
+            <i-input i-prop="name" reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+        -->
+    </i-form>
+
+    <script src="../../dist/itagsbuild.js"></script>
+    <script>
+        require('itags');
+        var datamodel = {
+                selectvalue: {
+                    value: 4
+                },
+                name: {
+                    value: 'Harry'
+                }
+            };
+        document.bindModel(datamodel, 'i-form');
+        document.getElement('i-form').focus();
+    </script>
+
+</body>
+
+</html>

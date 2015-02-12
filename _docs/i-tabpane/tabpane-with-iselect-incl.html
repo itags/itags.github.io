@@ -1,0 +1,53 @@
+
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>Simple i-form</title>
+    <style type="text/css">
+        i-tabpane {height: 15em; width: 40em;}
+    </style>
+</head>
+
+<body>
+
+    <i-tabpane pane="2">
+        <!--
+        <section>Content first page</section>
+        <section>Content second page</section>
+        <section><span is="tab">item3 header</span>page 3</section>
+        <section>
+            <i-select value="2" class="i-primary">
+                <!==
+                    <span>item1</span>
+                    <span>item2</span>
+                    <span><span is="button">item3 header</span>item3 content</span>
+                    <span>item4</span>
+                    <span>item5</span>
+                ==>
+            </i-select>
+            <i-input reset-value="nobody" placeholder="Say your name">Marco</i-input>
+        </section>
+        <section><i-input id="2" reset-value="nobody" placeholder="Say your name">Marco</i-input></section>
+        -->
+    </i-tabpane>
+
+    <script src="../../dist/itagsbuild.js"></script>
+    <script>
+        require('itags');
+        var model = {
+            value: 4,
+            'primary-button': true
+        };
+        var inputmodel = {
+            value: 'Harry'
+        };
+        document.bindModel(model, 'i-select');
+        document.bindModel(inputmodel, 'i-input');
+        document.getElement('i-tabpane').focus();
+
+    </script>
+
+</body>
+
+</html>

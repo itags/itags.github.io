@@ -213,8 +213,6 @@ module.exports = function (window) {
     if (!window.ITAGS[itagName]) {
         Event = require(&#x27;event-mobile&#x27;)(window);
         require(&#x27;focusmanager&#x27;)(window);
-        require(&#x27;i-item&#x27;)(window);
-        require(&#x27;i-head&#x27;)(window);
 
         Event.before(itagName+&#x27;:manualfocus&#x27;, function(e) {
             // the i-select itself is unfocussable, but its button is
@@ -260,7 +258,7 @@ module.exports = function (window) {
             */
             attrs: {
                 pane: &#x27;number&#x27;,
-                prop: &#x27;string&#x27;
+                &#x27;i-prop&#x27;: &#x27;string&#x27;
             },
 
            /**
@@ -277,22 +275,22 @@ module.exports = function (window) {
             */
             init: function() {
                 var element = this,
-                    itemNodes = element.getAll(&#x27;&gt;i-item&#x27;),
+                    designNode = element.getDesignNode(),
+                    itemNodes = designNode.getAll(&#x27;&gt;section&#x27;),
                     model = element.model,
                     pane = model.pane,
                     panes = [],
                     tabs = [],
                     content;
                 itemNodes.forEach(function(node, i) {
-                    var header = node.getElement(&#x27;i-head&#x27;);
+                    var header = node.getElement(&#x27;span[is=&quot;tab&quot;]&#x27;);
                     if (header) {
                         tabs[i] = header.getHTML();
-                        header.remove(true);
                     }
                     else {
                         tabs[i] = &#x27;&amp;nbsp;&#x27;;
                     }
-                    panes[panes.length] = node.getHTML();
+                    panes[panes.length] = node.getHTML(header);
                 });
 
                 element.defineWhenUndefined(&#x27;panes&#x27;, panes)

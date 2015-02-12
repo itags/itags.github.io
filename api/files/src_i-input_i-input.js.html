@@ -253,24 +253,22 @@ console.warn(&#x27;new value found: &#x27;+newValue);
 
         Itag = IFormElement.subClass(itagName, {
             attrs: {
-                &#x27;prop&#x27;: &#x27;string&#x27;,
+                &#x27;i-prop&#x27;: &#x27;string&#x27;,
                 &#x27;reset-value&#x27;: &#x27;string&#x27;,
                 &#x27;placeholder&#x27;: &#x27;string&#x27;,
-                &#x27;readonly&#x27;: &#x27;boolean&#x27;,
-                &#x27;fm-lastitem&#x27;: &#x27;boolean&#x27;,
-                &#x27;fm-selectionstart&#x27;: &#x27;number&#x27;,
-                &#x27;fm-selectionend&#x27;: &#x27;number&#x27;
+                &#x27;readonly&#x27;: &#x27;boolean&#x27;
             },
 
             init: function() {
                 var element = this,
-                    value = element.getText(),
+                    designNode = element.getDesignNode(),
+                    value = designNode.getText(),
                     content;
 
                 element.defineWhenUndefined(&#x27;value&#x27;, value);
 
                 // building the template of the itag:
-                content = &#x27;&lt;input class=&quot;focusable&quot; value=&quot;&#x27;+value+&#x27;&quot; /&gt;&#x27;;
+                content = &#x27;&lt;input value=&quot;&#x27;+value+&#x27;&quot; /&gt;&#x27;;
 
                 // set the content:
                 element.setHTML(content);

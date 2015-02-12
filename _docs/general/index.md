@@ -28,16 +28,51 @@ Every `Itag` needs to be defined by its own module. Once this module is loaded, 
 
 ```html
 <i-select value="2">
-    <i-item>item 1</i-item>
-    <i-item>item 2</i-item> <!-- is the selected item -->
-    <i-item>item 3</i-item>
-    <i-item>item 4</i-item>
+    <!--
+        <span>item1</span>
+        <span>item2</span>
+        <span><span is="button">item3 header</span>item3 content</span>
+        <span>item4</span>
+        <span>item5</span>
+    -->
 </i-select>
 ```
 
-Itags are special elements, because they have dedicated features:
+
+##initialization##
+
+Itags get initialized as soon as they enter the `DOM`, or when they are already in the `DOM`, by means of the `module-code`, which inspects the DOM and initializes all appropriate `itags`. The initialization-process is something that will depend on the module-code of the corresponding `itag`.
+
+The `innercontent` of the itag can be processed during initialization. The innercontent **should always be specified as a `comment-node`**. This is unfortunatly the only fully predictable way of passing through nodes as data inside a custom-element, see [this issue](https://github.com/Polymer/polymer/issues/1180).
+
+##State##
+
+The `state` of the itag is determined by some (not necessay all) attributes, as well as anything the itag might bind from the innercontent. The `state` is set into the Element-instance with the property: `model`. That is,you can access (or change) the state with element.model:
+
+###Example changing state###
+```html
+<i-select id="my-select" value="2">
+    <!--
+        <span>item1</span>
+        <span>item2</span>
+        <span><span is="button">item3 header</span>item3 content</span>
+        <span>item4</span>
+        <span>item5</span>
+    -->
+</i-select>
+```
+
+```js
+// change the selected to the fourth item:
+document.getElement('#my-select').model.value = 4;
+```
+
+You should look at the `itag`'s documentation about its `API`.
+
 
 ##Features##
+
+Itags are special elements, because they have dedicated features:
 
 * Inner nodes are not accessible through javascript (except from i-parcel)
 * Unidirect dataflow: element.model is leading
@@ -56,11 +91,89 @@ The `sync`-method should be used to re-set any innerNodes. Because `itags` are u
 ###Object.observe###
 `Object.observe` on element.model is the prefered way of keeping the itags up to date. At this moment only supported by Chrome and Opera. Whenever element.model changes, the according itag-instance will update its relevant attributes and will invoke its sync-method.
 
+
 ###Finilazer###
 For browsers that do not support this `Object.observe`, we make use of a special feature: a `finilizer`. What happens is that after every eventcycle (either Event, XHR or setTimeout) all itags will refresh in a same way that Object.observe did for its own instance. This may seem heavy, but refreshing is done by the vdom using diffing: nothing will change if there is nothing to change. We choosed this way of keeping up to date, because it is preferable above polling for changes in the modeldata (which could consist a huge numer of objects considering large arrays). There is no wasted polling and there won't be any missing updates: <u>changes in modeldata don't come out of the blue</u> --> they always happen after the eventcycle needed to perform some action.
 
 Some dom-events are likely to not effect any element.model data. To enlighten the system, these events do not lead into a direct resyncing of the itags, but are delayed to happen only once a second. Read more about these events (and how to make them directly resync) here..
 
+
+##Using nested itags##
+Itags can be setup nested. To come over with the issue of `uncommenting comment`, the inner-definitions should be setup with different HTML-comment: `<!==` instead of `<!--` and `==>` instead of `-->`:
+
+####Example nested itag:####
+```html
+<i-form class="i-aligned">
+    <!--
+        <i-select value="2" i-prop="selectvalue">
+            <!==
+                <span>item1</span>
+                <span>item2</span>
+                <span><span is="button">item3 header</span>item3 content</span>
+                <span>item4</span>
+                <span>item5</span>
+            ==>
+        </i-select>
+    -->
+</i-form>
+```
+
+
+##Binding external data##
+
+Itag-instances hold their state at: element-instance.`model`. However, you can easily use an external object and set this at the element's model. This can be done with:         `document.bindModel(model, cssselector)`:
+
+####Example binding object####
+```html
+<i-tabpane id="my-tabpane">
+    <!--
+        <section>Content first page</section>
+        <section>Content second page</section>
+        <section>Content third page</section>
+    -->
+</i-tabpane>
+```
+
+```js
+var controlModel = {
+    pane: 2
+};
+
+// bind the model and set the tab to the second:
+document.bindModel(controlModel, 'my-tabpane');
+
+// set the tab to the third index:
+controlModel.pane = 3;
+```
+
+**All itags are life-synced with their model**, so the update happens immediately
+
+###Prevent initial setup###
+In the example above, the itag will be rendered at its first time, making the first tab selected. After binding the model, the second tab gets selected, which will lead to flickering of the tabpane. To prevent this, you could try to use `document.bindModel()` before the itag is on the page, but that only works when content is updated later.
+
+A better way to let rendering wait for the model, is by set the attribute: `bound-model="true"`:
+####Example binding object with delayed rendering####
+```html
+<i-tabpane id="my-tabpane" bound-model="true">
+    <!--
+        <section>Content first page</section>
+        <section>Content second page</section>
+        <section>Content third page</section>
+    -->
+</i-tabpane>
+```
+
+```js
+var controlModel = {
+    pane: 2
+};
+
+// bind the model and set the tab to the second:
+document.bindModel(controlModel, 'my-tabpane');
+
+// set the tab to the third index:
+controlModel.pane = 3;
+```
 
 
 #Developing a new Itag#
@@ -79,8 +192,6 @@ In either case, the basic skeleton look like this (example is based upon `create
 ```js
 module.exports = function (window) {
     "use strict";
-
-    require('polyfill/polyfill-base.js');
 
     var itagCore =  require('itags.core')(window),
         itagName = 'i-yourname', // <-- define your own itag-name here
@@ -204,7 +315,7 @@ var MyIFormClass = document.createItag('i-myform', {
 });
 ```
 
-* **init** {Function} the initialisation method: this method gets invoked once on creation of the itag. This is the place to setup. You might create an itag that reads (and destroys) innerHTML and put it into element.model.someporperty. Needs no returnvalue.
+* **init** {Function} the initialisation method: this method gets invoked once on creation of the itag. This is the place to setup. You might create an itag that reads (and destroys) innerHTML and put it into element.model.someproperty. The `innercontent` of the `HTML` -which is setup as a comment-node- is available with **this.getDesignNode()** --> this is a container-node with inner-content as true HTML-elements which can be queried. Needs no returnvalue.
 
 * **sync** {Function} This is the method that gets invoked on every element.model change. You should process element.model data and update parts of the element.innerHTML here. Needs no returnvalue.
 Note: within the sync-method, you can set any attribute on the itag-element <u>except</u> those defined by `attrs` --> the attributes are bound to element.model and are life-updated by themselves.
@@ -557,15 +668,11 @@ Below is the full code of an early version if `i-select`, which illustrates how 
 
 ####Example i-select module####
 ```js
-require('polyfill/polyfill-base.js');
-require('js-ext/lib/string.js');
-require('css');
 require('./css/i-select.css');
 
 var NATIVE_OBJECT_OBSERVE = !!Object.observe,
     CLASS_ITAG_RENDERED = 'itag-rendered',
-    utils = require('utils'),
-    laterSilent = utils.laterSilent;
+    laterSilent = ITSA.laterSilent;
 
 module.exports = function (window) {
     "use strict";
@@ -577,13 +684,11 @@ module.exports = function (window) {
         DOCUMENT = window.document,
         HIDDEN = 'itsa-hidden',
         SHOW = 'i-select-show',
-        Event, Itag;
+        Event = ITSA.Event,
+        Itag;
 
     if (!window.ITAGS[itagName]) {
-        Event = require('event-dom')(window);
-        require('focusmanager')(window);
-        require('i-item')(window);
-        require('i-head')(window);
+        IFormElement = require('i-formelement')(window);
 
         Event.before(itagName+':manualfocus', function(e) {
             // the i-select itself is unfocussable, but its button is
@@ -593,40 +698,13 @@ module.exports = function (window) {
             // so we don't bother that
             var element = e.target;
             e.preventDefault();
-            // cautious: the element might get focus before it is rendered
-            // therefore, we wait until it is ready:
             element.itagReady().then(
                 function() {
                     var button = element.getElement('button');
-                    button && button.focus();
+                    button && button.focus(true, true);
                 }
             );
         });
-
-        Event.after('blur', function(e) {
-            // the i-select itself is unfocussable, but its button is
-            // we need to patch `manualfocus`,
-            // which is emitted on node.focus()
-            // a focus by userinteraction will always appear on the button itself
-            // so we don't bother that
-            var element = e.target,
-                model;
-            e.preventRender();
-            // cautious:  all child-elements that have `manualfocus` event are
-            // subscribed as well: we NEED to inspect e.target and only continue.
-            //
-            // I didn;t figure out why, but it seems we need `later`
-            // in order to make the i-select prevent from acting unpredictable.
-            // maybe because of the responsetime of the click-event
-            laterSilent(function() {
-                // if e.target===i-select
-                if ((element.getTagName()==='I-SELECT') && !element.hasClass('focussed')) {
-                    model = element.model;
-                    model.expanded = false;
-                    NATIVE_OBJECT_OBSERVE || DOCUMENT.refreshItags();
-                }
-            },350);
-        }, 'i-select');
 
         Event.before('keydown', function(e) {
             if (e.keyCode===40) {
@@ -635,37 +713,82 @@ module.exports = function (window) {
             }
         }, 'i-select > button');
 
-        // CAUTIOUS: it seems `tap` will be subscribed 8 times!!!
-        // TODO: figure out why not once
-        Event.after(['click', 'keydown'], function(e) {
+        Event.before('tap', function(e) {
+            // prevent nested focusmanager (parent) to refocus on the button:
+            e._noFocus = true;
+        }, 'i-select > button');
+
+        Event.after(['tap', 'keydown'], function(e) {
             var element = e.target.getParent(),
-                expanded, value, liNodes, focusNode, model;
-            if ((e.type==='click') || (e.keyCode===40)) {
-                (e.keyCode===40) && e.preventDefault();
+                e_type = e.type,
+                model, ulNode, liNode, inactive;
+            if ((e_type==='tap') || (e.keyCode===40)) {
                 model = element.model;
-                expanded = model.expanded;
-                value = element.model.value;
-                if (!expanded) {
-                    liNodes = element.getAll('ul[fm-manage] > li');
-                    focusNode = liNodes[value-1];
-                    focusNode && focusNode.focus();
+                if (e.keyCode===40) {
+                    e.preventDefault();
+                    model.expanded = true;
                 }
-                model.expanded = !expanded;
+                else {
+                    inactive = element.hasData('_suppressClose');
+                    if (inactive) {
+                        console.warn('not reacting to '+e_type+'-event: button is in pauzed state');
+                        return;
+                    }
+                    model.expanded = !model.expanded;
+                    if (!model.expanded) {
+                        liNode = element.getElement('ul[fm-manage] >li[fm-defaultitem]');
+                        liNode && liNode.focus(true);
+                    }
+                }
+                if (model.expanded) {
+                    ulNode = element.getElement('ul[fm-manage]');
+                    ulNode && ulNode.focus(true);
+                }
+                if (model.expanded || (e_type==='tap')) {
+                    element.setData('_suppressClose', true);
+                    laterSilent(function() {
+                        element.removeData('_suppressClose');
+                    }, SUPPRESS_DELAY);
+                    // ulNode = element.getElement('ul[fm-manage]');
+                    // ulNode && ulNode.focus(true);
+                }
             }
         }, 'i-select > button');
 
-        // CAUTIOUS: it seems `tap` will be subscribed 8 times!!!
-        // TODO: figure out why not once
-        Event.after(['click', 'keypress'], function(e) {
+        Event.after(['tap', 'keypress'], function(e) {
             var liNode = e.target,
-                element, index, model;
-            if ((e.type==='click') || (e.keyCode===13)) {
+                e_type = e.type,
+                element, index, ulNode, model, inactive;
+            if ((e_type==='tap') || (e.keyCode===13)) {
                 element = liNode.inside('i-select');
                 model = element.model;
-                index = liNode.getParent().getAll('li').indexOf(liNode);
-                model.expanded = false;
-                model.value = index+1;
-                element.getElement('button').focus();
+                // check for model.expanded --> a hidden selectbox might react on an enterpress
+                if (model.expanded) {
+                    inactive = element.hasData('_suppressClose');
+                    if (inactive) {
+                        console.warn('not reacting to '+e_type+'-event: button is in pauzed state');
+                        return;
+                    }
+                    model = element.model;
+                    ulNode = liNode.getParent();
+                    index = ulNode.getAll('li').indexOf(liNode);
+                    model.expanded = false;
+                    model.value = index+1;
+                    if (e_type==='tap') {
+                        element.setData('_suppressClose', true);
+                        laterSilent(function() {
+                            element.removeData('_suppressClose');
+                        }, SUPPRESS_DELAY);
+                        ulNode = element.getElement('ul[fm-manage]');
+                        ulNode && ulNode.focus(true);
+                    }
+                    // prevent that the focus will be reset to the focusmanager
+                    // when re-synced --> we want the focus on the button:
+                    ulNode.removeClass('focussed');
+                    asyncSilent(function() {
+                        element.focus(true);
+                    });
+                }
             }
         }, 'i-select ul[fm-manage] > li');
 
@@ -673,7 +796,7 @@ module.exports = function (window) {
              .unPreventable()
              .noRender();
 
-        Event.after('*:change', function(e) {
+        Event.after(itagName+':change', function(e) {
             var element = e.target,
                 prevValue = element.getData('i-select-value'),
                 model = element.model,
@@ -681,7 +804,6 @@ module.exports = function (window) {
                 markValue;
             if (prevValue!==newValue) {
                 markValue = newValue - 1;
-
                 /**
                 * Emitted when a the i-select changes its value
                 *
@@ -702,9 +824,23 @@ module.exports = function (window) {
                 });
             }
             element.setData('i-select-value', newValue);
-        }, itagCore.itagFilter);
+        });
 
-        Itag = DOCUMENT.createItag(itagName, {
+        Itag = IFormElement.subClass(itagName, {
+            /*
+             *
+             * @property attrs
+             * @type Object
+             * @since 0.0.1
+            */
+            attrs: {
+                expanded: 'boolean',
+                disabled: 'boolean',
+                value: 'string',
+                'i-prop': 'string',
+                'invalid-value': 'string'
+            },
+
            /**
             * Redefines the childNodes of both the vnode as well as its related dom-node. The new
             * definition replaces any previous nodes. (without touching unmodified nodes).
@@ -719,27 +855,27 @@ module.exports = function (window) {
             */
             init: function() {
                 var element = this,
-                    itemNodes = element.getAll('>i-item'),
+                    designNode = element.getDesignNode(),
+                    itemNodes = designNode.getAll('>span'),
                     items = [],
                     buttonTexts = [],
                     content;
                 itemNodes.forEach(function(node, i) {
-                    var header = node.getElement('i-head');
+                    var header = node.getElement('span[is="button"]');
                     if (header) {
                         buttonTexts[i] = header.getHTML();
-                        header.remove(true);
                     }
-                    items[items.length] = node.getHTML();
+                    items[items.length] = node.getHTML(header);
                 });
 
-                element.model.items = items;
-                element.model.buttonTexts = buttonTexts;
+                element.defineWhenUndefined('items', items)
+                       .defineWhenUndefined('buttonTexts', buttonTexts);
 
                 // store its current value, so that valueChange-event can fire:
                 element.setData('i-select-value', element.model.value);
 
                 // building the template of the itag:
-                content = '<button class="pure-button pure-button-bordered"><div class="pointer"></div><div class="btntext"></div></button>';
+                content = '<button><div class="pointer"></div><div class="btntext"></div></button>';
                 // first: outerdiv which will be relative positioned
                 // next: innerdiv which will be absolute positioned
                 // also: hide the container by default --> updateUI could make it shown
@@ -748,30 +884,34 @@ module.exports = function (window) {
                                '<ul fm-manage="li" fm-keyup="38" fm-keydown="40" fm-noloop="true"></ul>';
                              '</div>'+
                            '</div>';
+
+                element.setupEvents();
                 // set the content:
                 element.setHTML(content);
             },
 
-            /*
-             * Internal hash containing all DOM-events that are listened for (at `document`).
-             *
-             * DOMEvents = {
-             *     'click': callbackFn,
-             *     'mousemove': callbackFn,
-             *     'keypress': callbackFn
-             * }
-             *
-             * @property DOMEvents
-             * @default {}
-             * @type Object
-             * @private
-             * @since 0.0.1
-            */
-            attrs: {
-                expanded: 'boolean',
-                'primary-button': 'boolean',
-                value: 'string',
-                'invalid-value': 'string'
+            setupEvents: function() {
+                var element = this;
+                Event.after('tapoutside', function(e) {
+                    // at the end of the eventstack: give `tapoutside` a way to set the '_suppressClose'-data when needed
+                    // just async will do
+                    asyncSilent(function() {
+                        if (!element.hasData('_suppressClose') && !element.contains(e.sourceTarget)) {
+                            element.model.expanded = false;
+                            DOCUMENT.refreshItags();
+                        }
+                    });
+                }, 'i-select');
+                element.selfAfter('blurnode', function() {
+                    // at the end of the eventstack: give `blurnode` a way to set the '_suppressClose'-data when needed
+                    // need a bit more time because there is time inbetween the blur vs click events
+                    laterSilent(function() {
+                        if (!element.hasData('_suppressClose')) {
+                            element.model.expanded = false;
+                            DOCUMENT.refreshItags();
+                        }
+                    }, DELAY_BLURCLOSE);
+                });
             },
 
            /**
@@ -794,14 +934,13 @@ module.exports = function (window) {
                 // be aware that before ending, this method can run again
                 // if you do, then make sure to handle possible running
                 // async actions well !!!
-
                 var element = this,
                     model = element.model,
-                    items = model.items,
+                    items = model.items || [],
                     buttonTexts = model.buttonTexts,
                     value = model.value,
                     item, content, buttonText, len, i, markValue,
-                    button, container, itemsContainer, renderedBefore, hiddenTimer;
+                    button, container, itemsContainer, hiddenTimer;
 
                 len = items.length;
                 (value>len) && (value=0);
@@ -816,14 +955,12 @@ module.exports = function (window) {
 
                 // rebuild the button:
                 button = element.getElement('button');
-                button.toggleClass('pure-button-primary', model['primary-button']);
+                button.toggleClass('i-nonexpandable', (len<2));
                 button.getElement('div.btntext').setHTML(buttonText);
 
-                // show or hide the content, note that when not rendered before, you should use transitions
-                renderedBefore = element.hasClass(CLASS_ITAG_RENDERED);
                 container = element.getElement('>div');
 
-                if (model.expanded) {
+                if (model.expanded && !model.disabled && (len>1)) {
                     hiddenTimer = container.getData('_hiddenTimer');
                     hiddenTimer && hiddenTimer.cancel();
                     container.setClass(SHOW);
@@ -842,15 +979,17 @@ module.exports = function (window) {
                 content = '';
                 for (i=0; i<len; i++) {
                     item = items[i];
-                    content += '<li'+((i===markValue) ? ' class="selected"' : '')+'>'+item+'</li>';
+                    content += '<li'+((i===markValue) ? ' class="selected" fm-defaultitem="true"' : '')+'>'+item+'</li>';
                 }
 
                 // set the items:
-                itemsContainer.setHTML(content);
+                itemsContainer.setHTML(content, true);
             }
         });
 
-        Itag.setItagDirectEventResponse(['blur', 'keypress']);
+        itagCore.setDirectEventResponse(Itag, ['keypress', 'keydown']);
+
+        window.ITAGS[itagName] = Itag;
     }
 
     return window.ITAGS[itagName];

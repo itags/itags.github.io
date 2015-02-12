@@ -238,8 +238,6 @@ module.exports = function (window) {
         Event = require(&#x27;event-mobile&#x27;)(window);
         require(&#x27;event-dom/extra/blurnode.js&#x27;)(window);
         require(&#x27;focusmanager&#x27;)(window);
-        require(&#x27;i-item&#x27;)(window);
-        require(&#x27;i-head&#x27;)(window);
 
         IFormElement = require(&#x27;i-formelement&#x27;)(window);
 
@@ -264,6 +262,11 @@ module.exports = function (window) {
                 // prevent minus windowscroll:
                 e.preventDefaultContinue();
             }
+        }, &#x27;i-select &gt; button&#x27;);
+
+        Event.before(&#x27;tap&#x27;, function(e) {
+            // prevent nested focusmanager (parent) to refocus on the button:
+            e._noFocus = true;
         }, &#x27;i-select &gt; button&#x27;);
 
         Event.after([&#x27;tap&#x27;, &#x27;keydown&#x27;], function(e) {
@@ -297,8 +300,8 @@ module.exports = function (window) {
                     laterSilent(function() {
                         element.removeData(&#x27;_suppressClose&#x27;);
                     }, SUPPRESS_DELAY);
-                    ulNode = element.getElement(&#x27;ul[fm-manage]&#x27;);
-                    ulNode &amp;&amp; ulNode.focus(true);
+                    // ulNode = element.getElement(&#x27;ul[fm-manage]&#x27;);
+                    // ulNode &amp;&amp; ulNode.focus(true);
                 }
             }
         }, &#x27;i-select &gt; button&#x27;);
@@ -352,7 +355,6 @@ module.exports = function (window) {
                 markValue;
             if (prevValue!==newValue) {
                 markValue = newValue - 1;
-
                 /**
                 * Emitted when a the i-select changes its value
                 *
@@ -384,8 +386,9 @@ module.exports = function (window) {
             */
             attrs: {
                 expanded: &#x27;boolean&#x27;,
+                disabled: &#x27;boolean&#x27;,
                 value: &#x27;string&#x27;,
-                prop: &#x27;string&#x27;,
+                &#x27;i-prop&#x27;: &#x27;string&#x27;,
                 &#x27;invalid-value&#x27;: &#x27;string&#x27;
             },
 
@@ -403,17 +406,17 @@ module.exports = function (window) {
             */
             init: function() {
                 var element = this,
-                    itemNodes = element.getAll(&#x27;&gt;i-item&#x27;),
+                    designNode = element.getDesignNode(),
+                    itemNodes = designNode.getAll(&#x27;&gt;span&#x27;),
                     items = [],
                     buttonTexts = [],
                     content;
                 itemNodes.forEach(function(node, i) {
-                    var header = node.getElement(&#x27;i-head&#x27;);
+                    var header = node.getElement(&#x27;span[is=&quot;button&quot;]&#x27;);
                     if (header) {
                         buttonTexts[i] = header.getHTML();
-                        header.remove(true);
                     }
-                    items[items.length] = node.getHTML();
+                    items[items.length] = node.getHTML(header);
                 });
 
                 element.defineWhenUndefined(&#x27;items&#x27;, items)
@@ -423,7 +426,7 @@ module.exports = function (window) {
                 element.setData(&#x27;i-select-value&#x27;, element.model.value);
 
                 // building the template of the itag:
-                content = &#x27;&lt;button class=&quot;focusable&quot;&gt;&lt;div class=&quot;pointer&quot;&gt;&lt;/div&gt;&lt;div class=&quot;btntext&quot;&gt;&lt;/div&gt;&lt;/button&gt;&#x27;;
+                content = &#x27;&lt;button&gt;&lt;div class=&quot;pointer&quot;&gt;&lt;/div&gt;&lt;div class=&quot;btntext&quot;&gt;&lt;/div&gt;&lt;/button&gt;&#x27;;
                 // first: outerdiv which will be relative positioned
                 // next: innerdiv which will be absolute positioned
                 // also: hide the container by default --&gt; updateUI could make it shown
@@ -475,7 +478,6 @@ module.exports = function (window) {
             * @since 0.0.1
             */
             sync: function() {
-console.warn(&#x27;syncing i-select&#x27;);
                 // inside sync, YOU CANNOT change attributes which are part of &#x60;attrs&#x60; !!!
                 // those actions will be ignored.
 
@@ -485,7 +487,7 @@ console.warn(&#x27;syncing i-select&#x27;);
                 // async actions well !!!
                 var element = this,
                     model = element.model,
-                    items = model.items,
+                    items = model.items || [],
                     buttonTexts = model.buttonTexts,
                     value = model.value,
                     item, content, buttonText, len, i, markValue,
@@ -504,11 +506,12 @@ console.warn(&#x27;syncing i-select&#x27;);
 
                 // rebuild the button:
                 button = element.getElement(&#x27;button&#x27;);
+                button.toggleClass(&#x27;i-nonexpandable&#x27;, (len&lt;2));
                 button.getElement(&#x27;div.btntext&#x27;).setHTML(buttonText);
 
                 container = element.getElement(&#x27;&gt;div&#x27;);
 
-                if (model.expanded) {
+                if (model.expanded &amp;&amp; !model.disabled &amp;&amp; (len&gt;1)) {
                     hiddenTimer = container.getData(&#x27;_hiddenTimer&#x27;);
                     hiddenTimer &amp;&amp; hiddenTimer.cancel();
                     container.setClass(SHOW);

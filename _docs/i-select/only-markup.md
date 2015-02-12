@@ -3,35 +3,22 @@ module: i-select
 maintainer: Marco Asbreuk
 title: i-select by markup
 intro: ""
+includeexample: 20em
 ---
-
-<i-select value="2" class="i-primary">
-    <i-item>item1</i-item>
-    <i-item>item2</i-item>
-    <i-item><i-head>item3 header</i-head>item3 content</i-item>
-    <i-item>item4</i-item>
-    <i-item>item5</i-item>
-</i-select>
-
-<i-select value="2">
-    <i-item>item1</i-item>
-    <i-item>item2</i-item>
-    <i-item><i-head>item3 header</i-head>item3 content</i-item>
-    <i-item>item4</i-item>
-    <i-item>item5</i-item>
-</i-select>
 
 <p>Code-example:</p>
 
 
 ```html
 <body>
-    <i-select value="2" primary-button="true">
-        <i-item>item1</i-item>
-        <i-item>item2</i-item>
-        <i-item><i-head>item3 header</i-head>item3 content</i-item>
-        <i-item>item4</i-item>
-        <i-item>item5</i-item>
+    <i-select value="2" class="i-primary">
+    <!--
+        <span>item1</span>
+        <span>item2</span>
+        <span><span is="button">item3 header</span>item3 content</span>
+        <span>item4</span>
+        <span>item5</span>
+    -->
     </i-select>
 </body>
 ```
@@ -43,9 +30,3 @@ intro: ""
     document.getElement('i-select').focus();
 </script>
 ```
-
-<script src="../../dist/itagsbuild.js"></script>
-<script>
-    require('itags');
-    document.getElement('i-select').focus();
-</script>

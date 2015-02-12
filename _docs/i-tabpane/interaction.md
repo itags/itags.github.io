@@ -3,6 +3,7 @@ module: i-tabpane
 maintainer: Marco Asbreuk
 title: interact with i-tabpane
 intro: ""
+includeexample: 20em
 ---
 
 

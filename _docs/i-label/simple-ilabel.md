@@ -1,9 +1,9 @@
 ---
-module: i-form
+module: i-label
 maintainer: Marco Asbreuk
-title: Simple i-form
+title: Simple i-label
 intro: ""
-includeexample: 110em
+includeexample: 10m
 ---
 
 <p>Code-example:</p>

@@ -3,6 +3,7 @@ module: i-tabpane
 maintainer: Marco Asbreuk
 title: i-tabpane by markup
 intro: ""
+includeexample: 20em
 ---
 
 <style type="text/css">
@@ -10,11 +11,11 @@ intro: ""
 </style>
 
 <i-tabpane pane="2">
-    <i-item>Content first page</i-item>
-    <i-item>Content second page</i-item>
-    <i-item><i-head>item3 header</i-head>page 3</i-item>
-    <i-item>Content fourth page</i-item>
-    <i-item>Content fifth page</i-item>
+    <section>Content first page</section>
+    <section>Content second page</section>
+    <section><span is="tab">item3 header</span>page 3</section>
+    <section>Content fourth page</section>
+    <section>Content fifth page</section>
 </i-tabpane>
 
 <div id="test"></div>
@@ -24,11 +25,11 @@ intro: ""
 ```html
 <body>
     <i-tabpane>
-        <i-item>Content first page</i-item>
-        <i-item>Content second page</i-item>
-        <i-item><i-head>item3 header</i-head>page 3</i-item>
-        <i-item>Content fourth page</i-item>
-        <i-item>Content fifth page</i-item>
+        <section>Content first page</section>
+        <section>Content second page</section>
+        <section><i-head>item3 header</i-head>page 3</section>
+        <section>Content fourth page</section>
+        <section>Content fifth page</section>
     </i-tabpane>
 </body>
 ```

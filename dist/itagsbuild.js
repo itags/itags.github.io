@@ -586,9 +586,22 @@ module.exports = function (window) {
             lastFocussed = e.target;
         });
 
+
+        // patching DOCUMENT.activeElement because it doesn't work well in a Mac: https://developer.mozilla.org/en-US/docs/Web/API/document.activeElement
+        // DOCUMENT._activeElement is used with the patch for DOCUMENT.activeElement its getter
         Event.after('focus', function() {
-            // DOCUMENT._activeElement is used with the patch for DOCUMENT.activeElement its getter
-            DOCUMENT._activeElement = lastFocussed;
+                DOCUMENT._activeElement = lastFocussed;
+        });
+
+        Event.before('blur', function() {
+                DOCUMENT._activeElement = null;
+        });
+
+        // Note: window.document has no prototype
+        Object.defineProperty(DOCUMENT, 'activeElement', {
+            get: function() {
+                return DOCUMENT._activeElement || DOCUMENT.body;
+            }
         });
 
     };
@@ -3126,7 +3139,7 @@ require('../lib/object.js');
                     // if nameInProto: set the property, but also backup for chaining using $$orig
                     propDescriptor = Object.getOwnPropertyDescriptor(prototypes, name);
                     if (!propDescriptor.writable) {
-                        console.warn(NAME+'mergePrototypes will set property of '+name+' without its property-descriptor: for it is an unwritable property.');
+                        console.info(NAME+'mergePrototypes will set property of '+name+' without its property-descriptor: for it is an unwritable property.');
                         proto[finalName] = prototypes[name];
                     }
                     else {
@@ -6531,16 +6544,7 @@ module.exports = function (window) {
     // prevent double definition:
     window._ITSAmodules.ExtendDocument = true;
 
-    var DOCUMENT = window.document,
-        activeElementBKP = DOCUMENT.activeElement;
-
-    // Note: window.document has no prototype
-
-    Object.defineProperty(DOCUMENT, 'activeElement', {
-        get: function() {
-            return DOCUMENT._activeElement || activeElementBKP;
-        }
-    });
+    var DOCUMENT = window.document;
 
     /**
      * Returns a newly created TreeWalker object.
@@ -8259,7 +8263,8 @@ module.exports = function (window) {
         ElementPrototype.compareDocumentPosition = function(otherElement) {
             // see http://ejohn.org/blog/comparing-document-position/
             var instance = this,
-                parent, index1, index2, vChildNodes;
+                parent, index1, index2, vChildNodes, vnode, otherVNode,
+                i_instance, i_other, sameLevel, arrayInstance, arrayOther;
             if (instance===otherElement) {
                 return 0;
             }
@@ -8274,27 +8279,71 @@ module.exports = function (window) {
             }
             parent = instance.getParent();
             vChildNodes = parent.vnode.vChildNodes;
-            index1 = vChildNodes.indexOf(instance.vnode);
-            index2 = vChildNodes.indexOf(otherElement.vnode);
+            vnode = instance.vnode;
+            otherVNode = otherElement.vnode;
+            index1 = vChildNodes.indexOf(vnode);
+            index2 = vChildNodes.indexOf(otherVNode);
+            if ((index1!==-1) && (index2!==-1)) {
+                if (index1<index2) {
+                    return 4;
+                }
+                else {
+                    return 2;
+                }
+            }
+            // still not found, now we need to inspect the tree-structure of both elements
+            // and determine at what point (up-down the tree) the elements are going to differ
+            arrayInstance = [];
+            arrayOther = [];
+            arrayInstance[0] = vnode;
+/*jshint boss:true */
+            while (vnode=vnode.vParent) {
+/*jshint boss:false */
+                arrayInstance[arrayInstance.length] = vnode;
+            }
+            arrayOther[0] = otherVNode;
+/*jshint boss:true */
+            while (otherVNode=otherVNode.vParent) {
+/*jshint boss:false */
+                arrayOther[arrayOther.length] = otherVNode;
+            }
+            i_instance = arrayInstance.length - 1;
+            i_other = arrayOther.length - 1;
+            sameLevel = true;
+            while (sameLevel && (i_instance>=0) && (i_other>=0)) {
+                // starts with the most upper element
+                vnode = arrayInstance[i_instance];
+                otherVNode = arrayOther[i_other];
+                sameLevel = (vnode===otherVNode);
+                i_instance--;
+                i_other--;
+            }
+            // now we are out and we should be able to compare `vnode` and `otherVNode` which lie at the same level though are different
+            parent = vnode.vParent;
+            vChildNodes = parent.vChildNodes;
+            index1 = vChildNodes.indexOf(vnode);
+            index2 = vChildNodes.indexOf(otherVNode);
             if (index1<index2) {
-                return 2;
+                return 4;
             }
             else {
-                return 4;
+                return 2;
             }
         };
 
         /**
-         * Indicating whether this Element contains OR equals otherElement.
+         * Indicating whether this Element contains OR equals otherElement. If you need only to be sure the other Element lies inside,
+         * but not equals itself, set `excludeItself` true.
          *
          * @method contains
          * @param otherElement {Element}
+         * @param [excludeItself] {Boolean} to exclude itsefl as a hit
          * @param [insideItags=false] {Boolean} no deepsearch in iTags --> by default, these elements should be hidden
          * @return {Boolean} whether this Element contains OR equals otherElement.
          */
-        ElementPrototype.contains = function(otherElement, insideItags) {
+        ElementPrototype.contains = function(otherElement, excludeItself, insideItags) {
             if (otherElement===this) {
-                return true;
+                return !excludeItself;
             }
             return this.vnode.contains(otherElement.vnode, !insideItags);
         };
@@ -8380,11 +8429,18 @@ module.exports = function (window) {
          *
          * @method first
          * @param [cssSelector] {String} to return the first Element that matches the css-selector
+         * @param [container] {HTMLElement} the container-element to search within --> this lead into searching out of the same level
          * @return {Element}
          * @since 0.0.1
          */
-        ElementPrototype.first = function(cssSelector) {
-            return this.vnode.vParent.firstOfVChildren(cssSelector).domNode;
+        ElementPrototype.first = function(cssSelector, container) {
+            var parent, firstV;
+            if (container) {
+                return container.querySelector(cssSelector);
+            }
+            parent = this.vnode.vParent;
+            firstV = parent && parent.firstOfVChildren(cssSelector);
+            return firstV && firstV.domNode;
         };
 
         /**
@@ -8654,7 +8710,7 @@ module.exports = function (window) {
          */
         ElementPrototype.getElementById = function(id, insideItags) {
             var element = nodeids[id];
-            if (element && !this.contains(element, insideItags)) {
+            if (element && !this.contains(element, true, insideItags)) {
                 // outside itself
                 return null;
             }
@@ -9015,8 +9071,7 @@ module.exports = function (window) {
         * @since 0.0.1
         */
         ElementPrototype.hasFocusInside = function() {
-            var activeElement = DOCUMENT.activeElement;
-            return ((DOCUMENT.activeElement!==this) && this.contains(activeElement));
+            return this.contains(DOCUMENT.activeElement, true);
         };
 
        /**
@@ -9138,7 +9193,7 @@ module.exports = function (window) {
             if (this.vnode.removedFromDOM) {
                 return false;
             }
-            return DOCUMENT.contains(this, true);
+            return DOCUMENT.contains(this, false, true);
         };
 
        /**
@@ -9219,12 +9274,19 @@ module.exports = function (window) {
          *
          * @method last
          * @param [cssSelector] {String} to return the last Element that matches the css-selector
+         * @param [container] {HTMLElement} the container-element to search within --> this lead into searching out of the same level
          * @return {Element}
          * @since 0.0.1
          */
-        ElementPrototype.last = function(cssSelector) {
-            var vParent = this.vnode.vParent;
-            return vParent && vParent.lastOfVChildren(cssSelector).domNode;
+        ElementPrototype.last = function(cssSelector, container) {
+            var vParent, lastV, found;
+            if (container) {
+                found = container.querySelectorAll(cssSelector);
+                return found[found.length-1];
+            }
+            vParent = this.vnode.vParent;
+            lastV = vParent && vParent.lastOfVChildren(cssSelector);
+            return lastV && lastV.domNode;
         };
 
         /**
@@ -9271,13 +9333,17 @@ module.exports = function (window) {
          *
          * @method next
          * @param [cssSelector] {String} css-selector to be used as a filter
+         * @param [container] {HTMLElement} the container-element to search within --> this lead into searching out of the same level
          * @return {Element|null}
          * @type Element
          * @since 0.0.1
          */
-        ElementPrototype.next = function(cssSelector) {
+        ElementPrototype.next = function(cssSelector, container) {
             var vnode = this.vnode,
                 found, vNextElement, firstCharacter, i, len;
+            if (container) {
+                return container.querySelector(cssSelector, false, this, 2) || null;
+            }
             if (!cssSelector) {
                 vNextElement = vnode.vNextElement;
                 return vNextElement && vNextElement.domNode;
@@ -9360,13 +9426,18 @@ module.exports = function (window) {
          *
          * @method previous
          * @param [cssSelector] {String} css-selector to be used as a filter
+         * @param [container] {HTMLElement} the container-element to search within --> this lead into searching out of the same level
          * @return {Element|null}
          * @type Element
          * @since 0.0.1
          */
-        ElementPrototype.previous = function(cssSelector) {
+        ElementPrototype.previous = function(cssSelector, container) {
             var vnode = this.vnode,
                 found, vPreviousElement, firstCharacter, i, len;
+            if (container) {
+                found = container.querySelectorAll(cssSelector, false, this, 4);
+                return (found.length>0) ? found[found.length-1] :  null;
+            }
             if (!cssSelector) {
                 vPreviousElement = vnode.vPreviousElement;
                 return vPreviousElement && vPreviousElement.domNode;
@@ -9397,24 +9468,33 @@ module.exports = function (window) {
          * @method querySelector
          * @param selectors {String} CSS-selector(s) that should match
          * @param [insideItags=false] {Boolean} no deepsearch in iTags --> by default, these elements should be hidden
+         * @param [refNode] {HTMLElement} reference-node where the found node should be `before` or `after`: specified by domPosition
+         * @param [domPosition] {Number} The position to accept, compared to `refNode`. Should be either:
+         * <ul>
+         *     <li>Node.DOCUMENT_POSITION_PRECEDING === 2 (this Element comes before otherElement)</li>
+         *     <li>Node.DOCUMENT_POSITION_FOLLOWING === 4 (this Element comes after otherElement)</li>
+         * </ul>
          * @return {Element}
          */
-        ElementPrototype.querySelector = function(selectors, insideItags) {
+        ElementPrototype.querySelector = function(selectors, insideItags, refNode, domPosition) {
             var found,
                 i = -1,
-                len = selectors.length,
-                firstCharacter, startvnode,
                 thisvnode = this.vnode,
-                inspectChildren = function(vnode) {
-                    var vChildren = vnode.vChildren,
-                        len2 = vChildren ? vChildren.length : 0,
-                        j, vChildNode;
-                    for (j=0; (j<len2) && !found; j++) {
-                        vChildNode = vChildren[j];
-                        vChildNode.matchesSelector(selectors, thisvnode) && (found=vChildNode.domNode);
-                        found || (!insideItags && vChildNode.isItag && vChildNode.domNode.contentHidden) || inspectChildren(vChildNode); // not dive into itags (except from when content is not hidden)
+                len, firstCharacter, startvnode, inspectChildren;
+            selectors || (selectors='*');
+            len = selectors.length;
+            inspectChildren = function(vnode) {
+                var vChildren = vnode.vChildren,
+                    len2 = vChildren ? vChildren.length : 0,
+                    j, vChildNode;
+                for (j=0; (j<len2) && !found; j++) {
+                    vChildNode = vChildren[j];
+                    if (vChildNode.matchesSelector(selectors, thisvnode) && (!refNode || ((vChildNode.domNode.compareDocumentPosition(refNode) & domPosition)!==0))) {
+                        found = vChildNode.domNode;
                     }
-                };
+                    found || (!insideItags && vChildNode.isItag && vChildNode.domNode.contentHidden) || inspectChildren(vChildNode); // not dive into itags (except from when content is not hidden)
+                }
+            };
             while (!firstCharacter && (++i<len)) {
                 firstCharacter = selectors[i];
                 (firstCharacter===' ') && (firstCharacter=null);
@@ -9433,24 +9513,33 @@ module.exports = function (window) {
          * @method querySelectorAll
          * @param selectors {String} CSS-selector(s) that should match
          * @param [insideItags=false] {Boolean} no deepsearch in iTags --> by default, these elements should be hidden
+         * @param [refNode] {HTMLElement} reference-node where the found nodes should be `before` or `after`: specified by domPosition
+         * @param [domPosition] {Number} The position to accept, compared to `refNode`. Should be either:
+         * <ul>
+         *     <li>Node.DOCUMENT_POSITION_PRECEDING === 2 (this Element comes before otherElement)</li>
+         *     <li>Node.DOCUMENT_POSITION_FOLLOWING === 4 (this Element comes after otherElement)</li>
+         * </ul>
          * @return {ElementArray} non-life Array (snapshot) with Elements
          */
-        ElementPrototype.querySelectorAll = function(selectors, insideItags) {
+        ElementPrototype.querySelectorAll = function(selectors, insideItags, refNode, domPosition) {
             var found = ElementArray.createArray(),
                 i = -1,
-                len = selectors.length,
-                firstCharacter, startvnode,
                 thisvnode = this.vnode,
-                inspectChildren = function(vnode) {
-                    var vChildren = vnode.vChildren,
-                        len2 = vChildren ? vChildren.length : 0,
-                        j, vChildNode;
-                    for (j=0; j<len2; j++) {
-                        vChildNode = vChildren[j];
-                        vChildNode.matchesSelector(selectors, thisvnode) && (found[found.length]=vChildNode.domNode);
-                        (!insideItags && vChildNode.isItag && vChildNode.domNode.contentHidden) || inspectChildren(vChildNode); // not dive into itags
+                len, firstCharacter, startvnode, inspectChildren;
+            selectors || (selectors='*');
+            len = selectors.length,
+            inspectChildren = function(vnode) {
+                var vChildren = vnode.vChildren,
+                    len2 = vChildren ? vChildren.length : 0,
+                    j, vChildNode;
+                for (j=0; j<len2; j++) {
+                    vChildNode = vChildren[j];
+                    if (vChildNode.matchesSelector(selectors, thisvnode) && (!refNode || ((vChildNode.domNode.compareDocumentPosition(refNode) & domPosition)!==0))) {
+                        found[found.length] = vChildNode.domNode;
                     }
-                };
+                    (!insideItags && vChildNode.isItag && vChildNode.domNode.contentHidden) || inspectChildren(vChildNode); // not dive into itags
+                }
+            };
             while (!firstCharacter && (++i<len)) {
                 firstCharacter = selectors[i];
                 (firstCharacter===' ') && (firstCharacter=null);
@@ -12227,6 +12316,64 @@ var createHashMap = require('js-ext/extra/hashmap.js').createMap,
     },
 /*jshint proto:false */
     charToEntity = {},
+
+// Void Elements - HTML 4.01
+    DEFAULT_VOID = createHashMap({
+        AREA: true,
+        BASE: true,
+        BASEFONT: true,
+        BR: true,
+        COL: true,
+        FRAME: true,
+        HR: true,
+        IMG: true,
+        INPUT: true,
+        ISINDEX: true,
+        LINK: true,
+        META: true,
+        PARAM: true,
+        EMBED: true
+    }),
+
+    // Block Elements - HTML 4.01
+    DEFAULT_NON_BLOCK = createHashMap({
+        ADDRESS: true,
+        APPLET: true,
+        BLOCKQUITE: true,
+        BUTTON: true,
+        CENTER: true,
+        DD: true,
+        DEL: true,
+        DIR: true,
+        DIV: true,
+        DL: true,
+        DT: true,
+        FIELDSET: true,
+        FORM: true,
+        FRAMESET: true,
+        IFRAME: true,
+        INS: true,
+        ISINDEX: true,
+        LI: true,
+        MAP: true,
+        MENU: true,
+        NOFRAMES: true,
+        NOSCRIPT: true,
+        OBJECT: true,
+        OL: true,
+        P: true,
+        PRE: true,
+        SCRIPT: true,
+        TABLE: true,
+        TBODY: true,
+        TD: true,
+        TFOOT: true,
+        TH: true,
+        THEAD: true,
+        TR: true,
+        UL: true
+    }),
+
     entityName;
 
 for (entityName in ENTITY_TO_CODE) {
@@ -12280,7 +12427,7 @@ module.exports = function (window) {
      * @type Object
      * @since 0.0.1
      */
-    NS.nonVoidElements || (NS.nonVoidElements=createHashMap());
+    NS.nonVoidElements || (NS.nonVoidElements=DEFAULT_NON_BLOCK);
 
     /**
      * A hash to identify what tagNames are equal to `SCRIPT` or `STYLE`.
@@ -12317,7 +12464,7 @@ module.exports = function (window) {
      * @type Object
      * @since 0.0.1
      */
-    NS.voidElements || (NS.voidElements=createHashMap());
+    NS.voidElements || (NS.voidElements=DEFAULT_VOID);
 
     NS.UnescapeEntities = function(str) {
         return str.replace(
@@ -12681,78 +12828,70 @@ module.exports = function (window) {
     _matchesOneSelector = function(vnode, selector, relatedVNode) {
         var selList = _splitSelector(selector),
             size = selList.length,
-            originalVNode = vnode,
-            firstSelectorChar = selector[0],
-            i, selectorItem, selMatch, directMatch, vParentvChildren, indexRelated;
+            selMatch = false,
+            i, selectorItem, last,
+            rightvnode, relationMatch, checkRelation;
 
-        if (size===0) {
+        if (STORABLE_SPLIT_CHARACTER[selList[size-1]]) {
             return false;
         }
 
-        selectorItem = selList[size-1];
-        selMatch = _matchesSelectorItem(vnode, selectorItem);
-        for (i=size-2; (selMatch && (i>=0)); i--) {
-            selectorItem = selList[i];
-            if (SIBLING_MATCH_CHARACTER[selectorItem]) {
-                // need to search through the same level
-                if (--i>=0) {
-                    directMatch = (selectorItem==='+');
-                    selectorItem = selList[i];
-                    // need to search the previous siblings
-                    vnode = vnode.vPreviousElement;
-                    if (!vnode) {
-                        return false;
-                    }
-                    if (directMatch) {
-                        // should be immediate match
-                        selMatch = _matchesSelectorItem(vnode, selectorItem);
-                    }
-                    else {
-                        while (vnode && !(selMatch=_matchesSelectorItem(vnode, selectorItem))) {
-                            vnode = vnode.vPreviousElement;
-                        }
-                    }
-                }
-            }
-            else {
-                // need to search up the tree
-                vnode = vnode.vParent;
-                if (!vnode || ((vnode===relatedVNode) && (selectorItem!=='>'))) {
-                    return false;
-                }
-                if (selectorItem==='>') {
-                    if (--i>=0) {
-                        selectorItem = selList[i];
-                       // should be immediate match
-                        selMatch = _matchesSelectorItem(vnode, selectorItem);
-                    }
-                }
-                else {
-                    while (!(selMatch=_matchesSelectorItem(vnode, selectorItem))) {
-                        vnode = vnode.vParent;
-                        if (!vnode || (vnode===relatedVNode)) {
-                            return false;
-                        }
-                    }
-                }
-            }
-        }
-        if (selMatch && relatedVNode && STORABLE_SPLIT_CHARACTER[firstSelectorChar]) {
+        relationMatch = function(leftVNode, rightVNode, relationCharacter) {
+            var match, vParent, vChildren;
             // when `selector` starts with `>`, `~` or `+`, then
             // there should also be a match comparing a related node!
-            switch (firstSelectorChar) {
+            switch (relationCharacter) {
                 case '>':
-                    selMatch = (relatedVNode.vChildren.indexOf(originalVNode)!==-1);
+                    leftVNode || (leftVNode=rightVNode.vParent);
+                    match = (leftVNode.vChildren.indexOf(rightVNode)!==-1);
                 break;
                 case '~':
-                    vParentvChildren = originalVNode.vParent.vChildren;
-                    indexRelated = vParentvChildren.indexOf(relatedVNode);
-                    selMatch = (indexRelated!==-1) && (indexRelated<vParentvChildren.indexOf(originalVNode));
+                    leftVNode || (leftVNode=rightVNode.vFirstElement);
+                    vParent = leftVNode.vParent;
+                    vChildren = vParent && vParent.vChildren;
+                    match = vParent && (vChildren.indexOf(leftVNode)<vChildren.indexOf(rightVNode));
                 break;
                 case '+':
-                    selMatch = (originalVNode.vPreviousElement === relatedVNode);
+                    leftVNode || (leftVNode=rightVNode.vPreviousElement);
+                    match = (leftVNode.vNextElement === rightVNode);
+            }
+            return !!match;
+        };
+        last = size - 1;
+        i = last;
+        while (vnode && ((selMatch || (i===last)) && (i>=0))) {
+            selectorItem = selList[i];
+            if (STORABLE_SPLIT_CHARACTER[selectorItem]) {
+                checkRelation = selectorItem;
+                i--;
+            }
+            else {
+                selMatch = _matchesSelectorItem(vnode, selectorItem);
+                if (!selMatch && (i===last)) {
+                    return false;
+                }
+                while (!selMatch && vnode && (i!==last)) {
+                    // may also look at nodes higher in the chain
+                    vnode = SIBLING_MATCH_CHARACTER[selList[i+1]] ? vnode.vPreviousElement : vnode.vParent;
+                    selMatch = vnode && _matchesSelectorItem(vnode, selectorItem);
+                }
+                selMatch && checkRelation && vnode && (selMatch=relationMatch(vnode, rightvnode, checkRelation));
+                rightvnode = vnode;
+                if (vnode) {
+                    // do a precheck on the next checkRelation:
+                    // and determine whether to set the vnode upper the tree or at the previous sibling:
+                    vnode = SIBLING_MATCH_CHARACTER[selList[i-1]] ? vnode.vPreviousElement : vnode.vParent;
+                }
+                if (selMatch) {
+                    checkRelation = false;
+                    i--;
+                }
             }
         }
+        if ((rightvnode===relatedVNode) || (i!==-1)) {
+            selMatch = false;
+        }
+        selMatch && checkRelation && rightvnode && (selMatch=relationMatch(relatedVNode, rightvnode, checkRelation));
         return selMatch;
     };
 
@@ -13286,8 +13425,17 @@ module.exports = function (window) {
             return (otherVNode===this);
         },
 
+       /**
+        * Empties the vnode.
+        *
+        * Syncs with the dom.
+        *
+        * @method empty
+        * @chainable
+        * @since 0.0.1
+        */
         empty: function() {
-            this._setChildNodes([]);
+            return this._setChildNodes([]);
         },
 
        /**
@@ -14180,7 +14328,7 @@ module.exports = function (window) {
                                 bkpChildNodes = newChild.vChildNodes;
                                 oldChild.attrs.id && (delete nodeids[oldChild.attrs.id]);
 /*jshint proto:true */
-                                oldChild.isItag && oldChild.domNode.destroyUI(PROTO_SUPPORTED ? null : newChild.__proto__.constructor);
+                                oldChild.isItag && oldChild.domNode.destroyUI && oldChild.domNode.destroyUI(PROTO_SUPPORTED ? null : newChild.__proto__.constructor);
 /*jshint proto:false */
                                 newChild.attrs = {}; // reset to force defined by `_setAttrs`
                                 newChild.vChildNodes = []; // reset , to force defined by `_setAttrs`
@@ -14230,7 +14378,7 @@ module.exports = function (window) {
                                     prevSuppress = DOCUMENT._suppressMutationEvents || false;
                                     DOCUMENT.suppressMutationEvents && DOCUMENT.suppressMutationEvents(true);
 /*jshint proto:true */
-                                    newChild.domNode.destroyUI(PROTO_SUPPORTED ? null : newChild.__proto__.constructor);
+                                    newChild.domNode.destroyUI && newChild.domNode.destroyUI(PROTO_SUPPORTED ? null : newChild.__proto__.constructor);
 /*jshint proto:false */
                                     oldChild._setAttrs(newChild.attrs);
                                     newChild._destroy(true); // destroy through the vnode and removing from DOCUMENT._itagList
@@ -17552,1378 +17700,7 @@ module.exports=require(17)
 },{}],159:[function(require,module,exports){
 module.exports=require(18)
 },{"./lib/matchesselector.js":157,"./lib/window.console.js":158}],160:[function(require,module,exports){
-(function (global){
-/**
- * Defines the Event-Class, which should be instantiated to get its functionality
- *
- *
- * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
- * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
- *
- *
- * @module event
- * @class Event
- * @constructor
- * @since 0.0.1
-*/
-
-require('polyfill/polyfill-base.js');
-require('js-ext/lib/object.js');
-
-var createHashMap = require('js-ext/extra/hashmap.js').createMap;
-
-// to prevent multiple Event instances
-// (which might happen: http://nodejs.org/docs/latest/api/modules.html#modules_module_caching_caveats)
-// we make sure Event is defined only once. Therefore we bind it to `global` and return it if created before
-
-
-(function (global, factory) {
-
-    "use strict";
-
-    global._ITSAmodules || Object.protectedProp(global, '_ITSAmodules', createHashMap());
-    global._ITSAmodules.Event || (global._ITSAmodules.Event = factory());
-
-    module.exports = global._ITSAmodules.Event;
-
-}(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this, function () {
-
-    "use strict";
-
-    var NAME = '[core-event]: ',
-        REGEXP_CUSTOMEVENT = /^((?:\w|-|#)+):((?:\w|-|#)+)$/,
-        WILDCARD_WILDCARD = '*:*',
-        REGEXP_WILDCARD_CUSTOMEVENT = /^(?:((?:(?:\w|-|#)+)|\*):)?((?:(?:\w|-|#)+)|\*)$/,
-        /* REGEXP_WILDCARD_CUSTOMEVENT :
-         *
-         * valid:
-         * 'red:save'
-         * 'red:*'
-         * '*:save'
-         * '*:*'
-         * 'save'
-         *
-         * invalid:
-         * '*red:save'
-         * 're*d:save'
-         * 'red*:save'
-         * 'red:*save'
-         * 'red:sa*ve'
-         * 'red:save*'
-         * ':save'
-         */
-        REGEXP_EMITTERNAME_WITH_SEMICOLON = /^((?:\w|-|#)+):/,
-        REGEXP_EVENTNAME_WITH_SEMICOLON = /:((?:\w|-|#)+)$/,
-        Event;
-
-    Event = {
-        /**
-         * Subscribes to a customEvent. The callback will be executed `after` the defaultFn.
-         *
-         * @static
-         * @method after
-         * @param customEvent {String|Array} the custom-event (or Array of events) to subscribe to. CustomEvents should
-         *        have the syntax: `emitterName:eventName`. Wildcard `*` may be used for both `emitterName` as well as `eventName`.
-         *        If `emitterName` is not defined, `UI` is assumed.
-         * @param callback {Function} subscriber:will be invoked when the event occurs. An `eventobject` will be passed
-         *        as its only argument.
-         * @param [context] {Object} the instance that subscribes to the event.
-         *        any object can passed through, even those are not extended with event-listener methods.
-         *        Note: Objects who are extended with listener-methods should use instance.after() instead.
-         * @param [filter] {String|Function} to filter the event.
-         *        Use a String if you want to filter DOM-events by a `selector`
-         *        Use a function if you want to filter by any other means. If the function returns a trully value, the
-         *        subscriber gets invoked. The function gets the `eventobject` as its only argument and the context is
-         *        the subscriber.
-         * @param [prepend=false] {Boolean} whether the subscriber should be the first in the list of after-subscribers.
-         * @return {Object} handler with a `detach()`-method which can be used to detach the subscriber
-         * @since 0.0.1
-        */
-        after: function(customEvent, callback, context, filter, prepend) {
-            console.log(NAME, 'add after subscriber to: '+customEvent);
-            return this._addMultiSubs(false, customEvent, callback, context, filter, prepend);
-        },
-
-        /**
-         * Subscribes to a customEvent. The callback will be executed `before` the defaultFn.
-         *
-         * @static
-         * @method before
-         * @param customEvent {String|Array} the custom-event (or Array of events) to subscribe to. CustomEvents should
-         *        have the syntax: `emitterName:eventName`. Wildcard `*` may be used for both `emitterName` as well as `eventName`.
-         *        If `emitterName` is not defined, `UI` is assumed.
-         * @param callback {Function} subscriber:will be invoked when the event occurs. An `eventobject` will be passed
-         *        as its only argument.
-         * @param [context] {Object} the instance that subscribes to the event.
-         *        any object can passed through, even those are not extended with event-listener methods.
-         *        Note: Objects who are extended with listener-methods should use instance.before() instead.
-         * @param [filter] {String|Function} to filter the event.
-         *        Use a String if you want to filter DOM-events by a `selector`
-         *        Use a function if you want to filter by any other means. If the function returns a trully value, the
-         *        subscriber gets invoked. The function gets the `eventobject` as its only argument and the context is
-         *        the subscriber.
-         * @param [prepend=false] {Boolean} whether the subscriber should be the first in the list of before-subscribers.
-         * @return {Object} handler with a `detach()`-method which can be used to detach the subscriber
-         * @since 0.0.1
-        */
-        before: function(customEvent, callback, context, filter, prepend) {
-            console.log(NAME, 'add before subscriber to: '+customEvent);
-            return this._addMultiSubs(true, customEvent, callback, context, filter, prepend);
-        },
-
-        /**
-         * Defines an emitterName into the instance (emitter).
-         * This will add a protected property `_emitterName` to the instance.
-         *
-         * @static
-         * @method defineEmitter
-         * @param emitter {Object} instance that should hold the emitterName
-         * @param emitterName {String} identifier that will be added when events are sent (`emitterName:eventName`)
-         * @since 0.0.1
-         */
-        defineEmitter: function (emitter, emitterName) {
-            console.log(NAME, 'defineEmitter: '+emitterName);
-            // ennumerable MUST be set `true` to enable merging
-            Object.defineProperty(emitter, '_emitterName', {
-                configurable: false,
-                enumerable: true,
-                writable: false,
-                value: emitterName
-            });
-        },
-
-        /**
-         * Defines a CustomEvent. If the eventtype already exists, it will not be overridden,
-         * unless you force to assign with `.forceAssign()`
-         *
-         * The returned object comes with 8 methods which can be invoked chainable:
-         *
-         * <ul>
-         *     <li>defaultFn() --> the default-function of the event</li>
-         *     <li>preventedFn() --> the function that should be invoked when the event is defaultPrevented</li>
-         *     <li>forceAssign() --> overrides any previous definition</li>
-         *     <li>unHaltable() --> makes the customEvent cannot be halted</li>
-         *     <li>unPreventable() --> makes the customEvent's defaultFn cannot be prevented</li>
-         *     <li>unSilencable() --> makes that emitters cannot make this event to perform silently (using e.silent)</li>
-         *     <li>unRenderPreventable() --> makes that the customEvent's render cannot be prevented</li>
-         *     <li>unFinalizePreventable() --> makes that the customEvent's finalizer cannot be prevented</li>
-         *     <li>noRender() --> prevents this customEvent from render the dom. Overrules unRenderPreventable()</li>
-         *     <li>noFinalize() --> prevents this customEvent from running its finalizer. Overrules unFinalizePreventable()</li>
-         * </ul>
-         *
-         * @static
-         * @method defineEvent
-         * @param customEvent {String} name of the customEvent conform the syntax: `emitterName:eventName`
-         * @return {Object} with extra methods that can be chained:
-         * <ul>
-         *      <li>unPreventable() --> makes the customEvent's defaultFn cannot be prevented</li>
-         *      <li>unRenderPreventable() --> makes that the customEvent's render cannot be prevented</li>
-         *      <li>unFinalizePreventable() --> makes that the customEvent's finalizer cannot be prevented/li>
-         *      <li>forceAssign() --> overrides any previous definition</li>
-         *      <li>defaultFn() --> the default-function of the event</li>
-         *      <li>preventedFn() --> the function that should be invoked when the event is defaultPrevented</li>
-         *      <li>forceAssign() --> overrides any previous definition</li>
-         *      <li>unHaltable() --> makes the customEvent cannot be halted</li>
-         *      <li>unSilencable() --> makes that emitters cannot make this event to perform silently (using e.silent)</li>
-         *      <li>noRender() --> prevents this customEvent from render the dom. Overrules unRenderPreventable()</li>
-         *      <li>noFinalize() --> prevents this customEvent from running its finalizer. Overrules unFinalizePreventable()</li>
-         * </ul>
-         * @since 0.0.1
-         */
-        defineEvent: function (customEvent) {
-            console.log(NAME, 'Events.defineEvent: '+customEvent);
-            var instance = this,
-                customevents = instance._ce,
-                extract, exists, newCustomEvent;
-
-            if (typeof customEvent!=='string') {
-                console.error(NAME, 'defineEvent should have a String-type as argument');
-                return;
-            }
-            extract = customEvent.match(REGEXP_CUSTOMEVENT);
-            if (!extract) {
-                console.error(NAME, 'defined Customevent '+customEvent+' does not match pattern');
-                return;
-            }
-            newCustomEvent = {
-                preventable: true,
-                renderPreventable: true,
-                finalizePreventable: true
-            };
-            exists = customevents[customEvent];
-            // if customEvent not yet exists, we can add it
-            // else, we might need to wait for `forceAssign` to be called
-            if (!exists) {
-                // we can add it
-                customevents[customEvent] = newCustomEvent;
-            }
-            return {
-                defaultFn: function(defFn) {
-                    newCustomEvent.defaultFn = defFn;
-                    return this;
-                },
-                preventedFn: function(prevFn) {
-                    newCustomEvent.preventedFn = prevFn;
-                    return this;
-                },
-                unHaltable: function() {
-                    newCustomEvent.unHaltable = true;
-                    return this;
-                },
-                unSilencable: function() {
-                    newCustomEvent.unSilencable = true;
-                    return this;
-                },
-                unPreventable: function() {
-                    newCustomEvent.unPreventable = true;
-                    return this;
-                },
-                unRenderPreventable: function() {
-                    newCustomEvent.unRenderPreventable = true;
-                    return this;
-                },
-                unFinalizePreventable: function() {
-                    newCustomEvent.unFinalizePreventable = true;
-                    return this;
-                },
-                noRender: function() {
-                    newCustomEvent.noRender = true;
-                    return this;
-                },
-                noFinalize: function() {
-                    newCustomEvent.noFinalize = true;
-                    return this;
-                },
-                forceAssign: function() {
-                    // only needed when not yet added:
-                    // exists || (customevents[customEvent]=newCustomEvent);
-                    customevents[customEvent] = newCustomEvent;
-                    return this;
-                }
-            };
-        },
-
-        /**
-         * Detaches (unsubscribes) the listener from the specified customEvent.
-         *
-         * @static
-         * @method detach
-         * @param [listener] {Object} The instance that is going to detach the customEvent.
-         *        When not passed through (or undefined), all customevents of all instances are detached
-         * @param customEvent {String} conform the syntax: `emitterName:eventName`, wildcard `*` may be used for both
-         *        `emitterName` as well as only `eventName`, in which case 'UI' will become the emitterName.
-         *        Can be set as the only argument.
-         * @since 0.0.1
-        */
-        detach: function(listener, customEvent) {
-            console.log('detach instance-subscriber: '+customEvent);
-            // (typeof listener === 'string') means: only `customEvent` passed through
-            (typeof listener === 'string') ? this._removeSubscribers(undefined, listener) : this._removeSubscribers(listener, customEvent);
-        },
-
-        /**
-         * Detaches (unsubscribes) the listener from all customevents.
-         *
-         * @static
-         * @method detachAll
-         * @param listener {Object} The instance that is going to detach the customEvent
-         * @since 0.0.1
-        */
-        detachAll: function(listener) {
-            console.log(NAME, 'detach '+(listener ? 'all instance-' : 'ALL')+' subscribers');
-            var instance = this;
-            if (listener) {
-                instance._removeSubscribers(listener, '*:*');
-            }
-            else {
-                // we cannot just redefine _subs, for it is set as readonly
-                instance._subs.each(
-                    function(value, key) {
-                        delete instance._subs[key];
-                    }
-                );
-            }
-        },
-
-        /**
-         * Emits the event `eventName` on behalf of `emitter`, which becomes e.target in the eventobject.
-         * During this process, all subscribers and the defaultFn/preventedFn get an eventobject passed through.
-         * The eventobject is created with at least these properties:
-         *
-         * <ul>
-         *     <li>e.target --> source that triggered the event (instance or DOM-node), specified by `emitter`</li>
-         *     <li>e.type --> eventName</li>
-         *     <li>e.emitter --> emitterName</li>
-         *     <li>e.status --> status-information:
-         *          <ul>
-         *               <li>e.status.ok --> `true|false` whether the event got executed (not halted or defaultPrevented)</li>
-         *               <li>e.status.defaultFn (optional) --> `true` if any defaultFn got invoked</li>
-         *               <li>e.status.preventedFn (optional) --> `true` if any preventedFn got invoked</li>
-         *               <li>e.status.rendered (optional) --> `true` the vDOM rendered the dom</li>
-         *               <li>e.status.finalized (optional) --> `true` ran its finalizer</li>
-         *               <li>e.status.halted (optional) --> `reason|true` if the event got halted and optional the why</li>
-         *               <li>e.status.defaultPrevented (optional) -->  `reason|true` if the event got defaultPrevented and optional the why</li>
-         *               <li>e.status.renderPrevented (optional) -->  `reason|true` if the event got renderPrevented and optional the why</li>
-         *               <li>e.status.finalizePrevented (optional) -->  `reason|true` if the event got finalizePrevented and optional the why</li>
-         *          </ul>
-         *     </li>
-         * </ul>
-         *
-         * The optional `payload` is merged into the eventobject and could be used by the subscribers and the defaultFn/preventedFn.
-         * If payload.silent is set true, the subscribers are not getting invoked: only the defaultFn.
-         *
-         * The eventobject also has these methods:
-         *
-         * <ul>
-         *     <li>e.halt() --> stops immediate all actions: no mer subscribers are invoked, no defaultFn/preventedFn</li>
-         *     <li>e.preventDefault() --> instead of invoking defaultFn, preventedFn will be invoked. No aftersubscribers</li>
-         *     <li>e.preventRender() --> by default, any event will trigger the vDOM (if exists) to re-render, this can be prevented by calling e.preventRender()</li>
-         *     <li>e.preventFinalize() --> by default, any event will endup running the finalizer, this can be prevented by calling e.preventFinalize()</li>
-         * </ul>
-         *
-         * <ul>
-         *     <li>First, before-subscribers are invoked: this is the place where you might call `e.halt()`, `a.preventDefault()`, `e.preventRender() or `e.preventFinalize()`</li>
-         *     <li>Next, defaultFn or preventedFn gets invoked, depending on whether e.halt() or a.preventDefault() has been called</li>
-         *     <li>Next, after-subscribers get invoked (unless e.halt() or a.preventDefault() has been called)</li>
-         *     <li>Finally, the finalization takes place: any subscribers are invoked, unless e.halt() or a.preventDefault() has been called</li>
-         * <ul>
-         *
-         * @static
-         * @method emit
-         * @param [emitter] {Object} instance that emits the events
-         * @param customEvent {String} Full customEvent conform syntax `emitterName:eventName`.
-         *        `emitterName` is available as **e.emitter**, `eventName` as **e.type**.
-         * @param payload {Object} extra payload to be added to the event-object
-         * @return {Object|undefined} eventobject or undefined when the event was halted or preventDefaulted.
-         * @since 0.0.1
-         */
-        emit: function (emitter, customEvent, payload) {
-            var instance = this;
-            if (typeof emitter === 'string') {
-                // emit is called with signature emit(customEvent, payload)
-                // thus the source-emitter is the Event-instance
-                payload = customEvent;
-                customEvent = emitter;
-                emitter = instance;
-            }
-            return instance._emit(emitter, customEvent, payload);
-        },
-
-        /**
-         * Adds a subscriber to the finalization-cycle, which happens after the after-subscribers.
-         * Only get invoked when the cycle was not preventDefaulted or halted.
-         *
-         * @method finalize
-         * @param finallySubscriber {Function} callback to be invoked
-         *        Function recieves the eventobject as its only argument
-         * @return {Object} handler with a `detach()`-method which can be used to detach the subscriber
-         * @since 0.0.1
-         */
-        finalize: function (finallySubscriber) {
-            console.log(NAME, 'finalize');
-            var finalHash = this._final;
-            finalHash.push(finallySubscriber);
-            return {
-                detach: function() {
-                    console.log(NAME, 'detach finalizer');
-                    var index = finalHash.indexOf(finallySubscriber);
-                    (index===-1) || finalHash.splice(index, 1);
-                }
-            };
-        },
-
-        /**
-         * Creates a notifier for the customEvent.
-         * You can use this to create delayed `defineEvents`. When the customEvent is called, the callback gets invoked
-         * (even before the subsrcibers). Use this callback for delayed customEvent-definitions.
-         *
-         * You may use wildcards for both emitterName and eventName.
-
-         * You **must** specify the full `emitterName:eventName` syntax.
-         * The module `core-event-dom` uses `notify` to auto-define DOM-events (UI:*).
-         *
-         * @static
-         * @method notify
-         * @param customEvent {String|Array} the custom-event (or Array of events) to subscribe to. CustomEvents should
-         *        have the syntax: `emitterName:eventName`. Wildcard `*` may be used only  for`eventName`.
-         *        If `emitterName` should be defined.
-         * @param callback {Function} subscriber: will be invoked when the customEvent is called (before any subscribers.
-         *                 Recieves 2 arguments: the `customEvent` and `subscriber-object`.
-         * @param context {Object} context of the callback
-         * @param [once=false] {Boolean} whether the subscriptions should be removed after the first invokation
-         * @chainable
-         * @since 0.0.1
-        */
-        notify: function(customEvent, callback, context, once) {
-console.warn('notify');
-            console.log(NAME, 'notify');
-            var i, len, ce;
-            Array.isArray(customEvent) || (customEvent=[customEvent]);
-            len = customEvent.length;
-            for (i=0; i<len; i++) {
-                ce = customEvent[i];
-                this._notifiers[ce] = {
-                    cb: callback,
-                    o: context,
-                    r: once // r = remove automaticly
-                };
-            }
-            return this;
-        },
-
-        /**
-         * Creates a detach-notifier for the customEvent.
-         * You can use this to get informed whenever a subscriber detaches.
-         *
-         * Use **no** wildcards for the emitterName. You might use wildcards for the eventName. Without wildcards, the
-         * notification will be unNotified (callback automaticly detached) on the first time the event occurs.
-
-         * You **must** specify the full `emitterName:eventName` syntax.
-         * The module `core-event-dom` uses `notify` to auto-define DOM-events (UI:*).
-         *
-         * @static
-         * @method notifyDetach
-         * @param customEvent {String|Array} the custom-event (or Array of events) to subscribe to. CustomEvents should
-         *        have the syntax: `emitterName:eventName`. Wildcard `*` may be used only  for`eventName`.
-         *        If `emitterName` should be defined.
-         * @param callback {Function} subscriber: will be invoked when the customEvent is called (before any subscribers.
-         *                 Recieves 1 arguments: the `customEvent`.
-         * @param context {Object} context of the callback
-         * @param [once=false] {Boolean} whether the subscriptions should be removed after the first invokation
-         * @chainable
-         * @since 0.0.1
-        */
-        notifyDetach: function(customEvent, callback, context, once) {
-            console.log(NAME, 'notifyDetach');
-            var i, len, ce;
-            Array.isArray(customEvent) || (customEvent=[customEvent]);
-            len = customEvent.length;
-            for (i=0; i<len; i++) {
-                ce = customEvent[i];
-                this._detachNotifiers[ce] = {
-                    cb: callback,
-                    o: context,
-                    r: once // r = remove automaticly
-                };
-            }
-            return this;
-        },
-
-        /**
-         * Subscribes to a customEvent. The callback will be executed `after` the defaultFn.
-         * The subscriber will be automaticly removed once the callback executed the first time.
-         * No need to `detach()` (unless you want to undescribe before the first event)
-         *
-         * @static
-         * @method onceAfter
-         * @param customEvent {String|Array} the custom-event (or Array of events) to subscribe to. CustomEvents should
-         *        have the syntax: `emitterName:eventName`. Wildcard `*` may be used for both `emitterName` as well as `eventName`.
-         *        If `emitterName` is not defined, `UI` is assumed.
-         * @param callback {Function} subscriber:will be invoked when the event occurs. An `eventobject` will be passed
-         *        as its only argument.
-         * @param [context] {Object} the instance that subscribes to the event.
-         *        any object can passed through, even those are not extended with event-listener methods.
-         *        Note: Objects who are extended with listener-methods should use instance.onceAfter() instead.
-         * @param [filter] {String|Function} to filter the event.
-         *        Use a String if you want to filter DOM-events by a `selector`
-         *        Use a function if you want to filter by any other means. If the function returns a trully value, the
-         *        subscriber gets invoked. The function gets the `eventobject` as its only argument and the context is
-         *        the subscriber.
-         * @param [prepend=false] {Boolean} whether the subscriber should be the first in the list of after-subscribers.
-         * @return {Object} handler with a `detach()`-method which can be used to detach the subscriber
-         * @since 0.0.1
-        */
-        onceAfter: function(customEvent, callback, context, filter, prepend) {
-            var instance = this,
-                handler, wrapperFn;
-            console.log(NAME, 'add onceAfter subscriber to: '+customEvent);
-            wrapperFn = function(e) {
-                // CAUTIOUS: removeing the handler right now would lead into a mismatch of the dispatcher
-                // who loops through the array of subscribers!
-                // therefore, we must remove once the eventcycle has finished --> we detach by setting it
-                // at the end of the global-eventstack:
-                // yet there still is a change that the event is called multiple times BEFORE it
-                // will reach the defined `setTimeout` --> to avoid multiple invocations, handler is
-                // extended with the property `_detached`
-                handler._detached  || callback.call(this, e);
-                handler._detached = true;
-                setTimeout(function() {handler.detach();}, 0);
-            };
-            handler = instance._addMultiSubs(false, customEvent, wrapperFn, context, filter, prepend);
-            return handler;
-        },
-
-        /**
-         * Subscribes to a customEvent. The callback will be executed `before` the defaultFn.
-         * The subscriber will be automaticly removed once the callback executed the first time.
-         * No need to `detach()` (unless you want to undescribe before the first event)
-         *
-         * @static
-         * @method onceBefore
-         * @param customEvent {String|Array} the custom-event (or Array of events) to subscribe to. CustomEvents should
-         *        have the syntax: `emitterName:eventName`. Wildcard `*` may be used for both `emitterName` as well as `eventName`.
-         *        If `emitterName` is not defined, `UI` is assumed.
-         * @param callback {Function} subscriber:will be invoked when the event occurs. An `eventobject` will be passed
-         *        as its only argument.
-         * @param [context] {Object} the instance that subscribes to the event.
-         *        any object can passed through, even those are not extended with event-listener methods.
-         *        Note: Objects who are extended with listener-methods should use instance.onceBefore() instead.
-         * @param [filter] {String|Function} to filter the event.
-         *        Use a String if you want to filter DOM-events by a `selector`
-         *        Use a function if you want to filter by any other means. If the function returns a trully value, the
-         *        subscriber gets invoked. The function gets the `eventobject` as its only argument and the context is
-         *        the subscriber.
-         * @param [prepend=false] {Boolean} whether the subscriber should be the first in the list of before-subscribers.
-         * @return {Object} handler with a `detach()`-method which can be used to detach the subscriber
-         * @since 0.0.1
-        */
-        onceBefore: function(customEvent, callback, context, filter, prepend) {
-            var instance = this,
-                handler, wrapperFn;
-            console.log(NAME, 'add onceBefore subscriber to: '+customEvent);
-            wrapperFn = function(e) {
-                // CAUTIOUS: removeing the handler right now would lead into a mismatch of the dispatcher
-                // who loops through the array of subscribers!
-                // therefore, we must remove once the eventcycle has finished --> we detach by setting it
-                // at the end of the global-eventstack.
-                // yet there still is a change that the event is called multiple times BEFORE it
-                // will reach the defined `setTimeout` --> to avoid multiple invocations, handler is
-                // extended with the property `_detached`
-                handler._detached  || callback.call(this, e);
-                handler._detached = true;
-                setTimeout(function() {handler.detach();}, 0);
-            };
-            handler = instance._addMultiSubs(true, customEvent, wrapperFn, context, filter, prepend);
-            return handler;
-        },
-
-        /**
-         * Runs all registered finalizers. Sets `e.finalized` true if none of the finalizers turns e.silent into `true`
-         * and thus every single finalizer got invoked.
-         *
-         * @static
-         * @method runFinalizers
-         * @param e {Object} eventobject
-         * @since 0.0.2
-         */
-        runFinalizers: function(e) {
-console.warn('runFinalizers');
-            var allFinalized = true;
-            this._final.some(function(finallySubscriber) {
-                !e.silent && finallySubscriber(e);
-                if (e.status && e.status.unSilencable && e.silent) {
-                    console.warn(NAME, ' event '+e.emitter+':'+e.type+' cannot made silent: this customEvent is defined as unSilencable');
-                    e.silent = false;
-                }
-                allFinalized = !e.silent;
-                return !allFinalized;
-            });
-            e.finalized = allFinalized;
-        },
-
-        /**
-         * Removes all event-definitions of an emitter, specified by its `emitterName`.
-         * When `emitterName` is not set, ALL event-definitions will be removed.
-         *
-         * @static
-         * @method undefAllEvents
-         * @param [emitterName] {String} name of the customEvent conform the syntax: `emitterName:eventName`
-         * @since 0.0.1
-         */
-        undefAllEvents: function (emitterName) {
-            console.log(NAME, 'undefAllEvents');
-            var instance = this,
-                pattern;
-            if (emitterName) {
-                pattern = new RegExp('^'+emitterName+':');
-                instance._ce.each(
-                    function(value, key) {
-                        key.match(pattern) && (delete instance._ce[key]);
-                    }
-                );
-            }
-            else {
-                instance._ce.each(
-                    function(value, key) {
-                        delete instance._ce[key];
-                    }
-                );
-            }
-        },
-
-        /**
-         * Removes the event-definition of the specified customEvent.
-         *
-         * @static
-         * @method undefEvent
-         * @param customEvent {String} name of the customEvent conform the syntax: `emitterName:eventName`
-         * @since 0.0.1
-         */
-        undefEvent: function (customEvent) {
-            console.log(NAME, 'undefEvent '+customEvent);
-            delete this._ce[customEvent];
-        },
-
-        /**
-         * unNotifies (unsubscribes) the notifier of the specified customEvent.
-         *
-         * @static
-         * @method unNotify
-         * @param customEvent {String} conform the syntax: `emitterName:eventName`.
-         * @since 0.0.1
-        */
-        unNotify: function(customEvent) {
-            console.log(NAME, 'unNotify '+customEvent);
-            delete this._notifiers[customEvent];
-        },
-
-        /**
-         * unNotifies (unsubscribes) the detach-notifier of the specified customEvent.
-         *
-         * @static
-         * @method unNotifyDetach
-         * @param customEvent {String} conform the syntax: `emitterName:eventName`.
-         * @since 0.0.1
-        */
-        unNotifyDetach: function(customEvent) {
-            console.log(NAME, 'unNotifyDetach '+customEvent);
-            delete this._detachNotifiers[customEvent];
-        },
-
-        //====================================================================================================
-        // private methods:
-        //====================================================================================================
-
-        /**
-         * Creates a subscriber to the specified customEvent. The customEvent must conform the syntax:
-         * `emitterName:eventName`. Wildcard `*` may be used for both `emitterName` as well as `eventName`
-         * If `emitterName` is not defined, `UI` is assumed.
-         *
-         * Examples of valid customevents:
-         *
-         * <ul>
-         *     <li>'redmodel:save'</li>
-         *     <li>'UI:tap'</li>
-         *     <li>'tap' --> alias for 'UI:tap'</li>
-         *     <li>'`*`:click' --> careful: will listen to both UIs and non-UI- click-events</li>
-         *     <li>'redmodel:`*`'</li>
-         *     <li>'`*`:`*`'</li>
-         * </ul>
-         *
-         * @static
-         * @method _addMultiSubs
-         * @param before {Boolean} whether the subscriber is a `before` subscriber. On falsy, an `after`-subscriber is assumed.
-         * @param customEvent {Array} Array of Strings. customEvent should conform the syntax: `emitterName:eventName`, wildcard `*`
-         *         may be used for both `emitterName` as well as only `eventName`, in which case 'UI' will become the emitterName.
-         * @param callback {Function} subscriber to the event.
-         * @param listener {Object} Object that creates the subscriber (and will be listening by `listener.after(...)`)
-         * @param [filter] {String|Function} to filter the event.
-         *        Use a String if you want to filter DOM-events by a `selector`
-         *        Use a function if you want to filter by any other means. If the function returns a trully value, the
-         *        subscriber gets invoked. The function gets the `eventobject` as its only argument and the context is
-         *        the subscriber.
-         * @param [prepend=false] {Boolean} whether to make the subscriber the first in the list. By default it will pe appended.
-         * @return {Object} handler with a `detach()`-method which can be used to detach the subscriber
-         * @private
-         * @since 0.0.1
-        */
-        _addMultiSubs: function(before, customEvent, callback, listener, filter, prepend) {
-            console.log(NAME, '_addMultiSubs');
-            var instance = this,
-                subscribers;
-            if ((typeof listener === 'string') || (typeof listener === 'function')) {
-                prepend = filter;
-                filter = listener;
-                listener = null;
-            }
-            else if (typeof listener === 'boolean') {
-                prepend = listener;
-                filter = null;
-                listener = null;
-            }
-            if ((typeof filter==='boolean') || (typeof filter===undefined) || (typeof filter===null)) {
-                // filter was not set, instead `prepend` is set at this position
-                prepend = filter;
-                filter = null;
-            }
-            if (!Array.isArray(customEvent)) {
-                return instance._addSubscriber(listener, before, customEvent, callback, filter, prepend);
-            }
-            subscribers = [];
-            customEvent.forEach(
-                function(ce) {
-                    subscribers.push(instance._addSubscriber(listener, before, ce, callback, filter, prepend));
-                }
-            );
-            return {
-                detach: function() {
-                    subscribers.each(
-                        function(subscriber) {
-                            subscriber.detach();
-                        }
-                    );
-                }
-            };
-        },
-
-        /**
-         * Creates a subscriber to the specified customEvent. The customEvent must conform the syntax:
-         * `emitterName:eventName`. Wildcard `*` may be used for both `emitterName` as well as `eventName`
-         * If `emitterName` is not defined, `UI` is assumed.
-         *
-         * Examples of valid customevents:
-         *
-         * <ul>
-         *     <li>'redmodel:save'</li>
-         *     <li>'UI:tap'</li>
-         *     <li>'tap' --> alias for 'UI:tap'</li>
-         *     <li>'`*`:click' --> careful: will listen to both UIs and non-UI- click-events</li>
-         *     <li>'redmodel:`*`'</li>
-         *     <li>'`*`:`*`'</li>
-         * </ul>
-         *
-         * @static
-         * @method _addSubscriber
-         * @param listener {Object} Object that creates the subscriber (and will be listening by `listener.after(...)`)
-         * @param before {Boolean} whether the subscriber is a `before` subscriber. On falsy, an `after`-subscriber is assumed.
-         * @param customEvent {String} conform the syntax: `emitterName:eventName`, wildcard `*` may be used for both
-         *        `emitterName` as well as only `eventName`, in which case 'UI' will become the emitterName.
-         * @param callback {Function} subscriber to the event.
-         * @param [filter] {String|Function} to filter the event.
-         *        Use a String if you want to filter DOM-events by a `selector`
-         *        Use a function if you want to filter by any other means. If the function returns a trully value, the
-         *        subscriber gets invoked. The function gets the `eventobject` as its only argument and the context is
-         *        the subscriber.
-         * @param [prepend=false] {Boolean} whether to make the subscriber the first in the list. By default it will pe appended.
-         * @return {Object} handler with a `detach()`-method which can be used to detach the subscriber
-         * @private
-         * @since 0.0.1
-        */
-        _addSubscriber: function(listener, before, customEvent, callback, filter, prepend) {
-            var instance = this,
-                allSubscribers = instance._subs,
-                extract = customEvent.match(REGEXP_WILDCARD_CUSTOMEVENT),
-                hashtable, item, notifier, customEventWildcardEventName, customEventWildcardEmitterName;
-
-            if (!extract) {
-                console.error(NAME, 'subscribe-error: eventname does not match pattern');
-                return;
-            }
-
-            item = {
-                o: listener || instance,
-                cb: callback,
-                f: filter
-            };
-
-            // if extract[1] is undefined, a simple customEvent is going to subscribe (without :)
-            // therefore: recomposite customEvent:
-            extract[1] || (customEvent='UI:'+customEvent);
-
-            // if extract[1] === 'this', then a listener to its own emitterName is supposed
-            if (extract[1]==='this') {
-                if (listener._emitterName) {
-                    customEvent = listener._emitterName+':'+extract[2];
-                    item.s = true; // s --> self
-                }
-                else {
-                    console.error(NAME, 'subscribe-error: "this" cannot be detemined because the object is no emitter');
-                    return;
-                }
-            }
-
-            allSubscribers[customEvent] || (allSubscribers[customEvent]={});
-            if (before) {
-                allSubscribers[customEvent].b || (allSubscribers[customEvent].b=[]);
-            }
-            else {
-                allSubscribers[customEvent].a || (allSubscribers[customEvent].a=[]);
-            }
-
-            hashtable = allSubscribers[customEvent][before ? 'b' : 'a'];
-            // we need to be able to process an array of customevents
-
-            // in case of a defined subscription (no wildcard), we should look for notifiers
-            if ((extract[1]!=='*') && (extract[2]!=='*')) {
-                // before subscribing: we might need to activate notifiers --> with defined eventName should also be cleaned up:
-                notifier = instance._notifiers[customEvent];
-                if (notifier) {
-                    notifier.cb.call(notifier.o, customEvent, item);
-                    if (notifier.r) {
-                        delete instance._notifiers[customEvent];
-                    }
-                }
-                // check the same for wildcard eventName:
-                customEventWildcardEventName = customEvent.replace(REGEXP_EVENTNAME_WITH_SEMICOLON, ':*');
-                if ((customEventWildcardEventName !== customEvent) && (notifier=instance._notifiers[customEventWildcardEventName])) {
-                    notifier.cb.call(notifier.o, customEvent, item);
-                    if (notifier.r) {
-                        delete instance._notifiers[customEvent];
-                    }
-                }
-                // check the same for wildcard emitterName:
-                customEventWildcardEmitterName = customEvent.replace(REGEXP_EMITTERNAME_WITH_SEMICOLON, '*:');
-                if ((customEventWildcardEmitterName !== customEvent) && (notifier=instance._notifiers[customEventWildcardEmitterName])) {
-                    notifier.cb.call(notifier.o, customEvent, item);
-                    if (notifier.r) {
-                        delete instance._notifiers[customEvent];
-                    }
-                }
-                // check the same for wildcard emitterName and eventName:
-                if ((WILDCARD_WILDCARD !== customEvent) && (notifier=instance._notifiers[WILDCARD_WILDCARD])) {
-                    notifier.cb.call(notifier.o, customEvent, item);
-                    if (notifier.r) {
-                        delete instance._notifiers[customEvent];
-                    }
-                }
-            }
-
-            console.log(NAME, '_addSubscriber to customEvent: '+customEvent);
-            prepend ? hashtable.unshift(item) : hashtable.push(item);
-
-            return {
-                detach: function() {
-                    instance._removeSubscriber(listener, before, customEvent, callback);
-                }
-            };
-        },
-
-        /**
-         * Emits the event `eventName` on behalf of `emitter`, which becomes e.target in the eventobject.
-         * During this process, all subscribers and the defaultFn/preventedFn get an eventobject passed through.
-         * The eventobject is created with at least these properties:
-         *
-         * <ul>
-         *     <li>e.target --> source that triggered the event (instance or DOM-node), specified by `emitter`</li>
-         *     <li>e.type --> eventName</li>
-         *     <li>e.emitter --> emitterName</li>
-         *     <li>e.status --> status-information:
-         *          <ul>
-         *               <li>e.status.ok --> `true|false` whether the event got executed (not halted or defaultPrevented)</li>
-         *               <li>e.status.defaultFn (optional) --> `true` if any defaultFn got invoked</li>
-         *               <li>e.status.preventedFn (optional) --> `true` if any preventedFn got invoked</li>
-         *               <li>e.status.rendered (optional) --> `true` the vDOM rendered the dom</li>
-         *               <li>e.status.finalized (optional) --> `true` if finlize was invoked</li>
-         *               <li>e.status.halted (optional) --> `reason|true` if the event got halted and optional the why</li>
-         *               <li>e.status.defaultPrevented (optional) -->  `reason|true` if the event got defaultPrevented and optional the why</li>
-         *               <li>e.status.renderPrevented (optional) -->  `reason|true` if the event got renderPrevented and optional the why</li>
-         *               <li>e.status.finalizePrevented (optional) -->  `reason|true` if the event got finalizePrevented and optional the why</li>
-         *          </ul>
-         *     </li>
-         * </ul>
-         *
-         * The optional `payload` is merged into the eventobject and could be used by the subscribers and the defaultFn/preventedFn.
-         * If payload.silent is set true, the subscribers are not getting invoked: only the defaultFn.
-         *
-         * The eventobject also has these methods:
-         *
-         * <ul>
-         *     <li>e.halt() --> stops immediate all actions: no mer subscribers are invoked, no defaultFn/preventedFn</li>
-         *     <li>e.preventDefault() --> instead of invoking defaultFn, preventedFn will be invoked. No aftersubscribers</li>
-         *     <li>e.preventRender() --> by default, any event will trigger the vDOM (if exists) to re-render, this can be prevented by calling e.preventRender()</li>
-         *     <li>e.preventFinalize() --> by default, any event end up with running the finalizer, this can be prevented by calling e.preventFinalize()</li>
-         * </ul>
-         *
-         * <ul>
-         *     <li>First, before-subscribers are invoked: this is the place where you might call `e.halt()`, `a.preventDefault()`, `e.preventRender()` or `e.preventFinalize()`</li>
-         *     <li>Next, defaultFn or preventedFn gets invoked, depending on whether e.halt() or a.preventDefault() has been called</li>
-         *     <li>Next, after-subscribers get invoked (unless e.halt() or a.preventDefault() has been called)</li>
-         *     <li>Finally, the finalization takes place: any subscribers are invoked, unless e.halt() or a.preventDefault() has been called</li>
-         * <ul>
-         *
-         * @static
-         * @method emit
-         * @param [emitter] {Object} instance that emits the events
-         * @param customEvent {String} Full customEvent conform syntax `emitterName:eventName`.
-         *        `emitterName` is available as **e.emitter**, `eventName` as **e.type**.
-         * @param payload {Object} extra payload to be added to the event-object
-         * @param [beforeSubscribers] {Array} array of functions to act as beforesubscribers. <b>should not be used</b> other than
-         *                            by any submodule like `event-dom`. If used, than this list of subscribers gets invoked instead
-         *                            of the subscribers that actually subscribed to the event.
-         * @param [afterSubscribers] {Array} array of functions to act as afterSubscribers. <b>should not be used</b> other than
-         *                            by any submodule like `event-dom`. If used, than this list of subscribers gets invoked instead
-         *                            of the subscribers that actually subscribed to the event.
-         * @param [preProcessor] {Function} if passed, this function will be invoked before every single subscriber
-         *                       It is meant to manipulate the eventobject, something that `event-dom` needs to do
-         *                       This function expects 2 arguments: `subscriber` and `eventobject`.
-         *                       <b>should not be used</b> other than by any submodule like `event-dom`.
-         * @param [keepPayload=false] {Boolean} whether `payload` should be used as the ventobject instead of creating a new
-         *                      eventobject and merge payload. <b>should not be used</b> other than by any submodule like `event-dom`.
-         * @param [noFinalize=false] {Boolean} To supress finalization
-         * @return {Object|undefined} eventobject or undefined when the event was halted or preventDefaulted.
-         * @since 0.0.1
-         */
-        _emit: function (emitter, customEvent, payload, beforeSubscribers, afterSubscribers, preProcessor, keepPayload, noFinalize) {
-            // NOTE: emit() needs to be synchronous! otherwise we wouldn't be able
-            // to preventDefault DOM-events in time.
-            var instance = this,
-                allCustomEvents = instance._ce,
-                allSubscribers = instance._subs,
-                customEventDefinition, extract, emitterName, eventName, subs, wildcard_named_subs,
-                named_wildcard_subs, wildcard_wildcard_subs, e, invokeSubs, key, subscribedSize;
-
-            (customEvent.indexOf(':') !== -1) || (customEvent = emitter._emitterName+':'+customEvent);
-            console.log(NAME, 'customEvent.emit: '+customEvent);
-
-            extract = customEvent.match(REGEXP_CUSTOMEVENT);
-            if (!extract) {
-                console.error(NAME, 'defined emit-event does not match pattern');
-                return;
-            }
-            emitterName = extract[1];
-            eventName = extract[2];
-            customEventDefinition = allCustomEvents[customEvent];
-
-            subs = allSubscribers[customEvent];
-            wildcard_named_subs = allSubscribers['*:'+eventName];
-            named_wildcard_subs = allSubscribers[emitterName+':*'];
-            wildcard_wildcard_subs = allSubscribers['*:*'];
-
-            if (keepPayload) {
-                e = payload;
-            }
-            else {
-                e = Object.create(instance._defaultEventObj);
-                // e.target = (payload && payload.target) || emitter; // make it possible to force a specific e.target
-                e.target = emitter;
-                e.type = eventName;
-                e.emitter = emitterName;
-                e.status = {};
-                if (customEventDefinition) {
-                    e._unPreventable = customEventDefinition.unPreventable;
-                    e._unHaltable = customEventDefinition.unHaltable;
-                    e._unRenderPreventable = customEventDefinition.unRenderPreventable;
-                    e._unFinalizePreventable = customEventDefinition.unFinalizePreventable;
-                    e._noRender = customEventDefinition.noRender;
-                    e._noFinalize = customEventDefinition.noFinalize;
-                    customEventDefinition.unSilencable && (e.status.unSilencable = true);
-                }
-                if (payload) {
-                    // e.merge(payload); is not enough --> DOM-eventobject has many properties that are not "own"-properties
-                    for (key in payload) {
-                        e[key] || (e[key]=payload[key]);
-                    }
-                }
-                if (e.status.unSilencable && e.silent) {
-                    console.warn(NAME, ' event '+e.emitter+':'+e.type+' cannot made silent: this customEvent is defined as unSilencable');
-                    e.silent = false;
-                }
-            }
-            if (beforeSubscribers) {
-                instance._invokeSubs(e, false, true, preProcessor, {b: beforeSubscribers});
-            }
-            else {
-                invokeSubs = instance._invokeSubs.bind(instance, e, true, true, false);
-                [subs, named_wildcard_subs, wildcard_named_subs, wildcard_wildcard_subs].forEach(invokeSubs);
-            }
-            e.status.ok = !e.status.halted && !e.status.defaultPrevented;
-            // in case any subscriber changed e.target inside its filter (event-dom does this),
-            // then we reset e.target to its original. But only if e._noResetSourceTarget is undefined:
-            // (e._noResetSourceTarget can be used to supress this behaviour --> dragdrop uses this)
-            e.sourceTarget && !e._noResetSourceTarget && (e.target=e.sourceTarget);
-            if (customEventDefinition && !e.status.halted) {
-                // now invoke defFn
-                e.returnValue = (e.status.defaultPrevented || e.status.defaultPreventedContinue) ?
-                                (customEventDefinition.preventedFn && (e.status.preventedFn=true) && customEventDefinition.preventedFn.call(e.target, e)) :
-                                (customEventDefinition.defaultFn && (e.status.defaultFn=true) && customEventDefinition.defaultFn.call(e.target, e));
-            }
-
-            if (e.status.ok) {
-                if (afterSubscribers) {
-                    instance._invokeSubs(e, false, false, preProcessor, {a: afterSubscribers});
-                }
-                else {
-                    invokeSubs = instance._invokeSubs.bind(instance, e, true, false, false);
-                    [subs, named_wildcard_subs, wildcard_named_subs, wildcard_wildcard_subs].forEach(invokeSubs);
-                }
-                if (!e.silent) {
-                    // in case any subscriber changed e.target inside its filter (event-dom does this),
-                    // then we reset e.target to its original:
-                    e.sourceTarget && (e.target=e.sourceTarget);
-                    if (!noFinalize) {
-                        subscribedSize = 0;
-                        beforeSubscribers && (subscribedSize+=beforeSubscribers.size());
-                        afterSubscribers && (subscribedSize+=afterSubscribers.size());
-                        if (!beforeSubscribers || !afterSubscribers) {
-                            subs && (subscribedSize += subs.size());
-                            named_wildcard_subs && (subscribedSize += named_wildcard_subs.size());
-                            wildcard_named_subs && (subscribedSize += wildcard_named_subs.size());
-                            wildcard_wildcard_subs && (subscribedSize += wildcard_wildcard_subs.size());
-                        }
-                        (subscribedSize>0) && !e._noFinalize && !e.status.finalizePrevented && instance.runFinalizers(e);
-                    }
-                }
-            }
-            return e;
-        },
-
-        /**
-         * Does the actual invocation of a subscriber.
-         *
-         * @method _invokeSubs
-         * @param e {Object} event-object
-         * @param [checkFilter] {Boolean}
-         * @param [before] {Boolean} whether it concerns before subscribers
-         * @param [checkFilter] {Boolean}
-         * @param subscribers {Array} contains subscribers (objects) with these members:
-         * <ul>
-         *     <li>subscriber.o {Object} context of the callback</li>
-         *     <li>subscriber.cb {Function} callback to be invoked</li>
-         *     <li>subscriber.f {Function} filter to be applied</li>
-         *     <li>subscriber.t {DOM-node} target for the specific selector, which will be set as e.target
-         *         only when event-dom is active and there are filter-selectors</li>
-         *     <li>subscriber.n {DOM-node} highest dom-node that acts as the container for delegation.
-         *         only when event-dom is active and there are filter-selectors</li>
-         *     <li>subscriber.s {Boolean} true when the subscription was set to itself by using "this:eventName"</li>
-         * </ul>
-         * @private
-         * @since 0.0.1
-         */
-        _invokeSubs: function (e, checkFilter, before, preProcessor, subscribers) { // subscribers, plural
-            console.log(NAME, '_invokeSubs');
-            var subs, passesThis, passesFilter;
-            if (subscribers && !e.status.halted && !e.silent) {
-                subs = before ? subscribers.b : subscribers.a;
-                subs && subs.some(function(subscriber) {
-                    console.log(NAME, '_invokeSubs checking invokation for single subscriber');
-                    if (preProcessor && preProcessor(subscriber, e)) {
-                        return true;
-                    }
-                    // check: does it need to be itself because of subscribing through 'this'
-                    passesThis = (!subscriber.s || (subscriber.o===e.target));
-                    // check: does it pass the filter
-                    passesFilter = (!checkFilter || !subscriber.f || subscriber.f.call(subscriber.o, e));
-                    if (passesThis && passesFilter) {
-                        // finally: invoke subscriber
-                        console.log(NAME, '_invokeSubs is going to invoke subscriber');
-                        subscriber.cb.call(subscriber.o, e);
-                    }
-                    if (e.status.unSilencable && e.silent) {
-                        console.warn(NAME, ' event '+e.emitter+':'+e.type+' cannot made silent: this customEvent is defined as unSilencable');
-                        e.silent = false;
-                    }
-                    return e.silent || (before && e.status.halted);  // remember to check whether it was halted for any reason
-                });
-            }
-        },
-
-        /**
-         * Removes a subscriber from the specified customEvent. The customEvent must conform the syntax:
-         * `emitterName:eventName`.
-         *
-         * @static
-         * @method _removeSubscriber
-         * @param listener {Object} Object that creates the subscriber (and will be listening by `listener.after(...)`)
-         * @param before {Boolean} whether the subscriber is a `before` subscriber. On falsy, an `after`-subscriber is assumed.
-         * @param customEvent {String} conform the syntax: `emitterName:eventName`, wildcard `*` may be used for both
-         *        `emitterName` as well as only `eventName`, in which case 'UI' will become the emmiterName.
-         * @param [callback] {Function} subscriber to the event, when not set, all subscribers of the listener to this customEvent
-         *                   will be removed.
-         * @private
-         * @since 0.0.1
-        */
-        _removeSubscriber: function(listener, before, customEvent, callback) {
-            console.log('_removeSubscriber: '+customEvent);
-            var instance = this,
-                eventSubscribers = instance._subs[customEvent],
-                hashtable = eventSubscribers && eventSubscribers[before ? 'b' : 'a'],
-                i, subscriber, beforeUsed, afterUsed, extract, detachNotifier, customEventWildcardEventName;
-            if (hashtable) {
-                // unfortunatly we cannot search by reference, because the array has composed objects
-                // also: can't use native Array.forEach: removing items within its callback change the array
-                // during runtime, making it to skip the next item of the one that's being removed
-               for (i=0; i<hashtable.length; ++i) {
-                    console.log(NAME, '_removeSubscriber for single subscriber');
-                    subscriber = hashtable[i];
-                    if ((subscriber.o===(listener || instance)) && (!callback || (subscriber.cb===callback))) {
-                        console.log('removing subscriber');
-                        hashtable.splice(i--, 1);
-                    }
-                }
-            }
-            // After removal subscriber: check whether both eventSubscribers.a and eventSubscribers.b are empty
-            // if so, remove the member from Event._subs to cleanup memory
-            if (eventSubscribers) {
-                beforeUsed = eventSubscribers.b && (eventSubscribers.b.length>0);
-                afterUsed = eventSubscribers.a && (eventSubscribers.a.length>0);
-                if (!beforeUsed && !afterUsed) {
-                    delete instance._subs[customEvent];
-                }
-            }
-            extract = customEvent.match(REGEXP_CUSTOMEVENT);
-            // in case of a defined subscription (no wildcard),
-            // we need to inform any detachNotifier of the unsubscription:
-            if (extract && ((extract[1]!=='*') && (extract[2]!=='*'))) {
-                detachNotifier = instance._detachNotifiers[customEvent];
-                if (detachNotifier) {
-                    detachNotifier.cb.call(detachNotifier.o, customEvent);
-                    if (detachNotifier.r) {
-                        delete instance._detachNotifiers[customEvent];
-                    }
-                }
-                // check the same for wildcard eventName:
-                customEventWildcardEventName = customEvent.replace(REGEXP_EVENTNAME_WITH_SEMICOLON, ':*');
-                if ((customEventWildcardEventName !== customEvent) && (detachNotifier=instance._detachNotifiers[customEventWildcardEventName])) {
-                    detachNotifier.cb.call(detachNotifier.o, customEvent);
-                    if (detachNotifier.r) {
-                        delete instance._detachNotifiers[customEvent];
-                    }
-                }
-            }
-        },
-
-        /**
-         * Removes subscribers from the multiple customevents. The customEvent must conform the syntax:
-         * `emitterName:eventName`. Wildcard `*` may be used for both `emitterName` as well as `eventName`
-         * If `emitterName` is not defined, `UI` is assumed.
-         *
-         * Examples of valid customevents:
-         *
-         * <ul>
-         *     <li>'redmodel:save'</li>
-         *     <li>'UI:tap'</li>
-         *     <li>'tap' --> alias for 'UI:tap'</li>
-         *     <li>'`*`:click' --> careful: will listen to both UIs and non-UI- click-events</li>
-         *     <li>'redmodel:`*`'</li>
-         *     <li>'`*`:`*`'</li>
-         * </ul>
-         *
-         * @static
-         * @method _removeSubscriber
-         * @param listener {Object} Object that creates the subscriber (and will be listening by `listener.after(...)`)
-         * @param customEvent {String} conform the syntax: `emitterName:eventName`, wildcard `*` may be used for both
-         *        `emitterName` as well as only `eventName`, in which case 'UI' will become the emmiterName.
-         * @private
-         * @since 0.0.1
-        */
-        _removeSubscribers: function(listener, customEvent) {
-            console.log('_removeSubscribers: '+customEvent);
-            var instance = this,
-                emitterName, eventName,
-                extract = customEvent.match(REGEXP_WILDCARD_CUSTOMEVENT);
-            if (!extract) {
-                console.error(NAME, '_removeSubscribers-error: customEvent '+customEvent+' does not match pattern');
-                return;
-            }
-            emitterName = extract[1] || 'UI';
-            eventName = extract[2];
-            if ((emitterName!=='*') && (eventName!=='*')) {
-                instance._removeSubscriber(listener, true, customEvent);
-                instance._removeSubscriber(listener, false, customEvent);
-            }
-            else {
-                // wildcard, we need to look at all the members of Event._subs
-                instance._subs.each(
-                    function(value, key) {
-                        var localExtract = key.match(REGEXP_WILDCARD_CUSTOMEVENT),
-                            emitterMatch = (emitterName==='*') || (emitterName===localExtract[1]),
-                            eventMatch = (eventName==='*') || (eventName===localExtract[2]);
-                        if (emitterMatch && eventMatch) {
-                            instance._removeSubscriber(listener, true, key);
-                            instance._removeSubscriber(listener, false, key);
-                        }
-                    }
-                );
-            }
-        },
-
-        /**
-         * Adds a property to the default eventobject's prototype which passes through all eventcycles.
-         * Goes through Object.defineProperty with configurable, enumerable and writable
-         * all set to false.
-         *
-         * @method _setEventObjProperty
-         * @param property {String} event-object
-         * @param value {Any}
-         * @chainable
-         * @private
-         * @since 0.0.1
-         */
-        _setEventObjProperty: function (property, value) {
-            console.log(NAME, '_setEventObjProperty');
-            Object.protectedProp(this._defaultEventObj, property, value);
-            return this;
-        }
-
-    };
-
-    /**
-     * Objecthash containing all defined custom-events
-     * which has a structure like this:
-     *
-     * _ce = {
-     *     'UI:tap': {
-     *         preventable: true,
-     *         defaultFn: function(){...},
-     *         preventedFn: function(){...},
-     *         renderPreventable: true,
-     *         finalizePreventable: true
-     *     },
-     *     'redmodel:save': {
-     *         preventable: true,
-     *         defaultFn: function(){...},
-     *         preventedFn: function(){...},
-     *         renderPreventable: true,
-     *         finalizePreventable: true
-     *     }
-     * }
-     *
-     * @property _ce
-     * @default {}
-     * @type Object
-     * @private
-     * @since 0.0.1
-    */
-    Object.defineProperty(Event, '_ce', {
-        configurable: false,
-        enumerable: false,
-        writable: false,
-        value: {} // `writable` is false means we cannot chance the value-reference, but we can change {}'s properties itself
-    });
-
-    /**
-     * Objecthash containing all defined before and after subscribers
-     * which has a structure like this (`b` represents `before` and `a` represents `after`)
-     * Every item that gets in the array consist by itself of 3 properties:
-     *                                                          subscriberitem = {
-     *                                                              o: listener,
-     *                                                              cb: callbackFn(e),
-     *                                                              f: filter
-     *                                                          };
-     *
-     * _subs = {
-     *     'UI:tap': {
-     *         b: [
-     *             item,
-     *             item
-     *         ],
-     *         a: [
-     *             item,
-     *             item
-     *         ]
-     *     },
-     *     '*:click': {
-     *         b: [
-     *             item,
-     *             item
-     *         ],
-     *         a: [
-     *             item,
-     *             item
-     *         ]
-     *     },
-     *     'redmodel:save': {
-     *         b: [
-     *             item,
-     *             item
-     *         ],
-     *         a: [
-     *             item,
-     *             item
-     *         ]
-     *     }
-     * }
-     *
-     * @property _ce
-     * @default {}
-     * @type Object
-     * @private
-     * @since 0.0.1
-    */
-    Object.protectedProp(Event, '_subs', {});
-
-    /**
-     * Internal list of finalize-subscribers which are invoked at the finalization-cycle, which happens after the after-subscribers.
-     * Is an array of function-references.
-     *
-     * @property _final
-     * @default []
-     * @type Array
-     * @private
-     * @since 0.0.1
-    */
-    Object.protectedProp(Event, '_final', []);
-
-    /**
-     * Object that acts as the prototype of the eventobject.
-     * To add more methods, you can use `_setEventObjProperty`
-     *
-     * @property _defaultEventObj
-     * @default {
-     *    halt: function()
-     *    preventDefault: function()
-     *    preventRender: function()
-     *    preventFinalize: function()
-     * }
-     * @type Object
-     * @private
-     * @since 0.0.1
-    */
-    Object.protectedProp(Event, '_defaultEventObj', {});
-
-    /**
-     * Objecthash containing all detach-notifiers, keyed by customEvent name.
-     * This list is maintained by `notifyDetach` and `unNotifyDetach`
-     *
-     * _detachNotifiers = {
-     *     'UI:tap': {
-     *         cb:function() {}
-     *         o: {} // context
-     *     },
-     *     'redmodel:*': {
-     *         cb:function() {}
-     *         o: {} // context
-     *     },
-     *     'bluemodel:save': {
-     *         cb:function() {}
-     *         o: {} // context
-     *     }
-     * }
-     *
-     * @property _detachNotifiers
-     * @default {}
-     * @type Object
-     * @private
-     * @since 0.0.1
-    */
-    Object.protectedProp(Event, '_detachNotifiers', {});
-
-    /**
-     * Objecthash containing all notifiers, keyed by customEvent name.
-     * This list is maintained by `notify` and `unNotify`
-     *
-     * _notifiers = {
-     *     'UI:tap': {
-     *         cb:function() {}
-     *         o: {} // context
-     *     },
-     *     'redmodel:*': {
-     *         cb:function() {}
-     *         o: {} // context
-     *     },
-     *     'bluemodel:save': {
-     *         cb:function() {}
-     *         o: {} // context
-     *     }
-     * }
-     *
-     * @property _notifiers
-     * @default {}
-     * @type Object
-     * @private
-     * @since 0.0.1
-    */
-    Object.protectedProp(Event, '_notifiers', {});
-
-    Event._setEventObjProperty('halt', function(reason) {this.status.ok || this._unHaltable || (this.status.halted = (reason || true));})
-         ._setEventObjProperty('preventDefault', function(reason) {this.status.ok || this._unPreventable || (this.status.defaultPrevented = (reason || true));})
-         ._setEventObjProperty('preventDefaultContinue', function(reason) {this.status.ok || this._unPreventable || (this.status.defaultPreventedContinue = (reason || true));})
-         ._setEventObjProperty('preventFinalize', function(reason) {this.status.ok || this._unFinalizePreventable || (this.status.finalizePrevented = (reason || true));})
-         ._setEventObjProperty('preventRender', function(reason) {this.status.ok || this._unRenderPreventable || (this.status.renderPrevented = (reason || true));});
-
-    return Event;
-}));
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+module.exports=require(9)
 },{"js-ext/extra/hashmap.js":162,"js-ext/lib/object.js":163,"polyfill/polyfill-base.js":169}],161:[function(require,module,exports){
 (function (global){
 (function (global) {
@@ -19040,7 +17817,7 @@ require('polyfill');
 var NAME = '[focusmanager]: ',
     async = require('utils').async,
     createHashMap = require('js-ext/extra/hashmap.js').createMap,
-    DEFAULT_SELECTOR = 'input, button, select, textarea, .focusable',
+    DEFAULT_SELECTOR = 'input, button, select, textarea, .focusable, [fm-manage]',
     // SPECIAL_KEYS needs to be a native Object --> we need .some()
     SPECIAL_KEYS = {
         shift: 'shiftKey',
@@ -19050,6 +17827,8 @@ var NAME = '[focusmanager]: ',
     },
     DEFAULT_KEYUP = 'shift+9',
     DEFAULT_KEYDOWN = '9',
+    DEFAULT_ENTER = '39',
+    DEFAULT_LEAVE = '27',
     FM_SELECTION = 'fm-selection',
     FM_SELECTION_START = FM_SELECTION+'start',
     FM_SELECTION_END = FM_SELECTION+'end',
@@ -19058,7 +17837,8 @@ var NAME = '[focusmanager]: ',
 module.exports = function (window) {
 
     var DOCUMENT = window.document,
-        nodePlugin, FocusManager, Event, nextFocusNode, searchFocusNode, markAsFocussed, getFocusManagerSelector, setupEvents, defineFocusEvent;
+        nodePlugin, FocusManager, Event, nextFocusNode, searchFocusNode, markAsFocussed,
+        resetLastValue, getFocusManagerSelector, setupEvents, defineFocusEvent;
 
     window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
 
@@ -19078,10 +17858,10 @@ module.exports = function (window) {
         return selector;
     };
 
-    nextFocusNode = function(e, keyCode, actionkey, focusContainerNode, sourceNode, selector, downwards) {
+    nextFocusNode = function(e, keyCode, actionkey, focusContainerNode, sourceNode, selector, downwards, initialSourceNode) {
         console.log(NAME+'nextFocusNode');
         var keys, lastIndex, i, specialKeysMatch, specialKey, len, enterPressedOnInput, primaryButtons,
-            inputType, foundNode, formNode, primaryonenter, noloop, nextHit;
+            inputType, foundNode, formNode, primaryonenter, noloop, nodeHit, foundContainer;
         keys = actionkey.split('+');
         len = keys.length;
         lastIndex = len - 1;
@@ -19130,20 +17910,23 @@ module.exports = function (window) {
         if (specialKeysMatch) {
             noloop = focusContainerNode.getAttr('fm-noloop');
             noloop = noloop && (noloop.toLowerCase()==='true');
+            // in case sourceNode is an innernode of a selector, we need to start from the selector:
+            sourceNode.matches(selector) || (sourceNode=sourceNode.inside(selector));
             if (downwards) {
-                nextHit = sourceNode.next(selector) || (noloop ? sourceNode.last(selector) : sourceNode.first(selector));
+                nodeHit = sourceNode.next(selector, focusContainerNode) || (noloop ? sourceNode.last(selector, focusContainerNode) : sourceNode.first(selector, focusContainerNode));
             }
             else {
-                nextHit = sourceNode.previous(selector) || (noloop ? sourceNode.first(selector) : sourceNode.last(selector));
+                nodeHit = sourceNode.previous(selector, focusContainerNode) || (noloop ? sourceNode.first(selector, focusContainerNode) : sourceNode.last(selector, focusContainerNode));
             }
-            // if we don't find a new node to focus, we need to look a level higher
-            if (nextHit!==sourceNode) {
-                return nextHit;
+            if (nodeHit===sourceNode) {
+                // cannot found another, return itself, BUT return `initialSourceNode` if it is available
+                return initialSourceNode || sourceNode;
             }
             else {
-                // No new node to focus, we need to look a level higher, but NOT when we reach the focusContainerNode
-                nextHit = sourceNode.getParent();
-                return (nextHit!==focusContainerNode) ? nextFocusNode(e, keyCode, actionkey, focusContainerNode, sourceNode, selector, downwards) : sourceNode;
+                foundContainer = nodeHit.inside('[fm-manage]');
+                // only if `nodeHit` is inside the runniong focusContainer, we may return it,
+                // otherwise look further
+                return (foundContainer===focusContainerNode) ? nodeHit : nextFocusNode(e, keyCode, actionkey, focusContainerNode, nodeHit, selector, downwards, sourceNode);
             }
         }
         return false;
@@ -19155,9 +17938,7 @@ module.exports = function (window) {
             index = focusContainerNode.getAll(selector).indexOf(node) || 0;
         // we also need to set the appropriate nodeData, so that when the itags re-render,
         // they don't reset this particular information
-        focusContainerNode.getAll('[fm-lastitem]')
-                          .removeAttrs(['fm-lastitem', 'tabindex'], true)
-                          .removeData('fm-tabindex');
+        resetLastValue(focusContainerNode);
 
         // also store the lastitem's index --> in case the node gets removed,
         // or re-rendering itags which don't have the attribute-data.
@@ -19170,16 +17951,36 @@ module.exports = function (window) {
         ], true);
     };
 
-    searchFocusNode = function(initialNode) {
+    resetLastValue = function(focusContainerNode) {
+        var lastItemNodes = focusContainerNode.getAll('[fm-lastitem]');
+        lastItemNodes.removeAttrs(['fm-lastitem', 'tabindex'], true)
+                     .removeData('fm-tabindex');
+        focusContainerNode.removeData('fm-lastitem-bkp');
+    };
+
+    searchFocusNode = function(initialNode, deeper) {
         console.log(NAME+'searchFocusNode');
         var focusContainerNode = initialNode.hasAttr('fm-manage') ? initialNode : initialNode.inside('[fm-manage]'),
-            focusNode, alwaysDefault, fmAlwaysDefault, selector, allFocusableNodes, index;
+            focusNode, alwaysDefault, fmAlwaysDefault, selector, allFocusableNodes, index, parentContainerNode, parentSelector;
 
         if (focusContainerNode) {
             selector = getFocusManagerSelector(focusContainerNode);
             focusNode = initialNode.matches(selector) ? initialNode : initialNode.inside(selector);
-            if (focusNode && focusContainerNode.contains(focusNode)) {
-                markAsFocussed(focusContainerNode, focusNode);
+            // focusNode can only be equal focusContainerNode when focusContainerNode lies with a focusnode itself with that particular selector:
+            if (focusNode===focusContainerNode) {
+                parentContainerNode = focusNode.inside('[fm-manage]');
+                if (parentContainerNode) {
+                    parentSelector = getFocusManagerSelector(parentContainerNode);
+                    if (!focusNode.matches(parentSelector) || deeper) {
+                        focusNode = null;
+                    }
+                }
+                else {
+                    focusNode = null;
+                }
+            }
+            if (focusNode && focusContainerNode.contains(focusNode, true)) {
+                markAsFocussed(parentContainerNode || focusContainerNode, focusNode);
             }
             else {
                 // find the right node that should get focus
@@ -19204,7 +18005,7 @@ module.exports = function (window) {
                 // still not found: try the first focussable node (which we might find inside `allFocusableNodes`:
                 !focusNode && (focusNode = allFocusableNodes ? allFocusableNodes[0] : focusContainerNode.getElement(selector));
                 if (focusNode) {
-                    markAsFocussed(focusContainerNode, focusNode);
+                    markAsFocussed(parentContainerNode || focusContainerNode, focusNode);
                 }
                 else {
                     focusNode = initialNode;
@@ -19214,8 +18015,6 @@ module.exports = function (window) {
         else {
             focusNode = initialNode;
         }
-console.warn('searchFocusNode found the node to be focussed:');
-console.warn(focusNode);
         return focusNode;
     };
 
@@ -19225,8 +18024,7 @@ console.warn(focusNode);
             console.log(NAME+'before keydown-event');
             var focusContainerNode,
                 sourceNode = e.target,
-                node = sourceNode.getParent(),
-                selector, keyCode, actionkey, focusNode;
+                selector, keyCode, actionkey, focusNode, keys, len, lastIndex, specialKeysMatch, i, specialKey;
 
             focusContainerNode = sourceNode.inside('[fm-manage]');
             if (focusContainerNode) {
@@ -19235,19 +18033,69 @@ console.warn(focusNode);
                 keyCode = e.keyCode;
 
                 // first check for keydown:
-                actionkey = node.getAttr('fm-keydown') || DEFAULT_KEYDOWN;
+                actionkey = focusContainerNode.getAttr('fm-keydown') || DEFAULT_KEYDOWN;
                 focusNode = nextFocusNode(e, keyCode, actionkey, focusContainerNode, sourceNode, selector, true);
                 if (!focusNode) {
                     // check for keyup:
-                    actionkey = node.getAttr('fm-keyup') || DEFAULT_KEYUP;
+                    actionkey = focusContainerNode.getAttr('fm-keyup') || DEFAULT_KEYUP;
                     focusNode = nextFocusNode(e, keyCode, actionkey, focusContainerNode, sourceNode, selector);
+                }
+                if (!focusNode) {
+                    // check for keyenter, but only when e.target equals a focusmanager:
+                    if (sourceNode.matches('[fm-manage]')) {
+                        actionkey = focusContainerNode.getAttr('fm-enter') || DEFAULT_ENTER;
+                        keys = actionkey.split('+');
+                        len = keys.length;
+                        lastIndex = len - 1;
+                        // double == --> keyCode is number, keys is a string
+                        if (keyCode==keys[lastIndex]) {
+                            // posible keyup --> check if special characters match:
+                            specialKeysMatch = true;
+                            SPECIAL_KEYS.some(function(value) {
+                                specialKeysMatch = !e[value];
+                                return !specialKeysMatch;
+                            });
+                            for (i=lastIndex-1; (i>=0) && !specialKeysMatch; i--) {
+                                specialKey = keys[i].toLowerCase();
+                                specialKeysMatch = e[SPECIAL_KEYS[specialKey]];
+                            }
+                        }
+                        if (specialKeysMatch) {
+                            resetLastValue(sourceNode);
+                            focusNode = searchFocusNode(sourceNode, true);
+                        }
+                    }
+                }
+                if (!focusNode) {
+                    // check for keyleave:
+                    actionkey = focusContainerNode.getAttr('fm-leave') || DEFAULT_LEAVE;
+                    keys = actionkey.split('+');
+                    len = keys.length;
+                    lastIndex = len - 1;
+                    // double == --> keyCode is number, keys is a string
+                    if (keyCode==keys[lastIndex]) {
+                        // posible keyup --> check if special characters match:
+                        specialKeysMatch = true;
+                        SPECIAL_KEYS.some(function(value) {
+                            specialKeysMatch = !e[value];
+                            return !specialKeysMatch;
+                        });
+                        for (i=lastIndex-1; (i>=0) && !specialKeysMatch; i--) {
+                            specialKey = keys[i].toLowerCase();
+                            specialKeysMatch = e[SPECIAL_KEYS[specialKey]];
+                        }
+                    }
+                    if (specialKeysMatch) {
+                        resetLastValue(focusContainerNode);
+                        focusNode = focusContainerNode;
+                    }
                 }
                 if (focusNode) {
                     e.preventDefaultContinue();
                     e.preventRender(); // don't double render --> focus does this
                     // prevent default action --> we just want to re-focus, but we DO want afterlisteners
                     // to be handled in the after-listener: someone else might want to halt the keydown event.
-                    sourceNode.matches(selector) && (e._focusNode=focusNode);
+                    e._focusNode = focusNode;
                 }
             }
         });
@@ -19261,25 +18109,23 @@ console.warn(focusNode);
             }
         });
 
-        Event.after('blur', function(e) {
-            console.log(NAME+'after blur-event');
-            var node = e.target,
-                body = DOCUMENT.body;
-            if (node && node.removeAttr) {
-                do {
-                    // we also need to set the appropriate nodeData, so that when the itags re-render,
-                    // they don't reset this particular information
-                    node.removeData(FOCUSSED);
-                    node.removeClass(FOCUSSED, null, null, true);
-                    node = (node===body) ? null : node.getParent();
-                } while (node);
-            }
-        });
-
         Event.after('focus', function(e) {
             console.log(NAME+'after focus-event');
             var node = e.target,
-                body = DOCUMENT.body;
+                body = DOCUMENT.body,
+                cleanFocussedData = function(element, loop) {
+                    if (element.removeData) {
+                        do {
+                            // we also need to set the appropriate nodeData, so that when the itags re-render,
+                            // they don't reset this particular information
+                            element.removeData(FOCUSSED);
+                            element.removeClass(FOCUSSED, null, null, true);
+                            element = (element===body) ? null : element.getParent();
+                        } while (element && loop);
+                    }
+                };
+            // first, unfocus currently focussed items and up the tree
+            DOCUMENT.getAll('.'+FOCUSSED, true).forEach(cleanFocussedData);
             if (node && node.setClass) {
                 do {
                     // we also need to set the appropriate nodeData, so that when the itags re-render,
@@ -19289,7 +18135,7 @@ console.warn(focusNode);
                     node = (node===body) ? null : node.getParent();
                 } while (node);
             }
-        });
+        }, true); // set in front: we need to make use of the previous DOCUMENT._activeElement, before it gets updated by event-dom
 
         // focus-fix for keeping focus when a mouse gets down for a longer time
         Event.after('mousedown', function(e) {
@@ -19305,12 +18151,15 @@ console.warn(focusNode);
             console.log(NAME+'after tap-event');
             var focusNode = e.target,
                 focusContainerNode;
+            if (e._noFocus) {
+                return;
+            }
             if (focusNode && focusNode.inside) {
                 focusContainerNode = focusNode.hasAttr('fm-manage') ? focusNode : focusNode.inside('[fm-manage]');
             }
             if (focusContainerNode) {
                 if ((focusNode===focusContainerNode) || !focusNode.matches(getFocusManagerSelector(focusContainerNode))) {
-                    focusNode = searchFocusNode(focusNode);
+                    focusNode = searchFocusNode(focusNode, true);
                 }
                 if (focusNode.hasFocus()) {
                     markAsFocussed(focusContainerNode, focusNode);
@@ -20177,610 +19026,11 @@ module.exports=require(17)
 },{}],334:[function(require,module,exports){
 module.exports=require(18)
 },{"./lib/matchesselector.js":332,"./lib/window.console.js":333}],335:[function(require,module,exports){
-(function (global){
-/**
- *
- * Pollyfils for often used functionality for Functions
- *
- * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
- * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
- *
- * @module js-ext
- * @submodule extra/classes.js
- * @class Classes
- *
-*/
-
-require('polyfill/polyfill-base.js');
-require('../lib/object.js');
-
-(function (global) {
-
-    "use strict";
-
-    var NAME = '[Classes]: ',
-        createHashMap = require('js-ext/extra/hashmap.js').createMap,
-        DEFAULT_CHAIN_CONSTRUCT, defineProperty, defineProperties,
-        NOOP, REPLACE_CLASS_METHODS, PROTECTED_CLASS_METHODS, PROTO_RESERVED_NAMES,
-        BASE_MEMBERS, createBaseClass, Classes, coreMethods;
-
-    global._ITSAmodules || Object.protectedProp(global, '_ITSAmodules', createHashMap());
-
-/*jshint boss:true */
-    if (Classes=global._ITSAmodules.Classes) {
-/*jshint boss:false */
-        module.exports = Classes; // Classes was already created
-        return;
-    }
-
-    /**
-     * Defines whether Classes should call their constructor in a chained way top-down.
-     *
-     * @property DEFAULT_CHAIN_CONSTRUCT
-     * @default true
-     * @type Boolean
-     * @protected
-     * @since 0.0.1
-    */
-    DEFAULT_CHAIN_CONSTRUCT = true;
-
-    /**
-     * Sugarmethod for Object.defineProperty creating an unenumerable property
-     *
-     * @method defineProperty
-     * @param [object] {Object} The object to define the property to
-     * @param [name] {String} name of the property
-     * @param [method] {Any} value of the property
-     * @param [force=false] {Boolean} to force assignment when the property already exists
-     * @protected
-     * @since 0.0.1
-    */
-    defineProperty = function (object, name, method, force) {
-        if (!force && (name in object)) {
-            return;
-        }
-        Object.defineProperty(object, name, {
-            configurable: true,
-            enumerable: false,
-            writable: true,
-            value: method
-        });
-    };
-    /**
-     * Sugarmethod for using defineProperty for multiple properties at once.
-     *
-     * @method defineProperties
-     * @param [object] {Object} The object to define the property to
-     * @param [map] {Object} object to be set
-     * @param [force=false] {Boolean} to force assignment when the property already exists
-     * @protected
-     * @since 0.0.1
-    */
-    defineProperties = function (object, map, force) {
-        var names = Object.keys(map),
-            l = names.length,
-            i = -1,
-            name;
-        while (++i < l) {
-            name = names[i];
-            defineProperty(object, name, map[name], force);
-        }
-    };
-
-    /**
-     * Empty function
-     *
-     * @method NOOP
-     * @protected
-     * @since 0.0.1
-    */
-    NOOP = function () {};
-
-    /**
-     * Internal hash containing the names of members which names should be transformed
-     *
-     * @property REPLACE_CLASS_METHODS
-     * @default {destroy: '_destroy'}
-     * @type Object
-     * @protected
-     * @since 0.0.1
-    */
-    REPLACE_CLASS_METHODS = createHashMap({
-        destroy: '_destroy'
-    });
-
-    /**
-     * Internal hash containing protected members: those who cannot be merged into a Class
-     *
-     *
-     * @property PROTECTED_CLASS_METHODS
-     * @default {$super: true, $superProp: true, $orig: true}
-     * @type Object
-     * @protected
-     * @since 0.0.1
-    */
-    PROTECTED_CLASS_METHODS = createHashMap({
-        $super: true,
-        $superProp: true,
-        $orig: true
-    });
-
-/*jshint proto:true */
-/* jshint -W001 */
-    /*
-     * Internal hash containing protected members: those who cannot be merged into a Class
-     *
-     * @property PROTO_RESERVED_NAMES
-     * @default {constructor: true, prototype: true, hasOwnProperty: true, isPrototypeOf: true,
-     *           propertyIsEnumerable: true, __defineGetter__: true, __defineSetter__: true,
-     *           __lookupGetter__: true, __lookupSetter__: true, __proto__: true}
-     * @type Object
-     * @protected
-     * @since 0.0.1
-    */
-    PROTO_RESERVED_NAMES = createHashMap({
-        constructor: true,
-        prototype: true,
-        hasOwnProperty: true,
-        isPrototypeOf: true,
-        propertyIsEnumerable: true,
-        __defineGetter__: true,
-        __defineSetter__: true,
-        __lookupGetter__: true,
-        __lookupSetter__: true,
-        __proto__: true
-    });
-/* jshint +W001 */
-/*jshint proto:false */
-
-    defineProperties(Function.prototype, {
-
-        /**
-         * Merges the given prototypes of properties into the `prototype` of the Class.
-         *
-         * **Note1 ** to be used on instances --> ONLY on Classes
-         * **Note2 ** properties with getters and/or unwritable will NOT be merged
-         *
-         * The members in the hash prototypes will become members with
-         * instances of the merged class.
-         *
-         * By default, this method will not override existing prototype members,
-         * unless the second argument `force` is true.
-         *
-         * @method mergePrototypes
-         * @param prototypes {Object} Hash prototypes of properties to add to the prototype of this object
-         * @param force {Boolean}  If true, existing members will be overwritten
-         * @chainable
-         */
-        mergePrototypes: function (prototypes, force) {
-            var instance, proto, names, l, i, replaceMap, protectedMap, name, nameInProto, finalName, propDescriptor, extraInfo;
-            if (!prototypes) {
-                return;
-            }
-            instance = this; // the Class
-            proto = instance.prototype;
-            names = Object.getOwnPropertyNames(prototypes);
-            l = names.length;
-            i = -1;
-            replaceMap = arguments[2] || REPLACE_CLASS_METHODS; // hidden feature, used by itags
-
-            protectedMap = arguments[3] || PROTECTED_CLASS_METHODS; // hidden feature, used by itags
-            while (++i < l) {
-                name = names[i];
-                finalName = replaceMap[name] || name;
-                nameInProto = (finalName in proto);
-                if (!PROTO_RESERVED_NAMES[finalName] && !protectedMap[finalName] && (!nameInProto || force)) {
-                    // if nameInProto: set the property, but also backup for chaining using $$orig
-                    propDescriptor = Object.getOwnPropertyDescriptor(prototypes, name);
-                    if (!propDescriptor.writable) {
-                        console.info(NAME+'mergePrototypes will set property of '+name+' without its property-descriptor: for it is an unwritable property.');
-                        proto[finalName] = prototypes[name];
-                    }
-                    else {
-                        // adding prototypes[name] into $$orig:
-                        instance.$$orig[finalName] || (instance.$$orig[finalName]=[]);
-                        instance.$$orig[finalName][instance.$$orig[finalName].length] = prototypes[name];
-                        if (typeof prototypes[name] === 'function') {
-        /*jshint -W083 */
-                            propDescriptor.value = (function (originalMethodName, finalMethodName) {
-                                return function () {
-        /*jshint +W083 */
-                                    // this.$own = prot;
-                                    // this.$origMethods = instance.$$orig[finalMethodName];
-                                    var context = this,
-                                        classCarierBkp = context.__classCarier__,
-                                        methodClassCarierBkp = context.__methodClassCarier__,
-                                        origPropBkp = context.__origProp__,
-                                        returnValue;
-
-                                    context.__methodClassCarier__ = instance;
-
-                                    context.__classCarier__ = null;
-
-                                    context.__origProp__ = finalMethodName;
-                                    returnValue = prototypes[originalMethodName].apply(context, arguments);
-                                    context.__origProp__ = origPropBkp;
-
-                                    context.__classCarier__ = classCarierBkp;
-
-                                    context.__methodClassCarier__ = methodClassCarierBkp;
-
-                                    return returnValue;
-
-                                };
-                            })(name, finalName);
-                        }
-                        Object.defineProperty(proto, finalName, propDescriptor);
-                    }
-                }
-                else {
-                    extraInfo = '';
-                    nameInProto && (extraInfo = 'property is already available (you might force it to be set)');
-                    PROTO_RESERVED_NAMES[finalName] && (extraInfo = 'property is a protected property');
-                    protectedMap[finalName] && (extraInfo = 'property is a private property');
-                    console.warn(NAME+'mergePrototypes is not allowed to set the property: '+name+' --> '+extraInfo);
-                }
-            }
-            return instance;
-        },
-
-        /**
-         * Removes the specified prototypes from the Class.
-         *
-         *
-         * @method removePrototypes
-         * @param properties {String|Array} Hash of properties to be removed from the Class
-         * @chainable
-         */
-        removePrototypes: function (properties) {
-            var proto = this.prototype,
-                replaceMap = arguments[1] || REPLACE_CLASS_METHODS; // hidden feature, used by itags
-            Array.isArray(properties) || (properties=[properties]);
-            properties.forEach(function(prop) {
-                prop = replaceMap[prop] || prop;
-                delete proto[prop];
-            });
-            return this;
-        },
-
-        /**
-         * Redefines the constructor fo the Class
-         *
-         * @method setConstructor
-         * @param [constructorFn] {Function} The function that will serve as the new constructor for the class.
-         *        If `undefined` defaults to `NOOP`
-         * @param [prototypes] {Object} Hash map of properties to be added to the prototype of the new class.
-         * @param [chainConstruct=true] {Boolean} Whether -during instance creation- to automaticly construct in the complete hierarchy with the given constructor arguments.
-         * @chainable
-         */
-        setConstructor: function(constructorFn, chainConstruct) {
-            var instance = this;
-            if (typeof constructorFn==='boolean') {
-                chainConstruct = constructorFn;
-                constructorFn = null;
-            }
-            (typeof chainConstruct === 'boolean') || (chainConstruct=DEFAULT_CHAIN_CONSTRUCT);
-            instance.$$constrFn = constructorFn || NOOP;
-            instance.$$chainConstructed = chainConstruct ? true : false;
-            return instance;
-        },
-
-        /**
-         * Returns a newly created class inheriting from this class
-         * using the given `constructor` with the
-         * prototypes listed in `prototypes` merged in.
-         *
-         *
-         * The newly created class has the `$$super` static property
-         * available to access all of is ancestor's instance methods.
-         *
-         * Further methods can be added via the [mergePrototypes](#method_mergePrototypes).
-         *
-         * @example
-         *
-         *  var Circle = Shape.subClass(
-         *      function (x, y, r) {
-         *          // arguments will automaticly be passed through to Shape's constructor
-         *          this.r = r;
-         *      },
-         *      {
-         *          area: function () {
-         *              return this.r * this.r * Math.PI;
-         *          }
-         *      }
-         *  );
-         *
-         * @method subClass
-         * @param [constructor] {Function} The function that will serve as constructor for the new class.
-         *        If `undefined` defaults to `NOOP`
-         * @param [prototypes] {Object} Hash map of properties to be added to the prototype of the new class.
-         * @param [chainConstruct=true] {Boolean} Whether -during instance creation- to automaticly construct in the complete hierarchy with the given constructor arguments.
-         * @return the new class.
-         */
-        subClass: function (constructor, prototypes, chainConstruct) {
-
-            var instance = this,
-                constructorClosure = {},
-                baseProt, proto, constrFn;
-            if (typeof constructor === 'boolean') {
-                constructor = null;
-                prototypes = null;
-                chainConstruct = constructor;
-            }
-
-            else {
-                if (Object.isObject(constructor)) {
-                    chainConstruct = prototypes;
-                    prototypes = constructor;
-                    constructor = null;
-                }
-
-                if (typeof prototypes === 'boolean') {
-                    chainConstruct = prototypes;
-                    prototypes = null;
-                }
-            }
-
-            (typeof chainConstruct === 'boolean') || (chainConstruct=DEFAULT_CHAIN_CONSTRUCT);
-
-            constrFn = constructor || NOOP;
-            constructor = function() {
-                constructorClosure.constructor.$$constrFn.apply(this, arguments);
-            };
-
-            constructor = (function(originalConstructor) {
-                return function() {
-                    var context = this;
-                    if (constructorClosure.constructor.$$chainConstructed) {
-                        context.__classCarier__ = constructorClosure.constructor.$$super.constructor;
-                        context.__origProp__ = 'constructor';
-                        context.__classCarier__.apply(context, arguments);
-                        context.$origMethods = constructorClosure.constructor.$$orig.constructor;
-                    }
-                    context.__classCarier__ = constructorClosure.constructor;
-                    context.__origProp__ = 'constructor';
-                    originalConstructor.apply(context, arguments);
-
-                };
-            })(constructor);
-
-            baseProt = instance.prototype;
-            proto = Object.create(baseProt);
-            constructor.prototype = proto;
-
-            // webkit doesn't let all objects to have their constructor redefined
-            // when directly assigned. Using `defineProperty will work:
-            Object.defineProperty(proto, 'constructor', {value: constructor});
-
-            constructor.$$chainConstructed = chainConstruct ? true : false;
-            constructor.$$super = baseProt;
-            constructor.$$orig = {
-                constructor: constructor
-            };
-            constructor.$$constrFn = constrFn;
-            constructorClosure.constructor = constructor;
-            prototypes && constructor.mergePrototypes(prototypes, true);
-            return constructor;
-        }
-
-    });
-
-    global._ITSAmodules.Classes = Classes = {};
-
-    /**
-     * Base properties for every Class
-     *
-     *
-     * @property BASE_MEMBERS
-     * @type Object
-     * @protected
-     * @since 0.0.1
-    */
-    BASE_MEMBERS = {
-       /**
-        * Transformed from `destroy` --> when `destroy` gets invoked, the instance will invoke `_destroy` through the whole chain.
-        * Defaults to `NOOP`, so that it can be always be invoked.
-        *
-        * @method _destroy
-        * @private
-        * @chainable
-        * @since 0.0.1
-        */
-        _destroy: NOOP,
-
-       /**
-        * Calls `_destroy` on through the class-chain on every level (bottom-up).
-        * _destroy gets defined when the itag defines `destroy` --> transformation under the hood.
-        *
-        * @method destroy
-        * @param [notChained=false] {Boolean} set this `true` to prevent calling `destroy` up through the chain
-        * @chainable
-        * @since 0.0.1
-        */
-        destroy: function(notChained) {
-            var instance = this,
-                superDestroy;
-            if (!instance._destroyed) {
-                superDestroy = function(constructor) {
-                    // don't call `hasOwnProperty` directly on obj --> it might have been overruled
-                    Object.prototype.hasOwnProperty.call(constructor.prototype, '_destroy') && constructor.prototype._destroy.call(instance);
-                    if (!notChained && constructor.$$super) {
-                        instance.__classCarier__ = constructor.$$super.constructor;
-                        superDestroy(constructor.$$super.constructor);
-                    }
-                };
-                // instance.detachAll();  <-- is what Event will add
-                superDestroy(instance.constructor);
-                Object.protectedProp(instance, '_destroyed', true);
-            }
-            return instance;
-        }
-    };
-
-    coreMethods = Classes.coreMethods = {
-        /**
-         * Returns the instance, yet sets an internal flag to a higher Class (1 level up)
-         *
-         * @property $super
-         * @chainable
-         * @for BaseClass
-         * @since 0.0.1
-        */
-        $super: {
-            get: function() {
-                var instance = this;
-                instance.__classCarier__ || (instance.__classCarier__= instance.__methodClassCarier__);
-                instance.__$superCarierStart__ || (instance.__$superCarierStart__=instance.__classCarier__);
-                instance.__classCarier__ = instance.__classCarier__ && instance.__classCarier__.$$super.constructor;
-                return instance;
-            }
-        },
-
-        /**
-         * Calculated value of the specified member at the parent-Class.
-         *
-         * @method $superProp
-         * @return {Any}
-         * @since 0.0.1
-        */
-        $superProp: {
-            configurable: true,
-            writable: true,
-            value: function(/* member, *args */) {
-                var instance = this,
-                    classCarierReturn = instance.__$superCarierStart__ || instance.__classCarier__ || instance.__methodClassCarier__,
-                    currentClassCarier = instance.__classCarier__ || instance.__methodClassCarier__,
-                    args = arguments,
-                    superClass, superPrototype, firstArg, returnValue;
-
-                instance.__$superCarierStart__ = null;
-                if (args.length === 0) {
-                    instance.__classCarier__ = classCarierReturn;
-                    return;
-                }
-
-                superClass = currentClassCarier.$$super.constructor,
-                superPrototype = superClass.prototype,
-                firstArg = Array.prototype.shift.apply(args); // will decrease the length of args with one
-                if ((firstArg==='constructor') && currentClassCarier.$$chainConstructed) {
-                    console.warn('the constructor of this Class cannot be invoked manually, because it is chainConstructed');
-                    return currentClassCarier;
-                }
-                if (typeof superPrototype[firstArg] === 'function') {
-                    instance.__classCarier__ = superClass;
-                    returnValue = superPrototype[firstArg].apply(instance, args);
-                }
-                instance.__classCarier__ = classCarierReturn;
-                return returnValue || superPrototype[firstArg];
-            }
-        },
-
-        /**
-         * Invokes the original method (from inside where $orig is invoked).
-         * Any arguments will be passed through to the original method.
-         *
-         * @method $orig
-         * @return {Any}
-         * @since 0.0.1
-        */
-        $orig: {
-            configurable: true,
-            writable: true,
-            value: function() {
-                var instance = this,
-                    classCarierReturn = instance.__$superCarierStart__,
-                    currentClassCarier = instance.__classCarier__ || instance.__methodClassCarier__,
-                    args = arguments,
-                    propertyName = instance.__origProp__,
-                    returnValue, origArray, orig, item;
-
-                instance.__$superCarierStart__ = null;
-
-                origArray = currentClassCarier.$$orig[propertyName];
-
-                instance.__origPos__ || (instance.__origPos__ = []);
-
-                // every class can have its own overruled $orig for even the same method
-                // first: seek for the item that matches propertyName/classRef:
-                instance.__origPos__.some(function(element) {
-                    if ((element.propertyName===propertyName) && (element.classRef===currentClassCarier)) {
-                        item = element;
-                    }
-                    return item;
-                });
-
-                if (!item) {
-                    item = {
-                        propertyName: propertyName,
-                        classRef: currentClassCarier,
-                        position: origArray.length-1
-                    };
-                    instance.__origPos__.push(item);
-                }
-                if (item.position===0) {
-                    return undefined;
-                }
-                item.position--;
-                orig = origArray[item.position];
-                if (typeof orig === 'function') {
-                    instance.__classCarier__ = currentClassCarier;
-                    returnValue = orig.apply(instance, args);
-                }
-                instance.__classCarier__ = classCarierReturn;
-
-                item.position++;
-
-                return returnValue || orig;
-            }
-        }
-    };
-
-   /**
-    * Creates the base Class: the highest Class in the hierarchy of all Classes.
-    * Will get extra properties merge into its prototype, which leads into the formation of `BaseClass`.
-    *
-    * @method createBaseClass
-    * @protected
-    * @return {Class}
-    * @for Classes
-    * @since 0.0.1
-    */
-    createBaseClass = function () {
-        var InitClass = function() {};
-        return Function.prototype.subClass.apply(InitClass, arguments);
-    };
-
-    /**
-     * The base BaseClass: the highest Class in the hierarchy of all Classes.
-     *
-     * @property BaseClass
-     * @type Class
-     * @since 0.0.1
-    */
-    Object.protectedProp(Classes, 'BaseClass', createBaseClass().mergePrototypes(BASE_MEMBERS, true, {}, {}));
-
-    // because `mergePrototypes` cannot merge object-getters, we will add the getter `$super` manually:
-    Object.defineProperties(Classes.BaseClass.prototype, coreMethods);
-
-    /**
-     * Returns a base class with the given constructor and prototype methods
-     *
-     * @method createClass
-     * @param [constructor] {Function} constructor for the class
-     * @param [prototype] {Object} Hash map of prototype members of the new class
-     * @return {Class} the new class
-    */
-    Object.protectedProp(Classes, 'createClass', Classes.BaseClass.subClass.bind(Classes.BaseClass));
-
-    module.exports = Classes;
-
-}(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this));
-
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+module.exports=require(13)
 },{"../lib/object.js":342,"js-ext/extra/hashmap.js":336,"polyfill/polyfill-base.js":348}],336:[function(require,module,exports){
 module.exports=require(14)
 },{}],337:[function(require,module,exports){
-arguments[4][41][0].apply(exports,arguments)
+module.exports=require(41)
 },{"../lib/array.js":339,"../lib/object.js":342,"./classes.js":335,"js-ext/extra/hashmap.js":336,"polyfill/lib/weakmap.js":346}],338:[function(require,module,exports){
 "use strict";
 
@@ -20807,7 +19057,287 @@ module.exports=require(15)
 },{"js-ext/extra/hashmap.js":336,"polyfill/polyfill-base.js":348}],343:[function(require,module,exports){
 module.exports=require(44)
 },{"polyfill":348}],344:[function(require,module,exports){
-module.exports=require(25)
+/**
+ *
+ * Pollyfils for often used functionality for Strings
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ * @module js-ext
+ * @submodule lib/string.js
+ * @class String
+ *
+ */
+
+"use strict";
+
+(function(StringPrototype) {
+    var SUBREGEX  = /\{\s*([^|}]+?)\s*(?:\|([^}]*))?\s*\}/g,
+        DATEPATTERN = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z/,
+        WHITESPACE_CLASS = "[\\s\uFEFF\xA0]+",
+        TRIM_LEFT_REGEX  = new RegExp('^' + WHITESPACE_CLASS),
+        TRIM_RIGHT_REGEX = new RegExp(WHITESPACE_CLASS + '$'),
+        TRIMREGEX        = new RegExp(TRIM_LEFT_REGEX.source + '|' + TRIM_RIGHT_REGEX.source, 'g'),
+        PATTERN_EMAIL = new RegExp('^[\\w!#$%&\'*+/=?`{|}~^-]+(?:\\.[\\w!#$%&\'*+/=?`{|}~^-]+)*@(?:[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]\\.)+[a-zA-Z]{2,}$'),
+        PATTERN_URLEND = '([a-zA-Z0-9]+\\.)*(?:[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]\\.)+[a-zA-Z]{2,}(/[\\w-]+)*$',
+        PATTERN_URLHTTP = new RegExp('^http://'+PATTERN_URLEND),
+        PATTERN_URLHTTPS = new RegExp('^https://'+PATTERN_URLEND),
+        PATTERN_URL = new RegExp('^(https?://)?'+PATTERN_URLEND),
+        PATTERN_INTEGER = /^(([-]?[1-9][0-9]*)|0)$/,
+        PATTERN_FLOAT_START = '^([-]?(([1-9][0-9]*)|0))?(\\',
+        PATTERN_FLOAT_END = '[0-9]+)?$',
+        PATTERN_FLOAT_COMMA = new RegExp(PATTERN_FLOAT_START + ',' + PATTERN_FLOAT_END),
+        PATTERN_FLOAT_DOT = new RegExp(PATTERN_FLOAT_START + '.' + PATTERN_FLOAT_END),
+        PATTERN_HEX_COLOR_ALPHA = /^#?[0-9A-F]{4}([0-9A-F]{4})?$/,
+        PATTERN_HEX_COLOR = /^#?[0-9A-F]{3}([0-9A-F]{3})?$/,
+        replaceBKP;
+
+    /**
+     * Checks whether the substring is part if this String.
+     * Alias for (String.indexOf(substring) > -1)
+     *
+     * @method contains
+     * @param substring {String} the substring to test for
+     * @param [caseInsensitive=false] {Boolean} whether to ignore case-sensivity
+     * @return {Boolean} whether the substring is found
+     */
+    String.contains || (StringPrototype.contains=function(substring, caseInsensitive) {
+        return caseInsensitive ? (this.toLowerCase().indexOf(substring.toLowerCase()) > -1) : (this.indexOf(substring) > -1);
+    });
+
+    /**
+     * Checks if the string ends with the value specified by `test`
+     *
+     * @method endsWith
+     * @param test {String} the string to test for
+     * @param [caseInsensitive=false] {Boolean} whether to ignore case-sensivity
+     * @return {Boolean} whether the string ends with `test`
+     */
+     // NOTE: we ALWAYS set this method --> ES6 native `startsWiths` lacks the second argument
+    StringPrototype.endsWith=function(test, caseInsensitive) {
+        return (new RegExp(test+'$', caseInsensitive ? 'i': '')).test(this);
+    };
+
+    /**
+     * Checks if the string can be parsed into a number when using `parseInt()`
+     *
+     * @method parsable
+     * @return {Boolean} whether the string is parsable
+     */
+    String.parsable || (StringPrototype.parsable=function() {
+        // strange enough, NaN doen't let compare itself, so we need a strange test:
+        // parseInt(value, 10)===parseInt(value, 10)
+        // which returns `true` for a parsable value, otherwise false
+        return (parseInt(this)===parseInt(this));
+    });
+
+    /**
+     * Checks if the string starts with the value specified by `test`
+     *
+     * @method startsWith
+     * @param test {String} the string to test for
+     * @param [caseInsensitive=false] {Boolean} whether to ignore case-sensivity
+     * @return {Boolean} whether the string starts with `test`
+     */
+     // NOTE: we ALWAYS set this method --> ES6 native `startsWiths` lacks the second argument
+    StringPrototype.startsWith=function(test, caseInsensitive) {
+        return (new RegExp('^'+test, caseInsensitive ? 'i': '')).test(this);
+    };
+
+    /**
+     * Performs `{placeholder}` substitution on a string. The object passed
+     * provides values to replace the `{placeholder}`s.
+     * `{placeholder}` token names must match property names of the object.
+     *
+     * `{placeholder}` tokens that are undefined on the object map will be removed.
+     *
+     * @example
+     * var greeting = '{message} {who}!';
+     * greeting.substitute({message: 'Hello'}); // results into 'Hello !'
+     *
+     * @method substitute
+     * @param obj {Object} Object containing replacement values.
+     * @return {String} the substitute result.
+     */
+    String.substitute || (StringPrototype.substitute=function(obj) {
+        return this.replace(SUBREGEX, function (match, key) {
+            return (obj[key]===undefined) ? '' : obj[key];
+        });
+    });
+
+    /**
+     * Returns a ISO-8601 Date-object build by the String's value.
+     * If the String-value doesn't match ISO-8601, `null` will be returned.
+     *
+     * ISO-8601 Date's are generated by JSON.stringify(), so it's very handy to be able to reconvert them.
+     *
+     * @example
+     * var birthday = '2010-02-10T14:45:30.000Z';
+     * birthday.toDate(); // --> Wed Feb 10 2010 15:45:30 GMT+0100 (CET)
+     *
+     * @method toDate
+     * @return {Date|null} the Date represented by the String's value or null when invalid
+     */
+    String.toDate || (StringPrototype.toDate=function() {
+        return DATEPATTERN.test(this) ? new Date(this) : null;
+    });
+
+    /**
+     * Generated the string without any white-spaces at the start or end.
+     *
+     * @method trim
+     * @return {String} new String without leading and trailing white-spaces
+     */
+    String.trim || (StringPrototype.trim=function() {
+        return this.replace(TRIMREGEX, '');
+    });
+
+    /**
+     * Generated the string without any white-spaces at the beginning.
+     *
+     * @method trimLeft
+     * @return {String} new String without leading white-spaces
+     */
+    String.trimLeft || (StringPrototype.trimLeft=function() {
+        return this.replace(TRIM_LEFT_REGEX, '');
+    });
+
+    /**
+     * Generated the string without any white-spaces at the end.
+     *
+     * @method trimRight
+     * @return {String} new String without trailing white-spaces
+     */
+    String.trimRight || (StringPrototype.trimRight=function() {
+        return this.replace(TRIM_RIGHT_REGEX, '');
+    });
+
+    /**
+     * Replaces search-characters by a replacement. Replaces only the firts occurence.
+     * Does not alter the String itself, but returns a new String with the replacement.
+     *
+     * @method replace
+     * @param search {String} the character(s) to be replaced
+     * @param replacement {String} the replacement
+     * @param [caseInsensitive=false] {Boolean} whether to do search case-insensitive
+     * @return {String} new String with the replacement
+     */
+    replaceBKP = StringPrototype.replace;
+    StringPrototype.replace=function(search, replacement, caseInsensitive) {
+        var re;
+        if (caseInsensitive) {
+            re = new RegExp(search, 'i');
+            return this.replace(re, replacement);
+        }
+        else {
+            return replaceBKP.apply(this, arguments);
+        }
+    };
+
+    /**
+     * Replaces search-characters by a replacement. Replaces all occurences.
+     * Does not alter the String itself, but returns a new String with the replacements.
+     *
+     * @method replaceAll
+     * @param search {String} the character(s) to be replaced
+     * @param replacement {String} the replacement
+     * @param [caseInsensitive=false] {Boolean} whether to do search case-insensitive
+     * @return {String} new String with the replacements
+     */
+    String.replaceAll || (StringPrototype.replaceAll=function(search, replacement, caseInsensitive) {
+        var re = new RegExp(search, 'g' + (caseInsensitive ? 'i' : ''));
+        return this.replace(re, replacement);
+    });
+
+    /**
+     * Validates if the String's value represents a valid emailaddress.
+     *
+     * @method validateEmail
+     * @return {Boolean} whether the String's value is a valid emailaddress.
+     */
+    StringPrototype.validateEmail = function() {
+        return PATTERN_EMAIL.test(this);
+    };
+
+    /**
+     * Validates if the String's value represents a valid floated number.
+     *
+     * @method validateFloat
+     * @param [comma] {Boolean} whether to use a comma as decimal separator instead of a dot
+     * @return {Boolean} whether the String's value is a valid floated number.
+     */
+    StringPrototype.validateFloat = function(comma) {
+        return comma ? PATTERN_FLOAT_COMMA.test(this) : PATTERN_FLOAT_DOT.test(this);
+    };
+
+    /**
+     * Validates if the String's value represents a hexadecimal color.
+     *
+     * @method validateHexaColor
+     * @param [alpha=false] {Boolean} whether to accept alpha transparancy
+     * @return {Boolean} whether the String's value is a valid hexadecimal color.
+     */
+    StringPrototype.validateHexaColor = function(alpha) {
+        return alpha ? PATTERN_HEX_COLOR_ALPHA.test(this) : PATTERN_HEX_COLOR.test(this);
+    };
+
+    /**
+     * Validates if the String's value represents a valid integer number.
+     *
+     * @method validateNumber
+     * @return {Boolean} whether the String's value is a valid integer number.
+     */
+    StringPrototype.validateNumber = function() {
+        return PATTERN_INTEGER.test(this);
+    };
+
+    /**
+     * Validates if the String's value represents a valid boolean.
+     *
+     * @method validateBoolean
+     * @return {Boolean} whether the String's value is a valid boolean.
+     */
+    StringPrototype.validateBoolean = function() {
+        var length = this.length,
+            check;
+        if ((length<4) || (length>5)) {
+            return false;
+        }
+        check = this.toUpperCase();
+        return ((check==='TRUE') || (check==='FALSE'));
+    };
+
+    /**
+     * Validates if the String's value represents a valid Date.
+     *
+     * @method validateDate
+     * @return {Boolean} whether the String's value is a valid Date object.
+     */
+    StringPrototype.validateDate = function() {
+        return DATEPATTERN.test(this);
+    };
+
+    /**
+     * Validates if the String's value represents a valid URL.
+     *
+     * @method validateURL
+     * @param [options] {Object}
+     * @param [options.http] {Boolean} to force matching starting with `http://`
+     * @param [options.https] {Boolean} to force matching starting with `https://`
+     * @return {Boolean} whether the String's value is a valid URL.
+     */
+    StringPrototype.validateURL = function(options) {
+        var instance = this;
+        options || (options={});
+        if (options.http && options.https) {
+            return false;
+        }
+        return options.http ? PATTERN_URLHTTP.test(instance) : (options.https ? PATTERN_URLHTTPS.test(instance) : PATTERN_URL.test(instance));
+    };
+
+}(String.prototype));
+
 },{}],345:[function(require,module,exports){
 module.exports=require(16)
 },{}],346:[function(require,module,exports){
@@ -21431,7 +19961,7 @@ exports.XMLHttpRequest = function() {
 };
 
 }).call(this,require('_process'),require("buffer").Buffer)
-},{"_process":434,"buffer":423,"child_process":422,"fs":422,"http":427,"https":431,"url":452,"xmldom":406}],350:[function(require,module,exports){
+},{"_process":433,"buffer":422,"child_process":421,"fs":421,"http":426,"https":430,"url":451,"xmldom":406}],350:[function(require,module,exports){
 "use strict";
 
 /**
@@ -21643,7 +20173,7 @@ reset = function () {
 reset();
 
 module.exports = win;
-},{"./lib/XMLHttpRequest.js":349,"js-ext/lib/array.js":351,"polyfill/lib/window.console.js":356,"url":452,"xmldom":406}],351:[function(require,module,exports){
+},{"./lib/XMLHttpRequest.js":349,"js-ext/lib/array.js":351,"polyfill/lib/window.console.js":356,"url":451,"xmldom":406}],351:[function(require,module,exports){
 module.exports=require(23)
 },{"polyfill/polyfill-base.js":354}],352:[function(require,module,exports){
 module.exports=require(16)
@@ -22781,7 +21311,8 @@ module.exports = function (window) {
         ElementPrototype.compareDocumentPosition = function(otherElement) {
             // see http://ejohn.org/blog/comparing-document-position/
             var instance = this,
-                parent, index1, index2, vChildNodes;
+                parent, index1, index2, vChildNodes, vnode, otherVNode,
+                i_instance, i_other, sameLevel, arrayInstance, arrayOther;
             if (instance===otherElement) {
                 return 0;
             }
@@ -22796,27 +21327,71 @@ module.exports = function (window) {
             }
             parent = instance.getParent();
             vChildNodes = parent.vnode.vChildNodes;
-            index1 = vChildNodes.indexOf(instance.vnode);
-            index2 = vChildNodes.indexOf(otherElement.vnode);
+            vnode = instance.vnode;
+            otherVNode = otherElement.vnode;
+            index1 = vChildNodes.indexOf(vnode);
+            index2 = vChildNodes.indexOf(otherVNode);
+            if ((index1!==-1) && (index2!==-1)) {
+                if (index1<index2) {
+                    return 4;
+                }
+                else {
+                    return 2;
+                }
+            }
+            // still not found, now we need to inspect the tree-structure of both elements
+            // and determine at what point (up-down the tree) the elements are going to differ
+            arrayInstance = [];
+            arrayOther = [];
+            arrayInstance[0] = vnode;
+/*jshint boss:true */
+            while (vnode=vnode.vParent) {
+/*jshint boss:false */
+                arrayInstance[arrayInstance.length] = vnode;
+            }
+            arrayOther[0] = otherVNode;
+/*jshint boss:true */
+            while (otherVNode=otherVNode.vParent) {
+/*jshint boss:false */
+                arrayOther[arrayOther.length] = otherVNode;
+            }
+            i_instance = arrayInstance.length - 1;
+            i_other = arrayOther.length - 1;
+            sameLevel = true;
+            while (sameLevel && (i_instance>=0) && (i_other>=0)) {
+                // starts with the most upper element
+                vnode = arrayInstance[i_instance];
+                otherVNode = arrayOther[i_other];
+                sameLevel = (vnode===otherVNode);
+                i_instance--;
+                i_other--;
+            }
+            // now we are out and we should be able to compare `vnode` and `otherVNode` which lie at the same level though are different
+            parent = vnode.vParent;
+            vChildNodes = parent.vChildNodes;
+            index1 = vChildNodes.indexOf(vnode);
+            index2 = vChildNodes.indexOf(otherVNode);
             if (index1<index2) {
-                return 2;
+                return 4;
             }
             else {
-                return 4;
+                return 2;
             }
         };
 
         /**
-         * Indicating whether this Element contains OR equals otherElement.
+         * Indicating whether this Element contains OR equals otherElement. If you need only to be sure the other Element lies inside,
+         * but not equals itself, set `excludeItself` true.
          *
          * @method contains
          * @param otherElement {Element}
+         * @param [excludeItself] {Boolean} to exclude itsefl as a hit
          * @param [insideItags=false] {Boolean} no deepsearch in iTags --> by default, these elements should be hidden
          * @return {Boolean} whether this Element contains OR equals otherElement.
          */
-        ElementPrototype.contains = function(otherElement, insideItags) {
+        ElementPrototype.contains = function(otherElement, excludeItself, insideItags) {
             if (otherElement===this) {
-                return true;
+                return !excludeItself;
             }
             return this.vnode.contains(otherElement.vnode, !insideItags);
         };
@@ -22902,12 +21477,17 @@ module.exports = function (window) {
          *
          * @method first
          * @param [cssSelector] {String} to return the first Element that matches the css-selector
+         * @param [container] {HTMLElement} the container-element to search within --> this lead into searching out of the same level
          * @return {Element}
          * @since 0.0.1
          */
-        ElementPrototype.first = function(cssSelector) {
-            var parent = this.vnode.vParent,
-                firstV = parent && parent.firstOfVChildren(cssSelector);
+        ElementPrototype.first = function(cssSelector, container) {
+            var parent, firstV;
+            if (container) {
+                return container.querySelector(cssSelector);
+            }
+            parent = this.vnode.vParent;
+            firstV = parent && parent.firstOfVChildren(cssSelector);
             return firstV && firstV.domNode;
         };
 
@@ -23178,7 +21758,7 @@ module.exports = function (window) {
          */
         ElementPrototype.getElementById = function(id, insideItags) {
             var element = nodeids[id];
-            if (element && !this.contains(element, insideItags)) {
+            if (element && !this.contains(element, true, insideItags)) {
                 // outside itself
                 return null;
             }
@@ -23192,11 +21772,12 @@ module.exports = function (window) {
          * Use this method instead of `innerHTML`
          *
          * @method getHTML
+         * @param [exclude] {Array|HTMLElement} an array of HTMLElements - or just 1 - to be excluded
          * @return {String}
          * @since 0.0.1
          */
-        ElementPrototype.getHTML = function() {
-            return this.vnode.innerHTML;
+        ElementPrototype.getHTML = function(exclude) {
+            return exclude ? this.vnode.getHTML(exclude) : this.vnode.innerHTML;
         };
 
        /**
@@ -23539,8 +22120,7 @@ module.exports = function (window) {
         * @since 0.0.1
         */
         ElementPrototype.hasFocusInside = function() {
-            var activeElement = DOCUMENT.activeElement;
-            return ((DOCUMENT.activeElement!==this) && this.contains(activeElement));
+            return this.contains(DOCUMENT.activeElement, true);
         };
 
        /**
@@ -23662,7 +22242,7 @@ module.exports = function (window) {
             if (this.vnode.removedFromDOM) {
                 return false;
             }
-            return DOCUMENT.contains(this, true);
+            return DOCUMENT.contains(this, false, true);
         };
 
        /**
@@ -23743,12 +22323,18 @@ module.exports = function (window) {
          *
          * @method last
          * @param [cssSelector] {String} to return the last Element that matches the css-selector
+         * @param [container] {HTMLElement} the container-element to search within --> this lead into searching out of the same level
          * @return {Element}
          * @since 0.0.1
          */
-        ElementPrototype.last = function(cssSelector) {
-            var vParent = this.vnode.vParent,
-                lastV = vParent && vParent.lastOfVChildren(cssSelector);
+        ElementPrototype.last = function(cssSelector, container) {
+            var vParent, lastV, found;
+            if (container) {
+                found = container.querySelectorAll(cssSelector);
+                return found[found.length-1];
+            }
+            vParent = this.vnode.vParent;
+            lastV = vParent && vParent.lastOfVChildren(cssSelector);
             return lastV && lastV.domNode;
         };
 
@@ -23796,13 +22382,17 @@ module.exports = function (window) {
          *
          * @method next
          * @param [cssSelector] {String} css-selector to be used as a filter
+         * @param [container] {HTMLElement} the container-element to search within --> this lead into searching out of the same level
          * @return {Element|null}
          * @type Element
          * @since 0.0.1
          */
-        ElementPrototype.next = function(cssSelector) {
+        ElementPrototype.next = function(cssSelector, container) {
             var vnode = this.vnode,
                 found, vNextElement, firstCharacter, i, len;
+            if (container) {
+                return container.querySelector(cssSelector, false, this, 2) || null;
+            }
             if (!cssSelector) {
                 vNextElement = vnode.vNextElement;
                 return vNextElement && vNextElement.domNode;
@@ -23885,13 +22475,18 @@ module.exports = function (window) {
          *
          * @method previous
          * @param [cssSelector] {String} css-selector to be used as a filter
+         * @param [container] {HTMLElement} the container-element to search within --> this lead into searching out of the same level
          * @return {Element|null}
          * @type Element
          * @since 0.0.1
          */
-        ElementPrototype.previous = function(cssSelector) {
+        ElementPrototype.previous = function(cssSelector, container) {
             var vnode = this.vnode,
                 found, vPreviousElement, firstCharacter, i, len;
+            if (container) {
+                found = container.querySelectorAll(cssSelector, false, this, 4);
+                return (found.length>0) ? found[found.length-1] :  null;
+            }
             if (!cssSelector) {
                 vPreviousElement = vnode.vPreviousElement;
                 return vPreviousElement && vPreviousElement.domNode;
@@ -23922,24 +22517,33 @@ module.exports = function (window) {
          * @method querySelector
          * @param selectors {String} CSS-selector(s) that should match
          * @param [insideItags=false] {Boolean} no deepsearch in iTags --> by default, these elements should be hidden
+         * @param [refNode] {HTMLElement} reference-node where the found node should be `before` or `after`: specified by domPosition
+         * @param [domPosition] {Number} The position to accept, compared to `refNode`. Should be either:
+         * <ul>
+         *     <li>Node.DOCUMENT_POSITION_PRECEDING === 2 (this Element comes before otherElement)</li>
+         *     <li>Node.DOCUMENT_POSITION_FOLLOWING === 4 (this Element comes after otherElement)</li>
+         * </ul>
          * @return {Element}
          */
-        ElementPrototype.querySelector = function(selectors, insideItags) {
+        ElementPrototype.querySelector = function(selectors, insideItags, refNode, domPosition) {
             var found,
                 i = -1,
-                len = selectors.length,
-                firstCharacter, startvnode,
                 thisvnode = this.vnode,
-                inspectChildren = function(vnode) {
-                    var vChildren = vnode.vChildren,
-                        len2 = vChildren ? vChildren.length : 0,
-                        j, vChildNode;
-                    for (j=0; (j<len2) && !found; j++) {
-                        vChildNode = vChildren[j];
-                        vChildNode.matchesSelector(selectors, thisvnode) && (found=vChildNode.domNode);
-                        found || (!insideItags && vChildNode.isItag && vChildNode.domNode.contentHidden) || inspectChildren(vChildNode); // not dive into itags (except from when content is not hidden)
+                len, firstCharacter, startvnode, inspectChildren;
+            selectors || (selectors='*');
+            len = selectors.length;
+            inspectChildren = function(vnode) {
+                var vChildren = vnode.vChildren,
+                    len2 = vChildren ? vChildren.length : 0,
+                    j, vChildNode;
+                for (j=0; (j<len2) && !found; j++) {
+                    vChildNode = vChildren[j];
+                    if (vChildNode.matchesSelector(selectors, thisvnode) && (!refNode || ((vChildNode.domNode.compareDocumentPosition(refNode) & domPosition)!==0))) {
+                        found = vChildNode.domNode;
                     }
-                };
+                    found || (!insideItags && vChildNode.isItag && vChildNode.domNode.contentHidden) || inspectChildren(vChildNode); // not dive into itags (except from when content is not hidden)
+                }
+            };
             while (!firstCharacter && (++i<len)) {
                 firstCharacter = selectors[i];
                 (firstCharacter===' ') && (firstCharacter=null);
@@ -23958,24 +22562,33 @@ module.exports = function (window) {
          * @method querySelectorAll
          * @param selectors {String} CSS-selector(s) that should match
          * @param [insideItags=false] {Boolean} no deepsearch in iTags --> by default, these elements should be hidden
+         * @param [refNode] {HTMLElement} reference-node where the found nodes should be `before` or `after`: specified by domPosition
+         * @param [domPosition] {Number} The position to accept, compared to `refNode`. Should be either:
+         * <ul>
+         *     <li>Node.DOCUMENT_POSITION_PRECEDING === 2 (this Element comes before otherElement)</li>
+         *     <li>Node.DOCUMENT_POSITION_FOLLOWING === 4 (this Element comes after otherElement)</li>
+         * </ul>
          * @return {ElementArray} non-life Array (snapshot) with Elements
          */
-        ElementPrototype.querySelectorAll = function(selectors, insideItags) {
+        ElementPrototype.querySelectorAll = function(selectors, insideItags, refNode, domPosition) {
             var found = ElementArray.createArray(),
                 i = -1,
-                len = selectors.length,
-                firstCharacter, startvnode,
                 thisvnode = this.vnode,
-                inspectChildren = function(vnode) {
-                    var vChildren = vnode.vChildren,
-                        len2 = vChildren ? vChildren.length : 0,
-                        j, vChildNode;
-                    for (j=0; j<len2; j++) {
-                        vChildNode = vChildren[j];
-                        vChildNode.matchesSelector(selectors, thisvnode) && (found[found.length]=vChildNode.domNode);
-                        (!insideItags && vChildNode.isItag && vChildNode.domNode.contentHidden) || inspectChildren(vChildNode); // not dive into itags
+                len, firstCharacter, startvnode, inspectChildren;
+            selectors || (selectors='*');
+            len = selectors.length,
+            inspectChildren = function(vnode) {
+                var vChildren = vnode.vChildren,
+                    len2 = vChildren ? vChildren.length : 0,
+                    j, vChildNode;
+                for (j=0; j<len2; j++) {
+                    vChildNode = vChildren[j];
+                    if (vChildNode.matchesSelector(selectors, thisvnode) && (!refNode || ((vChildNode.domNode.compareDocumentPosition(refNode) & domPosition)!==0))) {
+                        found[found.length] = vChildNode.domNode;
                     }
-                };
+                    (!insideItags && vChildNode.isItag && vChildNode.domNode.contentHidden) || inspectChildren(vChildNode); // not dive into itags
+                }
+            };
             while (!firstCharacter && (++i<len)) {
                 firstCharacter = selectors[i];
                 (firstCharacter===' ') && (firstCharacter=null);
@@ -26214,239 +24827,496 @@ for (j=0; j<len2; j++) {
 */
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"../css/element.css":364,"./attribute-extractor.js":396,"./element-array.js":397,"./html-parser.js":401,"./node-parser.js":402,"./vdom-ns.js":403,"./vnode.js":404,"js-ext/extra/hashmap.js":366,"js-ext/lib/object.js":369,"js-ext/lib/promise.js":370,"js-ext/lib/string.js":371,"polyfill":382,"polyfill/extra/transition.js":377,"polyfill/extra/transitionend.js":378,"polyfill/extra/vendorCSS.js":379,"utils":383,"window-ext":389}],401:[function(require,module,exports){
-arguments[4][75][0].apply(exports,arguments)
-},{"./attribute-extractor.js":396,"./vdom-ns.js":403,"js-ext/extra/hashmap.js":366,"js-ext/lib/object.js":369,"polyfill":382}],402:[function(require,module,exports){
-arguments[4][76][0].apply(exports,arguments)
-},{"./attribute-extractor.js":396,"./vdom-ns.js":403,"./vnode.js":404,"js-ext/extra/hashmap.js":366,"js-ext/lib/object.js":369,"polyfill":382}],403:[function(require,module,exports){
+"use strict";
+
 /**
- * Creates a Namespace that can be used accros multiple vdom-modules to share information.
+ * Exports `htmlToVNodes` which transforms html-text into vnodes.
  *
  *
  * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
  * <br>
  * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
  *
- *
  * @module vdom
- * @submodule vdom-ns
- * @class NS-vdom
+ * @submodule html-parser
  * @since 0.0.1
 */
 
-"use strict";
-
-require('js-ext/lib/object.js');
 require('polyfill');
+require('js-ext/lib/object.js');
 
-var createHashMap = require('js-ext/extra/hashmap.js').createMap,
-    // for escaping entoties inside domNode.nodeValue, we need this trick: https://code.google.com/p/jslibs/wiki/JavascriptTips
-/*jshint proto:true */
-    ENTITY_TO_CODE = { __proto__: null,
-        apos:0x0027,quot:0x0022,amp:0x0026,lt:0x003C,gt:0x003E,nbsp:0x00A0,iexcl:0x00A1,cent:0x00A2,pound:0x00A3,
-        curren:0x00A4,yen:0x00A5,brvbar:0x00A6,sect:0x00A7,uml:0x00A8,copy:0x00A9,ordf:0x00AA,laquo:0x00AB,
-        not:0x00AC,shy:0x00AD,reg:0x00AE,macr:0x00AF,deg:0x00B0,plusmn:0x00B1,sup2:0x00B2,sup3:0x00B3,
-        acute:0x00B4,micro:0x00B5,para:0x00B6,middot:0x00B7,cedil:0x00B8,sup1:0x00B9,ordm:0x00BA,raquo:0x00BB,
-        frac14:0x00BC,frac12:0x00BD,frac34:0x00BE,iquest:0x00BF,Agrave:0x00C0,Aacute:0x00C1,Acirc:0x00C2,Atilde:0x00C3,
-        Auml:0x00C4,Aring:0x00C5,AElig:0x00C6,Ccedil:0x00C7,Egrave:0x00C8,Eacute:0x00C9,Ecirc:0x00CA,Euml:0x00CB,
-        Igrave:0x00CC,Iacute:0x00CD,Icirc:0x00CE,Iuml:0x00CF,ETH:0x00D0,Ntilde:0x00D1,Ograve:0x00D2,Oacute:0x00D3,
-        Ocirc:0x00D4,Otilde:0x00D5,Ouml:0x00D6,times:0x00D7,Oslash:0x00D8,Ugrave:0x00D9,Uacute:0x00DA,Ucirc:0x00DB,
-        Uuml:0x00DC,Yacute:0x00DD,THORN:0x00DE,szlig:0x00DF,agrave:0x00E0,aacute:0x00E1,acirc:0x00E2,atilde:0x00E3,
-        auml:0x00E4,aring:0x00E5,aelig:0x00E6,ccedil:0x00E7,egrave:0x00E8,eacute:0x00E9,ecirc:0x00EA,euml:0x00EB,
-        igrave:0x00EC,iacute:0x00ED,icirc:0x00EE,iuml:0x00EF,eth:0x00F0,ntilde:0x00F1,ograve:0x00F2,oacute:0x00F3,
-        ocirc:0x00F4,otilde:0x00F5,ouml:0x00F6,divide:0x00F7,oslash:0x00F8,ugrave:0x00F9,uacute:0x00FA,ucirc:0x00FB,
-        uuml:0x00FC,yacute:0x00FD,thorn:0x00FE,yuml:0x00FF,OElig:0x0152,oelig:0x0153,Scaron:0x0160,scaron:0x0161,
-        Yuml:0x0178,fnof:0x0192,circ:0x02C6,tilde:0x02DC,Alpha:0x0391,Beta:0x0392,Gamma:0x0393,Delta:0x0394,
-        Epsilon:0x0395,Zeta:0x0396,Eta:0x0397,Theta:0x0398,Iota:0x0399,Kappa:0x039A,Lambda:0x039B,Mu:0x039C,
-        Nu:0x039D,Xi:0x039E,Omicron:0x039F,Pi:0x03A0,Rho:0x03A1,Sigma:0x03A3,Tau:0x03A4,Upsilon:0x03A5,
-        Phi:0x03A6,Chi:0x03A7,Psi:0x03A8,Omega:0x03A9,alpha:0x03B1,beta:0x03B2,gamma:0x03B3,delta:0x03B4,
-        epsilon:0x03B5,zeta:0x03B6,eta:0x03B7,theta:0x03B8,iota:0x03B9,kappa:0x03BA,lambda:0x03BB,mu:0x03BC,
-        nu:0x03BD,xi:0x03BE,omicron:0x03BF,pi:0x03C0,rho:0x03C1,sigmaf:0x03C2,sigma:0x03C3,tau:0x03C4,
-        upsilon:0x03C5,phi:0x03C6,chi:0x03C7,psi:0x03C8,omega:0x03C9,thetasym:0x03D1,upsih:0x03D2,piv:0x03D6,
-        ensp:0x2002,emsp:0x2003,thinsp:0x2009,zwnj:0x200C,zwj:0x200D,lrm:0x200E,rlm:0x200F,ndash:0x2013,
-        mdash:0x2014,lsquo:0x2018,rsquo:0x2019,sbquo:0x201A,ldquo:0x201C,rdquo:0x201D,bdquo:0x201E,dagger:0x2020,
-        Dagger:0x2021,bull:0x2022,hellip:0x2026,permil:0x2030,prime:0x2032,Prime:0x2033,lsaquo:0x2039,rsaquo:0x203A,
-        oline:0x203E,frasl:0x2044,euro:0x20AC,image:0x2111,weierp:0x2118,real:0x211C,trade:0x2122,alefsym:0x2135,
-        larr:0x2190,uarr:0x2191,rarr:0x2192,darr:0x2193,harr:0x2194,crarr:0x21B5,lArr:0x21D0,uArr:0x21D1,
-        rArr:0x21D2,dArr:0x21D3,hArr:0x21D4,forall:0x2200,part:0x2202,exist:0x2203,empty:0x2205,nabla:0x2207,
-        isin:0x2208,notin:0x2209,ni:0x220B,prod:0x220F,sum:0x2211,minus:0x2212,lowast:0x2217,radic:0x221A,
-        prop:0x221D,infin:0x221E,ang:0x2220,and:0x2227,or:0x2228,cap:0x2229,cup:0x222A,int:0x222B,
-        there4:0x2234,sim:0x223C,cong:0x2245,asymp:0x2248,ne:0x2260,equiv:0x2261,le:0x2264,ge:0x2265,
-        sub:0x2282,sup:0x2283,nsub:0x2284,sube:0x2286,supe:0x2287,oplus:0x2295,otimes:0x2297,perp:0x22A5,
-        sdot:0x22C5,lceil:0x2308,rceil:0x2309,lfloor:0x230A,rfloor:0x230B,lang:0x2329,rang:0x232A,loz:0x25CA,
-        spades:0x2660,clubs:0x2663,hearts:0x2665,diams:0x2666
-    },
-/*jshint proto:false */
-    charToEntity = {},
-
-// Void Elements - HTML 4.01
-    DEFAULT_VOID = createHashMap({
-        AREA: true,
-        BASE: true,
-        BASEFONT: true,
-        BR: true,
-        COL: true,
-        FRAME: true,
-        HR: true,
-        IMG: true,
-        INPUT: true,
-        ISINDEX: true,
-        LINK: true,
-        META: true,
-        PARAM: true,
-        EMBED: true
-    }),
-
-    // Block Elements - HTML 4.01
-    DEFAULT_NON_BLOCK = createHashMap({
-        ADDRESS: true,
-        APPLET: true,
-        BLOCKQUITE: true,
-        BUTTON: true,
-        CENTER: true,
-        DD: true,
-        DEL: true,
-        DIR: true,
-        DIV: true,
-        DL: true,
-        DT: true,
-        FIELDSET: true,
-        FORM: true,
-        FRAMESET: true,
-        IFRAME: true,
-        INS: true,
-        ISINDEX: true,
-        LI: true,
-        MAP: true,
-        MENU: true,
-        NOFRAMES: true,
-        NOSCRIPT: true,
-        OBJECT: true,
-        OL: true,
-        P: true,
-        PRE: true,
-        SCRIPT: true,
-        TABLE: true,
-        TBODY: true,
-        TD: true,
-        TFOOT: true,
-        TH: true,
-        THEAD: true,
-        TR: true,
-        UL: true
-    }),
-
-    entityName;
-
-for (entityName in ENTITY_TO_CODE) {
-    charToEntity[String.fromCharCode(ENTITY_TO_CODE[entityName])] = entityName;
-}
+var createHashMap = require('js-ext/extra/hashmap.js').createMap;
 
 module.exports = function (window) {
-    var NS;
 
     window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
 
-    if (window._ITSAmodules.VDOM_NS) {
-        return window._ITSAmodules.VDOM_NS; // VDOM_NS was already created
+    if (window._ITSAmodules.HtmlParser) {
+        return window._ITSAmodules.HtmlParser; // HtmlParser was already created
     }
 
-    NS = window._ITSAmodules.VDOM_NS = createHashMap();
+    var NS = require('./vdom-ns.js')(window),
+        extractor = require('./attribute-extractor.js')(window),
+        DOCUMENT = window.document,
+        xmlNS = NS.xmlNS,
+        voidElements = NS.voidElements,
+        nonVoidElements = NS.nonVoidElements,
 
-    /**
-     * Reference to the VElement of document.body (gets its value as soon as it gets refered to)
-     *
-     * @property body
-     * @default null
-     * @type VElement
-     * @since 0.0.1
-     */
-    NS.body = null;
+        TAG_OR_ATTR_START_CHARACTERS = createHashMap({
+            a: true,
+            b: true,
+            c: true,
+            d: true,
+            e: true,
+            f: true,
+            g: true,
+            h: true,
+            i: true,
+            j: true,
+            k: true,
+            l: true,
+            m: true,
+            n: true,
+            o: true,
+            p: true,
+            q: true,
+            r: true,
+            s: true,
+            t: true,
+            u: true,
+            v: true,
+            w: true,
+            x: true,
+            y: true,
+            z: true,
+            A: true,
+            B: true,
+            C: true,
+            D: true,
+            E: true,
+            F: true,
+            G: true,
+            H: true,
+            I: true,
+            J: true,
+            K: true,
+            L: true,
+            M: true,
+            N: true,
+            O: true,
+            P: true,
+            Q: true,
+            R: true,
+            S: true,
+            T: true,
+            U: true,
+            V: true,
+            W: true,
+            X: true,
+            Y: true,
+            Z: true
+        }),
+        STARTTAG_OR_ATTR_VALUE_ENDS_CHARACTERS = createHashMap({
+            ' ': true,
+            '>': true
+        }),
+        ATTRUBUTE_NAME_ENDS_CHARACTER = createHashMap({
+            ' ': true,
+            '=': true,
+            '>': true
+        }),
 
-    NS.xmlNS = createHashMap({
-        SVG: 'http://www.w3.org/2000/svg',
-        XBL: 'http://www.mozilla.org/xbl',
-        XUL: 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul',
-        MATH: 'http://www.w3.org/1998/Math/MathML',
-        XLINK: 'http://www.w3.org/1999/xlink'
-    });
+        /**
+         * Transforms html-text into a vnodes-Array.
+         *
+         * @method htmlToVNodes
+         * @param htmlString {String} plain html as string
+         * @return {Array} array with `vnodes`
+         * @since 0.0.1
+         */
+        htmlToVNodes = window._ITSAmodules.HtmlParser = function(htmlString, vNodeProto, nameSpace, parentVNode, suppressItagRender) {
+            var i = 0,
+                vnodes = [],
+                insideTagDefinition, insideComment, innerText, endTagCount, stringMarker, attributeisString, attribute, attributeValue, nestedComments,
+                len, j, character, character2, vnode, tag, isBeginTag, isEndTag, scriptVNode, extractClass, extractStyle, tagdefinition, is;
 
-    /**
-     * A hash with all node'ids (of all the domnodes that have an id). The value is a reference to an VElement.
-     *
-     * @property nodeids
-     * @default {}
-     * @type Object
-     * @since 0.0.1
-     */
-    NS.nodeids || (NS.nodeids=createHashMap());
+            htmlString || (htmlString='');
+            len = htmlString.length;
 
-    /**
-     * A hash with all encountered non-void Elements
-     *
-     * @property nonVoidElements
-     * @default {}
-     * @type Object
-     * @since 0.0.1
-     */
-    NS.nonVoidElements || (NS.nonVoidElements=DEFAULT_NON_BLOCK);
+            while (i<len) {
+                character = htmlString[i];
+                character2 = htmlString[i+1];
+                if (insideTagDefinition) {
 
-    /**
-     * A hash to identify what tagNames are equal to `SCRIPT` or `STYLE`.
-     *
-     * @property SCRIPT_OR_STYLE_TAG
-     * @default {SCRIPT: true, STYLE: true}
-     * @type Object
-     * @since 0.0.1
-     */
-    NS.SCRIPT_OR_STYLE_TAG = createHashMap({
-        SCRIPT: true,
-        STYLE: true
-    });
+                    vnode.attrs = {};
+                    if (character!=='>') {
+                        // fill attributes until tagdefinition is over:
+                        // NOTE: we need to DOUBLE check for "(character!=='>')" because the loop might set the position to '>' where an i++ would miss it!
+                        while ((character!=='>') && (++i<len) && (character=htmlString[i]) && (character!=='>')) {
+                            // when starting to read an attribute, finish reading until it is completely ready.
+                            // this is, because attributes can have a '>' which shouldn't be noticed as an end-of-tag definition
+                            if (TAG_OR_ATTR_START_CHARACTERS[character]) {
+                                attribute = character;
+                                while ((++i<len) && (character=htmlString[i]) && !ATTRUBUTE_NAME_ENDS_CHARACTER[character]) {
+                                    attribute += character;
+                                }
+                                if (character==='=') {
+                                    stringMarker = htmlString[i+1];
+                                    attributeisString = (stringMarker==='"') || (stringMarker==="'");
 
-    /**
-     * A hash with all nodeTypes that should be captured by the vDOM.
-     *
-     * @property VALID_NODE_TYPES
-     * @default {1: true, 3: true, 8: true}
-     * @type Object
-     * @since 0.0.1
-     */
-    NS.VALID_NODE_TYPES = createHashMap({
-        1: true,
-        3: true,
-        8: true
-    });
+                                    attributeValue = '';
+                                    if (attributeisString) {
+                                        i++;
+                                        while ((++i<len) && (character=htmlString[i]) && ((character!==stringMarker) || (htmlString[i-1]==='\\'))) {
+                                            ((htmlString[i+1]!==stringMarker) || (character!=='\\')) && (attributeValue+=character);
+                                        }
+                                    }
+                                    else {
+                                        while ((++i<len) && (character=htmlString[i]) && !STARTTAG_OR_ATTR_VALUE_ENDS_CHARACTERS[character]) {
+                                            attributeValue += character;
+                                        }
+                                        // need to set the position one step behind --> the attributeloop will increase it and would otherwise miss a character
+                                        i--;
+                                    }
+                                }
+                                else {
+                                    attributeValue = "";
+                                }
+                                // always store the `is` attribute in lowercase:
+                                (attribute.length===2) && (attribute.toLowerCase()==='is') && (attribute='is');
+                                vnode.attrs[attribute] = attributeValue;
+                            }
+                        }
+                        vnode.id = vnode.attrs.id;
 
-    /**
-     * A hash with all encountered void Elements
-     *
-     * @property voidElements
-     * @default {}
-     * @type Object
-     * @since 0.0.1
-     */
-    NS.voidElements || (NS.voidElements=DEFAULT_VOID);
+                        extractClass = extractor.extractClass(vnode.attrs['class']);
+                        extractClass.attrClass && (vnode.attrs['class']=extractClass.attrClass);
+                        vnode.classNames = extractClass.classNames;
 
-    NS.UnescapeEntities = function(str) {
-        return str.replace(
-            /&(.+?);/g,
-            function(str, ent) {
-                return String.fromCharCode( ent[0]!=='#' ? ENTITY_TO_CODE[ent] : (ent[1]==='x' ? parseInt(ent.substr(2),16) : parseInt(ent.substr(1)) ) );
+                        extractStyle = extractor.extractStyle(vnode.attrs.style);
+                        extractStyle.attrStyle && (vnode.attrs.style=extractStyle.attrStyle);
+                        vnode.styles = extractStyle.styles;
+
+                    }
+
+                    if (!vnode.isVoid) {
+                        innerText = '';
+                        endTagCount = 1;
+                        // fill innerText until end-tagdefinition:
+                        while ((endTagCount>0) && (++i<len) && (character=htmlString[i])) {
+                            if (character==='<') {
+                                if ((character2=htmlString[i+1]) && (character2==='/')) {
+                                    // possible end-tag
+                                    j = i+1;
+                                    isEndTag = true;
+                                    while (isEndTag && (++j<len) && (htmlString[j]!=='>')) {
+                                        if (htmlString[j].toUpperCase()!==tag[j-i-2]) {
+                                            isEndTag = false;
+                                        }
+                                    }
+                                    isEndTag && (endTagCount--);
+                                }
+                                else {
+                                    // possible begin-tag of the same tag (an innertag with the same tagname)
+                                    j = i;
+                                    isBeginTag = true;
+                                    while (isBeginTag && (++j<len) && (character2=htmlString[j]) && (character2!=='>') && (character2!==' ')) {
+                                        if (htmlString[j].toUpperCase()!==tag[j-i-1]) {
+                                            isBeginTag = false;
+                                        }
+                                    }
+                                    isBeginTag && (endTagCount++);
+                                }
+                            }
+                            if (endTagCount>0) {
+                                innerText += character;
+                            }
+                        }
+                        (endTagCount===0) && (i=i+tag.length+3);
+                        // in case of 'SCRIPT' or 'STYLE' tags --> just use the innertext, all other tags need to be extracted
+
+                        if (NS.SCRIPT_OR_STYLE_TAG[vnode.tag]) {
+                            // CREATE INNER TEXTNODE
+                            scriptVNode = Object.create(vNodeProto);
+                            scriptVNode.ns = nameSpace;
+                            scriptVNode.nodeType = 3;
+                            scriptVNode.domNode = DOCUMENT.createTextNode(innerText);
+                            // create circular reference:
+                            scriptVNode.domNode._vnode = scriptVNode;
+                            scriptVNode.text = innerText;
+                            scriptVNode.vParent = vnode;
+                            vnode.vChildNodes = [scriptVNode];
+                        }
+                        else {
+                            vnode.vChildNodes = (innerText!=='') ? htmlToVNodes(innerText, vNodeProto, vnode.ns, vnode, suppressItagRender) : [];
+                        }
+                    }
+                    else {
+                        i++; // compensate for the '>'
+                    }
+
+                    //vnode.domNode can only be set after inspecting the attributes --> there might be an `is` attribute
+                    tagdefinition = tag.toLowerCase();
+                    if (vnode.isItag && (is=vnode.attrs.is) && !is.contains('-')) {
+                        tagdefinition = tag + '#' + is;
+                    }
+                    vnode.domNode = vnode.ns ? DOCUMENT.createElementNS(vnode.ns, tagdefinition) : DOCUMENT.createElement(tagdefinition, suppressItagRender);
+                    // create circular reference:
+                    vnode.domNode._vnode = vnode;
+
+                    vnodes[vnodes.length] = vnode;
+                    // reset vnode to force create a new one
+                    vnode = null;
+                    insideTagDefinition = false;
+                }
+
+                else if (insideComment) {
+                    if (character+character2+htmlString[i+2]+htmlString[i+3]==='<!--') {
+                        nestedComments++;
+                    }
+                    if (character+character2+htmlString[i+2]==='-->') {
+                        // should we close  the vnode?
+                        nestedComments--;
+                        if (nestedComments<0) {
+                            // yes close the commentnode
+                            // move index to last character of comment
+                            i = i+2;
+                            vnode.domNode = DOCUMENT.createComment('');
+                            // create circular reference:
+                            vnode.domNode._vnode = vnode;
+                            vnodes[vnodes.length] = vnode;
+                            // reset vnode to force create a new one
+                            vnode = null;
+                            insideComment = false;
+                        }
+                        else {
+                            vnode.text += character;
+                        }
+                    }
+                    else {
+                        vnode.text += character;
+                    }
+                    i++;
+                }
+
+                else {
+                    // inside TextNode which could go over into an Element or CommentNode
+                    if ((character==='<') && TAG_OR_ATTR_START_CHARACTERS[character2] && (htmlString.lastIndexOf('>')>i)) {
+                        // begin of opening Element
+                        // first: store current vnode:
+                        if (vnode) {
+                            vnode.domNode = DOCUMENT.createTextNode('');
+                            // create circular reference:
+                            vnode.domNode._vnode = vnode;
+                            vnodes[vnodes.length] = vnode;
+                        }
+                        vnode = Object.create(vNodeProto);
+                        vnode.ns = nameSpace;
+                        vnode.nodeType = 1;
+                        vnode.vParent = parentVNode;
+                        vnode.tag = '';
+                        vnode.classNames ={};
+
+                        // find tagname:
+                        while ((++i<len) && (character=htmlString[i]) && (!STARTTAG_OR_ATTR_VALUE_ENDS_CHARACTERS[character])) {
+                            vnode.tag += character.toUpperCase();
+                        }
+
+                        tag = vnode.tag;
+                        vnode.isItag = ((tag[0]==='I') && (tag[1]==='-'));
+                        vnode.ns = xmlNS[tag] || nameSpace;
+
+                        //vnode.domNode can only be set after inspecting the attributes --> there might be an `is` attribute
+
+                        // check if it is a void-tag, but only need to do the regexp once per tag-element:
+                        if (voidElements[tag]) {
+                            vnode.isVoid = true;
+                        }
+                        else if (nonVoidElements[tag]) {
+                            vnode.isVoid = false;
+                        }
+                        else {
+                            vnode.isVoid = vnode.isItag ? false : !(new RegExp('</'+tag+'>', 'i')).test(htmlString);
+                            vnode.isVoid ? (voidElements[tag]=true) : (nonVoidElements[tag]=true);
+                        }
+                        insideTagDefinition = true;
+                    }
+                    else if (character+character2+htmlString[i+2]+htmlString[i+3]==='<!--') {
+                        // begin of CommentNode
+                        if (vnode) {
+                            vnode.domNode = DOCUMENT.createTextNode('');
+                            // create circular reference:
+                            vnode.domNode._vnode = vnode;
+                            vnodes[vnodes.length] = vnode;
+                        }
+                        vnode = Object.create(vNodeProto);
+                        vnode.ns = nameSpace;
+                        vnode.nodeType = 8;
+                        vnode.text = '';
+                        vnode.vParent = parentVNode;
+                        // move index to first character of comment
+                        i = i+4;
+                        insideComment = true;
+                        nestedComments = 0;
+                    }
+                    else {
+                        if (!vnode) {
+                            // no current vnode --> create a TextNode:
+                            vnode = Object.create(vNodeProto);
+                            vnode.ns = nameSpace;
+                            vnode.nodeType = 3;
+                            vnode.text = '';
+                            vnode.vParent = parentVNode;
+                        }
+                        vnode.text += character;
+                        i++;
+                    }
+                }
             }
-        );
-    };
 
-    NS.EscapeEntities = function(str) {
-        return str.replace(
-            /[^\x20-\x7E]/g,
-            function(str) {
-                return charToEntity[str] ? '&'+charToEntity[str]+';' : str;
+            if (vnode) {
+                vnode.domNode = DOCUMENT.createTextNode('');
+                // create circular reference:
+                vnode.domNode._vnode = vnode;
+                vnodes[vnodes.length] = vnode;
             }
-        );
-    };
+            return vnodes;
+        };
 
-    return NS;
+    return htmlToVNodes;
+
 };
+},{"./attribute-extractor.js":396,"./vdom-ns.js":403,"js-ext/extra/hashmap.js":366,"js-ext/lib/object.js":369,"polyfill":382}],402:[function(require,module,exports){
+"use strict";
+
+/**
+ * Exports `domNodeToVNode` which transforms dom-nodes into vnodes.
+ *
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i><br>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ * @module vdom
+ * @submodule node-parser
+ * @since 0.0.1
+*/
+
+require('polyfill');
+require('js-ext/lib/object.js');
+
+var createHashMap = require('js-ext/extra/hashmap.js').createMap;
+
+module.exports = function (window) {
+
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
+
+    if (window._ITSAmodules.NodeParser) {
+        return window._ITSAmodules.NodeParser; // NodeParser was already created
+    }
+
+    var NS = require('./vdom-ns.js')(window),
+        escapeEntities = NS.EscapeEntities,
+        extractor = require('./attribute-extractor.js')(window),
+        xmlNS = NS.xmlNS,
+        voidElements = NS.voidElements,
+        nonVoidElements = NS.nonVoidElements,
+        vNodeProto = require('./vnode.js')(window),
+        /**
+         * Transforms a dom-node into a vnode.
+         *
+         * @method domNodeToVNode
+         * @param domNode {Node} The dom-node to be transformed
+         * @param [parentVNode] {vnode} the parent-vnode that belongs to the dom-node
+         * @return {vnode} the vnode-representation of the dom-node
+         * @since 0.0.1
+         */
+        domNodeToVNode = window._ITSAmodules.NodeParser = function(domNode, parentVNode) {
+            var nodeType = domNode.nodeType,
+                vnode, attributes, attr, i, len, childNodes, domChildNode, vChildNodes, tag,
+                childVNode, extractClass, extractStyle, attributeName;
+            if (!NS.VALID_NODE_TYPES[nodeType]) {
+                // only process ElementNodes, TextNodes and CommentNodes
+                return;
+            }
+            vnode = Object.create(vNodeProto);
+
+            // set properties:
+            vnode.domNode = domNode;
+            // create circular reference:
+            vnode.domNode._vnode = vnode;
+
+            parentVNode && (vnode.ns=parentVNode.ns);
+            vnode.nodeType = nodeType;
+            vnode.vParent = parentVNode;
+
+            if (nodeType===1) {
+                // ElementNode
+                tag = vnode.tag = domNode.nodeName; // is always uppercase
+                vnode.isItag = ((tag[0]==='I') && (tag[1]==='-'));
+                vnode.ns = xmlNS[tag] || vnode.ns;
+
+                vnode.attrs = {};
+
+                attributes = domNode.attributes;
+                len = attributes.length;
+                for (i=0; i<len; i++) {
+                    attr = attributes[i];
+                    // always store the `is` attribute in lowercase:
+                    attributeName = ((attr.name.length===2) && (attr.name.toLowerCase()==='is')) ? 'is' : attr.name;
+                    vnode.attrs[attributeName] = String(attr.value);
+                }
+
+                vnode.id = vnode.attrs.id;
+
+                extractClass = extractor.extractClass(vnode.attrs['class']);
+                extractClass.attrClass && (vnode.attrs['class']=extractClass.attrClass);
+                vnode.classNames = extractClass.classNames;
+
+                extractStyle = extractor.extractStyle(vnode.attrs.style);
+                extractStyle.attrStyle && (vnode.attrs.style=extractStyle.attrStyle);
+                vnode.styles = extractStyle.styles;
+
+                if (voidElements[tag]) {
+                    vnode.isVoid = true;
+                }
+                else if (nonVoidElements[tag]) {
+                    vnode.isVoid = false;
+                }
+                else {
+                    (vnode.isVoid=!(new RegExp('</'+tag+'>$', 'i')).test(domNode.outerHTML)) ? (voidElements[tag]=true) : (nonVoidElements[tag]=true);
+                }
+
+                if (!vnode.isVoid) {
+                    // in case of 'SCRIPT' or 'STYLE' tags --> just use the innertext, all other tags need to be extracted
+                    if (NS.SCRIPT_OR_STYLE_TAG[tag]) {
+                        vnode.text = domNode.textContent;
+                    }
+                    else {
+                        vChildNodes = vnode.vChildNodes = [];
+                        childNodes = domNode.childNodes;
+                        len = childNodes.length;
+                        for (i=0; i<len; i++) {
+                            domChildNode = childNodes[i];
+                            childVNode = domNodeToVNode(domChildNode, vnode);
+                            vChildNodes[vChildNodes.length] = childVNode;
+                        }
+                    }
+                }
+            }
+            else {
+                // TextNode or CommentNode
+                vnode.text = (nodeType===3) ? escapeEntities(domNode.nodeValue) : domNode.nodeValue;
+            }
+            // store vnode's id:
+            vnode.storeId();
+            return vnode;
+        };
+
+    return domNodeToVNode;
+
+};
+},{"./attribute-extractor.js":396,"./vdom-ns.js":403,"./vnode.js":404,"js-ext/extra/hashmap.js":366,"js-ext/lib/object.js":369,"polyfill":382}],403:[function(require,module,exports){
+module.exports=require(77)
 },{"js-ext/extra/hashmap.js":366,"js-ext/lib/object.js":369,"polyfill":382}],404:[function(require,module,exports){
 "use strict";
 
@@ -26789,78 +25659,70 @@ module.exports = function (window) {
     _matchesOneSelector = function(vnode, selector, relatedVNode) {
         var selList = _splitSelector(selector),
             size = selList.length,
-            originalVNode = vnode,
-            firstSelectorChar = selector[0],
-            i, selectorItem, selMatch, directMatch, vParentvChildren, indexRelated;
+            selMatch = false,
+            i, selectorItem, last,
+            rightvnode, relationMatch, checkRelation;
 
-        if (size===0) {
+        if (STORABLE_SPLIT_CHARACTER[selList[size-1]]) {
             return false;
         }
 
-        selectorItem = selList[size-1];
-        selMatch = _matchesSelectorItem(vnode, selectorItem);
-        for (i=size-2; (selMatch && (i>=0)); i--) {
-            selectorItem = selList[i];
-            if (SIBLING_MATCH_CHARACTER[selectorItem]) {
-                // need to search through the same level
-                if (--i>=0) {
-                    directMatch = (selectorItem==='+');
-                    selectorItem = selList[i];
-                    // need to search the previous siblings
-                    vnode = vnode.vPreviousElement;
-                    if (!vnode) {
-                        return false;
-                    }
-                    if (directMatch) {
-                        // should be immediate match
-                        selMatch = _matchesSelectorItem(vnode, selectorItem);
-                    }
-                    else {
-                        while (vnode && !(selMatch=_matchesSelectorItem(vnode, selectorItem))) {
-                            vnode = vnode.vPreviousElement;
-                        }
-                    }
-                }
-            }
-            else {
-                // need to search up the tree
-                vnode = vnode.vParent;
-                if (!vnode || ((vnode===relatedVNode) && (selectorItem!=='>'))) {
-                    return false;
-                }
-                if (selectorItem==='>') {
-                    if (--i>=0) {
-                        selectorItem = selList[i];
-                       // should be immediate match
-                        selMatch = _matchesSelectorItem(vnode, selectorItem);
-                    }
-                }
-                else {
-                    while (!(selMatch=_matchesSelectorItem(vnode, selectorItem))) {
-                        vnode = vnode.vParent;
-                        if (!vnode || (vnode===relatedVNode)) {
-                            return false;
-                        }
-                    }
-                }
-            }
-        }
-        if (selMatch && relatedVNode && STORABLE_SPLIT_CHARACTER[firstSelectorChar]) {
+        relationMatch = function(leftVNode, rightVNode, relationCharacter) {
+            var match, vParent, vChildren;
             // when `selector` starts with `>`, `~` or `+`, then
             // there should also be a match comparing a related node!
-            switch (firstSelectorChar) {
+            switch (relationCharacter) {
                 case '>':
-                    selMatch = (relatedVNode.vChildren.indexOf(originalVNode)!==-1);
+                    leftVNode || (leftVNode=rightVNode.vParent);
+                    match = (leftVNode.vChildren.indexOf(rightVNode)!==-1);
                 break;
                 case '~':
-                    vParentvChildren = originalVNode.vParent.vChildren;
-                    indexRelated = vParentvChildren.indexOf(relatedVNode);
-                    selMatch = (indexRelated!==-1) && (indexRelated<vParentvChildren.indexOf(originalVNode));
+                    leftVNode || (leftVNode=rightVNode.vFirstElement);
+                    vParent = leftVNode.vParent;
+                    vChildren = vParent && vParent.vChildren;
+                    match = vParent && (vChildren.indexOf(leftVNode)<vChildren.indexOf(rightVNode));
                 break;
                 case '+':
-                    selMatch = (originalVNode.vPreviousElement === relatedVNode);
+                    leftVNode || (leftVNode=rightVNode.vPreviousElement);
+                    match = (leftVNode.vNextElement === rightVNode);
+            }
+            return !!match;
+        };
+        last = size - 1;
+        i = last;
+        while (vnode && ((selMatch || (i===last)) && (i>=0))) {
+            selectorItem = selList[i];
+            if (STORABLE_SPLIT_CHARACTER[selectorItem]) {
+                checkRelation = selectorItem;
+                i--;
+            }
+            else {
+                selMatch = _matchesSelectorItem(vnode, selectorItem);
+                if (!selMatch && (i===last)) {
+                    return false;
+                }
+                while (!selMatch && vnode && (i!==last)) {
+                    // may also look at nodes higher in the chain
+                    vnode = SIBLING_MATCH_CHARACTER[selList[i+1]] ? vnode.vPreviousElement : vnode.vParent;
+                    selMatch = vnode && _matchesSelectorItem(vnode, selectorItem);
+                }
+                selMatch && checkRelation && vnode && (selMatch=relationMatch(vnode, rightvnode, checkRelation));
+                rightvnode = vnode;
+                if (vnode) {
+                    // do a precheck on the next checkRelation:
+                    // and determine whether to set the vnode upper the tree or at the previous sibling:
+                    vnode = SIBLING_MATCH_CHARACTER[selList[i-1]] ? vnode.vPreviousElement : vnode.vParent;
+                }
+                if (selMatch) {
+                    checkRelation = false;
+                    i--;
+                }
             }
         }
+        if ((rightvnode===relatedVNode) || (i!==-1)) {
+            selMatch = false;
+        }
+        selMatch && checkRelation && rightvnode && (selMatch=relationMatch(relatedVNode, rightvnode, checkRelation));
         return selMatch;
     };
 
@@ -27385,17 +26247,27 @@ module.exports = function (window) {
         * @since 0.0.1
         */
         contains: function(otherVNode, noItagSearch) {
+            var instance = this;
             if (otherVNode && otherVNode.destroyed) {
                 return false;
             }
-            while (otherVNode && (otherVNode!==this) && (!noItagSearch || !otherVNode.isItag || !otherVNode.domNode.contentHidden)) {
+            while (otherVNode && (otherVNode!==instance) && (!noItagSearch || !instance.isItag || !instance.domNode.contentHidden)) {
                 otherVNode = otherVNode.vParent;
             }
-            return (otherVNode===this);
+            return (otherVNode===instance);
         },
 
+       /**
+        * Empties the vnode.
+        *
+        * Syncs with the dom.
+        *
+        * @method empty
+        * @chainable
+        * @since 0.0.1
+        */
         empty: function() {
-            this._setChildNodes([]);
+            return this._setChildNodes([]);
         },
 
        /**
@@ -27419,6 +26291,42 @@ module.exports = function (window) {
                 element.matchesSelector(cssSelector) && (found=element);
             }
             return found;
+        },
+
+        /**
+         * Gets the innerHTML of the vnode representing the dom-node.
+         * You may exclude HTMLElement (node-type=1) by specifying `exclude`.
+         *
+         * Only valid for nodetype=1 (HTMLElements)
+         *
+         * @method getHTML
+         * @param [exclude] {Array|HTMLElement} an array of HTMLElements - or just 1 - to be excluded
+         * @return {String|undefined} the innerHTML without the elements specified, or `undefined` when not an HTMLElement
+         * @since 0.0.1
+         */
+        getHTML: function(exclude) {
+            var instance = this,
+                html, vChildNodes, len, i, vChildNode;
+            if (instance.nodeType===1) {
+                Array.isArray(exclude) || (exclude=[exclude]);
+                html = '';
+                vChildNodes = instance.vChildNodes;
+                len = vChildNodes ? vChildNodes.length : 0;
+                for (i=0; i<len; i++) {
+                    vChildNode = vChildNodes[i];
+                    switch (vChildNode.nodeType) {
+                        case 1:
+                            exclude.contains(vChildNode.domNode) || (html+=vChildNode.outerHTML);
+                            break;
+                        case 3:
+                            html += vChildNode.text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                            break;
+                        case 8:
+                            html += '<!--' + vChildNode.text.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '-->';
+                    }
+                }
+            }
+            return html;
         },
 
        /**
@@ -27579,8 +26487,32 @@ module.exports = function (window) {
             return domNode;
         },
 
+       /**
+        * Returns the vnode's style in a serialized form: the way it appears in the dom.
+        *
+        * @method serializeStyles
+        * @return {String} vnode's style
+        * @since 0.0.1
+        */
         serializeStyles: function() {
             return extractor.serializeStyles(this.styles);
+        },
+
+       /**
+        * Sets the vnode's and dom-nodes inner HTML.
+        *
+        * Syncs with the dom. Can be invoked multiple times without issues.
+        *
+        * @method setHTML
+        * @param content {String} the innerHTML
+        * @param [suppressItagRender] {Boolean} to suppress Itags from rendering
+        * @chainable
+        * @since 0.0.1
+        */
+        setHTML: function(content, suppressItagRender) {
+            var instance = this;
+            instance._setChildNodes(htmlToVNodes(content, vNodeProto, instance.ns, null, suppressItagRender));
+            return instance;
         },
 
        /**
@@ -28012,7 +26944,7 @@ module.exports = function (window) {
         _removeAttr: function(attributeName) {
             var instance = this,
                 attributeNameSplitted, ns;
-            if ((instance._unchangableAttrs && instance._unchangableAttrs[attributeName]) || ((attributeName.length===2) && (attributeName.toLowerCase()==='is'))) {
+            if (instance.isItag && ((instance._unchangableAttrs && instance._unchangableAttrs[attributeName]) || ((attributeName.length===2) && (attributeName.toLowerCase()==='is')))) {
                 console.warn('Not allowed to remove the attribute '+attributeName);
                 return instance;
             }
@@ -28053,7 +26985,7 @@ module.exports = function (window) {
         _removeChild: function(VNode) {
             var instance = this,
                 domNode = VNode.domNode,
-                hadFocus = domNode.hasFocus() && (VNode.attrs['fm-lastitem']==='true'),
+                hadFocus = domNode && domNode.hasFocus && domNode.hasFocus() && (VNode.attrs['fm-lastitem']==='true'),
                 parentVNode = VNode.vParent;
             VNode._destroy();
             _tryRemoveDomNode(instance.domNode, VNode.domNode);
@@ -28112,7 +27044,7 @@ module.exports = function (window) {
                 domNode = instance.domNode,
                 attributeNameSplitted, ns;
 
-            if (!force && ((instance._unchangableAttrs && instance._unchangableAttrs[attributeName]) || ((attributeName.length===2) && (attributeName.toLowerCase()==='is')))) {
+            if (!force && instance.isItag && ((instance._unchangableAttrs && instance._unchangableAttrs[attributeName]) || ((attributeName.length===2) && (attributeName.toLowerCase()==='is')))) {
                 console.warn('Not allowed to set the attribute '+attributeName);
                 return instance;
             }
@@ -28177,7 +27109,7 @@ module.exports = function (window) {
        /**
         * Redefines the attributes of both the vnode as well as its related dom-node. The new
         * definition replaces any previous attributes (without touching unmodified attributes).
-        * the `is` attribute cannot be changed.
+        * the `is` attribute cannot be changed for itags.
         *
         * Syncs the new vnode's attributes with the dom.
         *
@@ -28210,14 +27142,16 @@ module.exports = function (window) {
                 }
             }
 
-            if (attrs.is) {
-                attrsObj.is = attrs.is;
-            }
-            else {
-                delete attrsObj.is;
-                delete attrsObj.Is;
-                delete attrsObj.iS;
-                delete attrsObj.IS;
+            if (instance.isItag) {
+                if (attrs.is) {
+                    attrsObj.is = attrs.is;
+                }
+                else {
+                    delete attrsObj.is;
+                    delete attrsObj.Is;
+                    delete attrsObj.iS;
+                    delete attrsObj.IS;
+                }
             }
 
             // first _remove the attributes that are no longer needed.
@@ -28554,30 +27488,10 @@ module.exports = function (window) {
          */
         innerHTML: {
             get: function() {
-                var instance = this,
-                    html, vChildNodes, len, i, vChildNode;
-                if (instance.nodeType===1) {
-                    html = '';
-                    vChildNodes = instance.vChildNodes;
-                    len = vChildNodes ? vChildNodes.length : 0;
-                    for (i=0; i<len; i++) {
-                        vChildNode = vChildNodes[i];
-                        switch (vChildNode.nodeType) {
-                            case 1:
-                                html += vChildNode.outerHTML;
-                                break;
-                            case 3:
-                                html += vChildNode.text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                                break;
-                            case 8:
-                                html += '<!--' + vChildNode.text.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '-->';
-                        }
-                    }
-                }
-                return html;
+                return this.getHTML();
             },
             set: function(v) {
-                this._setChildNodes(htmlToVNodes(v, vNodeProto, this.ns));
+                this.setHTML(v);
             }
         },
 
@@ -30949,7 +29863,7 @@ if(typeof require == 'function'){
 
 
 },{}],409:[function(require,module,exports){
-var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-select;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* =================================== */\n/* set invisiblity when not rendered   */\n/* =================================== */\ni-form.hide-children,\ni-form:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n/* ================================= */\n\n/*!\n * Most styles are from Pure v0.5.0\n * Licensed under the BSD License.\n*/\n\ni-form label {\n    margin: 0.5em 0 0.2em;\n}\ni-form fieldset {\n    margin: 0;\n    padding: 0.35em 0 0.75em;\n    border: 0;\n}\ni-form legend {\n    display: block;\n    width: 100%;\n    padding: 0.3em 0;\n    margin-bottom: 0.3em;\n    color: #333;\n    border-bottom: 1px solid #e5e5e5;\n}\n\ni-form.i-stacked [itag-formelement=\"true\"]:not(i-button) {\n    display: block;\n    margin: 0.25em 0;\n}\n\ni-form.i-aligned [itag-formelement=\"true\"] {\n    display: inline-block;\n    *display: inline;\n    *zoom: 1;\n    vertical-align: middle;\n}\n\n/* Aligned Forms */\ni-form.i-aligned i-formrow {\n    margin-bottom: 0.5em;\n}\ni-form.i-aligned i-formrow label {\n    text-align: right;\n    display: inline-block;\n    vertical-align: middle;\n    width: 10em;\n    margin: 0 1em 0 0;\n}\ni-form.i-aligned .i-controls {\n    margin: 1.5em 0 0 10em;\n}\n\n/* Grouped Inputs */\ni-form i-formrow fieldset {\n    margin-bottom: 10px;\n}\ni-form i-formrow i-input {\n    display: block;\n    margin: 0;\n    border-radius: 0;\n    position: relative;\n    top: -1px;\n}\ni-form i-formrow i-input.focussed input,\ni-form i-formrow i-input input:focus {\n    z-index: 2;\n}\ni-form i-formrow i-input:first-child input {\n    top: 1px;\n    border-radius: 4px 4px 0 0;\n}\ni-form i-formrow i-input:last-child input {\n    top: -2px;\n    border-radius: 0 0 4px 4px;\n}\ni-form i-formrow i-button,\ni-form i-formrow i-select {\n    margin: 0.35em 0;\n}\n\n/* Inline help for forms */\n/* NOTE: pure-help-inline is deprecated. Use i-form-message-inline instead. */\ni-form .message-inline {\n    display: inline-block;\n    padding-left: 0.3em;\n    color: #666;\n    vertical-align: middle;\n    font-size: 0.875em;\n}\n\n/* Block help for forms */\ni-form .message {\n    display: block;\n    color: #666;\n    font-size: 0.875em;\n}\n\n@media only screen and (max-width : 480px) {\n    i-form i-button:last-child {\n        margin: 0.7em 0 0;\n    }\n\n    i-form i-input,\n    i-form label {\n        margin-bottom: 0.3em;\n        display: block;\n    }\n\n    i-form i-formrow i-input {\n        margin-bottom: 0;\n    }\n\n    i-form .i-aligned i-formrow label {\n        margin-bottom: 0.3em;\n        text-align: left;\n        display: block;\n        width: 100%;\n    }\n\n    i-form .i-aligned .i-controls {\n        margin: 1.5em 0 0 0;\n    }\n\n    i-form .message-inline,\n    i-form .message {\n        display: block;\n        font-size: 0.75em;\n        /* Increased bottom padding to make it group with its related input element. */\n        padding: 0.2em 0 0.8em;\n    }\n}\n"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-select;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* =================================== */\n/* set invisiblity when not rendered   */\n/* =================================== */\ni-form.hide-children,\ni-form:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n/* ================================= */\n\n/*!\n * Most styles are from Pure v0.5.0\n * Licensed under the BSD License.\n*/\n\ni-form {\n    margin: 0;\n    display: inline-block;\n    *display: inline; /*IE 6/7*/\n    zoom: 1;\n    padding: 0.25em 0.5em;\n}\n\ni-form[active-labels=\"true\"] i-label {\n    cursor: default;\n}\n\ni-form fieldset {\n    margin: 0;\n    padding: 0.35em 0 0.75em;\n    border: 0;\n}\n\ni-form legend {\n    display: block;\n    width: 100%;\n    padding: 0.3em 0;\n    margin-bottom: 0.3em;\n    color: #333;\n    border-bottom: 1px solid #e5e5e5;\n}\n\ni-form.i-stacked [itag-formelement=\"true\"]:not(i-button) {\n    display: block;\n    margin: 0.25em 0;\n}\n\ni-form.i-aligned [itag-formelement=\"true\"] {\n    display: inline-block;\n    *display: inline;\n    *zoom: 1;\n    vertical-align: middle;\n}\n\n/* Aligned Forms */\ni-form.i-aligned div.i-formrow {\n    margin-bottom: 0.5em;\n}\ni-form.i-aligned div.i-formrow:last-child {\n    margin-bottom: 0;\n}\ni-form.i-aligned div.i-formrow i-label {\n    text-align: right;\n    display: inline-block;\n    vertical-align: middle;\n    width: 10em;\n    margin: 0 1em 0 0;\n}\ni-form.i-aligned .i-controls {\n    margin: 1.5em 0 0 10em;\n}\n\n/* Grouped Inputs */\ni-form div.i-formrow fieldset {\n    margin-bottom: 10px;\n}\ni-form div.i-formrow i-input {\n    display: block;\n    margin: 0;\n    border-radius: 0;\n    position: relative;\n    top: -1px;\n}\ni-form div.i-formrow i-input.focussed input,\ni-form div.i-formrow i-input input:focus {\n    z-index: 2;\n}\ni-form fieldset.i-group div.i-formrow:first-child i-input input {\n    top: 1px;\n    border-radius: 4px 4px 0 0;\n}\ni-form fieldset.i-group div.i-formrow:last-child i-input input {\n    top: -2px;\n    border-radius: 0 0 4px 4px;\n}\ni-form div.i-formrow i-button,\ni-form div.i-formrow i-select {\n    margin: 0.35em 0;\n}\n\n/* Inline help for forms */\n/* NOTE: pure-help-inline is deprecated. Use i-form-message-inline instead. */\ni-form .message-inline {\n    display: inline-block;\n    padding-left: 0.3em;\n    color: #666;\n    vertical-align: middle;\n    font-size: 0.875em;\n}\n\n/* Block help for forms */\ni-form .message {\n    display: block;\n    color: #666;\n    font-size: 0.875em;\n}\n\n@media only screen and (max-width : 480px) {\n    i-form i-button:last-child {\n        margin: 0.7em 0 0;\n    }\n\n    i-form i-input,\n    i-form i-label {\n        margin-bottom: 0.3em;\n        display: block;\n    }\n\n    i-form div.i-formrow i-input {\n        margin-bottom: 0;\n    }\n\n    i-form.i-aligned div.i-formrow i-label {\n        margin-bottom: 0.3em;\n        text-align: left;\n        display: block;\n        width: 100%;\n    }\n\n    i-form.i-aligned .i-controls {\n        margin: 1.5em 0 0 0;\n    }\n\n    i-form .message-inline,\n    i-form .message {\n        display: block;\n        font-size: 0.75em;\n        /* Increased bottom padding to make it group with its related input element. */\n        padding: 0.2em 0 0.8em;\n    }\n}\n"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
 },{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],410:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
@@ -30957,21 +29871,47 @@ module.exports = function (window) {
     require('polyfill/polyfill-base.js');
     require('./css/i-form.css');
 
-    var itagName = 'i-form', // <-- define your own itag-name here
+    var NAME = '[i-form]: ',
+        itagName = 'i-form', // <-- define your own itag-name here
         DOCUMENT = window.document,
         itagCore = require('itags.core')(window),
         FocusManagerPlugin = require('focusmanager')(window),
         DEFAULT_KEYUP = 'shift+9',
         DEFAULT_KEYDOWN = '9',
+        DEFAULT_SELECTOR = '[itag-formelement]',
         DEFAULT_LOOP = true,
-        Itag;
+        Event, Itag;
 
     if (!window.ITAGS[itagName]) {
+        Event = require('event-mobile')(window);
+
+        Event.before(itagName+':manualfocus', function(e) {
+            // the i-select itself is unfocussable, but its button is
+            // we need to patch `manualfocus`,
+            // which is emitted on node.focus()
+            // a focus by userinteraction will always appear on the button itself
+            // so we don't bother that
+            var element = e.target;
+            e.preventDefault();
+            element.itagReady().then(
+                function() {
+                    var selector = element.getFocusManagerSelector(),
+                        focusNode = element.getElement(selector);
+                    focusNode && focusNode.focus();
+                }
+            );
+        });
+
         Itag = DOCUMENT.createItag(itagName, {
+            attrs: {
+                'active-labels': 'boolean'
+            },
 
             init: function() {
                 var element = this,
+                    designNode = element.getDesignNode(),
                     allFormElements, children;
+
                 if (!element.isPlugged(FocusManagerPlugin)) {
                     element.plug(
                         FocusManagerPlugin,
@@ -30987,15 +29927,20 @@ module.exports = function (window) {
                 // i-form-elements are ready. This we need to prevent the i-form-elements
                 // to show some initial value before they are bounded
                 // now we add all i-form-elements that need to wait for bounded data to a hash
-                allFormElements = element.getAll('[itag-formelement="true"][prop]');
+
+                // fully set the designNode's content into the i-form:
+                element.setHTML(designNode.getHTML());
+                allFormElements = element.getAll('[i-prop], i-label');
                 if (allFormElements.length>0) {
-                    element.addClass('hide-children');
+                    element.setClass('hide-children');
                     children = [];
                     allFormElements.forEach(function(formElement) {
                         // first tell the element it needs to wait for data:
-                        formElement.setAttr('bound-model', 'true');
+                        formElement.hasAttribute('i-prop') && formElement.setAttr('bound-model', 'true');
                         // now add the readypromise to the hash:
-                        children[children.length] = formElement.itagReady();
+                        formElement._showItagPromise = window.Promise.manage();
+                        children[children.length] = formElement._showItagPromise;
+                        formElement.itagReady().then(formElement._showItagPromise.fulfill());
                     });
                     window.Promise.finishAll(children).then(
                         function() {
@@ -31005,8 +29950,14 @@ module.exports = function (window) {
                 }
             },
 
+            getFocusManagerSelector: function() {
+                var selector = this.getAttr('fm-manage');
+                (selector.toLowerCase()==='true') && (selector=DEFAULT_SELECTOR);
+                return selector;
+            },
+
             defFmSelector: function() {
-                return "[itag-formelement].focusable, [itag-formelement] .focusable";
+                return DEFAULT_SELECTOR;
             },
 
             defFmKeyup: function() {
@@ -31028,12 +29979,19 @@ module.exports = function (window) {
                     allFormElements, propertyModel;
                 element.setAttr('fm-manage', element.defFmSelector(), true);
                 element.unbind();
-                allFormElements = element.getAll('[itag-formelement="true"][prop]');
+                allFormElements = element.getAll('[i-prop]');
                 allFormElements.forEach(function(formElement) {
-                    var property = formElement.model.prop;
+                    var property = formElement.getAttr('i-prop');
                     if (property) {
                         propertyModel = model[property];
-                        propertyModel && (databinders[databinders.length] = element.bindModel(propertyModel, formElement, true));
+                        if (propertyModel) {
+                            databinders[databinders.length] = formElement.bindModel(propertyModel);
+                        }
+                        else {
+                            // fulfill the promise from the hash, to make the hash completely fulfilled and the i-form to show:
+                            formElement._showItagPromise && formElement._showItagPromise.fulfill();
+                            console.warn(NAME+'Form-element waits for prop: '+property+', but this property is not bound. Will show the form, but not this element.');
+                        }
                     }
                 });
             },
@@ -31059,7 +30017,7 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 };
 
-},{"./css/i-form.css":409,"focusmanager":170,"itags.core":421,"polyfill/polyfill-base.js":357}],411:[function(require,module,exports){
+},{"./css/i-form.css":409,"event-mobile":80,"focusmanager":170,"itags.core":420,"polyfill/polyfill-base.js":357}],411:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 
@@ -31084,26 +30042,9 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 };
 
-},{"itags.core":421,"polyfill/polyfill-base.js":357}],412:[function(require,module,exports){
-/*
-* attributes:
-* value, expanded, primary-button
-*/
-require('polyfill/polyfill-base.js');
-
-module.exports = function (window) {
-
-    "use strict";
-    require('itags.core')(window);
-
-    var itagName = 'i-head';
-
-    // window.ITAGS[itagName] || window.document.createItag(itagName);
-
-};
-},{"itags.core":421,"polyfill/polyfill-base.js":357}],413:[function(require,module,exports){
+},{"itags.core":420,"polyfill/polyfill-base.js":357}],412:[function(require,module,exports){
 var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-input;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-input:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-input:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\ni-input {\n    margin: 0;\n    display: inline-block;\n    *display: inline; /*IE 6/7*/\n    zoom: 1;\n    width: 12em;\n    position: relative;\n    vertical-align: middle;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-input > input {\n    color: inherit;\n    font: inherit;\n    margin: 0;\n    padding: 0.5em 0.6em;\n    display: inline-block;\n    border: 1px solid #ccc;\n    box-shadow: inset 0 1px 3px #ddd;\n    border-radius: 4px;\n    line-height: normal;\n    width: 100%; /* within the i-input always 100% */\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\nhtml i-input[disabled] > input {\n    cursor: not-allowed;\n    background-color: #eaeded;\n    color: #cad2d3;\n}\n\ni-input > input::-moz-focus-inner {\n  border: 0;\n  padding: 0;\n}\n\n\ni-input > input:focus,\ni-input.focussed > input {\n    outline: 0;\n    outline: thin dotted \\9; /* IE6-9 */\n    border-color: #129FEA;\n}\n\ni-input[readonly] > input {\n    background: #eee; /* menu hover bg color */\n    color: #777; /* menu text color */\n    border-color: #ccc;\n}\n\ni-input > input:focus:invalid {\n    color: #b94a48;\n    border-color: #ee5f5b;\n}\n\ni-input > input:focus:invalid:focus {\n    border-color: #e9322d;\n}\n\ni-input.i-rounded > input {\n    border-radius: 2em;\n    padding: 0.5em 1em;\n}\n\ni-input.i-input-1 {\n    width: 100%;\n}\ni-input.i-input-2-3 {\n    width: 66%;\n}\ni-input.i-input-1-2 {\n    width: 50%;\n}\ni-input.i-input-1-3 {\n    width: 33%;\n}\ni-input.i-input-1-4 {\n    width: 25%;\n}\n\n@media only screen and (max-width : 480px) {\n    i-input {\n        margin-bottom: 0.3em;\n        display: block;\n    }\n}\n\n"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],414:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],413:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 
@@ -31165,24 +30106,22 @@ console.warn('new value found: '+newValue);
 
         Itag = IFormElement.subClass(itagName, {
             attrs: {
-                'prop': 'string',
+                'i-prop': 'string',
                 'reset-value': 'string',
                 'placeholder': 'string',
-                'readonly': 'boolean',
-                'fm-lastitem': 'boolean',
-                'fm-selectionstart': 'number',
-                'fm-selectionend': 'number'
+                'readonly': 'boolean'
             },
 
             init: function() {
                 var element = this,
-                    value = element.getText(),
+                    designNode = element.getDesignNode(),
+                    value = designNode.getText(),
                     content;
 
                 element.defineWhenUndefined('value', value);
 
                 // building the template of the itag:
-                content = '<input class="focusable" value="'+value+'" />';
+                content = '<input value="'+value+'" />';
 
                 // set the content:
                 element.setHTML(content);
@@ -31214,26 +30153,118 @@ console.warn('new value found: '+newValue);
     return window.ITAGS[itagName];
 };
 
-},{"./css/i-input.css":413,"event-dom/extra/valuechange.js":8,"i-formelement":411,"itags.core":421,"polyfill/polyfill-base.js":357}],415:[function(require,module,exports){
-/*
-* attributes:
-* value, expanded, primary-button
-*/
-require('polyfill/polyfill-base.js');
-
+},{"./css/i-input.css":412,"event-dom/extra/valuechange.js":8,"i-formelement":411,"itags.core":420,"polyfill/polyfill-base.js":357}],414:[function(require,module,exports){
 module.exports = function (window) {
-
     "use strict";
+
+    var itagName = 'i-label', // <-- define your own itag-name here
+        DOCUMENT = window.document,
+        Event = require('event-dom')(window),
+        Itag;
+
     require('itags.core')(window);
 
-    var itagName = 'i-item';
+    if (!window.ITAGS[itagName]) {
 
-    // window.ITAGS[itagName] || window.document.createItag(itagName);
+        Event.after('tap', function(e) {
+            var labelNode = e.target,
+                iform = labelNode.inside('i-form'),
+                selector, focusNode;
+            if (iform && iform.model['active-labels']) {
+                selector = iform.getFocusManagerSelector(),
+                focusNode = labelNode.next(selector, iform);
+                focusNode && focusNode.focus();
+            }
+        }, 'i-label');
 
+        Itag = DOCUMENT.createItag(itagName, {
+            attrs: {
+                content: 'string'
+            },
+
+            init: function() {
+                var element = this,
+                    designNode = element.getDesignNode(),
+                    content = designNode.getHTML();
+
+                // when initializing: make sure NOT to overrule model-properties that already
+                // might have been defined when modeldata was boundend. Therefore, use `defineWhenUndefined`
+                // element.defineWhenUndefined('someprop', somevalue); // sets element.model.someprop = somevalue; when not defined yet
+                element.defineWhenUndefined('content', content);
+
+
+                // make the form wait to show until this element is rendered:
+                element.setAttr('itag-formwait', 'true', true);
+
+
+                if (element.getParent()) {
+                    // already in the dom --> we can encapsulate
+                    element.encapsulate();
+                }
+                else {
+                    element.selfOnceAfter('UI:nodeinsert', element.encapsulate.bind(element));
+                }
+                // set the inner-content of the label will be done when syncing
+            },
+
+            encapsulate: function() {
+                var element = this,
+                    prevSuppress = DOCUMENT._suppressMutationEvents || false,
+                    parentNode = element.getParent(),
+                    parentVNode = parentNode.vnode,
+                    rowVNode, vnode, vChildNodes, i, len, absorbed;
+                DOCUMENT.suppressMutationEvents(true);
+                rowVNode = parentNode.prepend('<div class="i-formrow"></div>', false, element).vnode;
+                // now absorb all next nodes, and finish when an i-form-element has been absorbed:
+                vChildNodes = parentVNode.vChildNodes;
+                i = vChildNodes.indexOf(rowVNode) + 1;
+                len = vChildNodes.length;
+                // i doesn't change: it is len that will decrease, because we absorb items
+                while (!absorbed && (i<=(--len))) {
+                    vnode = vChildNodes[i];
+                    rowVNode._appendChild(vnode);
+                    absorbed = vnode.isItag && (vnode.tag!=='I-LABEL');
+                }
+                DOCUMENT.suppressMutationEvents(prevSuppress);
+            },
+
+            decapsulate: function() {
+                var element = this,
+                    prevSuppress = DOCUMENT._suppressMutationEvents || false,
+                    rowVNode = element.vnode.vParent,
+                    parentVNode = rowVNode.vParent,
+                    vnode;
+                DOCUMENT.suppressMutationEvents(true);
+                // set all childnodes to parent:
+/*jshint boss:true */
+                while (vnode=rowVNode.vChildNodes[0]) {
+/*jshint boss:false */
+                    parentVNode._insertBefore(vnode, rowVNode);
+                }
+                // now remove rowVNode:
+                parentVNode._removeChild(rowVNode);
+                DOCUMENT.suppressMutationEvents(prevSuppress);
+            },
+
+            sync: function() {
+                var element = this;
+                element.setHTML(element.model.content);
+            },
+
+            destroy: function() {
+                this.decapsulate();
+            }
+        });
+
+        window.ITAGS[itagName] = Itag;
+    }
+
+    return window.ITAGS[itagName];
 };
-},{"itags.core":421,"polyfill/polyfill-base.js":357}],416:[function(require,module,exports){
-var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-select;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-select:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-select:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\ni-select {\n    margin: 0;\n    display: inline-block;\n    *display: inline; /*IE 6/7*/\n    zoom: 1;\n    position: relative;\n    vertical-align: middle;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-select >div {\n    position: relative;\n    z-index: 2;\n    -webkit-transition: opacity 0.1s;\n    -moz-transition: opacity 0.1s;\n    -ms-transition: opacity 0.1s;\n    -o-transition: opacity 0.1s;\n    transition: opacity 0.1s;\n    opacity: 0;\n}\n\ni-select >div.i-select-show {\n    -webkit-transition: opacity 0.2s;\n    -moz-transition: opacity 0.2s;\n    -ms-transition: opacity 0.2s;\n    -o-transition: opacity 0.2s;\n    transition: opacity 0.2s;\n    opacity: 1;\n}\n\n\n\ni-select.i-primary >button,\ni-select.i-focussed >button {\n    background-color: rgb(0, 120, 231);\n    color: #fff;\n}\n\n/*csslint outline-none:false*/\n\ni-select >button {\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    -khtml-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    position: relative;\n    padding: 0.5em 0;\n    max-width: 8em;\n    color: inherit; /* 1 */\n    font: inherit; /* 2 */\n    margin: 0; /* 3 */\n    overflow: visible;\n    text-transform: none;\n    -webkit-appearance: button; /* 2 */\n    line-height: normal;\n    white-space: nowrap;\n    vertical-align: baseline;\n    text-align: center;\n    cursor: pointer;\n    -webkit-user-drag: none;\n    -webkit-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    font-family: inherit;\n    font-size: 100%;\n    color: #444; /* rgba not supported (IE 8) */\n    color: rgba(0, 0, 0, 0.80); /* rgba supported */\n    border: 1px solid #999;  /*IE 6/7/8*/\n    border: none rgba(0, 0, 0, 0);  /*IE9 + everything else*/\n    background-color: #E6E6E6;\n    text-decoration: none;\n    border-radius: 2px;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n}\n\n\ni-select.i-hover >button,\ni-select >button:hover,\ni-select >button:focus {\n    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#00000000', endColorstr='#1a000000',GradientType=0);\n    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(transparent), color-stop(40%, rgba(0,0,0, 0.05)), to(rgba(0,0,0, 0.10)));\n    background-image: -webkit-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: -moz-linear-gradient(top, rgba(0,0,0, 0.05) 0%, rgba(0,0,0, 0.10));\n    background-image: -o-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.6) inset;\n}\ni-select >button:focus {\n    outline: 0;\n}\ni-select.i-active >button,\ni-select >button:active {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.4) inset, 0 0 6px rgba(0,0,0, 0.2) inset;\n}\n\ni-select.i-disabled >button,\ni-select[disabled] >button,\ni-select.i-disabled >button:active,\ni-select[disabled] >button:active,\ni-select.i-disabled.i-active >button,\ni-select.i-active[disabled] >button,\ni-select.i-disabled >button:focus,\ni-select[disabled] >button:focus,\ni-select.i-disabled.focussed >button,\ni-select.focussed[disabled] >button,\ni-select.i-disabled >button:hover,\ni-select[disabled] >button:hover {\n    border: none;\n    background-image: none;\n    filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);\n    filter: alpha(opacity=40);\n    -khtml-opacity: 0.40;\n    -moz-opacity: 0.40;\n    opacity: 0.40;\n    cursor: not-allowed;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n    cursor: default;\n}\n\ni-select.i-rounded >button {\n    border-radius: 0.3em;\n}\n\ni-select.i-heavyrounded >button {\n    border-radius: 0.5em;\n}\n\ni-select.i-oval >button {\n    border-radius: 50%;\n}\n\ni-select.i-halfoval >button {\n    border-radius: 25%;\n}\n\ni-select.i-hidden {\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -9;\n}\n\ni-select >button::-moz-focus-inner {\n  border: 0;\n  padding: 0;\n}\n\ni-select >button div.btntext {\n    margin: 0 1.25em 0 1em;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 8em;\n    display: block;\n}\n\ni-select >button div.pointer {\n    border-left: 0.4em solid rgba(0, 0, 0, 0);\n    border-right: 0.4em solid rgba(0, 0, 0, 0);\n    border-top: 0.5em solid #000;\n    right: 0.25em;\n    position: absolute;\n    bottom: 0.2em;\n}\n\ni-select >div >div {\n    position: absolute;\n    left: 0;\n    top: 0;\n    cursor: pointer;\n    border-style: solid;\n    border-width: 0.1em;\n    -webkit-border-radius: 0 0 0.3em 0.3em;\n    -moz-border-radius: 0 0 0.3em 0.3em;\n    border-radius: 0 0 0.3em 0.3em;\n    -webkit-box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n    -moz-box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n    box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n}\n\ni-select ul {\n    font-size: 1.2em;\n    padding: 0 0 0.3em;\n    list-style: none;\n    margin: 0;\n}\n\ni-select li {\n    padding: 0.25em 0.7em;\n    white-space: nowrap;\n}\n\ni-select li.focussed {\n    background-color: #B3D4FF;\n}\n\ni-select li.selected:before {\n    content: '*';\n    margin-left: -0.7em;\n    padding-right: 0.25em;\n}\n\ni-select li:before,\ni-select li:after {\n    content: '';\n    padding: 0;\n    margin: 0;\n}\n\n/* color specification:; */\n\ni-select >div >div {\n    background-color: #FFF;\n    border-color: #000;\n}\n\ni-select li:hover {\n    background-color: #B3D4FF;\n}\n\ni-select.i-focused > button div.pointer,\ni-select.i-primary > button div.pointer {\n    border-top: 0.5em solid #FEFEFE;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],417:[function(require,module,exports){
+
+},{"event-dom":6,"itags.core":420}],415:[function(require,module,exports){
+var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-select;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-select:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-select:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\ni-select {\n    margin: 0;\n    display: inline-block;\n    *display: inline; /*IE 6/7*/\n    zoom: 1;\n    position: relative;\n    vertical-align: middle;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-select >div {\n    position: relative;\n    z-index: 2;\n    -webkit-transition: opacity 0.1s;\n    -moz-transition: opacity 0.1s;\n    -ms-transition: opacity 0.1s;\n    -o-transition: opacity 0.1s;\n    transition: opacity 0.1s;\n    opacity: 0;\n}\n\ni-select >div.i-select-show {\n    -webkit-transition: opacity 0.2s;\n    -moz-transition: opacity 0.2s;\n    -ms-transition: opacity 0.2s;\n    -o-transition: opacity 0.2s;\n    transition: opacity 0.2s;\n    opacity: 1;\n}\n\n\n\ni-select.i-primary >button,\ni-select.i-focussed >button {\n    background-color: rgb(0, 120, 231);\n    color: #fff;\n}\n\n/*csslint outline-none:false*/\n\ni-select >button {\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    -khtml-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    position: relative;\n    padding: 0.5em 0;\n    max-width: 8em;\n    color: inherit; /* 1 */\n    font: inherit; /* 2 */\n    margin: 0; /* 3 */\n    overflow: visible;\n    text-transform: none;\n    -webkit-appearance: button; /* 2 */\n    line-height: normal;\n    white-space: nowrap;\n    vertical-align: baseline;\n    text-align: center;\n    cursor: pointer;\n    -webkit-user-drag: none;\n    -webkit-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    font-family: inherit;\n    font-size: 100%;\n    color: #444; /* rgba not supported (IE 8) */\n    color: rgba(0, 0, 0, 0.80); /* rgba supported */\n    border: 1px solid #999;  /*IE 6/7/8*/\n    border: none rgba(0, 0, 0, 0);  /*IE9 + everything else*/\n    background-color: #E6E6E6;\n    text-decoration: none;\n    border-radius: 2px;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n}\n\n\ni-select.i-hover >button,\ni-select >button:hover,\ni-select >button:focus {\n    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#00000000', endColorstr='#1a000000',GradientType=0);\n    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(transparent), color-stop(40%, rgba(0,0,0, 0.05)), to(rgba(0,0,0, 0.10)));\n    background-image: -webkit-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: -moz-linear-gradient(top, rgba(0,0,0, 0.05) 0%, rgba(0,0,0, 0.10));\n    background-image: -o-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.6) inset;\n}\ni-select >button:focus {\n    outline: 0;\n}\ni-select.i-active >button,\ni-select >button:active {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.4) inset, 0 0 6px rgba(0,0,0, 0.2) inset;\n}\n\ni-select.i-disabled >button,\ni-select[disabled] >button,\ni-select.i-disabled >button:active,\ni-select[disabled] >button:active,\ni-select.i-disabled.i-active >button,\ni-select.i-active[disabled] >button,\ni-select.i-disabled >button:focus,\ni-select[disabled] >button:focus,\ni-select.i-disabled.focussed >button,\ni-select.focussed[disabled] >button,\ni-select.i-disabled >button:hover,\ni-select[disabled] >button:hover {\n    border: none;\n    background-image: none;\n    filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);\n    filter: alpha(opacity=60);\n    -khtml-opacity: 0.60;\n    -moz-opacity: 0.60;\n    opacity: 0.60;\n    cursor: not-allowed;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n    cursor: default;\n}\n\ni-select.i-rounded >button {\n    border-radius: 0.3em;\n}\n\ni-select.i-heavyrounded >button {\n    border-radius: 0.5em;\n}\n\ni-select.i-oval >button {\n    border-radius: 50%;\n}\n\ni-select.i-halfoval >button {\n    border-radius: 25%;\n}\n\ni-select.i-hidden {\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -9;\n}\n\ni-select >button::-moz-focus-inner {\n  border: 0;\n  padding: 0;\n}\n\ni-select >button div.btntext {\n    margin: 0 1.25em 0 1em;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 8em;\n    display: block;\n}\n\ni-select >button div.pointer {\n    border-left: 0.4em solid rgba(0, 0, 0, 0);\n    border-right: 0.4em solid rgba(0, 0, 0, 0);\n    border-top: 0.5em solid #000;\n    right: 0.25em;\n    position: absolute;\n    bottom: 0.2em;\n}\n\ni-select >button.i-nonexpandable div.btntext {\n    margin: 0 1em;\n}\n\ni-select >button.i-nonexpandable div.pointer {\n    visibility: hidden;\n}\n\ni-select >div >div {\n    position: absolute;\n    left: 0;\n    top: 0;\n    cursor: pointer;\n    border-style: solid;\n    border-width: 0.1em;\n    -webkit-border-radius: 0 0 0.3em 0.3em;\n    -moz-border-radius: 0 0 0.3em 0.3em;\n    border-radius: 0 0 0.3em 0.3em;\n    -webkit-box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n    -moz-box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n    box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n}\n\ni-select ul {\n    font-size: 1.2em;\n    padding: 0 0 0.3em;\n    list-style: none;\n    margin: 0;\n}\n\ni-select li {\n    padding: 0.25em 0.7em;\n    white-space: nowrap;\n}\n\ni-select li.focussed {\n    background-color: #B3D4FF;\n}\n\ni-select li.selected:before {\n    content: '*';\n    margin-left: -0.7em;\n    padding-right: 0.25em;\n}\n\ni-select li:before,\ni-select li:after {\n    content: '';\n    padding: 0;\n    margin: 0;\n}\n\n/* color specification:; */\n\ni-select >div >div {\n    background-color: #FFF;\n    border-color: #000;\n}\n\ni-select li:hover {\n    background-color: #B3D4FF;\n}\n\ni-select.i-focused > button div.pointer,\ni-select.i-primary > button div.pointer {\n    border-top: 0.5em solid #FEFEFE;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],416:[function(require,module,exports){
 /**
  * Provides several methods that override native Element-methods to work with the vdom.
  *
@@ -31280,8 +30311,6 @@ module.exports = function (window) {
         Event = require('event-mobile')(window);
         require('event-dom/extra/blurnode.js')(window);
         require('focusmanager')(window);
-        require('i-item')(window);
-        require('i-head')(window);
 
         IFormElement = require('i-formelement')(window);
 
@@ -31306,6 +30335,11 @@ module.exports = function (window) {
                 // prevent minus windowscroll:
                 e.preventDefaultContinue();
             }
+        }, 'i-select > button');
+
+        Event.before('tap', function(e) {
+            // prevent nested focusmanager (parent) to refocus on the button:
+            e._noFocus = true;
         }, 'i-select > button');
 
         Event.after(['tap', 'keydown'], function(e) {
@@ -31339,8 +30373,8 @@ module.exports = function (window) {
                     laterSilent(function() {
                         element.removeData('_suppressClose');
                     }, SUPPRESS_DELAY);
-                    ulNode = element.getElement('ul[fm-manage]');
-                    ulNode && ulNode.focus(true);
+                    // ulNode = element.getElement('ul[fm-manage]');
+                    // ulNode && ulNode.focus(true);
                 }
             }
         }, 'i-select > button');
@@ -31394,7 +30428,6 @@ module.exports = function (window) {
                 markValue;
             if (prevValue!==newValue) {
                 markValue = newValue - 1;
-
                 /**
                 * Emitted when a the i-select changes its value
                 *
@@ -31426,8 +30459,9 @@ module.exports = function (window) {
             */
             attrs: {
                 expanded: 'boolean',
+                disabled: 'boolean',
                 value: 'string',
-                prop: 'string',
+                'i-prop': 'string',
                 'invalid-value': 'string'
             },
 
@@ -31445,17 +30479,17 @@ module.exports = function (window) {
             */
             init: function() {
                 var element = this,
-                    itemNodes = element.getAll('>i-item'),
+                    designNode = element.getDesignNode(),
+                    itemNodes = designNode.getAll('>span'),
                     items = [],
                     buttonTexts = [],
                     content;
                 itemNodes.forEach(function(node, i) {
-                    var header = node.getElement('i-head');
+                    var header = node.getElement('span[is="button"]');
                     if (header) {
                         buttonTexts[i] = header.getHTML();
-                        header.remove(true);
                     }
-                    items[items.length] = node.getHTML();
+                    items[items.length] = node.getHTML(header);
                 });
 
                 element.defineWhenUndefined('items', items)
@@ -31465,7 +30499,7 @@ module.exports = function (window) {
                 element.setData('i-select-value', element.model.value);
 
                 // building the template of the itag:
-                content = '<button class="focusable"><div class="pointer"></div><div class="btntext"></div></button>';
+                content = '<button><div class="pointer"></div><div class="btntext"></div></button>';
                 // first: outerdiv which will be relative positioned
                 // next: innerdiv which will be absolute positioned
                 // also: hide the container by default --> updateUI could make it shown
@@ -31517,7 +30551,6 @@ module.exports = function (window) {
             * @since 0.0.1
             */
             sync: function() {
-console.warn('syncing i-select');
                 // inside sync, YOU CANNOT change attributes which are part of `attrs` !!!
                 // those actions will be ignored.
 
@@ -31527,7 +30560,7 @@ console.warn('syncing i-select');
                 // async actions well !!!
                 var element = this,
                     model = element.model,
-                    items = model.items,
+                    items = model.items || [],
                     buttonTexts = model.buttonTexts,
                     value = model.value,
                     item, content, buttonText, len, i, markValue,
@@ -31546,11 +30579,12 @@ console.warn('syncing i-select');
 
                 // rebuild the button:
                 button = element.getElement('button');
+                button.toggleClass('i-nonexpandable', (len<2));
                 button.getElement('div.btntext').setHTML(buttonText);
 
                 container = element.getElement('>div');
 
-                if (model.expanded) {
+                if (model.expanded && !model.disabled && (len>1)) {
                     hiddenTimer = container.getData('_hiddenTimer');
                     hiddenTimer && hiddenTimer.cancel();
                     container.setClass(SHOW);
@@ -31584,9 +30618,9 @@ console.warn('syncing i-select');
 
     return window.ITAGS[itagName];
 };
-},{"./css/i-select.css":416,"css":4,"event-dom/extra/blurnode.js":7,"event-mobile":80,"focusmanager":170,"i-formelement":411,"i-head":412,"i-item":415,"itags.core":421,"js-ext/lib/string.js":344,"polyfill/polyfill-base.js":357,"utils":358}],418:[function(require,module,exports){
-var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-tabpane;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-tabpane:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-tabpane:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\ni-tabpane {\n    /* make it accept width and height by swith from :inline\" to \"inline-block\"*/\n    display: inline-block;\n    *display: block;\n    *zoom: 1;\n}\n\ni-tabpane >ul {\n    margin:0;\n    padding:0;\n    list-style:none;\n    height: 2.18em;\n    overflow: hidden;\n}\n\ni-tabpane >ul li div {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    opacity: 0.6;\n    margin: 0;\n    padding: 0;\n    border: none;\n}\n\ni-tabpane >ul li:hover div {\n    opacity: 0.8;\n}\n\ni-tabpane >ul li.pure-button-active div,\ni-tabpane >ul li:active div {\n    opacity: 1;\n}\n\ni-tabpane >ul li {\n    display: inline-block;\n    *display: inline; /* IE */\n    *zoom: 1; /* IE */\n    margin-right: 0.25em;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n}\n\ni-tabpane >ul li.pure-button {\n    display: inline-block;\n    *display: inline; /* IE */\n    *zoom: 1; /* IE */\n    margin-right: 0.2em;\n    border-radius: 2px 2px 0 0;\n    border-bottom: none;\n}\n\ni-tabpane >div {\n    height: 100%;\n    margin-top: -2.18em;\n    padding-top: 2.18em;\n}\n\ni-tabpane >div >div.container {\n    border: 1px solid #2647a0;\n    border-top: 5px solid #2647a0;\n    padding: 0.25em 0.5em;\n    height: 100%;\n    width: 100%;\n    overflow: scroll;\n}\n"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],419:[function(require,module,exports){
+},{"./css/i-select.css":415,"css":4,"event-dom/extra/blurnode.js":7,"event-mobile":80,"focusmanager":170,"i-formelement":411,"itags.core":420,"js-ext/lib/string.js":344,"polyfill/polyfill-base.js":357,"utils":358}],417:[function(require,module,exports){
+var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-tabpane;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-tabpane:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-tabpane:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\ni-tabpane {\n    /* make it accept width and height by swith from :inline\" to \"inline-block\"*/\n    display: inline-block;\n    *display: block;\n    *zoom: 1;\n}\n\ni-tabpane >ul {\n    margin:0;\n    padding:0;\n    list-style:none;\n    height: 1.9em;\n    overflow: hidden;\n}\n\ni-tabpane >ul li div {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    opacity: 0.6;\n    margin: 0;\n    padding: 0;\n    border: none;\n}\n\ni-tabpane >ul li:hover div {\n    opacity: 0.8;\n}\n\ni-tabpane >ul li.pure-button-active div,\ni-tabpane >ul li:active div {\n    opacity: 1;\n}\n\ni-tabpane >ul li {\n    display: inline-block;\n    *display: inline; /* IE */\n    *zoom: 1; /* IE */\n    margin-right: 0.25em;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n}\n\ni-tabpane >ul li.pure-button {\n    display: inline-block;\n    *display: inline; /* IE */\n    *zoom: 1; /* IE */\n    margin-right: 0.2em;\n    border-radius: 2px 2px 0 0;\n    border-bottom: none;\n}\n\ni-tabpane >div {\n    height: 100%;\n    margin-top: -2.18em;\n    padding-top: 2.18em;\n}\n\ni-tabpane >div >div.container {\n    border: 1px solid #2647a0;\n    border-top: 5px solid #2647a0;\n    padding: 0.25em 0.5em;\n    height: 100%;\n    width: 100%;\n    overflow: scroll;\n}\n"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],418:[function(require,module,exports){
 /*
 * attributes:
 * value, expanded, primary-button
@@ -31608,8 +30642,6 @@ module.exports = function (window) {
     if (!window.ITAGS[itagName]) {
         Event = require('event-mobile')(window);
         require('focusmanager')(window);
-        require('i-item')(window);
-        require('i-head')(window);
 
         Event.before(itagName+':manualfocus', function(e) {
             // the i-select itself is unfocussable, but its button is
@@ -31655,7 +30687,7 @@ module.exports = function (window) {
             */
             attrs: {
                 pane: 'number',
-                prop: 'string'
+                'i-prop': 'string'
             },
 
            /**
@@ -31672,22 +30704,22 @@ module.exports = function (window) {
             */
             init: function() {
                 var element = this,
-                    itemNodes = element.getAll('>i-item'),
+                    designNode = element.getDesignNode(),
+                    itemNodes = designNode.getAll('>section'),
                     model = element.model,
                     pane = model.pane,
                     panes = [],
                     tabs = [],
                     content;
                 itemNodes.forEach(function(node, i) {
-                    var header = node.getElement('i-head');
+                    var header = node.getElement('span[is="tab"]');
                     if (header) {
                         tabs[i] = header.getHTML();
-                        header.remove(true);
                     }
                     else {
                         tabs[i] = '&nbsp;';
                     }
-                    panes[panes.length] = node.getHTML();
+                    panes[panes.length] = node.getHTML(header);
                 });
 
                 element.defineWhenUndefined('panes', panes)
@@ -31764,9 +30796,9 @@ console.info(element.getOuterHTML());
     return window.ITAGS[itagName];
 
 };
-},{"./css/i-tabpane.css":418,"css":4,"event-mobile":80,"focusmanager":170,"i-head":412,"i-item":415,"itags.core":421,"js-ext/lib/string.js":344,"polyfill/polyfill-base.js":357}],420:[function(require,module,exports){
+},{"./css/i-tabpane.css":417,"css":4,"event-mobile":80,"focusmanager":170,"itags.core":420,"js-ext/lib/string.js":344,"polyfill/polyfill-base.js":357}],419:[function(require,module,exports){
 var css = "span.itag-data {\n    display: none !important;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],421:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":5}],420:[function(require,module,exports){
 (function (global){
 /*jshint proto:true */
 
@@ -31934,7 +30966,7 @@ module.exports = function (window) {
         initUI: function(constructor, reInitialize) {
             var instance = this,
                 vnode = instance.vnode,
-                superInit;
+                superInit, serverModel;
             if ((reInitialize || !vnode.ce_initialized) && !vnode.removedFromDOM && !vnode.ce_destroyed) {
                 superInit = function(constructor) {
                     var classCarierBKP = instance.__classCarier__;
@@ -31946,19 +30978,32 @@ module.exports = function (window) {
                     // don't call `hasOwnProperty` directly on obj --> it might have been overruled
                     Object.prototype.hasOwnProperty.call(constructor.prototype, '_initUI') && constructor.prototype._initUI.call(instance);
                 };
-                if (reInitialize) {
-                    instance.setHTML(vnode.ce_initContent);
-                }
-                else {
-                    // already synced on the server:
+                if (!reInitialize) {
+                    // First time init.
+                    // If already rendered on the server:
                     // bind the stored json-data on the property `model`:
-                    itagCore.retrieveModel(instance);
-                    Object.protectedProp(vnode, 'ce_initContent', instance.getHTML());
+                    if (instance.hasClass(CLASS_ITAG_RENDERED)) {
+                        // already rendered on the server
+                        if (!RUNNING_ON_NODE) {
+                            serverModel = itagCore.extractModel(instance);
+                            if (serverModel && !vnode.ce_boundModel) {
+                                instance.model = serverModel;
+                            }
+                        }
+                        Object.protectedProp(vnode, 'ce_designNode', itagCore.extractContent(instance));
+                    }
+                    else {
+                        Object.protectedProp(vnode, 'ce_designNode', itagCore.extractContent(instance, true));
+                    }
                 }
                 superInit(constructor || instance.constructor);
                 Object.protectedProp(vnode, 'ce_initialized', true);
             }
             return instance;
+        },
+
+        getDesignNode: function() {
+            return this.vnode.ce_designNode;
         },
 
        /**
@@ -32048,11 +31093,35 @@ module.exports = function (window) {
         syncUI: function() {
             var instance = this,
                 attrs = instance._attrs,
-                vnode = instance.vnode;
+                vnode = instance.vnode,
+                stringifiedData, vChildNodes, lastVChild;
             if (vnode.ce_initialized && !vnode.removedFromDOM && !vnode.ce_destroyed) {
                 vnode._setUnchangableAttrs(attrs);
                 instance._syncUI.apply(instance, arguments);
                 vnode._setUnchangableAttrs(null);
+                if (RUNNING_ON_NODE) {
+                    // store the modeldata inside a commentNode at the end of innerHTML:
+                    try {
+                        stringifiedData = JSON.stringify(instance.model);
+                        // we need to patch directly on the vnode --> modification of commentNodes
+                        // have no customized methods on the Element, but they are patchable through Element.vnode:
+                        vChildNodes = vnode.vChildNodes;
+                        lastVChild = vChildNodes[vChildNodes.length-1];
+                        if (lastVChild && (lastVChild.nodeType===8) && (lastVChild.text.startsWith('i-model:{'))) {
+                            // modeldata was already set --> overwrite it
+                            lastVChild.text = 'i-model:'+stringifiedData;
+                            // lastVChild.domNode.nodeValue = unescapeEntities(lastVChild.text);
+                            lastVChild.domNode.nodeValue = lastVChild.text;
+                        }
+                        else {
+                            // insert modeldata
+                            instance.prepend('<!--i-model:'+stringifiedData+'-->');
+                        }
+                    }
+                    catch(e) {
+                        console.warn(e);
+                    }
+                }
             }
             return instance;
         },
@@ -32284,7 +31353,7 @@ module.exports = function (window) {
         * @since 0.0.1
         */
         attrsToModel: function(domElement) {
-console.warn('attrsToModel');
+            console.log(NAME+'attrsToModel');
             var attrs = domElement._attrs,
                 attrValue, validValue;
             attrs.each(function(value, key) {
@@ -32328,11 +31397,12 @@ console.warn('attrsToModel');
         * @since 0.0.1
         */
         bindModel: function(element, model, mergeCurrent) {
-console.warn('bindModel');
+            console.log(NAME+'bindModel');
             var instance = this,
-                stringifiedData, prevContent, observer;
+                observer;
             if (element.isItag() && (element.model!==model)) {
                 element.removeAttr('bound-model');
+                Object.protectedProp(element.vnode, 'ce_boundModel', true);
                 if (NATIVE_OBJECT_OBSERVE) {
                     observer = element.getData('_observer');
                     observer && Object.unobserve(element.model, observer);
@@ -32353,19 +31423,78 @@ console.warn('bindModel');
                 }
                 element.syncUI();
                 element.itagRendered || instance.setRendered(element);
-                if (RUNNING_ON_NODE) {
-                    // store the modeldata inside an inner div-node
+            }
+        },
+
+       /**
+        * Retrieves modeldata set by the server inside the itag-element and binds this data into element.model
+        *
+        * @method extractModel
+        * @param domElement {HTMLElement} the itag that should be processed.
+        * @return {Object|null} the modeldata or null when not supplied
+        * @since 0.0.1
+        */
+        extractModel: function(domElement) {
+            console.log(NAME+'extractModel');
+            var vnode = domElement.vnode,
+                vChildNodes = vnode.vChildNodes,
+                lastPos = vChildNodes.length - 1,
+                i = -1,
+                modelData, vChildNode, content;
+            // walk through the vChilds and handle the model-data:
+            while ((++i<lastPos) && (modelData===undefined)) {
+                vChildNode = vChildNodes[i];
+                if ((vChildNode.nodeType===8) && (vChildNode.text.startsWith('i-model:{'))) {
+                    // modeldata was set
                     try {
-                        stringifiedData = JSON.stringify(model);
-                        prevContent = element.getElement('span.itag-data');
-                        prevContent && prevContent.remove();
-                        element.prepend('<span class="itag-data">'+stringifiedData+'</span>');
+                        content = vChildNode.text.replaceAll('&lt;', '<').replaceAll('&gt;', '>');
+                        modelData = JSON.parseWithDate(content.substr(8));
                     }
                     catch(e) {
+                        modelData = null;
                         console.warn(e);
                     }
+                    vnode._removeChild(vChildNode);
                 }
             }
+            return modelData || null;
+        },
+
+       /**
+        * Retrieves content set by the definition of the iTag. The content should be inside a comment-node
+        * inside the itag. The returnvalue is a container-node (DIV) where the content
+        * -as is specified by the comment-node- lies within as true HTML.
+        *
+        * @method extractContent
+        * @param domElement {HTMLElement} the itag that should be processed.
+        * @return {HTMLElement} a DIV-container with HTML inside
+        * @since 0.0.1
+        */
+        extractContent: function(domElement, empty) {
+            console.log(NAME+'extractContent');
+            var vnode = domElement.vnode,
+                vChildNodes = vnode.vChildNodes,
+                lastPos = vChildNodes.length,
+                i = -1,
+                container = DOCUMENT.createElement('div'),
+                content, vChildNode;
+            // mark the container with a class -->
+            // so we know we don't need to render the itags anything inside:
+            container.setClass('ce-design-node');
+            // walk through the vChilds and handle the model-data:
+            while ((++i<lastPos) && !content) {
+                vChildNode = vChildNodes[i];
+                if ((vChildNode.nodeType===8) && (!vChildNode.text.startsWith('i-model:{'))) {
+                    content = vChildNode.text.trim().replaceAll('&lt;', '<').replaceAll('&gt;', '>');
+                    // to support nested comments (in case of nested iTags),
+                    // we transform any text looking like --!> into -->
+                    content = content.replaceAll('<!==', '<!--').replaceAll('==>', '-->');
+                    container.vnode.setHTML(content, true);
+                    empty || vnode._removeChild(vChildNode);
+                }
+            }
+            empty && domElement.empty();
+            return container;
         },
 
        /**
@@ -32378,6 +31507,7 @@ console.warn('bindModel');
         * @since 0.0.1
         */
         itagFilter: function(e) {
+            console.log(NAME+'itagFilter');
             var node = e.target;
             return node.vnode.isItag && node.getData('itagRendered');
         },
@@ -32391,7 +31521,7 @@ console.warn('bindModel');
         * @since 0.0.1
         */
         modelToAttrs: function(domElement) {
-console.warn('modelToAttrs');
+            console.log(NAME+'modelToAttrs');
             var attrs = domElement._attrs,
                 model = domElement.model,
                 newAttrs = [];
@@ -32409,7 +31539,7 @@ console.warn('modelToAttrs');
         * @since 0.0.1
         */
         renderDomElements: function(domElementConstructor) {
-console.warn('renderDomElements');
+            console.log(NAME+'renderDomElements');
             var itagName = domElementConstructor.$$itag,
                 pseudo = domElementConstructor.$$pseudo,
                 itagElements = pseudo ? DOCUMENT.getAll(itagName+'[is="'+pseudo+'"]') : DOCUMENT.getAll(itagName+':not([is])'),
@@ -32419,32 +31549,6 @@ console.warn('renderDomElements');
                 itagElement = itagElements[i];
                 this.upgradeElement(itagElement, domElementConstructor);
             }
-        },
-
-       /**
-        * Retrieves modeldata set by the server inside the itag-element and binds this data into element.model
-        *
-        * @method retrieveModel
-        * @param domElement {HTMLElement} the itag that should be processed.
-        * @return {Object}
-        * @since 0.0.1
-        */
-        retrieveModel: function(domElement) {
-console.warn('retrieveModel');
-            // try to load the model from a stored inner div-node
-            var dataNode = domElement.getElement('span.itag-data'),
-                stringifiedData;
-            if (dataNode) {
-                try {
-                    stringifiedData = dataNode.getHTML();
-                    domElement.model = JSON.parseWithDate(stringifiedData);
-                    dataNode.remove(true);
-                }
-                catch(e) {
-                    console.warn(e);
-                }
-            }
-            return domElement.model;
         },
 
        /**
@@ -32483,6 +31587,7 @@ console.warn('retrieveModel');
         * @since 0.0.1
         */
         setDirectEventResponse :function(ItagClass, domEvents) {
+            console.log(NAME+'setDirectEventResponse');
             var itag = ItagClass.$$itag;
             if (!NATIVE_OBJECT_OBSERVE && itag) {
                 Array.isArray(domEvents) || (domEvents=[domEvents]);
@@ -32501,7 +31606,7 @@ console.warn('retrieveModel');
                                 delete DELAYED_FINALIZE_EVENTS[domEvent];
                             }
                             // add to the list whenever elements are removed and no itag is in the dom anymore:
-                            Event.after(NODE_REMOVE, function() {
+                            Event.after('UI:'+NODE_REMOVE, function() {
                                 var elementThatNeedsEvent;
                                 itagsThatNeedsEvent[domEvent].some(function(oneItag) {
                                     DOCUMENT.getElement(oneItag, true) && (elementThatNeedsEvent=true);
@@ -32511,7 +31616,7 @@ console.warn('retrieveModel');
                             }, itag);
 
                             // remove from the list whenever itag is added in the dom:
-                            Event.after(NODE_INSERT, function() {
+                            Event.after('UI:'+NODE_INSERT, function() {
                                 delete DELAYED_FINALIZE_EVENTS[domEvent];
                             }, itag);
                         }
@@ -32528,7 +31633,7 @@ console.warn('retrieveModel');
         * @since 0.0.1
         */
         setRendered: function(domElement) {
-console.warn('setRendered');
+            console.log(NAME+'setRendered');
             domElement.setClass(CLASS_ITAG_RENDERED, null, null, true);
             domElement.setData('itagRendered', true);
             domElement._itagReady || (domElement._itagReady=window.Promise.manage());
@@ -32542,7 +31647,7 @@ console.warn('setRendered');
         * @since 0.0.1
         */
         setupEmitters: function() {
-console.warn('setRendered');
+            console.log(NAME+'setupEmitters');
             Event.after('*:'+NODE_CONTENT_CHANGE, function(e) {
                 var element = e.target;
                 /**
@@ -32558,6 +31663,7 @@ console.warn('setRendered');
         },
 
         setContentVisibility: function(ItagClass, value) {
+            console.log(NAME+'setContentVisibility');
             (typeof value === 'boolean') && ItagClass.mergePrototypes({contentHidden: !value}, true, false, true);
         },
 
@@ -32568,10 +31674,11 @@ console.warn('setRendered');
         * @since 0.0.1
         */
         setupWatchers: function() {
+            console.log(NAME+'setupWatchers');
             var types = [];
 
             Event.after(
-                NODE_REMOVE,
+                'UI:'+NODE_REMOVE,
                 function(e) {
                     var node = e.target;
                     node.destroyUI(PROTO_SUPPORTED ? null : node.__proto__.constructor);
@@ -32694,7 +31801,7 @@ console.warn('setRendered');
         * @since 0.0.1
         */
         upgradeElement: function(domElement, domElementConstructor) {
-console.warn('upgradeElement');
+            console.log(NAME+'upgradeElement');
             var instance = this,
                 proto = domElementConstructor.prototype,
                 observer;
@@ -32778,6 +31885,7 @@ console.warn('upgradeElement');
     * @since 0.0.1
     */
     manageFocus = function(domElement) {
+        console.log(NAME+'manageFocus');
         var focusManagerNode = domElement.getElement('.focussed[fm-manage]');
         focusManagerNode && focusManagerNode.focus(true);
     };
@@ -32811,7 +31919,43 @@ console.warn('upgradeElement');
     * @since 0.0.1
     */
     DOCUMENT.bindModel = function(model, selector, mergeCurrent, fineGrain) {
-        return DOCUMENT.documentElement.bindModel(model, selector, mergeCurrent, fineGrain);
+        console.log(NAME+'bindModel');
+        var documentElement = DOCUMENT.documentElement,
+            listener, elements, observer;
+        if ((typeof selector === 'string') && (selector.length>0) && !BINDING_LIST[selector]) {
+            BINDING_LIST[selector] = true;
+            elements = documentElement.getAll(selector);
+            elements.forEach(function(element) {
+                itagCore.bindModel(element, (typeof fineGrain==='function') ? fineGrain(element, model) : model, mergeCurrent);
+            });
+            listener = Event.after('UI:'+NODE_INSERT, function(e) {
+                var element = e.target;
+                itagCore.bindModel(element, (typeof fineGrain==='function') ? fineGrain(element, model) : model, mergeCurrent);
+            }, function(e) {
+                return e.target.matches(selector);
+            });
+            return {
+                detach: function() {
+                    listener.detach();
+                    if (NATIVE_OBJECT_OBSERVE) {
+                        elements = documentElement.getAll(selector);
+                        elements.forEach(function(element) {
+                            observer = element.getData('_observer');
+                            observer && Object.unobserve(element.model, observer);
+                        });
+                    }
+                    delete BINDING_LIST[selector];
+                }
+            };
+        }
+        // else
+        return {
+            detach: function() {
+                if (typeof selector === 'string') {
+                    delete BINDING_LIST[selector];
+                }
+            }
+        };
     };
 
    /**
@@ -32819,13 +31963,14 @@ console.warn('upgradeElement');
     *
     * @method createElement
     * @param tag {String} tagname to be created
+    * @param [suppressItagRender] {Boolean} to suppress Itags from rendering
     * @return {HTMLElement}
     * @since 0.0.1
     */
-    DOCUMENT.createElement = function(tag) {
-console.warn('createElement');
+    DOCUMENT.createElement = function(tag, suppressItagRender) {
+        console.log(NAME+'createElement '+tag);
         var ItagClass = window.ITAGS[tag.toLowerCase()];
-        if (ItagClass) {
+        if (!suppressItagRender && ItagClass) {
             return new ItagClass();
         }
         return this._createElement(tag);
@@ -32855,7 +32000,7 @@ console.warn('createElement');
     * @since 0.0.1
     */
     DOCUMENT.refreshItags = function(force) {
-console.warn('refreshItags');
+        console.log(NAME+'refreshItags');
         var instance = this,
             list, len, i, itagElement, needRefresh, stringifiedModel;
         if (!NATIVE_OBJECT_OBSERVE || force) {
@@ -32878,6 +32023,8 @@ console.warn('refreshItags');
                     catch (err) {
                         console.warn('Invalid model-structure: possibly it is cycle referenced --> will NEVER refresh the Itag:');
                         console.warn(itagElement);
+                        console.warn('related model:');
+                        console.warn(itagElement.model);
                     }
                     if (needRefresh) {
                         itagCore.modelToAttrs(itagElement);
@@ -33193,7 +32340,6 @@ console.warn('refreshItags');
         *
         * @method bindModel
         * @param model {Object} the model to bind to the itag-element
-        * @param selector {String|HTMLElement} a css-selector or an HTMLElement where the data should be bound
         * @param [mergeCurrent=false] {Boolean} when set true, current properties on the iTag that aren't defined
         *                                       in the new model, get merged into the new model.
         * @param [fineGrain] {Function} A function that recieves `model` as argument and should return a
@@ -33201,51 +32347,23 @@ console.warn('refreshItags');
         * @return {Object} handler with a `detach()`-method which can be used to detach the binder
         * @since 0.0.1
         */
-        ElementPrototype.bindModel = function(model, selector, mergeCurrent, fineGrain) {
+        ElementPrototype.bindModel = function(model, mergeCurrent, fineGrain) {
             var instance = this,
-                listener, elements, observer;
-            if ((typeof selector === 'string') && (selector.length>0) && !BINDING_LIST[selector]) {
-                BINDING_LIST[selector] = true;
-                elements = instance.getAll(selector);
-                elements.forEach(function(element) {
-                    itagCore.bindModel(element, (typeof fineGrain==='function') ? fineGrain(element, model) : model, mergeCurrent);
-                });
-                listener = Event.after(NODE_INSERT, function(e) {
-                    var element = e.target;
-                    itagCore.bindModel(element, (typeof fineGrain==='function') ? fineGrain(element, model) : model, mergeCurrent);
-                }, selector);
-                return {
-                    detach: function() {
-                        listener.detach();
-                        if (NATIVE_OBJECT_OBSERVE) {
-                            elements = instance.getAll(selector);
-                            elements.forEach(function(element) {
-                                observer = element.getData('_observer');
-                                observer && Object.unobserve(element.model, observer);
-                            });
-                        }
-                        delete BINDING_LIST[selector];
-                    }
-                };
-            }
-            else if (selector && selector._syncUI) {
-                itagCore.bindModel(selector, (typeof fineGrain==='function') ? fineGrain(selector, model) : model, mergeCurrent);
+                observer;
+            if (instance._syncUI) {
+                itagCore.bindModel(instance, (typeof fineGrain==='function') ? fineGrain(instance, model) : model, mergeCurrent);
                 return {
                     detach: function() {
                         if (NATIVE_OBJECT_OBSERVE) {
-                            observer = selector.getData('_observer');
-                            observer && Object.unobserve(selector.model, observer);
+                            observer = instance.getData('_observer');
+                            observer && Object.unobserve(instance.model, observer);
                         }
                     }
                 };
             }
-            // else
+            // else for compatabilaty, return a detachFn
             return {
-                detach: function() {
-                    if (typeof selector === 'string') {
-                        delete BINDING_LIST[selector];
-                    }
-                }
+                detach: function() {}
             };
         };
 
@@ -33288,7 +32406,6 @@ console.warn('refreshItags');
          * @since 0.0.1
         */
         ElementPrototype.setAttribute = function(attributeName, value, silent) {
-console.warn('setAttribute '+this.getTagName());
             var instance = this,
                 valueType;
             if (!instance.isItag() || silent) {
@@ -33437,9 +32554,9 @@ console.warn('setAttribute '+this.getTagName());
     return itagCore;
 };
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./css/itags.core.css":420,"event-dom":6,"event/extra/timer-finalize.js":161,"io":314,"js-ext/extra/hashmap.js":336,"js-ext/js-ext.js":338,"polyfill/polyfill-base.js":357,"utils":358,"vdom":405}],422:[function(require,module,exports){
+},{"./css/itags.core.css":419,"event-dom":6,"event/extra/timer-finalize.js":161,"io":314,"js-ext/extra/hashmap.js":336,"js-ext/js-ext.js":338,"polyfill/polyfill-base.js":357,"utils":358,"vdom":405}],421:[function(require,module,exports){
 
-},{}],423:[function(require,module,exports){
+},{}],422:[function(require,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -34610,7 +33727,7 @@ function assert (test, message) {
   if (!test) throw new Error(message || 'Failed assertion')
 }
 
-},{"base64-js":424,"ieee754":425}],424:[function(require,module,exports){
+},{"base64-js":423,"ieee754":424}],423:[function(require,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
@@ -34732,7 +33849,7 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	exports.fromByteArray = uint8ToBase64
 }(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
 
-},{}],425:[function(require,module,exports){
+},{}],424:[function(require,module,exports){
 exports.read = function(buffer, offset, isLE, mLen, nBytes) {
   var e, m,
       eLen = nBytes * 8 - mLen - 1,
@@ -34818,7 +33935,7 @@ exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128;
 };
 
-},{}],426:[function(require,module,exports){
+},{}],425:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -35123,7 +34240,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],427:[function(require,module,exports){
+},{}],426:[function(require,module,exports){
 var http = module.exports;
 var EventEmitter = require('events').EventEmitter;
 var Request = require('./lib/request');
@@ -35262,7 +34379,7 @@ http.STATUS_CODES = {
     510 : 'Not Extended',               // RFC 2774
     511 : 'Network Authentication Required' // RFC 6585
 };
-},{"./lib/request":428,"events":426,"url":452}],428:[function(require,module,exports){
+},{"./lib/request":427,"events":425,"url":451}],427:[function(require,module,exports){
 var Stream = require('stream');
 var Response = require('./response');
 var Base64 = require('Base64');
@@ -35456,7 +34573,7 @@ var indexOf = function (xs, x) {
     return -1;
 };
 
-},{"./response":429,"Base64":430,"inherits":432,"stream":451}],429:[function(require,module,exports){
+},{"./response":428,"Base64":429,"inherits":431,"stream":450}],428:[function(require,module,exports){
 var Stream = require('stream');
 var util = require('util');
 
@@ -35578,7 +34695,7 @@ var isArray = Array.isArray || function (xs) {
     return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{"stream":451,"util":454}],430:[function(require,module,exports){
+},{"stream":450,"util":453}],429:[function(require,module,exports){
 ;(function () {
 
   var object = typeof exports != 'undefined' ? exports : this; // #8: web workers
@@ -35640,7 +34757,7 @@ var isArray = Array.isArray || function (xs) {
 
 }());
 
-},{}],431:[function(require,module,exports){
+},{}],430:[function(require,module,exports){
 var http = require('http');
 
 var https = module.exports;
@@ -35655,7 +34772,7 @@ https.request = function (params, cb) {
     return http.request.call(this, params, cb);
 }
 
-},{"http":427}],432:[function(require,module,exports){
+},{"http":426}],431:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -35680,12 +34797,12 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],433:[function(require,module,exports){
+},{}],432:[function(require,module,exports){
 module.exports = Array.isArray || function (arr) {
   return Object.prototype.toString.call(arr) == '[object Array]';
 };
 
-},{}],434:[function(require,module,exports){
+},{}],433:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -35750,7 +34867,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],435:[function(require,module,exports){
+},{}],434:[function(require,module,exports){
 (function (global){
 /*! http://mths.be/punycode v1.2.4 by @mathias */
 ;(function(root) {
@@ -36261,7 +35378,7 @@ process.chdir = function (dir) {
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],436:[function(require,module,exports){
+},{}],435:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -36347,7 +35464,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],437:[function(require,module,exports){
+},{}],436:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -36434,16 +35551,16 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],438:[function(require,module,exports){
+},{}],437:[function(require,module,exports){
 'use strict';
 
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
-},{"./decode":436,"./encode":437}],439:[function(require,module,exports){
+},{"./decode":435,"./encode":436}],438:[function(require,module,exports){
 module.exports = require("./lib/_stream_duplex.js")
 
-},{"./lib/_stream_duplex.js":440}],440:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":439}],439:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -36536,7 +35653,7 @@ function forEach (xs, f) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_readable":442,"./_stream_writable":444,"_process":434,"core-util-is":445,"inherits":432}],441:[function(require,module,exports){
+},{"./_stream_readable":441,"./_stream_writable":443,"_process":433,"core-util-is":444,"inherits":431}],440:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -36584,7 +35701,7 @@ PassThrough.prototype._transform = function(chunk, encoding, cb) {
   cb(null, chunk);
 };
 
-},{"./_stream_transform":443,"core-util-is":445,"inherits":432}],442:[function(require,module,exports){
+},{"./_stream_transform":442,"core-util-is":444,"inherits":431}],441:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -37547,7 +36664,7 @@ function indexOf (xs, x) {
 }
 
 }).call(this,require('_process'))
-},{"_process":434,"buffer":423,"core-util-is":445,"events":426,"inherits":432,"isarray":433,"stream":451,"string_decoder/":446}],443:[function(require,module,exports){
+},{"_process":433,"buffer":422,"core-util-is":444,"events":425,"inherits":431,"isarray":432,"stream":450,"string_decoder/":445}],442:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -37759,7 +36876,7 @@ function done(stream, er) {
   return stream.push(null);
 }
 
-},{"./_stream_duplex":440,"core-util-is":445,"inherits":432}],444:[function(require,module,exports){
+},{"./_stream_duplex":439,"core-util-is":444,"inherits":431}],443:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -38150,7 +37267,7 @@ function endWritable(stream, state, cb) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_duplex":440,"_process":434,"buffer":423,"core-util-is":445,"inherits":432,"stream":451}],445:[function(require,module,exports){
+},{"./_stream_duplex":439,"_process":433,"buffer":422,"core-util-is":444,"inherits":431,"stream":450}],444:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -38260,7 +37377,7 @@ function objectToString(o) {
   return Object.prototype.toString.call(o);
 }
 }).call(this,require("buffer").Buffer)
-},{"buffer":423}],446:[function(require,module,exports){
+},{"buffer":422}],445:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -38462,10 +37579,10 @@ function base64DetectIncompleteChar(buffer) {
   return incomplete;
 }
 
-},{"buffer":423}],447:[function(require,module,exports){
+},{"buffer":422}],446:[function(require,module,exports){
 module.exports = require("./lib/_stream_passthrough.js")
 
-},{"./lib/_stream_passthrough.js":441}],448:[function(require,module,exports){
+},{"./lib/_stream_passthrough.js":440}],447:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Readable = exports;
 exports.Writable = require('./lib/_stream_writable.js');
@@ -38473,13 +37590,13 @@ exports.Duplex = require('./lib/_stream_duplex.js');
 exports.Transform = require('./lib/_stream_transform.js');
 exports.PassThrough = require('./lib/_stream_passthrough.js');
 
-},{"./lib/_stream_duplex.js":440,"./lib/_stream_passthrough.js":441,"./lib/_stream_readable.js":442,"./lib/_stream_transform.js":443,"./lib/_stream_writable.js":444}],449:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":439,"./lib/_stream_passthrough.js":440,"./lib/_stream_readable.js":441,"./lib/_stream_transform.js":442,"./lib/_stream_writable.js":443}],448:[function(require,module,exports){
 module.exports = require("./lib/_stream_transform.js")
 
-},{"./lib/_stream_transform.js":443}],450:[function(require,module,exports){
+},{"./lib/_stream_transform.js":442}],449:[function(require,module,exports){
 module.exports = require("./lib/_stream_writable.js")
 
-},{"./lib/_stream_writable.js":444}],451:[function(require,module,exports){
+},{"./lib/_stream_writable.js":443}],450:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -38608,7 +37725,7 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"events":426,"inherits":432,"readable-stream/duplex.js":439,"readable-stream/passthrough.js":447,"readable-stream/readable.js":448,"readable-stream/transform.js":449,"readable-stream/writable.js":450}],452:[function(require,module,exports){
+},{"events":425,"inherits":431,"readable-stream/duplex.js":438,"readable-stream/passthrough.js":446,"readable-stream/readable.js":447,"readable-stream/transform.js":448,"readable-stream/writable.js":449}],451:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -39317,14 +38434,14 @@ function isNullOrUndefined(arg) {
   return  arg == null;
 }
 
-},{"punycode":435,"querystring":438}],453:[function(require,module,exports){
+},{"punycode":434,"querystring":437}],452:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],454:[function(require,module,exports){
+},{}],453:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -39914,7 +39031,7 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":453,"_process":434,"inherits":432}],"itags":[function(require,module,exports){
+},{"./support/isBuffer":452,"_process":433,"inherits":431}],"itags":[function(require,module,exports){
 (function (global){
 /**
  * The ITSA module is an aggregator for all the individual modules that the library uses.
@@ -39937,13 +39054,12 @@ function hasOwnProperty(obj, prop) {
     require('i-tabpane')(window);
     require('i-select')(window);
     // require('i-parcel')(window);
+    require('i-label')(window);
     require('i-input')(window);
-    require('i-head')(window);
-    require('i-item')(window);
     require('i-form')(window);
 
      window.laterSilent = require('utils').laterSilent;
 
 })(global.window || require('node-win'));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"i-form":410,"i-head":412,"i-input":414,"i-item":415,"i-select":417,"i-tabpane":419,"node-win":350,"utils":358}]},{},[]);
+},{"i-form":410,"i-input":413,"i-label":414,"i-select":416,"i-tabpane":418,"node-win":350,"utils":358}]},{},[]);
