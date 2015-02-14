@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>src/i-checkbox/i-checkbox.js - Itsa</title>
+    <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
+    <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
+    <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
+    <link rel="shortcut icon" type="image/png" href="../assets/favicon.png">
+    <script src="http://yui.yahooapis.com/combo?3.9.1/build/yui/yui-min.js"></script>
+</head>
+<body class="yui3-skin-sam">
+
+<div id="doc">
+    <div id="hd" class="yui3-g header">
+        <div class="yui3-u-3-4">
+            
+                <h1><img src="../assets/css/logo.png" title="Itsa"></h1>
+            
+        </div>
+        <div class="yui3-u-1-4 version">
+            <em>API Docs for: 0.0.1</em>
+        </div>
+    </div>
+    <div id="bd" class="yui3-g">
+
+        <div class="yui3-u-1-4">
+            <div id="docs-sidebar" class="sidebar apidocs">
+                <div id="api-list">
+    <h2 class="off-left">APIs</h2>
+    <div id="api-tabview" class="tabview">
+        <ul class="tabs">
+            <li><a href="#api-classes">Classes</a></li>
+            <li><a href="#api-modules">Modules</a></li>
+        </ul>
+
+        <div id="api-tabview-filter">
+            <input type="search" id="api-filter" placeholder="Type to filter APIs">
+        </div>
+
+        <div id="api-tabview-panel">
+            <ul id="api-classes" class="apis classes">
+            
+                <li><a href="../classes/Array.html">Array</a></li>
+            
+                <li><a href="../classes/BaseClass.html">BaseClass</a></li>
+            
+                <li><a href="../classes/Classes.html">Classes</a></li>
+            
+                <li><a href="../classes/DD.html">DD</a></li>
+            
+                <li><a href="../classes/document.html">document</a></li>
+            
+                <li><a href="../classes/Element.html">Element</a></li>
+            
+                <li><a href="../classes/ElementArray.html">ElementArray</a></li>
+            
+                <li><a href="../classes/Event.html">Event</a></li>
+            
+                <li><a href="../classes/Event.Emitter.html">Event.Emitter</a></li>
+            
+                <li><a href="../classes/Event.Listener.html">Event.Listener</a></li>
+            
+                <li><a href="../classes/FocusManager.html">FocusManager</a></li>
+            
+                <li><a href="../classes/Function.html">Function</a></li>
+            
+                <li><a href="../classes/HTMLElement.html">HTMLElement</a></li>
+            
+                <li><a href="../classes/IO.html">IO</a></li>
+            
+                <li><a href="../classes/ItagBaseClass.html">ItagBaseClass</a></li>
+            
+                <li><a href="../classes/itagCore.html">itagCore</a></li>
+            
+                <li><a href="../classes/ITSA.html">ITSA</a></li>
+            
+                <li><a href="../classes/Node.html">Node</a></li>
+            
+                <li><a href="../classes/NS-vdom.html">NS-vdom</a></li>
+            
+                <li><a href="../classes/Object.html">Object</a></li>
+            
+                <li><a href="../classes/Plugins.html">Plugins</a></li>
+            
+                <li><a href="../classes/Promise.html">Promise</a></li>
+            
+                <li><a href="../classes/Promise.Resolver.html">Promise.Resolver</a></li>
+            
+                <li><a href="../classes/String.html">String</a></li>
+            
+                <li><a href="../classes/USERAGENT.html">USERAGENT</a></li>
+            
+                <li><a href="../classes/Utils.html">Utils</a></li>
+            
+                <li><a href="../classes/vnode.html">vnode</a></li>
+            
+                <li><a href="../classes/window.html">window</a></li>
+            
+            </ul>
+
+            <ul id="api-modules" class="apis modules">
+            
+                <li><a href="../modules/attribute-extractor.html">attribute-extractor</a></li>
+            
+                <li><a href="../modules/drag.html">drag</a></li>
+            
+                <li><a href="../modules/drag-drop.html">drag-drop</a></li>
+            
+                <li><a href="../modules/element-array.html">element-array</a></li>
+            
+                <li><a href="../modules/element-plugin.html">element-plugin</a></li>
+            
+                <li><a href="../modules/event.html">event</a></li>
+            
+                <li><a href="../modules/event-blurnode.html">event-blurnode</a></li>
+            
+                <li><a href="../modules/event-dom.html">event-dom</a></li>
+            
+                <li><a href="../modules/event-emitter.html">event-emitter</a></li>
+            
+                <li><a href="../modules/event-focusnode.html">event-focusnode</a></li>
+            
+                <li><a href="../modules/event-hover.html">event-hover</a></li>
+            
+                <li><a href="../modules/event-listener.html">event-listener</a></li>
+            
+                <li><a href="../modules/event-mobile.html">event-mobile</a></li>
+            
+                <li><a href="../modules/event-objectobserve.html">event-objectobserve</a></li>
+            
+                <li><a href="../modules/extend-document.html">extend-document</a></li>
+            
+                <li><a href="../modules/extend-element.html">extend-element</a></li>
+            
+                <li><a href="../modules/extra_classes.js.html">extra/classes.js</a></li>
+            
+                <li><a href="../modules/focusmanager.html">focusmanager</a></li>
+            
+                <li><a href="../modules/html-parser.html">html-parser</a></li>
+            
+                <li><a href="../modules/io.html">io</a></li>
+            
+                <li><a href="../modules/io-cors.html">io-cors</a></li>
+            
+                <li><a href="../modules/io-transfer.html">io-transfer</a></li>
+            
+                <li><a href="../modules/io-xml.html">io-xml</a></li>
+            
+                <li><a href="../modules/itags.core.html">itags.core</a></li>
+            
+                <li><a href="../modules/itsa.build.html">itsa.build</a></li>
+            
+                <li><a href="../modules/js-ext.html">js-ext</a></li>
+            
+                <li><a href="../modules/lib_array.js.html">lib/array.js</a></li>
+            
+                <li><a href="../modules/lib_function.js.html">lib/function.js</a></li>
+            
+                <li><a href="../modules/lib_object.js.html">lib/object.js</a></li>
+            
+                <li><a href="../modules/lib_promise.s.html">lib/promise.s</a></li>
+            
+                <li><a href="../modules/lib_string.js.html">lib/string.js</a></li>
+            
+                <li><a href="../modules/node-parser.html">node-parser</a></li>
+            
+                <li><a href="../modules/node-win.html">node-win</a></li>
+            
+                <li><a href="../modules/useragent.html">useragent</a></li>
+            
+                <li><a href="../modules/utils.html">utils</a></li>
+            
+                <li><a href="../modules/vdom.html">vdom</a></li>
+            
+                <li><a href="../modules/vdom-ns.html">vdom-ns</a></li>
+            
+                <li><a href="../modules/vnode.html">vnode</a></li>
+            
+            </ul>
+        </div>
+    </div>
+</div>
+
+            </div>
+        </div>
+        <div class="yui3-u-3-4">
+                <div id="api-options">
+        Show:
+        <label for="api-show-inherited">
+            <input type="checkbox" id="api-show-inherited" checked>
+            Inherited
+        </label>
+
+        <label for="api-show-protected">
+            <input type="checkbox" id="api-show-protected">
+            Protected
+        </label>
+
+        <label for="api-show-private">
+            <input type="checkbox" id="api-show-private">
+            Private
+        </label>
+        <label for="api-show-deprecated">
+            <input type="checkbox" id="api-show-deprecated">
+            Deprecated
+        </label>
+
+    </div>
+
+
+            <div class="apidocs">
+                <div id="docs-main">
+                    <div class="content">
+                        <h1 class="file-heading">File: src/i-checkbox/i-checkbox.js</h1>
+
+<div class="file">
+    <pre class="code prettyprint linenums">
+module.exports = function (window) {
+    &quot;use strict&quot;;
+
+    require(&#x27;./css/i-checkbox.css&#x27;);
+    require(&#x27;itags.core&#x27;)(window);
+
+    var itagName = &#x27;i-checkbox&#x27;, // &lt;-- define your own itag-name here
+        ITSA = window.ITSA,
+        Event = ITSA.Event,
+        laterSilent = ITSA.laterSilent,
+        DEFAULT_ON_TEXT = &#x27;I&#x27;,
+        DEFAULT_OFF_TEXT = &#x27;O&#x27;,
+        SUPPRESS_DELAY = 50,
+        INTERVAL_FONTCHANGE_CHECK = 350,
+        Itag, IFormElement, registeredElements;
+
+    if (!window.ITAGS[itagName]) {
+        ITSA.DD.init();
+
+        registeredElements = [];
+        IFormElement = require(&#x27;i-formelement&#x27;)(window);
+
+        Event.before(itagName+&#x27;:manualfocus&#x27;, function(e) {
+            // the i-select itself is unfocussable, but its button is
+            // we need to patch &#x60;manualfocus&#x60;,
+            // which is emitted on node.focus()
+            // a focus by userinteraction will always appear on the button itself
+            // so we don&#x27;t bother that
+            var element = e.target;
+            e.preventDefault();
+            element.itagReady().then(
+                function() {
+                    var focusNode = element.getElement(&#x27;&gt;div&#x27;);
+                    focusNode &amp;&amp; focusNode.focus(true, true);
+                }
+            );
+        });
+
+        Event.after(&#x27;tap&#x27;, function(e) {
+            var element = e.target,
+                model = element.model,
+                focusNode;
+            if (!element.hasData(&#x27;_suppressTap&#x27;)) {
+                model.checked = !model.checked;
+                focusNode = element.getElement(&#x27;&gt;div&#x27;);
+                focusNode.hasFocus() || focusNode.focus();
+            }
+        }, &#x27;i-checkbox&#x27;);
+
+        Event.after(&#x27;keypress&#x27;, function(e) {
+            var element = e.target,
+                model = element.model;
+            (e.charCode===32) &amp;&amp; (model.checked=!model.checked);
+        }, &#x27;i-checkbox&#x27;);
+
+        Event.after(&#x27;dd-drag&#x27;, function(e) {
+            var checkbox = e.target.inside(&#x27;i-checkbox&#x27;);
+            checkbox.setData(&#x27;_suppressTap&#x27;, true);
+        }, &#x27;i-checkbox&#x27;);
+
+        Event.after(&#x27;dd-drop&#x27;, function(e) {
+            var dragNode = e.target,
+                checkbox = dragNode.inside(&#x27;i-checkbox&#x27;),
+                btnNode = dragNode.getElement(&#x27;&gt;.i-btn&#x27;),
+                distance = btnNode.left - checkbox.left - checkbox.getData(&#x27;_leftBorder&#x27;) + Math.round(checkbox.getData(&#x27;_height&#x27;)/2);
+            checkbox.model.checked = (distance&gt;Math.round(checkbox.getData(&#x27;_width&#x27;)/2));
+            checkbox._setUIState();
+            laterSilent(function() {
+                checkbox.removeData(&#x27;_suppressTap&#x27;);
+            }, SUPPRESS_DELAY);
+        }, &#x27;i-checkbox&#x27;);
+
+        Event.defineEvent(itagName+&#x27;:checkedchange&#x27;)
+             .unPreventable()
+             .noRender();
+
+        Event.after(itagName+&#x27;:change&#x27;, function(e) {
+            var element = e.target,
+                model = element.model;
+            /**
+            * Emitted when a the i-checkbox changes its &#x60;checked&#x60;-value
+            *
+            * @event i-checkbox:checkedchange
+            * @param e {Object} eventobject including:
+            * @param e.target {HtmlElement} the i-checkbox element
+            * @param e.prevValue {Boolean}
+            * @param e.newValue {Boolean}
+            * @since 0.1
+            */
+            element.emit(&#x27;checkedchange&#x27;, {
+                prevValue: !model.checked,
+                newValue: model.checked
+            });
+        });
+
+        // whenever fontsize changes, the calculated height needs to change
+        // we have no means of listening to this - even it&#x27;s unlikely to happen
+        // yet we want the i-checkboxes to fit at anytime, so we set up a lazy timer
+        // that checks all registered itag-instances
+        laterSilent(function() {
+            var len = registeredElements.length,
+                i, element;
+            for (i=0; i&lt;len; i++) {
+                element = registeredElements[i];
+                if (!element.hasData(&#x27;_suppressTap&#x27;)) {
+                    // element._fitCheckbox();
+                    // element._setUIState();
+                }
+            }
+        }, INTERVAL_FONTCHANGE_CHECK, true);
+
+        Itag = IFormElement.subClass(itagName, {
+            attrs: {
+                checked: &#x27;boolean&#x27;,
+                &#x27;reset-value&#x27;: &#x27;boolean&#x27;
+            },
+
+            init: function() {
+                var element = this,
+                    value = element.model.checked || false,
+                    designNode = element.getDesignNode(),
+                    options = designNode.getAll(&#x27;&gt;option&#x27;),
+                    content, innerDiv, borderLeftWidth;
+                element.defineWhenUndefined(&#x27;checked&#x27;, value);
+                // set the reset-value to the inital-value in case &#x60;reset-value&#x60; was not present
+                element.defineWhenUndefined(&#x27;reset-value&#x27;, value);
+                element.defineWhenUndefined(&#x27;onText&#x27;, options[0] ? options[0].getHTML() : DEFAULT_ON_TEXT);
+                element.defineWhenUndefined(&#x27;offText&#x27;, options[1] ? options[1].getHTML() : DEFAULT_OFF_TEXT);
+
+                content = &#x27;&lt;div tabindex=&quot;0&quot;&gt;&#x27;+
+                              &#x27;&lt;div class=&quot;i-constrain&quot;&gt;&#x27;+
+                                  &#x27;&lt;div class=&quot;i-container&quot; dd-draggable=&quot;true&quot; dd-handle=&quot;.i-btn&quot; constrain-selector=&quot;.i-constrain&quot;&gt;&#x27;+
+                                      &#x27;&lt;div class=&quot;i-on&quot;&gt;I&lt;/div&gt;&#x27;+
+                                      &#x27;&lt;div class=&quot;i-off&quot;&gt;O&lt;/div&gt;&#x27;+
+                                      &#x27;&lt;div class=&quot;i-btn&quot;&gt;&lt;/div&gt;&#x27;+
+                                  &#x27;&lt;/div&gt;&#x27;+
+                              &#x27;&lt;/div&gt;&#x27;+
+                          &#x27;&lt;/div&gt;&#x27;;
+                element.setHTML(content);
+                innerDiv = element.getElement(&#x27;&gt;div&#x27;);
+                borderLeftWidth = parseInt(innerDiv.getStyle(&#x27;border-left-width&#x27;), 10);
+                element.setData(&#x27;_leftBorder&#x27;, borderLeftWidth);
+                element.setData(&#x27;_vertBorders&#x27;, parseInt(innerDiv.getStyle(&#x27;border-top-width&#x27;), 10) + parseInt(innerDiv.getStyle(&#x27;border-bottom-width&#x27;), 10));
+                element.setData(&#x27;_horBorders&#x27;, borderLeftWidth + parseInt(innerDiv.getStyle(&#x27;border-right-width&#x27;), 10));
+                registeredElements.push(element);
+            },
+
+            _fitCheckbox: function() {
+                var element = this,
+                    // width = parseInt(element.getStyle(&#x27;width&#x27;), 10),
+                    // height = parseInt(element.getStyle(&#x27;height&#x27;), 10),
+                    width = element.offsetWidth,
+                    height = element.offsetHeight,
+                    innerDiv, constrainNode, innerNodes, halfHeight, shift;
+                if ((width!==element.getData(&#x27;_width&#x27;)) || (height!==element.getData(&#x27;_height&#x27;))) {
+                    // the height that should be used by the innernodes, schould be decreased by the border-width
+                    height -= element.getData(&#x27;_vertBorders&#x27;);
+                    width -= element.getData(&#x27;_horBorders&#x27;);
+                    innerDiv = element.getElement(&#x27;&gt;div&#x27;);
+                    constrainNode = innerDiv.getElement(&#x27;&gt;div&#x27;);
+                    innerNodes = constrainNode.getAll(&#x27;&gt;div &gt;div&#x27;);
+                    halfHeight = Math.round(height/2);
+                    shift = 3*Math.round(height/4);
+                    innerDiv.setInlineStyle(&#x27;border-radius&#x27;, height+&#x27;px&#x27;);
+                    constrainNode.setInlineStyles([
+                        {property: &#x27;left&#x27;, value: (height-width)+&#x27;px&#x27;},
+                        {property: &#x27;width&#x27;, value: (3*width-height)+&#x27;px&#x27;}
+                    ]);
+                    innerNodes[0].setInlineStyles([
+                        {property: &#x27;border-radius&#x27;, value: height+&#x27;px&#x27;},
+                        {property: &#x27;line-height&#x27;, value: (height-2)+&#x27;px&#x27;}, // correct with 2px: the padding-top of i-on
+                        {property: &#x27;padding-right&#x27;, value: shift+&#x27;px&#x27;},
+                        {property: &#x27;width&#x27;, value: width+&#x27;px&#x27;}
+                    ]);
+                    innerNodes[1].setInlineStyles([
+                        {property: &#x27;border-radius&#x27;, value: height+&#x27;px&#x27;},
+                        {property: &#x27;margin-left&#x27;, value: -height+&#x27;px&#x27;},
+                        {property: &#x27;line-height&#x27;, value: (height-2)+&#x27;px&#x27;}, // correct with 2px: the padding-top of i-off
+                        {property: &#x27;padding-left&#x27;, value: shift+&#x27;px&#x27;},
+                        {property: &#x27;width&#x27;, value: width+&#x27;px&#x27;}
+                    ]);
+                    innerNodes[2].setInlineStyles([
+                        {property: &#x27;left&#x27;, value: -width+&#x27;px&#x27;},
+                        {property: &#x27;height&#x27;, value: height+&#x27;px&#x27;},
+                        {property: &#x27;width&#x27;, value: height+&#x27;px&#x27;}
+                    ]);
+                    element.setData(&#x27;_width&#x27;, width);
+                    element.setData(&#x27;_height&#x27;, height);
+                }
+            },
+
+            _setUIState: function() {
+                var element = this,
+                    container = element.getElement(&#x27;&gt;div &gt;div &gt;div&#x27;),
+                    newValue = element.model.checked ? (element.getData(&#x27;_width&#x27;)-element.getData(&#x27;_height&#x27;))+&#x27;px&#x27; : &#x27;0&#x27;;
+                (container.getInlineStyle(&#x27;left&#x27;)===newValue) || container.setInlineStyle(&#x27;left&#x27;, newValue);
+            },
+
+            sync: function() {
+                var element = this,
+                    container = element.getElement(&#x27;&gt;div &gt;div &gt;div&#x27;),
+                    itemContainers = container.getAll(&#x27;&gt;div&#x27;),
+                    model = element.model;
+                element._fitCheckbox();
+                element._setUIState(model.checked);
+                itemContainers[0].setHTML(model.onText);
+                itemContainers[1].setHTML(model.offText);
+            },
+
+            reset: function() {
+                var model = this.model;
+                model.checked = model[&#x27;reset-value&#x27;];
+                // no need to call &#x60;refreshItags&#x60; --&gt; the reset()-method doesn&#x27;t come out of the blue
+                // so, the eventsystem will refresh it afterwards
+            },
+
+            destroy: function() {
+                registeredElements.remove(this);
+            }
+        });
+
+        window.ITAGS[itagName] = Itag;
+    }
+
+    return window.ITAGS[itagName];
+};
+
+    </pre>
+</div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="../assets/vendor/prettify/prettify-min.js"></script>
+<script>prettyPrint();</script>
+<script src="../assets/js/yui-prettify.js"></script>
+<script src="../assets/../api.js"></script>
+<script src="../assets/js/api-filter.js"></script>
+<script src="../assets/js/api-list.js"></script>
+<script src="../assets/js/api-search.js"></script>
+<script src="../assets/js/apidocs.js"></script>
+</body>
+</html>

@@ -18,49 +18,55 @@
 
     <i-form class="i-aligned" bound-model="true">
         <!--
-            <i-select value="2" i-prop="selectvalue">
-                <!==
-                    <option>item1</option>
-                    <option>item2</option>
-                    <option><span is="button">item3 header</span>item3 content</option>
-                    <option>item4</option>
-                    <option>item5</option>
-                ==>
-            </i-select>
-            <i-select value="2" i-prop="selectvalue">
-                <!==
-                    <option>item1</option>
-                    <option>item2</option>
-                    <option><span is="button">item3 header</span>item3 content</option>
-                    <option>item4</option>
-                    <option>item5</option>
-                ==>
-            </i-select>
-            <label for="name">Username</label>
-            <i-input i-prop="name" reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
-            <label for="name">Username</label>
-            <i-input i-prop="name" reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
-            <label for="name">Username</label>
-            <i-input i-prop="name" reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
-            <i-select value="2" i-prop="selectvalue">
-                <!==
-                    <option>item1</option>
-                    <option>item2</option>
-                    <option><span is="button">item3 header</span>item3 content</option>
-                    <option>item4</option>
-                    <option>item5</option>
-                ==>
-            </i-select>
-            <i-input i-prop="name" reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+            <legend>An Aligned Form</legend>
+            <i-label><!==Username:==></i-label><i-input i-prop="name" reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+            <i-label><!==Username:==></i-label><i-input i-prop="name" reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+            <i-label><!==Username:==></i-label><i-input i-prop="name" reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+            <i-label><!==Username:==></i-label>
+                <i-select i-prop="selectvalue">
+                    <!==
+                        <option>item1</option>
+                        <option>item2</option>
+                        <option><span is="button">item3 header</span>item3 content</option>
+                        <option>item4</option>
+                        <option>item5</option>
+                    ==>
+                </i-select>
+            <fieldset class="i-group">
+                <i-label><!==Username:==></i-label><i-input i-prop="name" reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+                <i-label><!==Username:==></i-label><i-input i-prop="name" reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+                <i-label><!==Username:==></i-label><i-input i-prop="name" reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+            </fieldset>
+            <fieldset>
+                <i-label><!==Activated:==></i-label><i-checkbox i-prop="activated">
+                    <!==
+                        <option>ON</option>
+                        <option>OFF</option>
+                    ==>
+                </i-checkbox>
+                <i-label><!==Activated:==></i-label><i-checkbox i-prop="activated"></i-checkbox>
+                <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+                <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+                <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+            </fieldset>
+            <fieldset>
+                <i-button is="reset"><!==Reset==></i-button>
+                <i-button><!==Cancel==></i-button>
+                <i-button><!==Ignore==></i-button>
+                <i-button><!==Retry==></i-button>
+            </fieldset>
         -->
     </i-form>
 
-    <script src="../../dist/itagsbuild.js"></script>
+    <script src="../../dist/itagsbuild-min.js"></script>
     <script>
         require('itags');
         var datamodel = {
                 selectvalue: {
                     value: 4
+                },
+                activated: {
+                    checked: true
                 },
                 name: {
                     value: 'Harry'
@@ -68,6 +74,12 @@
             };
         document.bindModel(datamodel, 'i-form');
         document.getElement('i-form').focus();
+        ITSA.Event.after('i-form:action', function(e) {
+            console.warn('form asks for action '+JSON.stringify(e.target.model));
+        });
+        ITSA.Event.after('i-form:reset', function(e) {
+            console.warn('form resetted '+JSON.stringify(e.target.model));
+        });
     </script>
 
 </body>

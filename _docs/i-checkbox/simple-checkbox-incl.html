@@ -5,24 +5,20 @@
 <head>
     <title>Simple i-checkbox</title>
     <style>
-        #ok {
-            border: solid 1px #000;
-            width: 100%;
+        #my-checkbox {
+            width: 6em;
         }
     </style>
 </head>
 
 <body>
-    <div id="ok">
-        ok<i-input></i-input>ok
-        <i-checkbox id="my-checkbox">
-            <!--
-                <option>OFF</option>
-                <option>ON</option>
-            -->
-        </i-checkbox><i-button class="i-primary"><!--PRESS ME--></i-button>
-    </div>
-    <script src="../../dist/itagsbuild.js"></script>
+    <i-checkbox id="my-checkbox">
+        <!--
+            <option>SILKE</option>
+            <option>PAPA</option>
+        -->
+    </i-checkbox>
+    <script src="../../dist/itagsbuild-min.js"></script>
     <script>
         require('itags');
         document.getElement('i-checkbox').focus();
