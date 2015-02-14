@@ -16,87 +16,118 @@
 </head>
 
 <body>
-
     <i-form>
         <!--
+            <legend>A Form</legend>
             <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
-            <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
-            <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+            <i-label><!==Username:==></i-label><i-input placeholder="Say your name"><!==Marco==></i-input>
+            <i-label><!==Username:==></i-label><i-input placeholder="Say your name"><!==Marco==></i-input>
             <i-label><!==Username:==></i-label>
                 <i-select value="2">
                     <!==
-                        <span>item1</span>
-                        <span>item2</span>
-                        <span><span is="button">item3 header</span>item3 content</span>
-                        <span>item4</span>
-                        <span>item5</span>
+                        <option>item1</option>
+                        <option>item2</option>
+                        <option><span is="button">item3 header</span>item3 content</option>
+                        <option>item4</option>
+                        <option>item5</option>
                     ==>
                 </i-select>
+            <fieldset class="i-group">
+                <i-label><!==Username:==></i-label><i-input placeholder="Say your name"></i-input>
+                <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+                <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+            </fieldset>
             <fieldset>
+                <i-checkbox>
+                    <!==
+                        <option>OFF</option>
+                        <option>ON</option>
+                    ==>
+                </i-checkbox>
                 <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
                 <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
                 <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
             </fieldset>
             <fieldset>
-                <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
-                <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
-                <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+                <i-button is="reset"><!==Reset==></i-button>
+                <i-button type="cancel"><!==Cancel==></i-button>
+                <i-button type="ignore"><!==Ignore==></i-button>
+                <i-button type="retry"><!==Retry==></i-button>
             </fieldset>
         -->
     </i-form>
 
     <i-form class="i-stacked">
         <!--
+            <legend>A Stacked Form</legend>
             <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
             <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
             <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
             <i-label><!==Username:==></i-label>
                 <i-select value="2">
                     <!==
-                        <span>item1</span>
-                        <span>item2</span>
-                        <span><span is="button">item3 header</span>item3 content</span>
-                        <span>item4</span>
-                        <span>item5</span>
+                        <option>item1</option>
+                        <option>item2</option>
+                        <option><span is="button">item3 header</span>item3 content</option>
+                        <option>item4</option>
+                        <option>item5</option>
                     ==>
                 </i-select>
-            <fieldset>
+            <fieldset class="i-group">
                 <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
                 <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
                 <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
             </fieldset>
             <fieldset>
+                <i-checkbox></i-checkbox>
                 <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
                 <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
                 <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+            </fieldset>
+            <fieldset>
+                <i-button><!==Cancel==></i-button>
+                <i-button><!==Ignore==></i-button>
+                <i-button><!==Retry==></i-button>
             </fieldset>
         -->
     </i-form>
 
     <i-form class="i-aligned">
         <!--
+            <legend>An Aligned Form</legend>
             <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
             <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
             <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
             <i-label><!==Username:==></i-label>
                 <i-select value="2">
                     <!==
-                        <span>item1</span>
-                        <span>item2</span>
-                        <span><span is="button">item3 header</span>item3 content</span>
-                        <span>item4</span>
-                        <span>item5</span>
+                        <option>item1</option>
+                        <option>item2</option>
+                        <option><span is="button">item3 header</span>item3 content</option>
+                        <option>item4</option>
+                        <option>item5</option>
                     ==>
                 </i-select>
-            <fieldset>
+            <fieldset class="i-group">
                 <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
                 <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
                 <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
             </fieldset>
             <fieldset>
+                <i-checkbox>
+                    <!==
+                        <option>OFF</option>
+                        <option>ON</option>
+                    ==>
+                </i-checkbox>
                 <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
                 <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
                 <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+            </fieldset>
+            <fieldset>
+                <i-button><!==Cancel==></i-button>
+                <i-button><!==Ignore==></i-button>
+                <i-button><!==Retry==></i-button>
             </fieldset>
         -->
     </i-form>
@@ -106,6 +137,9 @@
     <script>
         require('itags');
         document.getElement('i-form').focus();
+        ITSA.Event.after('i-form:action', function(e) {
+            console.warn(e)
+        }, 'i-form');
     </script>
 
 </body>

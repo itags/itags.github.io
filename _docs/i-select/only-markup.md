@@ -13,11 +13,11 @@ includeexample: 20em
 <body>
     <i-select value="2" class="i-primary">
     <!--
-        <span>item1</span>
-        <span>item2</span>
-        <span><span is="button">item3 header</span>item3 content</span>
-        <span>item4</span>
-        <span>item5</span>
+        <option>item1</option>
+        <option>item2</option>
+        <option><span is="button">item3 header</span>item3 content</option>
+        <option>item4</option>
+        <option>item5</option>
     -->
     </i-select>
 </body>

@@ -47,6 +47,8 @@
             
                 <li><a href="../classes/Classes.html">Classes</a></li>
             
+                <li><a href="../classes/DD.html">DD</a></li>
+            
                 <li><a href="../classes/document.html">document</a></li>
             
                 <li><a href="../classes/Element.html">Element</a></li>
@@ -71,6 +73,8 @@
             
                 <li><a href="../classes/itagCore.html">itagCore</a></li>
             
+                <li><a href="../classes/ITSA.html">ITSA</a></li>
+            
                 <li><a href="../classes/Node.html">Node</a></li>
             
                 <li><a href="../classes/NS-vdom.html">NS-vdom</a></li>
@@ -81,7 +85,11 @@
             
                 <li><a href="../classes/Promise.html">Promise</a></li>
             
+                <li><a href="../classes/Promise.Resolver.html">Promise.Resolver</a></li>
+            
                 <li><a href="../classes/String.html">String</a></li>
+            
+                <li><a href="../classes/USERAGENT.html">USERAGENT</a></li>
             
                 <li><a href="../classes/Utils.html">Utils</a></li>
             
@@ -95,6 +103,10 @@
             
                 <li><a href="../modules/attribute-extractor.html">attribute-extractor</a></li>
             
+                <li><a href="../modules/drag.html">drag</a></li>
+            
+                <li><a href="../modules/drag-drop.html">drag-drop</a></li>
+            
                 <li><a href="../modules/element-array.html">element-array</a></li>
             
                 <li><a href="../modules/element-plugin.html">element-plugin</a></li>
@@ -107,11 +119,15 @@
             
                 <li><a href="../modules/event-emitter.html">event-emitter</a></li>
             
+                <li><a href="../modules/event-focusnode.html">event-focusnode</a></li>
+            
                 <li><a href="../modules/event-hover.html">event-hover</a></li>
             
                 <li><a href="../modules/event-listener.html">event-listener</a></li>
             
                 <li><a href="../modules/event-mobile.html">event-mobile</a></li>
+            
+                <li><a href="../modules/event-objectobserve.html">event-objectobserve</a></li>
             
                 <li><a href="../modules/extend-document.html">extend-document</a></li>
             
@@ -124,6 +140,12 @@
                 <li><a href="../modules/html-parser.html">html-parser</a></li>
             
                 <li><a href="../modules/io.html">io</a></li>
+            
+                <li><a href="../modules/io-cors.html">io-cors</a></li>
+            
+                <li><a href="../modules/io-transfer.html">io-transfer</a></li>
+            
+                <li><a href="../modules/io-xml.html">io-xml</a></li>
             
                 <li><a href="../modules/itags.core.html">itags.core</a></li>
             
@@ -144,6 +166,8 @@
                 <li><a href="../modules/node-parser.html">node-parser</a></li>
             
                 <li><a href="../modules/node-win.html">node-win</a></li>
+            
+                <li><a href="../modules/useragent.html">useragent</a></li>
             
                 <li><a href="../modules/utils.html">utils</a></li>
             
@@ -210,18 +234,19 @@
 
 &quot;use strict&quot;;
 
-require(&#x27;polyfill/polyfill-base.js&#x27;);
 require(&#x27;./css/itags.core.css&#x27;);
 
 var NAME = &#x27;[itags.core]: &#x27;,
-    jsExt = require(&#x27;js-ext/js-ext.js&#x27;), // want the full version: include it at the top, so that object.merge is available
-    createHashMap = require(&#x27;js-ext/extra/hashmap.js&#x27;).createMap,
-    asyncSilent = require(&#x27;utils&#x27;).asyncSilent,
-    laterSilent = require(&#x27;utils&#x27;).laterSilent,
+    ITSA = require(&#x27;itsa&#x27;),
+    createHashMap = ITSA.createHashMap,
+    asyncSilent = ITSA.asyncSilent,
+    laterSilent = ITSA.laterSilent,
+    Event = ITSA.Event,
+    IO = ITSA.IO,
+    Classes = ITSA.Classes,
     CLASS_ITAG_RENDERED = &#x27;itag-rendered&#x27;,
     DEFAULT_CHAIN_INIT = true,
     DEFAULT_CHAIN_DESTROY = true,
-    Classes = jsExt.Classes,
     NODE = &#x27;node&#x27;,
     REMOVE = &#x27;remove&#x27;,
     INSERT = &#x27;insert&#x27;,
@@ -259,7 +284,11 @@ var NAME = &#x27;[itags.core]: &#x27;,
     }),
     NOOP = function() {};
 
+
 module.exports = function (window) {
+    // make ITSA available as global, so we can use it in all other itag-modules:
+    window.ITSA = ITSA;
+    require(&#x27;./lib/timer-finalize.js&#x27;)(window);
 
     var DOCUMENT = window.document,
         PROTOTYPE_CHAIN_CAN_BE_SET = arguments[1], // hidden feature, used by unit-test
@@ -268,14 +297,10 @@ module.exports = function (window) {
         allowedToRefreshItags = true,
         itagsThatNeedsEvent = {},
         BINDING_LIST = {},
-        itagCore, MUTATION_EVENTS, PROTECTED_MEMBERS, EXTRA_BASE_MEMBERS, Event, IO,
+        itagCore, MUTATION_EVENTS, PROTECTED_MEMBERS, EXTRA_BASE_MEMBERS,
         DEFAULT_DELAYED_FINALIZE_EVENTS, ATTRIBUTE_EVENTS, registerDelay, manageFocus,
         mergeFlat,  DELAYED_FINALIZE_EVENTS;
 
-    require(&#x27;vdom&#x27;)(window);
-    Event = require(&#x27;event-dom&#x27;)(window);
-    IO = require(&#x27;io&#x27;)(window);
-    require(&#x27;event/extra/timer-finalize.js&#x27;);
 
 /*jshint boss:true */
     if (itagCore=window._ItagCore) {
@@ -792,7 +817,7 @@ module.exports = function (window) {
             console.log(NAME+&#x27;bindModel&#x27;);
             var instance = this,
                 observer;
-            if (element.isItag() &amp;&amp; (element.model!==model)) {
+            if (element.isItag() &amp;&amp; (element.model!==model) &amp;&amp; !element.inside(&#x27;.ce-design-node&#x27;)) {
                 element.removeAttr(&#x27;bound-model&#x27;);
                 Object.protectedProp(element.vnode, &#x27;ce_boundModel&#x27;, true);
                 if (NATIVE_OBJECT_OBSERVE) {
@@ -1361,11 +1386,18 @@ module.exports = function (window) {
     */
     DOCUMENT.createElement = function(tag, suppressItagRender) {
         console.log(NAME+&#x27;createElement &#x27;+tag);
-        var ItagClass = window.ITAGS[tag.toLowerCase()];
+        var ItagClass = window.ITAGS[tag.toLowerCase()],
+            pos;
         if (!suppressItagRender &amp;&amp; ItagClass) {
             return new ItagClass();
         }
-        return this._createElement(tag);
+        // we could run into a situation where we have an itag that is a pseudoclass
+        // yet suppressItagRender is &#x60;true&#x60;. This would lead into tagnames like: I-BUTTON#reset
+        // because native createElement cannot create these, we need to strip as from the #
+        else if (ItagClass &amp;&amp; ((pos=tag.indexOf(&#x27;#&#x27;))!==-1)) {
+            tag = tag.substr(0, pos);
+        }
+        return DOCUMENT._createElement(tag);
     };
 
     /**

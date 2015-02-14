@@ -4,6 +4,7 @@ YUI.add("yuidoc-meta", function(Y) {
         "Array",
         "BaseClass",
         "Classes",
+        "DD",
         "Element",
         "ElementArray",
         "Event",
@@ -13,13 +14,16 @@ YUI.add("yuidoc-meta", function(Y) {
         "Function",
         "HTMLElement",
         "IO",
+        "ITSA",
         "ItagBaseClass",
         "NS-vdom",
         "Node",
         "Object",
         "Plugins",
         "Promise",
+        "Promise.Resolver",
         "String",
+        "USERAGENT",
         "Utils",
         "document",
         "itagCore",
@@ -28,15 +32,19 @@ YUI.add("yuidoc-meta", function(Y) {
     ],
     "modules": [
         "attribute-extractor",
+        "drag",
+        "drag-drop",
         "element-array",
         "element-plugin",
         "event",
         "event-blurnode",
         "event-dom",
         "event-emitter",
+        "event-focusnode",
         "event-hover",
         "event-listener",
         "event-mobile",
+        "event-objectobserve",
         "extend-document",
         "extend-element",
         "extend-element",
@@ -44,6 +52,9 @@ YUI.add("yuidoc-meta", function(Y) {
         "focusmanager",
         "html-parser",
         "io",
+        "io-cors",
+        "io-transfer",
+        "io-xml",
         "itags.core",
         "itsa.build",
         "js-ext",
@@ -54,10 +65,10 @@ YUI.add("yuidoc-meta", function(Y) {
         "lib/string.js",
         "node-parser",
         "node-win",
+        "useragent",
         "utils",
         "vdom",
         "vdom-ns",
-        "vnode",
         "vnode"
     ],
     "allModules": [
@@ -65,6 +76,16 @@ YUI.add("yuidoc-meta", function(Y) {
             "displayName": "attribute-extractor",
             "name": "attribute-extractor",
             "description": "Exports `htmlToVNodes` which transforms html-text into vnodes.\n\n\n<i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>\n<br>\nNew BSD License - http://choosealicense.com/licenses/bsd-3-clause/"
+        },
+        {
+            "displayName": "drag",
+            "name": "drag",
+            "description": "Provides `drag and drop` functionality, without dropzones.\nFor `dropzone`-support, you should use the module: `drag-drop`.\n\n\n<i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>\nNew BSD License - http://choosealicense.com/licenses/bsd-3-clause/"
+        },
+        {
+            "displayName": "drag-drop",
+            "name": "drag-drop",
+            "description": "Provides `drag and drop` functionality with dropzones\n\n\n<i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>\nNew BSD License - http://choosealicense.com/licenses/bsd-3-clause/"
         },
         {
             "displayName": "element-array",
@@ -97,6 +118,11 @@ YUI.add("yuidoc-meta", function(Y) {
             "description": "Extends the Event-instance by adding the method `Emitter` to it.\nThe `Emitter-method` returns an object that should be merged into any Class-instance or object you\nwant to extend with the emit-methods, so the appropriate methods can be invoked on the instance.\n\n\n<i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>\nNew BSD License - http://choosealicense.com/licenses/bsd-3-clause/\n\n\nShould be called using  the provided `extend`-method like this:"
         },
         {
+            "displayName": "event-focusnode",
+            "name": "event-focusnode",
+            "description": "Adds the `focusnode` event as a DOM-event to event-dom. more about DOM-events:\nhttp://www.smashingmagazine.com/2013/11/12/an-introduction-to-dom-events/\n\n\n<i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>\nNew BSD License - http://choosealicense.com/licenses/bsd-3-clause/"
+        },
+        {
             "displayName": "event-hover",
             "name": "event-hover",
             "description": "Adds the `hover` event as a DOM-event to event-dom. more about DOM-events:\nhttp://www.smashingmagazine.com/2013/11/12/an-introduction-to-dom-events/\n\nShould be called using  the provided `mergeInto`-method like this:\n\n\n<i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>\nNew BSD License - http://choosealicense.com/licenses/bsd-3-clause/"
@@ -110,6 +136,11 @@ YUI.add("yuidoc-meta", function(Y) {
             "displayName": "event-mobile",
             "name": "event-mobile",
             "description": "Integrates mobile-events to event-dom. more about DOM-events:\nhttp://www.smashingmagazine.com/2013/11/12/an-introduction-to-dom-events/\n\n\n<i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>\nNew BSD License - http://choosealicense.com/licenses/bsd-3-clause/"
+        },
+        {
+            "displayName": "event-objectobserve",
+            "name": "event-objectobserve",
+            "description": "Adds the `objectobserve` event, to monitor changes in objects.\n\n\n<i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>\nNew BSD License - http://choosealicense.com/licenses/bsd-3-clause/"
         },
         {
             "displayName": "extend-document",
@@ -140,6 +171,21 @@ YUI.add("yuidoc-meta", function(Y) {
             "displayName": "io",
             "name": "io",
             "description": "Provides core IO-functionality.\n\n\n<i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>\nNew BSD License - http://choosealicense.com/licenses/bsd-3-clause/"
+        },
+        {
+            "displayName": "io-cors",
+            "name": "io-cors",
+            "description": "Extends io by adding the method `readXML` to it.\nShould be called using  the provided `mergeInto`-method like this:"
+        },
+        {
+            "displayName": "io-transfer",
+            "name": "io-transfer",
+            "description": "Extends io by adding the method `readXML` to it.\nShould be called using  the provided `mergeInto`-method like this:"
+        },
+        {
+            "displayName": "io-xml",
+            "name": "io-xml",
+            "description": "Extends io by adding the method `readXML` to it.\nShould be called using  the provided `mergeInto`-method like this:"
         },
         {
             "displayName": "itags.core",
@@ -189,6 +235,11 @@ YUI.add("yuidoc-meta", function(Y) {
             "displayName": "node-win",
             "name": "node-win",
             "description": "Emulation of browser `window` and `dom`. Just enough to make ITSA work.\n\n\n<i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>\nNew BSD License - http://choosealicense.com/licenses/bsd-3-clause/"
+        },
+        {
+            "displayName": "useragent",
+            "name": "useragent",
+            "description": "<i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>\n New BSD License - http://choosealicense.com/licenses/bsd-3-clause/"
         },
         {
             "displayName": "utils",

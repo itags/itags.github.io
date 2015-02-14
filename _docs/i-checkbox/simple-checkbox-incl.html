@@ -1,0 +1,33 @@
+
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>Simple i-checkbox</title>
+    <style>
+        #ok {
+            border: solid 1px #000;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="ok">
+        ok<i-input></i-input>ok
+        <i-checkbox id="my-checkbox">
+            <!--
+                <option>OFF</option>
+                <option>ON</option>
+            -->
+        </i-checkbox><i-button class="i-primary"><!--PRESS ME--></i-button>
+    </div>
+    <script src="../../dist/itagsbuild.js"></script>
+    <script>
+        require('itags');
+        document.getElement('i-checkbox').focus();
+    </script>
+
+</body>
+
+</html>
