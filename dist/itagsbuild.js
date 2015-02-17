@@ -27492,8 +27492,8 @@ module.exports = function (window) {
             for (i=0; i<len; i++) {
                 element = registeredElements[i];
                 if (!element.hasData('_suppressTap')) {
-                    // element._fitCheckbox();
-                    // element._setUIState();
+                    element._fitCheckbox();
+                    element._setUIState();
                 }
             }
         }, INTERVAL_FONTCHANGE_CHECK, true);
@@ -27506,15 +27506,15 @@ module.exports = function (window) {
 
             init: function() {
                 var element = this,
-                    value = element.model.checked || false,
+                    value = element.model.checked,
                     designNode = element.getDesignNode(),
                     options = designNode.getAll('>option'),
                     content, innerDiv, borderLeftWidth;
-                element.defineWhenUndefined('checked', value);
+
                 // set the reset-value to the inital-value in case `reset-value` was not present
-                element.defineWhenUndefined('reset-value', value);
-                element.defineWhenUndefined('onText', options[0] ? options[0].getHTML() : DEFAULT_ON_TEXT);
-                element.defineWhenUndefined('offText', options[1] ? options[1].getHTML() : DEFAULT_OFF_TEXT);
+                element.defineWhenUndefined('reset-value', value)
+                       .defineWhenUndefined('onText', options[0] ? options[0].getHTML() : DEFAULT_ON_TEXT)
+                       .defineWhenUndefined('offText', options[1] ? options[1].getHTML() : DEFAULT_OFF_TEXT);
 
                 content = '<div tabindex="0">'+
                               '<div class="i-constrain">'+
@@ -27596,6 +27596,10 @@ module.exports = function (window) {
                 itemContainers[1].setHTML(model.offText);
             },
 
+            currentToReset: function() {
+                model['reset-value'] = model.checked;
+            },
+
             reset: function() {
                 var model = this.model;
                 model.checked = model['reset-value'];
@@ -27615,7 +27619,7 @@ module.exports = function (window) {
 };
 
 },{"./css/i-checkbox.css":744,"i-formelement":748,"itags.core":758}],746:[function(require,module,exports){
-var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-select;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* =================================== */\n/* set invisiblity when not rendered   */\n/* =================================== */\ni-form.hide-children,\ni-form:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n/* ================================= */\n\n/*!\n * Most styles are from Pure v0.5.0\n * Licensed under the BSD License.\n*/\n\ni-form {\n    margin: 0;\n    display: inline-block;\n    *display: inline; /*IE 6/7*/\n    zoom: 1;\n    padding: 0.25em 0.5em;\n}\n\ni-form[active-labels=\"true\"] i-label {\n    cursor: default;\n}\n\ni-form fieldset {\n    margin: 0 0 0.8em;\n    padding: 0.75em 0;\n    border: 1px solid #C0C0C0;\n    border-radius: 2px;\n    background-color: rgba(0, 0, 0, 0.03);\n}\n\ni-form fieldset i-button {\n    margin-top: 0.75em;\n    margin-right: 0.25em;\n}\n\ni-form legend {\n    display: block;\n    width: 100%;\n    padding: 0.3em 0;\n    margin-bottom: 1em;\n    color: #333;\n    border-bottom: 1px solid #e5e5e5;\n}\n\ni-form div.i-formrow {\n    margin: 0;\n    padding: 0;\n    display: inline-block;\n    *display: inline; /*IE 6/7*/\n    zoom: 1;\n}\n\n/* ======================================================== */\n/* Grouped Inputs */\ni-form.i-group:not(.i-aligned) i-label,\ni-form:not(.i-aligned) .i-group i-label {\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\ni-form.i-group [itag-formelement=\"true\"]:not(i-button),\ni-form .i-group [itag-formelement=\"true\"]:not(i-button) {\n    display: block;\n}\ni-form.i-group i-input input,\ni-form .i-group i-input input {\n    border-radius: 0;\n    position: relative;\n    top: -1px;\n}\ni-form.i-group div.i-formrow:first-child i-input input,\ni-form .i-group div.i-formrow:first-child i-input input {\n    top: 1px;\n    border-radius: 4px 4px 0 0;\n}\ni-form.i-group div.i-formrow:last-child i-input input,\ni-form .i-group div.i-formrow:last-child i-input input {\n    top: -2px;\n    border-radius: 0 0 4px 4px;\n}\ni-form.i-group div.i-formrow:first-child i-label,\ni-form .i-group div.i-formrow:first-child i-label {\n    margin-top: 1px;\n}\ni-form.i-group div.i-formrow:last-child i-label,\ni-form .i-group div.i-formrow:last-child i-label {\n    margin-top: -1px; /* not -2px: that would disturb appearance too much */;\n}\ni-form.i-group i-input input:focus,\ni-form .i-group i-input input:focus {\n    z-index: 2;\n}\ni-form.i-group i-button,\ni-form.i-group i-select,\ni-form .i-group i-button,\ni-form .i-group i-select {\n    margin: 0.35em 0;\n}\n/* ======================================================== */\n\n\n\n/* ======================================================== */\n/* Stacked */\ni-form.i-stacked div.i-formrow {\n    display: block;\n}\ni-form.i-stacked div.i-formrow.itag-noblock i-label {\n    display: inline-block;\n    margin-right: 1em;\n}\ni-form.i-stacked [itag-formelement=\"true\"]:not(i-button) {\n    display: block;\n    margin: 0.25em 0;\n}\ni-form.i-stacked div.i-formrow.itag-noblock [itag-formelement=\"true\"]:not(i-button) {\n    display: inline-block;\n    margin: 0;\n}\ni-form.i-stacked i-label {\n    display: block;\n    margin: 1em 0 0.4em 0.15em;\n}\ni-form.i-stacked fieldset div.i-formrow:first-child i-label {\n    margin-top: 0;\n}\ni-form.i-stacked .i-group i-input,\ni-form.i-aligned .i-group i-input,\ni-form .i-stacked .i-group i-input,\ni-form .i-aligned .i-group i-input {\n    margin: 0;\n}\n/* ======================================================== */\n\n\n\n/* ======================================================== */\n/* Aligned */\ni-form.i-aligned div.i-formrow {\n    display: block;\n}\ni-form.i-aligned i-label,\ni-form.i-aligned i-button,\ni-form.i-aligned [itag-formelement=\"true\"]:not(i-button) {\n    display: inline-block;\n    *display: inline;\n    *zoom: 1;\n    vertical-align: middle;\n}\ni-form.i-aligned div.i-formrow {\n    margin-bottom: 1em;\n}\ni-form.i-aligned .i-group div.i-formrow,\ni-form .i-aligned .i-group div.i-formrow {\n    margin-bottom: 0;\n}\ni-form.i-aligned div.i-formrow:last-child {\n    margin-bottom: 0;\n}\ni-form.i-aligned i-label {\n    text-align: right;\n    display: inline-block;\n    vertical-align: middle;\n    width: 10em;\n    margin: 0 1em 0 0;\n}\ni-form.i-aligned i-textarea {\n    vertical-align: top;\n}\ni-form.i-aligned.i-group,\ni-form.i-aligned .i-group {\n    margin-bottom: 0.8em;\n}\ni-form.i-aligned.i-group i-label label,\ni-form.i-aligned .i-group i-label label {\n    text-align: right;\n}\ni-form.i-aligned fieldset i-button:first-child {\n    margin-left: 11em;\n}\n/* ======================================================== */\n\n\n\n/* ======================================================== */\n/* Inline help for forms */\ni-form .message-inline {\n    display: inline-block;\n    padding-left: 0.3em;\n    color: #666;\n    vertical-align: middle;\n    font-size: 0.875em;\n}\n\n/* Block help for forms */\ni-form .message {\n    display: block;\n    color: #666;\n    font-size: 0.875em;\n}\n/* ======================================================== */\n\n\n\n@media only screen and (max-width : 480px) {\n    i-form i-label,\n    i-form.i-aligned i-label {\n        display: block;\n        text-align: left;\n        margin: 1em 0 0.4em 3px; /* 3px as lect-padding --> needs to fit .itag-noblock labels  */\n    }\n\n    i-form fieldset div.i-formrow:first-child i-label,\n    i-form.i-aligned fieldset div.i-formrow:first-child i-label {\n        margin-top: 0;\n    }\n\n    i-form.i-aligned div.i-formrow.itag-noblock i-label {\n        display: inline-block;\n        width: 100%;\n        padding-left: 85px;  /* 82 + 3 extra pixels  */\n        margin-left: -82px;\n        margin-bottom: 0;\n    }\n\n    i-form.i-aligned div.i-formrow.itag-noblock i-checkbox {\n        margin-right: 12px;\n        width: 70px !important;\n    }\n\n    i-form.i-aligned div.i-formrow.itag-noblock {\n        text-align: right;\n    }\n\n    i-form.i-group i-label,\n    i-form .i-group i-label {\n        opacity: 0 !important;\n        position: absolute !important;\n        left: -9999px !important;\n        top: -9999px !important;\n        z-index: -1;\n    }\n\n    i-form i-input {\n        display: block;\n        text-align: left;\n        margin-bottom: 0.3em;\n    }\n\n    i-form.i-group i-input,\n    i-form .i-group i-input {\n        margin-bottom: 0em;\n    }\n\n    i-form.i-aligned .control {\n        margin: 1.5em 0 0 0;\n    }\n\n    i-form i-button,\n    i-form i-select {\n        display: block;\n        width: 100%;\n    }\n\n    i-form fieldset i-button {\n        margin-right: 0;\n        margin-top: 0;\n    }\n\n    i-form.i-aligned fieldset i-button:first-child {\n        margin-left: 0;\n    }\n\n    i-form i-button button,\n    i-form i-select >button,\n    i-form i-select >div >div {\n        width: 100%;\n    }\n\n    i-form i-select >button {\n        max-width: inherit;\n    }\n\n    i-form i-select > button div.btntext {\n        margin: 0;\n        max-width: inherit;\n        width: 100%;\n        text-align: center;\n    }\n\n    i-form i-select li {\n        text-align: center;\n    }\n\n    i-form i-button:last-child {\n        margin: 1em 0 0;\n    }\n\n    i-form .message-inline,\n    i-form .message {\n        display: block;\n        font-size: 0.75em;\n        /* Increased bottom padding to make it group with its related input element. */\n        padding: 0.2em 0 0.8em;\n    }\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-select;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* =================================== */\n/* set invisiblity when not rendered   */\n/* =================================== */\ni-form.hide-children,\ni-form:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n/* ================================= */\n\n/*!\n * Most styles are from Pure v0.5.0\n * Licensed under the BSD License.\n*/\n\ni-form {\n    margin: 0;\n    padding: 0.25em 0.5em;\n}\n\ni-form[active-labels=\"true\"] i-label {\n    cursor: default;\n}\n\ni-form fieldset {\n    margin: 0 0 0.8em;\n    padding: 0.75em 0;\n    border: 1px solid #C0C0C0;\n    border-radius: 2px;\n    background-color: rgba(0, 0, 0, 0.03);\n    width: 100%;\n    display: block;\n}\n\ni-form fieldset i-button {\n    margin-top: 0.75em;\n    margin-right: 0.25em;\n}\n\ni-form legend {\n    display: block;\n    width: 100%;\n    padding: 0.3em 0;\n    margin-bottom: 1em;\n    color: #333;\n    border-bottom: 1px solid #e5e5e5;\n}\n\ni-form div.i-formrow {\n    margin: 0;\n    padding: 0;\n    display: inline-block;\n}\n\n/* ======================================================== */\n/* Grouped Inputs */\ni-form.i-group:not(.i-aligned) i-label,\ni-form:not(.i-aligned) .i-group i-label {\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\ni-form.i-group [itag-formelement=\"true\"]:not(i-button),\ni-form .i-group [itag-formelement=\"true\"]:not(i-button) {\n    display: block;\n}\ni-form.i-group i-input input,\ni-form .i-group i-input input {\n    border-radius: 0;\n    position: relative;\n    top: -1px;\n}\ni-form.i-group div.i-formrow:first-child i-input input,\ni-form .i-group div.i-formrow:first-child i-input input {\n    top: 1px;\n    border-radius: 4px 4px 0 0;\n}\ni-form.i-group div.i-formrow:last-child i-input input,\ni-form .i-group div.i-formrow:last-child i-input input {\n    top: -2px;\n    border-radius: 0 0 4px 4px;\n}\ni-form.i-group div.i-formrow:first-child i-label,\ni-form .i-group div.i-formrow:first-child i-label {\n    margin-top: 1px;\n}\ni-form.i-group div.i-formrow:last-child i-label,\ni-form .i-group div.i-formrow:last-child i-label {\n    margin-top: -1px; /* not -2px: that would disturb appearance too much */;\n}\ni-form.i-group i-input input:focus,\ni-form .i-group i-input input:focus {\n    z-index: 2;\n}\ni-form.i-group i-button,\ni-form.i-group i-select,\ni-form .i-group i-button,\ni-form .i-group i-select {\n    margin: 0.35em 0;\n}\n/* ======================================================== */\n\n\n\n/* ======================================================== */\n/* Stacked */\ni-form.i-stacked div.i-formrow {\n    display: block;\n}\ni-form.i-stacked div.i-formrow.itag-noblock i-label {\n    display: inline-block;\n    margin-right: 1em;\n}\ni-form.i-stacked [itag-formelement=\"true\"]:not(i-button) {\n    display: block;\n    margin: 0.25em 0;\n}\ni-form.i-stacked div.i-formrow.itag-noblock [itag-formelement=\"true\"]:not(i-button) {\n    display: inline-block;\n    margin: 0;\n}\ni-form.i-stacked i-label {\n    display: block;\n    margin: 1em 0 0.4em 0.15em;\n}\ni-form.i-stacked fieldset div.i-formrow:first-child i-label {\n    margin-top: 0;\n}\ni-form.i-stacked .i-group i-input,\ni-form.i-aligned .i-group i-input,\ni-form .i-stacked .i-group i-input,\ni-form .i-aligned .i-group i-input {\n    margin: 0;\n}\n/* ======================================================== */\n\n\n\n/* ======================================================== */\n/* Aligned */\ni-form.i-aligned div.i-formrow {\n    display: block;\n}\ni-form.i-aligned i-label,\ni-form.i-aligned i-button,\ni-form.i-aligned [itag-formelement=\"true\"]:not(i-button) {\n    display: inline-block;\n    *display: inline;\n    *zoom: 1;\n    vertical-align: middle;\n}\ni-form.i-aligned div.i-formrow {\n    margin-bottom: 1em;\n}\ni-form.i-aligned .i-group div.i-formrow,\ni-form .i-aligned .i-group div.i-formrow {\n    margin-bottom: 0;\n}\ni-form.i-aligned div.i-formrow:last-child {\n    margin-bottom: 0;\n}\ni-form.i-aligned i-label {\n    text-align: right;\n    display: inline-block;\n    vertical-align: middle;\n    width: 10em;\n    margin: 0 1em 0 0;\n}\ni-form.i-aligned i-textarea {\n    vertical-align: top;\n}\ni-form.i-aligned.i-group,\ni-form.i-aligned .i-group {\n    margin-bottom: 0.8em;\n}\ni-form.i-aligned.i-group i-label label,\ni-form.i-aligned .i-group i-label label {\n    text-align: right;\n}\ni-form.i-aligned fieldset i-button:first-child {\n    margin-left: 11em;\n}\n/* ======================================================== */\n\n\n\n/* ======================================================== */\n/* Inline help for forms */\ni-form .message-inline {\n    display: inline-block;\n    padding-left: 0.3em;\n    color: #666;\n    vertical-align: middle;\n    font-size: 0.875em;\n}\n\n/* Block help for forms */\ni-form .message {\n    display: block;\n    color: #666;\n    font-size: 0.875em;\n}\n/* ======================================================== */\n\n\n\n@media only screen and (max-width : 480px) {\n    i-form {\n        display: block;\n        width: 100%;\n    }\n\n    i-form i-label,\n    i-form.i-aligned i-label {\n        display: block;\n        text-align: left;\n        margin: 1em 0 0.4em 3px; /* 3px as lect-padding --> needs to fit .itag-noblock labels  */\n    }\n\n    i-form fieldset div.i-formrow:first-child i-label,\n    i-form.i-aligned fieldset div.i-formrow:first-child i-label {\n        margin-top: 0;\n    }\n\n    i-form.i-aligned div.i-formrow.itag-noblock i-label {\n        display: inline-block;\n        width: 100%;\n        padding-left: 85px;  /* 82 + 3 extra pixels  */\n        margin-left: -82px;\n        margin-bottom: 0;\n    }\n\n    i-form.i-aligned div.i-formrow.itag-noblock i-checkbox {\n        margin-right: 12px;\n        width: 70px !important;\n    }\n\n    i-form.i-aligned div.i-formrow.itag-noblock {\n        text-align: right;\n    }\n\n    i-form.i-group i-label,\n    i-form .i-group i-label {\n        opacity: 0 !important;\n        position: absolute !important;\n        left: -9999px !important;\n        top: -9999px !important;\n        z-index: -1;\n    }\n\n    i-form i-input {\n        display: block;\n        text-align: left;\n        margin-bottom: 0.3em;\n    }\n\n    i-form.i-group i-input,\n    i-form .i-group i-input {\n        margin-bottom: 0em;\n    }\n\n    i-form.i-aligned .control {\n        margin: 1.5em 0 0 0;\n    }\n\n    i-form i-button,\n    i-form i-select {\n        display: block;\n        width: 100%;\n    }\n\n    i-form fieldset i-button {\n        margin-right: 0;\n        margin-top: 0;\n    }\n\n    i-form.i-aligned fieldset i-button:first-child {\n        margin-left: 0;\n    }\n\n    i-form i-button button,\n    i-form i-select >button,\n    i-form i-select >div >div {\n        width: 100%;\n    }\n\n    i-form i-select >button {\n        max-width: inherit;\n    }\n\n    i-form i-select > button div.btntext {\n        margin: 0;\n        max-width: inherit;\n        width: 100%;\n        text-align: center;\n    }\n\n    i-form i-select li {\n        text-align: center;\n    }\n\n    i-form i-button:last-child {\n        margin: 1em 0 0;\n    }\n\n    i-form .message-inline,\n    i-form .message {\n        display: block;\n        font-size: 0.75em;\n        /* Increased bottom padding to make it group with its related input element. */\n        padding: 0.2em 0 0.8em;\n    }\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
 },{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],747:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
@@ -27799,6 +27803,13 @@ module.exports = function (window) {
                 });
             },
 
+            currentToReset: function() {
+                // will set the current value as the reset-value: for all form elements
+                this.getAll('[itag-formelement]').forEach(function(element) {
+                    element.currentToReset && element.currentToReset();
+                });
+            },
+
             reset: function() {
                 // will reset all form elements
                 this.getAll('[itag-formelement]').forEach(function(element) {
@@ -27925,9 +27936,9 @@ module.exports = function (window) {
                     value = designNode.getText(),
                     content;
 
-                element.defineWhenUndefined('value', value);
-                // set the reset-value to the inital-value in case `reset-value` was not present
-                element.defineWhenUndefined('reset-value', value);
+                element.defineWhenUndefined('value', value)
+                       // set the reset-value to the inital-value in case `reset-value` was not present
+                       .defineWhenUndefined('reset-value', value);
 
                 // building the template of the itag:
                 content = '<input value="'+value+'" />';
@@ -27946,6 +27957,11 @@ module.exports = function (window) {
 // model.placeholder && input.setAttr('placeholder', model.placeholder, true);
 // model['reset-value'] && input.setAttr('reset-value', model['reset-value'], true);
 
+            },
+
+            currentToReset: function() {
+                var model = this.model;
+                model['reset-value'] = model.value;
             },
 
             reset: function() {
@@ -28342,12 +28358,12 @@ module.exports = function (window) {
                 });
 
                 element.defineWhenUndefined('items', items)
-                       .defineWhenUndefined('buttonTexts', buttonTexts);
+                       .defineWhenUndefined('buttonTexts', buttonTexts)
+                        // set the reset-value to the inital-value in case `reset-value` was not present
+                       .defineWhenUndefined('reset-value', value);
 
                 // store its current value, so that valueChange-event can fire:
                 element.setData('i-select-value', value);
-                // set the reset-value to the inital-value in case `reset-value` was not present
-                element.defineWhenUndefined('reset-value', value);
 
                 // building the template of the itag:
                 content = '<button><div class="pointer"></div><div class="btntext"></div></button>';
@@ -28368,6 +28384,11 @@ module.exports = function (window) {
 
             cleanupEvents: function() {
                 this._outsideListener && this._outsideListener.detach();
+            },
+
+            currentToReset: function() {
+                var model = this.model;
+                model['reset-value'] = model.value;
             },
 
             reset: function() {
@@ -28551,6 +28572,7 @@ module.exports = function (window) {
             */
             attrs: {
                 pane: 'number',
+                'reset-value': 'string',
                 'i-prop': 'string'
             },
 
@@ -28587,7 +28609,9 @@ module.exports = function (window) {
                 });
 
                 element.defineWhenUndefined('panes', panes)
-                       .defineWhenUndefined('tabs', tabs);
+                       .defineWhenUndefined('tabs', tabs)
+                        // set the reset-value to the inital-value in case `reset-value` was not present
+                       .defineWhenUndefined('reset-value', pane);
 
                 // store its current value, so that valueChange-event can fire:
                 element.setData('i-select-pane', pane);
@@ -28596,6 +28620,18 @@ module.exports = function (window) {
                 content = '<ul fm-manage="li" fm-keyup="37" fm-keydown="39" fm-noloop="true"></ul><div><div class="container"></div></div>';
                 // set the content:
                 element.setHTML(content);
+            },
+
+            currentToReset: function() {
+                var model = this.model;
+                model['reset-value'] = model.pane;
+            },
+
+            reset: function() {
+                var model = this.model;
+                model.pane = model['reset-value'];
+                // no need to call `refreshItags` --> the reset()-method doesn't come out of the blue
+                // so, the eventsystem will refresh it afterwards
             },
 
            /**
@@ -29243,8 +29279,16 @@ module.exports = function (window) {
                         default:
                             validValue = false;
                     }
-                    validValue && domElement.defineWhenUndefined(key, attrValue);
                 }
+                else if (value.toLowerCase()==='boolean') {
+                    // undefined `boolean` attributes need to be stored as `false`
+                    validValue = true;
+                    attrValue = false;
+                }
+                else {
+                    validValue = false;
+                }
+                validValue && domElement.defineWhenUndefined(key, attrValue);
             });
         },
 

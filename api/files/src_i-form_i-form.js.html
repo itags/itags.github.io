@@ -398,6 +398,13 @@ module.exports = function (window) {
                 });
             },
 
+            currentToReset: function() {
+                // will set the current value as the reset-value: for all form elements
+                this.getAll(&#x27;[itag-formelement]&#x27;).forEach(function(element) {
+                    element.currentToReset &amp;&amp; element.currentToReset();
+                });
+            },
+
             reset: function() {
                 // will reset all form elements
                 this.getAll(&#x27;[itag-formelement]&#x27;).forEach(function(element) {

@@ -321,8 +321,8 @@ module.exports = function (window) {
             for (i=0; i&lt;len; i++) {
                 element = registeredElements[i];
                 if (!element.hasData(&#x27;_suppressTap&#x27;)) {
-                    // element._fitCheckbox();
-                    // element._setUIState();
+                    element._fitCheckbox();
+                    element._setUIState();
                 }
             }
         }, INTERVAL_FONTCHANGE_CHECK, true);
@@ -335,15 +335,15 @@ module.exports = function (window) {
 
             init: function() {
                 var element = this,
-                    value = element.model.checked || false,
+                    value = element.model.checked,
                     designNode = element.getDesignNode(),
                     options = designNode.getAll(&#x27;&gt;option&#x27;),
                     content, innerDiv, borderLeftWidth;
-                element.defineWhenUndefined(&#x27;checked&#x27;, value);
+
                 // set the reset-value to the inital-value in case &#x60;reset-value&#x60; was not present
-                element.defineWhenUndefined(&#x27;reset-value&#x27;, value);
-                element.defineWhenUndefined(&#x27;onText&#x27;, options[0] ? options[0].getHTML() : DEFAULT_ON_TEXT);
-                element.defineWhenUndefined(&#x27;offText&#x27;, options[1] ? options[1].getHTML() : DEFAULT_OFF_TEXT);
+                element.defineWhenUndefined(&#x27;reset-value&#x27;, value)
+                       .defineWhenUndefined(&#x27;onText&#x27;, options[0] ? options[0].getHTML() : DEFAULT_ON_TEXT)
+                       .defineWhenUndefined(&#x27;offText&#x27;, options[1] ? options[1].getHTML() : DEFAULT_OFF_TEXT);
 
                 content = &#x27;&lt;div tabindex=&quot;0&quot;&gt;&#x27;+
                               &#x27;&lt;div class=&quot;i-constrain&quot;&gt;&#x27;+
@@ -423,6 +423,10 @@ module.exports = function (window) {
                 element._setUIState(model.checked);
                 itemContainers[0].setHTML(model.onText);
                 itemContainers[1].setHTML(model.offText);
+            },
+
+            currentToReset: function() {
+                model[&#x27;reset-value&#x27;] = model.checked;
             },
 
             reset: function() {

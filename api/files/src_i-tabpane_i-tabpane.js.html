@@ -280,6 +280,7 @@ module.exports = function (window) {
             */
             attrs: {
                 pane: &#x27;number&#x27;,
+                &#x27;reset-value&#x27;: &#x27;string&#x27;,
                 &#x27;i-prop&#x27;: &#x27;string&#x27;
             },
 
@@ -316,7 +317,9 @@ module.exports = function (window) {
                 });
 
                 element.defineWhenUndefined(&#x27;panes&#x27;, panes)
-                       .defineWhenUndefined(&#x27;tabs&#x27;, tabs);
+                       .defineWhenUndefined(&#x27;tabs&#x27;, tabs)
+                        // set the reset-value to the inital-value in case &#x60;reset-value&#x60; was not present
+                       .defineWhenUndefined(&#x27;reset-value&#x27;, pane);
 
                 // store its current value, so that valueChange-event can fire:
                 element.setData(&#x27;i-select-pane&#x27;, pane);
@@ -325,6 +328,18 @@ module.exports = function (window) {
                 content = &#x27;&lt;ul fm-manage=&quot;li&quot; fm-keyup=&quot;37&quot; fm-keydown=&quot;39&quot; fm-noloop=&quot;true&quot;&gt;&lt;/ul&gt;&lt;div&gt;&lt;div class=&quot;container&quot;&gt;&lt;/div&gt;&lt;/div&gt;&#x27;;
                 // set the content:
                 element.setHTML(content);
+            },
+
+            currentToReset: function() {
+                var model = this.model;
+                model[&#x27;reset-value&#x27;] = model.pane;
+            },
+
+            reset: function() {
+                var model = this.model;
+                model.pane = model[&#x27;reset-value&#x27;];
+                // no need to call &#x60;refreshItags&#x60; --&gt; the reset()-method doesn&#x27;t come out of the blue
+                // so, the eventsystem will refresh it afterwards
             },
 
            /**

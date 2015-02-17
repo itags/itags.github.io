@@ -22960,7 +22960,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 27677,
+            "line": 27681,
             "description": "Emitted when a the i-select changes its value",
             "itemtype": "event",
             "name": "i-form:reset",
@@ -22989,7 +22989,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 27765,
+            "line": 27769,
             "description": "Emitted when a the i-select changes its value",
             "itemtype": "event",
             "name": "i-form:action",
@@ -23023,7 +23023,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 27895,
+            "line": 27906,
             "description": "Emitted when a the i-select changes its value",
             "itemtype": "event",
             "name": "i-select:valuechange",
@@ -23057,7 +23057,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 28278,
+            "line": 28294,
             "description": "Emitted when a the i-select changes its value",
             "itemtype": "event",
             "name": "i-select:valuechange",
@@ -23102,7 +23102,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 28316,
+            "line": 28332,
             "description": "Redefines the childNodes of both the vnode as well as its related dom-node. The new\ndefinition replaces any previous nodes. (without touching unmodified nodes).\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "_setChildNodes",
@@ -23123,7 +23123,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 28403,
+            "line": 28424,
             "description": "Redefines the childNodes of both the vnode as well as its related dom-node. The new\ndefinition replaces any previous nodes. (without touching unmodified nodes).\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "_setChildNodes",
@@ -23144,7 +23144,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 28557,
+            "line": 28579,
             "description": "Redefines the childNodes of both the vnode as well as its related dom-node. The new\ndefinition replaces any previous nodes. (without touching unmodified nodes).\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "_setChildNodes",
@@ -23165,7 +23165,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 28601,
+            "line": 28637,
             "description": "Redefines the childNodes of both the vnode as well as its related dom-node. The new\ndefinition replaces any previous nodes. (without touching unmodified nodes).\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "_setChildNodes",
@@ -23186,7 +23186,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 28711,
+            "line": 28747,
             "description": "Internal hash containing the names of members which names should be transformed",
             "itemtype": "property",
             "name": "ITAG_METHODS",
@@ -23200,7 +23200,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 28759,
+            "line": 28795,
             "description": "Internal hash containing all ITAG-Class definitions.",
             "itemtype": "property",
             "name": "ITAGS",
@@ -23211,7 +23211,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 28769,
+            "line": 28805,
             "description": "Base properties for every Itag-class",
             "itemtype": "property",
             "name": "EXTRA_BASE_MEMBERS",
@@ -23224,7 +23224,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 28780,
+            "line": 28816,
             "description": "Calls `_destroyUI` on through the class-chain on every level (bottom-up).\n_destroyUI gets defined when the itag defines `destroy` --> transformation under the hood.\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "destroyUI",
@@ -23249,7 +23249,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 28821,
+            "line": 28857,
             "description": "Unitializer for itags. Calls the `_init`-method through the whole chain (top-bottom).\n_initUI() is set for each `init`-member --> transformed under the hood.",
             "itemtype": "method",
             "name": "initUI",
@@ -23274,7 +23274,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 28874,
+            "line": 28910,
             "description": "Flag that tells wether the itag is rendered. If you need to wait for rendering (to continue processing),\nthen use `itagReady()`\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "isRendered",
@@ -23288,7 +23288,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 28888,
+            "line": 28924,
             "description": "Flag that tells wether the itag is destoyed.",
             "itemtype": "method",
             "name": "isDestroyed",
@@ -23302,7 +23302,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 28899,
+            "line": 28935,
             "description": "Promise that gets fulfilled as soon as the itag is rendered.",
             "itemtype": "method",
             "name": "itagReady",
@@ -23316,7 +23316,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 28916,
+            "line": 28952,
             "description": "Destroys and reinitialises the itag-element.\nNo need to use directly, only internal.",
             "itemtype": "method",
             "name": "reInitializeUI",
@@ -23334,7 +23334,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 28936,
+            "line": 28972,
             "description": "Defines the `key`-property on element.model, but only when is hasn't been defined before.",
             "itemtype": "method",
             "name": "defineWhenUndefined",
@@ -23345,7 +23345,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 28949,
+            "line": 28985,
             "description": "Syncs the itag, by calling `_syncUI`: the transformed `sync()`-method.\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "syncUI",
@@ -23356,7 +23356,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 28996,
+            "line": 29032,
             "description": "Internal hash containing the `attrs`-definition which can be set by the itag-declaration.\nThis hash is used to determine which properties of `model` need to sync as an attribute.",
             "itemtype": "property",
             "name": "_attrs",
@@ -23370,7 +23370,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 29008,
+            "line": 29044,
             "description": "Transformed from `destroy` --> when `destroy` gets invoked, the instance will invoke `_destroyUI` through the whole chain.\nDefaults to `NOOP`, so that it can be always be invoked.",
             "itemtype": "method",
             "name": "_destroyUI",
@@ -23383,7 +23383,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 29019,
+            "line": 29055,
             "description": "Transformed from `init` --> when the instance gets created, the instance will invoke `_initUI` through the whole chain.\nDefaults to `NOOP`, so that it can be always be invoked.\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "NOOP",
@@ -23395,7 +23395,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 29031,
+            "line": 29067,
             "description": "Transformed from `sync` --> when `sync` gets invoked, the instance will invoke `_syncUI`.\nDefaults to `NOOP`, so that it can be always be invoked.",
             "itemtype": "method",
             "name": "_syncUI",
@@ -23407,7 +23407,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 29045,
+            "line": 29081,
             "description": "Internal hash holding all attribute-mutation events",
             "itemtype": "property",
             "name": "ATTRIBUTE_EVENTS",
@@ -23421,7 +23421,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 29056,
+            "line": 29092,
             "description": "Internal hash holding all mutation events",
             "itemtype": "property",
             "name": "MUTATION_EVENTS",
@@ -23435,7 +23435,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 29067,
+            "line": 29103,
             "description": "Internal hash containing all `protected members` --> the properties that CANNOT be set at the prototype of ItagClasses.",
             "itemtype": "property",
             "name": "PROTECTED_MEMBERS",
@@ -23449,7 +23449,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 29088,
+            "line": 29124,
             "description": "Default internal hash containing all DOM-events that will not directly call `event-finalize`\nbut after a delay of 1 second",
             "itemtype": "property",
             "name": "DEFAULT_DELAYED_FINALIZE_EVENTS",
@@ -23463,7 +23463,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 29140,
+            "line": 29176,
             "description": "Internal hash containing all DOM-events that will not directly call `event-finalize`\nbut after a delay of 1 second",
             "itemtype": "property",
             "name": "DELAYED_FINALIZE_EVENTS",
@@ -23477,7 +23477,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 29172,
+            "line": 29208,
             "description": "Merges all prototype-members of every level in the chain directly on the domElement.\nThis needs to be done for browsers which don't support changing __proto__ (like <IE11)",
             "itemtype": "method",
             "name": "mergeFlat",
@@ -23501,7 +23501,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 29211,
+            "line": 29247,
             "description": "Copies the attibute-values into element.model.\nOnly processes the attributes that are defined through the Itag-class its `attrs`-property.",
             "itemtype": "method",
             "name": "attrsToModel",
@@ -23518,7 +23518,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 29251,
+            "line": 29295,
             "description": "Binds a model to the itag-element, making element.model equals the bound model.\nImmediately syncs the itag with the new model-data.\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "bindModel",
@@ -23547,7 +23547,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 29294,
+            "line": 29338,
             "description": "Retrieves modeldata set by the server inside the itag-element and binds this data into element.model",
             "itemtype": "method",
             "name": "extractModel",
@@ -23568,7 +23568,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 29328,
+            "line": 29372,
             "description": "Retrieves content set by the definition of the iTag. The content should be inside a comment-node\ninside the itag. The returnvalue is a container-node (DIV) where the content\n-as is specified by the comment-node- lies within as true HTML.",
             "itemtype": "method",
             "name": "extractContent",
@@ -23589,7 +23589,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 29365,
+            "line": 29409,
             "description": "Function that can be used ad the `filterFn` of event-listeners.\nReturns true for any HTML-element that is a rendered itag.",
             "itemtype": "method",
             "name": "itagFilter",
@@ -23610,7 +23610,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 29380,
+            "line": 29424,
             "description": "Copies elemtn.model values into the attibute-values of the element.\nOnly processes the attributes that are defined through the Itag-class its `attrs`-property.",
             "itemtype": "method",
             "name": "modelToAttrs",
@@ -23627,7 +23627,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 29399,
+            "line": 29443,
             "description": "Searches through the dom for the specified itags and upgrades its HTMLElement.",
             "itemtype": "method",
             "name": "renderDomElements",
@@ -23644,7 +23644,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 29419,
+            "line": 29463,
             "description": "Defines which domevents should lead to a direct sync by the Event-finalizer.\nOnly needed for events that are in the list set by DEFAULT_DELAYED_FINALIZE_EVENTS:\n\n<ul>\n    <li>mousedown</li>\n    <li>mouseup</li>\n    <li>mousemove</li>\n    <li>panmove</li>\n    <li>panstart</li>\n    <li>panleft</li>\n    <li>panright</li>\n    <li>panup</li>\n    <li>pandown</li>\n    <li>pinchmove</li>\n    <li>rotatemove</li>\n    <li>focus</li>\n    <li>manualfocus</li>\n    <li>keydown</li>\n    <li>keyup</li>\n    <li>keypress</li>\n    <li>blur</li>\n    <li>resize</li>\n    <li>scroll</li>\n</ul>\n\nEvents that are not in this list don't need to be set: they always go through the finalizer immediatly.\n\nYou need to set this if the itag-definition its `sync`-method should be updated after one of the events in the list.",
             "itemtype": "method",
             "name": "setItagDirectEventResponse",
@@ -23666,7 +23666,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 29493,
+            "line": 29537,
             "description": "Defines the itag-element as being rendered.",
             "itemtype": "method",
             "name": "setRendered",
@@ -23683,7 +23683,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 29508,
+            "line": 29552,
             "description": "Sets up all general itag-emitters.",
             "itemtype": "method",
             "name": "setupEmitters",
@@ -23693,7 +23693,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 29518,
+            "line": 29562,
             "description": "Emitted when an itag changed its content",
             "itemtype": "event",
             "name": "*:change",
@@ -23717,7 +23717,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 29535,
+            "line": 29579,
             "description": "Sets up all itag-watchers, giving itags its life behaviour.",
             "itemtype": "method",
             "name": "setupWatchers",
@@ -23727,7 +23727,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 29660,
+            "line": 29704,
             "description": "Upgrades the HTMLElement into an itag defined by domElementConstructor.",
             "itemtype": "method",
             "name": "upgradeElement",
@@ -23749,7 +23749,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 29743,
+            "line": 29787,
             "description": "Resets the focus on the right element inside an itag-instance after syncing.\nOnly when a focusmanager is active and has focus.",
             "itemtype": "method",
             "name": "manageFocus",
@@ -23768,7 +23768,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 29758,
+            "line": 29802,
             "description": "Reference to the original document.createElement.",
             "itemtype": "method",
             "name": "_createElement",
@@ -23791,7 +23791,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 29770,
+            "line": 29814,
             "description": "Binds a model to the itag-element, making element.model equals the bound model.\nImmediately syncs the itag with the new model-data.\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "bindModel",
@@ -23830,7 +23830,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 29826,
+            "line": 29870,
             "description": "Redefinition of document.createElement, enabling creation of itags.",
             "itemtype": "method",
             "name": "createElement",
@@ -23857,7 +23857,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 29851,
+            "line": 29895,
             "description": "Internal hash containing all DOM-events that are listened for (at `document`).",
             "itemtype": "property",
             "name": "createItag",
@@ -23888,7 +23888,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 29867,
+            "line": 29911,
             "description": "Refreshes all Itag-elements in the dom by syncing their element.model onto the attributes and calling their `sync`-method.",
             "itemtype": "method",
             "name": "refreshItags",
@@ -23899,7 +23899,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 29918,
+            "line": 29962,
             "description": "Backup of the original `mergePrototypes`-method.",
             "itemtype": "method",
             "name": "mergePrototypes",
@@ -23924,7 +23924,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 29930,
+            "line": 29974,
             "description": "Merges the given prototypes of properties into the `prototype` of the Class.\n\n**Note1 ** to be used on instances --> ONLY on Classes\n**Note2 ** properties with getters and/or unwritable will NOT be merged\n\nThe members in the hash prototypes will become members with\ninstances of the merged class.\n\nBy default, this method will not override existing prototype members,\nunless the second argument `force` is true.\n\nIn case of merging properties into an itag, a `*:prototypechange`-event gets emitted",
             "itemtype": "method",
             "name": "mergePrototypes",
@@ -23956,7 +23956,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 29961,
+            "line": 30005,
             "description": "Emitted when prototypes are set on an existing Itag-Class.",
             "itemtype": "event",
             "name": "*:prototypechange",
@@ -23985,7 +23985,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 29979,
+            "line": 30023,
             "description": "Subclasses in Itag-Class into a pseudo-class: retaining its tagname, yet still subclassing.\nThe pseudoclass gets identified by `i-parentclass#pseudo` and once rendered it has the signature of:\n&lt;i-parentclass&gt; is=\"pseudo\" &lt;/i-parentclass&gt;\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "pseudoClass",
@@ -24033,7 +24033,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 30012,
+            "line": 30056,
             "description": "Backup of the original `removePrototypes`-method.",
             "itemtype": "method",
             "name": "_removePrototypes",
@@ -24052,7 +24052,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 30023,
+            "line": 30067,
             "description": "Redefines the childNodes of both the vnode as well as its related dom-node. The new\ndefinition replaces any previous nodes. (without touching unmodified nodes).\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "removePrototypes",
@@ -24069,7 +24069,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 30043,
+            "line": 30087,
             "description": "Emitted when prototypes are removed off an existing Itag-Class.",
             "itemtype": "event",
             "name": "*:prototyperemove",
@@ -24093,7 +24093,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 30063,
+            "line": 30107,
             "description": "Backup of the original `setConstructor`-method.",
             "itemtype": "method",
             "name": "_setConstructor",
@@ -24125,7 +24125,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 30076,
+            "line": 30120,
             "description": "Redefines the constructor fo the Class",
             "itemtype": "method",
             "name": "setConstructor",
@@ -24156,7 +24156,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 30095,
+            "line": 30139,
             "description": "Redefines the childNodes of both the vnode as well as its related dom-node. The new\ndefinition replaces any previous nodes. (without touching unmodified nodes).\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "subClass",
@@ -24205,7 +24205,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 30207,
+            "line": 30251,
             "description": "Binds a model to the itag-element, making element.model equals the bound model.\nImmediately syncs the itag with the new model-data.\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "bindModel",
@@ -24239,7 +24239,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 30242,
+            "line": 30286,
             "description": "Removes the attribute from the Element.\nIn case of an Itag --> will remove the property of element.model\n\nUse removeAttr() to be able to chain.",
             "itemtype": "method",
             "name": "removeAttr",
@@ -24263,7 +24263,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 30268,
+            "line": 30312,
             "description": "Sets the attribute on the Element with the specified value.\nIn case of an Itag --> will remove the property of element.model\n\nAlias for setAttr(), BUT differs in a way that setAttr is chainable, setAttribute is not.",
             "itemtype": "method",
             "name": "setAttribute",
@@ -24292,7 +24292,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 30311,
+            "line": 30355,
             "description": "Flag that tells whether the HTMLElement is an Itag",
             "itemtype": "method",
             "name": "isItag",
@@ -24306,7 +24306,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 30327,
+            "line": 30371,
             "description": "Creates the base ItagClass: the highest Class in the hierarchy of all ItagClasses.\nWill get extra properties merge into its prototype, which leads into the formation of `ItagBaseClass`.",
             "itemtype": "method",
             "name": "createItagBaseClass",
@@ -24322,7 +24322,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 30341,
+            "line": 30385,
             "description": "The base ItagClass: the highest Class in the hierarchy of all ItagClasses.",
             "itemtype": "property",
             "name": "ItagBaseClass",
@@ -24333,7 +24333,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 30354,
+            "line": 30398,
             "description": "Calculated value of the specified member at the parent-Class.",
             "itemtype": "method",
             "name": "$superProp",
@@ -24347,41 +24347,41 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 30528,
+            "line": 30572,
             "description": "If `TYPED_ARRAY_SUPPORT`:\n  === true    Use Uint8Array implementation (fastest)\n  === false   Use Object implementation (most compatible, even IE6)\n\nBrowsers that support typed arrays are IE 10+, Firefox 4+, Chrome 7+, Safari 5.1+,\nOpera 11.6+, iOS 4.2+.\n\nNote:\n\n- Implementation must support adding new properties to `Uint8Array` instances.\n  Firefox 4-29 lacked support, fixed in Firefox 30+.\n  See: https://bugzilla.mozilla.org/show_bug.cgi?id=695438.\n\n - Chrome 9-10 is missing the `TypedArray.prototype.subarray` function.\n\n - IE10 has a broken `TypedArray.prototype.subarray` function which returns arrays of\n   incorrect length in some situations.\n\nWe detect these buggy browsers and set `TYPED_ARRAY_SUPPORT` to `false` so they will\nget the Object implementation, which is slower but will work correctly.",
             "class": "ItagBaseClass",
             "module": "itags.core"
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 30563,
+            "line": 30607,
             "description": "Class: Buffer\n=============\n\nThe Buffer constructor returns instances of `Uint8Array` that are augmented\nwith function properties for all the node `Buffer` API functions. We use\n`Uint8Array` so that square bracket notation works as expected -- it returns\na single octet.\n\nBy augmenting the instances, we can avoid modifying the `Uint8Array`\nprototype.",
             "class": "ItagBaseClass",
             "module": "itags.core"
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 31476,
+            "line": 31520,
             "description": "Creates a new `ArrayBuffer` with the *copied* memory of the buffer instance.\nAdded in Node 0.12. Only available in browsers that support ArrayBuffer.",
             "class": "ItagBaseClass",
             "module": "itags.core"
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 31501,
+            "line": 31545,
             "description": "Augment a Uint8Array *instance* (not the Uint8Array class!) with Buffer methods",
             "class": "ItagBaseClass",
             "module": "itags.core"
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 32828,
+            "line": 32872,
             "class": "ItagBaseClass",
             "module": "itags.core"
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 32837,
+            "line": 32881,
             "description": "The `punycode` object.",
             "name": "punycode",
             "type": "Object",
@@ -24390,43 +24390,43 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 32844,
+            "line": 32888,
             "class": "ItagBaseClass",
             "module": "itags.core"
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 32847,
+            "line": 32891,
             "class": "ItagBaseClass",
             "module": "itags.core"
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 32857,
+            "line": 32901,
             "class": "ItagBaseClass",
             "module": "itags.core"
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 32862,
+            "line": 32906,
             "class": "ItagBaseClass",
             "module": "itags.core"
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 32869,
+            "line": 32913,
             "class": "ItagBaseClass",
             "module": "itags.core"
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 32874,
+            "line": 32918,
             "class": "ItagBaseClass",
             "module": "itags.core"
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 32879,
+            "line": 32923,
             "description": "A generic error utility function.",
             "access": "private",
             "tagname": "",
@@ -24446,7 +24446,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 32889,
+            "line": 32933,
             "description": "A generic `Array#map` utility function.",
             "access": "private",
             "tagname": "",
@@ -24471,7 +24471,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 32905,
+            "line": 32949,
             "description": "A simple `Array#map`-like wrapper to work with domain name strings.",
             "access": "private",
             "tagname": "",
@@ -24496,7 +24496,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 32918,
+            "line": 32962,
             "description": "Creates an array containing the numeric code points of each Unicode\ncharacter in the string. While JavaScript uses UCS-2 internally,\nthis function will convert a pair of surrogate halves (each of which\nUCS-2 exposes as separate characters) into a single code point,\nmatching UTF-16.",
             "see": [
                 "`punycode.ucs2.encode`",
@@ -24520,7 +24520,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 32957,
+            "line": 33001,
             "description": "Creates a string based on an array of numeric code points.",
             "see": [
                 "`punycode.ucs2.decode`"
@@ -24543,7 +24543,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 32978,
+            "line": 33022,
             "description": "Converts a basic code point into a digit/integer.",
             "see": [
                 "`digitToBasic()`"
@@ -24566,7 +24566,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 33000,
+            "line": 33044,
             "description": "Converts a digit/integer into a basic code point.",
             "see": [
                 "`basicToDigit()`"
@@ -24589,7 +24589,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 33017,
+            "line": 33061,
             "description": "Bias adaptation function as per section 3.4 of RFC 3492.\nhttp://tools.ietf.org/html/rfc3492#section-3.4",
             "access": "private",
             "tagname": "",
@@ -24598,7 +24598,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 33032,
+            "line": 33076,
             "description": "Converts a Punycode string of ASCII-only symbols to a string of Unicode\nsymbols.",
             "memberof": "punycode",
             "params": [
@@ -24617,13 +24617,13 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 33055,
+            "line": 33099,
             "class": "ItagBaseClass",
             "module": "itags.core"
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 33133,
+            "line": 33177,
             "description": "Converts a string of Unicode symbols to a Punycode string of ASCII-only\nsymbols.",
             "memberof": "punycode",
             "params": [
@@ -24642,19 +24642,19 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 33153,
+            "line": 33197,
             "class": "ItagBaseClass",
             "module": "itags.core"
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 33155,
+            "line": 33199,
             "class": "ItagBaseClass",
             "module": "itags.core"
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 33247,
+            "line": 33291,
             "description": "Converts a Punycode string representing a domain name to Unicode. Only the\nPunycoded parts of the domain name will be converted, i.e. it doesn't\nmatter if you call it on a string that has already been converted to\nUnicode.",
             "memberof": "punycode",
             "params": [
@@ -24673,7 +24673,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 33265,
+            "line": 33309,
             "description": "Converts a Unicode string representing a domain name to Punycode. Only the\nnon-ASCII parts of the domain name will be converted, i.e. it doesn't\nmatter if you call it with a domain that's already in ASCII.",
             "memberof": "punycode",
             "params": [
@@ -24692,13 +24692,13 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 33283,
+            "line": 33327,
             "class": "ItagBaseClass",
             "module": "itags.core"
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 33285,
+            "line": 33329,
             "description": "A string representing the current Punycode.js version number.",
             "memberof": "punycode",
             "type": "String",
@@ -24707,7 +24707,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 33291,
+            "line": 33335,
             "description": "An object of methods to convert from JavaScript's internal character\nrepresentation (UCS-2) to Unicode code points, and back.",
             "see": [
                 "<http://mathiasbynens.be/notes/javascript-encoding>"
@@ -24719,13 +24719,13 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 33308,
+            "line": 33352,
             "class": "ItagBaseClass",
             "module": "itags.core"
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 36515,
+            "line": 36559,
             "description": "Echos the value of a value. Trys to print the value out\nin the best way possible given the different types.",
             "params": [
                 {
@@ -24744,7 +24744,7 @@
         },
         {
             "file": "site/dist/itagsbuild.js",
-            "line": 36955,
+            "line": 36999,
             "description": "Inherit the prototype methods from one constructor into another.\n\nThe Function.prototype.inherits from lang.js rewritten as a standalone\nfunction (not on Function.prototype). NOTE: If this file is to be loaded\nduring bootstrapping this function needs to be rewritten using some native\nfunctions as prototype setup using normal JavaScript does not work as\nexpected during bootstrapping (see mirror.js in r114903).",
             "params": [
                 {
@@ -39903,7 +39903,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 27677,
+            "line": 27681,
             "description": "Emitted when a the i-select changes its value",
             "itemtype": "event",
             "name": "i-form:reset",
@@ -39932,7 +39932,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 27765,
+            "line": 27769,
             "description": "Emitted when a the i-select changes its value",
             "itemtype": "event",
             "name": "i-form:action",
@@ -39966,7 +39966,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 27895,
+            "line": 27906,
             "description": "Emitted when a the i-select changes its value",
             "itemtype": "event",
             "name": "i-select:valuechange",
@@ -40000,7 +40000,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 28278,
+            "line": 28294,
             "description": "Emitted when a the i-select changes its value",
             "itemtype": "event",
             "name": "i-select:valuechange",
@@ -40045,7 +40045,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 28316,
+            "line": 28332,
             "description": "Redefines the childNodes of both the vnode as well as its related dom-node. The new\ndefinition replaces any previous nodes. (without touching unmodified nodes).\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "_setChildNodes",
@@ -40066,7 +40066,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 28403,
+            "line": 28424,
             "description": "Redefines the childNodes of both the vnode as well as its related dom-node. The new\ndefinition replaces any previous nodes. (without touching unmodified nodes).\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "_setChildNodes",
@@ -40087,7 +40087,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 28557,
+            "line": 28579,
             "description": "Redefines the childNodes of both the vnode as well as its related dom-node. The new\ndefinition replaces any previous nodes. (without touching unmodified nodes).\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "_setChildNodes",
@@ -40108,7 +40108,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 28601,
+            "line": 28637,
             "description": "Redefines the childNodes of both the vnode as well as its related dom-node. The new\ndefinition replaces any previous nodes. (without touching unmodified nodes).\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "_setChildNodes",
@@ -40129,7 +40129,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 28711,
+            "line": 28747,
             "description": "Internal hash containing the names of members which names should be transformed",
             "itemtype": "property",
             "name": "ITAG_METHODS",
@@ -40143,7 +40143,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 28759,
+            "line": 28795,
             "description": "Internal hash containing all ITAG-Class definitions.",
             "itemtype": "property",
             "name": "ITAGS",
@@ -40154,7 +40154,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 28769,
+            "line": 28805,
             "description": "Base properties for every Itag-class",
             "itemtype": "property",
             "name": "EXTRA_BASE_MEMBERS",
@@ -40167,7 +40167,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 28780,
+            "line": 28816,
             "description": "Calls `_destroyUI` on through the class-chain on every level (bottom-up).\n_destroyUI gets defined when the itag defines `destroy` --> transformation under the hood.\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "destroyUI",
@@ -40192,7 +40192,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 28821,
+            "line": 28857,
             "description": "Unitializer for itags. Calls the `_init`-method through the whole chain (top-bottom).\n_initUI() is set for each `init`-member --> transformed under the hood.",
             "itemtype": "method",
             "name": "initUI",
@@ -40217,7 +40217,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 28874,
+            "line": 28910,
             "description": "Flag that tells wether the itag is rendered. If you need to wait for rendering (to continue processing),\nthen use `itagReady()`\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "isRendered",
@@ -40231,7 +40231,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 28888,
+            "line": 28924,
             "description": "Flag that tells wether the itag is destoyed.",
             "itemtype": "method",
             "name": "isDestroyed",
@@ -40245,7 +40245,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 28899,
+            "line": 28935,
             "description": "Promise that gets fulfilled as soon as the itag is rendered.",
             "itemtype": "method",
             "name": "itagReady",
@@ -40259,7 +40259,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 28916,
+            "line": 28952,
             "description": "Destroys and reinitialises the itag-element.\nNo need to use directly, only internal.",
             "itemtype": "method",
             "name": "reInitializeUI",
@@ -40277,7 +40277,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 28936,
+            "line": 28972,
             "description": "Defines the `key`-property on element.model, but only when is hasn't been defined before.",
             "itemtype": "method",
             "name": "defineWhenUndefined",
@@ -40288,7 +40288,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 28949,
+            "line": 28985,
             "description": "Syncs the itag, by calling `_syncUI`: the transformed `sync()`-method.\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "syncUI",
@@ -40299,7 +40299,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 28996,
+            "line": 29032,
             "description": "Internal hash containing the `attrs`-definition which can be set by the itag-declaration.\nThis hash is used to determine which properties of `model` need to sync as an attribute.",
             "itemtype": "property",
             "name": "_attrs",
@@ -40313,7 +40313,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 29008,
+            "line": 29044,
             "description": "Transformed from `destroy` --> when `destroy` gets invoked, the instance will invoke `_destroyUI` through the whole chain.\nDefaults to `NOOP`, so that it can be always be invoked.",
             "itemtype": "method",
             "name": "_destroyUI",
@@ -40326,7 +40326,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 29019,
+            "line": 29055,
             "description": "Transformed from `init` --> when the instance gets created, the instance will invoke `_initUI` through the whole chain.\nDefaults to `NOOP`, so that it can be always be invoked.\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "NOOP",
@@ -40338,7 +40338,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 29031,
+            "line": 29067,
             "description": "Transformed from `sync` --> when `sync` gets invoked, the instance will invoke `_syncUI`.\nDefaults to `NOOP`, so that it can be always be invoked.",
             "itemtype": "method",
             "name": "_syncUI",
@@ -40350,7 +40350,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 29045,
+            "line": 29081,
             "description": "Internal hash holding all attribute-mutation events",
             "itemtype": "property",
             "name": "ATTRIBUTE_EVENTS",
@@ -40364,7 +40364,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 29056,
+            "line": 29092,
             "description": "Internal hash holding all mutation events",
             "itemtype": "property",
             "name": "MUTATION_EVENTS",
@@ -40378,7 +40378,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 29067,
+            "line": 29103,
             "description": "Internal hash containing all `protected members` --> the properties that CANNOT be set at the prototype of ItagClasses.",
             "itemtype": "property",
             "name": "PROTECTED_MEMBERS",
@@ -40392,7 +40392,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 29088,
+            "line": 29124,
             "description": "Default internal hash containing all DOM-events that will not directly call `event-finalize`\nbut after a delay of 1 second",
             "itemtype": "property",
             "name": "DEFAULT_DELAYED_FINALIZE_EVENTS",
@@ -40406,7 +40406,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 29140,
+            "line": 29176,
             "description": "Internal hash containing all DOM-events that will not directly call `event-finalize`\nbut after a delay of 1 second",
             "itemtype": "property",
             "name": "DELAYED_FINALIZE_EVENTS",
@@ -40420,7 +40420,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 29172,
+            "line": 29208,
             "description": "Merges all prototype-members of every level in the chain directly on the domElement.\nThis needs to be done for browsers which don't support changing __proto__ (like <IE11)",
             "itemtype": "method",
             "name": "mergeFlat",
@@ -40444,7 +40444,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 29211,
+            "line": 29247,
             "description": "Copies the attibute-values into element.model.\nOnly processes the attributes that are defined through the Itag-class its `attrs`-property.",
             "itemtype": "method",
             "name": "attrsToModel",
@@ -40461,7 +40461,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 29251,
+            "line": 29295,
             "description": "Binds a model to the itag-element, making element.model equals the bound model.\nImmediately syncs the itag with the new model-data.\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "bindModel",
@@ -40490,7 +40490,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 29294,
+            "line": 29338,
             "description": "Retrieves modeldata set by the server inside the itag-element and binds this data into element.model",
             "itemtype": "method",
             "name": "extractModel",
@@ -40511,7 +40511,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 29328,
+            "line": 29372,
             "description": "Retrieves content set by the definition of the iTag. The content should be inside a comment-node\ninside the itag. The returnvalue is a container-node (DIV) where the content\n-as is specified by the comment-node- lies within as true HTML.",
             "itemtype": "method",
             "name": "extractContent",
@@ -40532,7 +40532,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 29365,
+            "line": 29409,
             "description": "Function that can be used ad the `filterFn` of event-listeners.\nReturns true for any HTML-element that is a rendered itag.",
             "itemtype": "method",
             "name": "itagFilter",
@@ -40553,7 +40553,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 29380,
+            "line": 29424,
             "description": "Copies elemtn.model values into the attibute-values of the element.\nOnly processes the attributes that are defined through the Itag-class its `attrs`-property.",
             "itemtype": "method",
             "name": "modelToAttrs",
@@ -40570,7 +40570,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 29399,
+            "line": 29443,
             "description": "Searches through the dom for the specified itags and upgrades its HTMLElement.",
             "itemtype": "method",
             "name": "renderDomElements",
@@ -40587,7 +40587,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 29419,
+            "line": 29463,
             "description": "Defines which domevents should lead to a direct sync by the Event-finalizer.\nOnly needed for events that are in the list set by DEFAULT_DELAYED_FINALIZE_EVENTS:\n\n<ul>\n    <li>mousedown</li>\n    <li>mouseup</li>\n    <li>mousemove</li>\n    <li>panmove</li>\n    <li>panstart</li>\n    <li>panleft</li>\n    <li>panright</li>\n    <li>panup</li>\n    <li>pandown</li>\n    <li>pinchmove</li>\n    <li>rotatemove</li>\n    <li>focus</li>\n    <li>manualfocus</li>\n    <li>keydown</li>\n    <li>keyup</li>\n    <li>keypress</li>\n    <li>blur</li>\n    <li>resize</li>\n    <li>scroll</li>\n</ul>\n\nEvents that are not in this list don't need to be set: they always go through the finalizer immediatly.\n\nYou need to set this if the itag-definition its `sync`-method should be updated after one of the events in the list.",
             "itemtype": "method",
             "name": "setItagDirectEventResponse",
@@ -40609,7 +40609,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 29493,
+            "line": 29537,
             "description": "Defines the itag-element as being rendered.",
             "itemtype": "method",
             "name": "setRendered",
@@ -40626,7 +40626,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 29508,
+            "line": 29552,
             "description": "Sets up all general itag-emitters.",
             "itemtype": "method",
             "name": "setupEmitters",
@@ -40636,7 +40636,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 29518,
+            "line": 29562,
             "description": "Emitted when an itag changed its content",
             "itemtype": "event",
             "name": "*:change",
@@ -40660,7 +40660,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 29535,
+            "line": 29579,
             "description": "Sets up all itag-watchers, giving itags its life behaviour.",
             "itemtype": "method",
             "name": "setupWatchers",
@@ -40670,7 +40670,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 29660,
+            "line": 29704,
             "description": "Upgrades the HTMLElement into an itag defined by domElementConstructor.",
             "itemtype": "method",
             "name": "upgradeElement",
@@ -40692,7 +40692,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 29743,
+            "line": 29787,
             "description": "Resets the focus on the right element inside an itag-instance after syncing.\nOnly when a focusmanager is active and has focus.",
             "itemtype": "method",
             "name": "manageFocus",
@@ -40711,7 +40711,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 29758,
+            "line": 29802,
             "description": "Reference to the original document.createElement.",
             "itemtype": "method",
             "name": "_createElement",
@@ -40734,7 +40734,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 29770,
+            "line": 29814,
             "description": "Binds a model to the itag-element, making element.model equals the bound model.\nImmediately syncs the itag with the new model-data.\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "bindModel",
@@ -40773,7 +40773,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 29826,
+            "line": 29870,
             "description": "Redefinition of document.createElement, enabling creation of itags.",
             "itemtype": "method",
             "name": "createElement",
@@ -40800,7 +40800,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 29851,
+            "line": 29895,
             "description": "Internal hash containing all DOM-events that are listened for (at `document`).",
             "itemtype": "property",
             "name": "createItag",
@@ -40831,7 +40831,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 29867,
+            "line": 29911,
             "description": "Refreshes all Itag-elements in the dom by syncing their element.model onto the attributes and calling their `sync`-method.",
             "itemtype": "method",
             "name": "refreshItags",
@@ -40842,7 +40842,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 29918,
+            "line": 29962,
             "description": "Backup of the original `mergePrototypes`-method.",
             "itemtype": "method",
             "name": "mergePrototypes",
@@ -40867,7 +40867,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 29930,
+            "line": 29974,
             "description": "Merges the given prototypes of properties into the `prototype` of the Class.\n\n**Note1 ** to be used on instances --> ONLY on Classes\n**Note2 ** properties with getters and/or unwritable will NOT be merged\n\nThe members in the hash prototypes will become members with\ninstances of the merged class.\n\nBy default, this method will not override existing prototype members,\nunless the second argument `force` is true.\n\nIn case of merging properties into an itag, a `*:prototypechange`-event gets emitted",
             "itemtype": "method",
             "name": "mergePrototypes",
@@ -40899,7 +40899,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 29961,
+            "line": 30005,
             "description": "Emitted when prototypes are set on an existing Itag-Class.",
             "itemtype": "event",
             "name": "*:prototypechange",
@@ -40928,7 +40928,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 29979,
+            "line": 30023,
             "description": "Subclasses in Itag-Class into a pseudo-class: retaining its tagname, yet still subclassing.\nThe pseudoclass gets identified by `i-parentclass#pseudo` and once rendered it has the signature of:\n&lt;i-parentclass&gt; is=\"pseudo\" &lt;/i-parentclass&gt;\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "pseudoClass",
@@ -40976,7 +40976,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 30012,
+            "line": 30056,
             "description": "Backup of the original `removePrototypes`-method.",
             "itemtype": "method",
             "name": "_removePrototypes",
@@ -40995,7 +40995,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 30023,
+            "line": 30067,
             "description": "Redefines the childNodes of both the vnode as well as its related dom-node. The new\ndefinition replaces any previous nodes. (without touching unmodified nodes).\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "removePrototypes",
@@ -41012,7 +41012,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 30043,
+            "line": 30087,
             "description": "Emitted when prototypes are removed off an existing Itag-Class.",
             "itemtype": "event",
             "name": "*:prototyperemove",
@@ -41036,7 +41036,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 30063,
+            "line": 30107,
             "description": "Backup of the original `setConstructor`-method.",
             "itemtype": "method",
             "name": "_setConstructor",
@@ -41068,7 +41068,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 30076,
+            "line": 30120,
             "description": "Redefines the constructor fo the Class",
             "itemtype": "method",
             "name": "setConstructor",
@@ -41099,7 +41099,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 30095,
+            "line": 30139,
             "description": "Redefines the childNodes of both the vnode as well as its related dom-node. The new\ndefinition replaces any previous nodes. (without touching unmodified nodes).\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "subClass",
@@ -41148,7 +41148,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 30207,
+            "line": 30251,
             "description": "Binds a model to the itag-element, making element.model equals the bound model.\nImmediately syncs the itag with the new model-data.\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "bindModel",
@@ -41182,7 +41182,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 30242,
+            "line": 30286,
             "description": "Removes the attribute from the Element.\nIn case of an Itag --> will remove the property of element.model\n\nUse removeAttr() to be able to chain.",
             "itemtype": "method",
             "name": "removeAttr",
@@ -41206,7 +41206,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 30268,
+            "line": 30312,
             "description": "Sets the attribute on the Element with the specified value.\nIn case of an Itag --> will remove the property of element.model\n\nAlias for setAttr(), BUT differs in a way that setAttr is chainable, setAttribute is not.",
             "itemtype": "method",
             "name": "setAttribute",
@@ -41235,7 +41235,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 30311,
+            "line": 30355,
             "description": "Flag that tells whether the HTMLElement is an Itag",
             "itemtype": "method",
             "name": "isItag",
@@ -41249,7 +41249,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 30327,
+            "line": 30371,
             "description": "Creates the base ItagClass: the highest Class in the hierarchy of all ItagClasses.\nWill get extra properties merge into its prototype, which leads into the formation of `ItagBaseClass`.",
             "itemtype": "method",
             "name": "createItagBaseClass",
@@ -41265,7 +41265,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 30341,
+            "line": 30385,
             "description": "The base ItagClass: the highest Class in the hierarchy of all ItagClasses.",
             "itemtype": "property",
             "name": "ItagBaseClass",
@@ -41276,7 +41276,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 30354,
+            "line": 30398,
             "description": "Calculated value of the specified member at the parent-Class.",
             "itemtype": "method",
             "name": "$superProp",
@@ -41290,41 +41290,41 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 30528,
+            "line": 30572,
             "description": "If `TYPED_ARRAY_SUPPORT`:\n  === true    Use Uint8Array implementation (fastest)\n  === false   Use Object implementation (most compatible, even IE6)\n\nBrowsers that support typed arrays are IE 10+, Firefox 4+, Chrome 7+, Safari 5.1+,\nOpera 11.6+, iOS 4.2+.\n\nNote:\n\n- Implementation must support adding new properties to `Uint8Array` instances.\n  Firefox 4-29 lacked support, fixed in Firefox 30+.\n  See: https://bugzilla.mozilla.org/show_bug.cgi?id=695438.\n\n - Chrome 9-10 is missing the `TypedArray.prototype.subarray` function.\n\n - IE10 has a broken `TypedArray.prototype.subarray` function which returns arrays of\n   incorrect length in some situations.\n\nWe detect these buggy browsers and set `TYPED_ARRAY_SUPPORT` to `false` so they will\nget the Object implementation, which is slower but will work correctly.",
             "class": "ItagBaseClass",
             "module": "itags.core"
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 30563,
+            "line": 30607,
             "description": "Class: Buffer\n=============\n\nThe Buffer constructor returns instances of `Uint8Array` that are augmented\nwith function properties for all the node `Buffer` API functions. We use\n`Uint8Array` so that square bracket notation works as expected -- it returns\na single octet.\n\nBy augmenting the instances, we can avoid modifying the `Uint8Array`\nprototype.",
             "class": "ItagBaseClass",
             "module": "itags.core"
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 31476,
+            "line": 31520,
             "description": "Creates a new `ArrayBuffer` with the *copied* memory of the buffer instance.\nAdded in Node 0.12. Only available in browsers that support ArrayBuffer.",
             "class": "ItagBaseClass",
             "module": "itags.core"
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 31501,
+            "line": 31545,
             "description": "Augment a Uint8Array *instance* (not the Uint8Array class!) with Buffer methods",
             "class": "ItagBaseClass",
             "module": "itags.core"
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 32828,
+            "line": 32872,
             "class": "ItagBaseClass",
             "module": "itags.core"
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 32837,
+            "line": 32881,
             "description": "The `punycode` object.",
             "name": "punycode",
             "type": "Object",
@@ -41333,43 +41333,43 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 32844,
+            "line": 32888,
             "class": "ItagBaseClass",
             "module": "itags.core"
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 32847,
+            "line": 32891,
             "class": "ItagBaseClass",
             "module": "itags.core"
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 32857,
+            "line": 32901,
             "class": "ItagBaseClass",
             "module": "itags.core"
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 32862,
+            "line": 32906,
             "class": "ItagBaseClass",
             "module": "itags.core"
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 32869,
+            "line": 32913,
             "class": "ItagBaseClass",
             "module": "itags.core"
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 32874,
+            "line": 32918,
             "class": "ItagBaseClass",
             "module": "itags.core"
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 32879,
+            "line": 32923,
             "description": "A generic error utility function.",
             "access": "private",
             "tagname": "",
@@ -41389,7 +41389,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 32889,
+            "line": 32933,
             "description": "A generic `Array#map` utility function.",
             "access": "private",
             "tagname": "",
@@ -41414,7 +41414,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 32905,
+            "line": 32949,
             "description": "A simple `Array#map`-like wrapper to work with domain name strings.",
             "access": "private",
             "tagname": "",
@@ -41439,7 +41439,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 32918,
+            "line": 32962,
             "description": "Creates an array containing the numeric code points of each Unicode\ncharacter in the string. While JavaScript uses UCS-2 internally,\nthis function will convert a pair of surrogate halves (each of which\nUCS-2 exposes as separate characters) into a single code point,\nmatching UTF-16.",
             "see": [
                 "`punycode.ucs2.encode`",
@@ -41463,7 +41463,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 32957,
+            "line": 33001,
             "description": "Creates a string based on an array of numeric code points.",
             "see": [
                 "`punycode.ucs2.decode`"
@@ -41486,7 +41486,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 32978,
+            "line": 33022,
             "description": "Converts a basic code point into a digit/integer.",
             "see": [
                 "`digitToBasic()`"
@@ -41509,7 +41509,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 33000,
+            "line": 33044,
             "description": "Converts a digit/integer into a basic code point.",
             "see": [
                 "`basicToDigit()`"
@@ -41532,7 +41532,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 33017,
+            "line": 33061,
             "description": "Bias adaptation function as per section 3.4 of RFC 3492.\nhttp://tools.ietf.org/html/rfc3492#section-3.4",
             "access": "private",
             "tagname": "",
@@ -41541,7 +41541,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 33032,
+            "line": 33076,
             "description": "Converts a Punycode string of ASCII-only symbols to a string of Unicode\nsymbols.",
             "memberof": "punycode",
             "params": [
@@ -41560,13 +41560,13 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 33055,
+            "line": 33099,
             "class": "ItagBaseClass",
             "module": "itags.core"
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 33133,
+            "line": 33177,
             "description": "Converts a string of Unicode symbols to a Punycode string of ASCII-only\nsymbols.",
             "memberof": "punycode",
             "params": [
@@ -41585,19 +41585,19 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 33153,
+            "line": 33197,
             "class": "ItagBaseClass",
             "module": "itags.core"
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 33155,
+            "line": 33199,
             "class": "ItagBaseClass",
             "module": "itags.core"
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 33247,
+            "line": 33291,
             "description": "Converts a Punycode string representing a domain name to Unicode. Only the\nPunycoded parts of the domain name will be converted, i.e. it doesn't\nmatter if you call it on a string that has already been converted to\nUnicode.",
             "memberof": "punycode",
             "params": [
@@ -41616,7 +41616,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 33265,
+            "line": 33309,
             "description": "Converts a Unicode string representing a domain name to Punycode. Only the\nnon-ASCII parts of the domain name will be converted, i.e. it doesn't\nmatter if you call it with a domain that's already in ASCII.",
             "memberof": "punycode",
             "params": [
@@ -41635,13 +41635,13 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 33283,
+            "line": 33327,
             "class": "ItagBaseClass",
             "module": "itags.core"
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 33285,
+            "line": 33329,
             "description": "A string representing the current Punycode.js version number.",
             "memberof": "punycode",
             "type": "String",
@@ -41650,7 +41650,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 33291,
+            "line": 33335,
             "description": "An object of methods to convert from JavaScript's internal character\nrepresentation (UCS-2) to Unicode code points, and back.",
             "see": [
                 "<http://mathiasbynens.be/notes/javascript-encoding>"
@@ -41662,13 +41662,13 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 33308,
+            "line": 33352,
             "class": "ItagBaseClass",
             "module": "itags.core"
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 36515,
+            "line": 36559,
             "description": "Echos the value of a value. Trys to print the value out\nin the best way possible given the different types.",
             "params": [
                 {
@@ -41687,7 +41687,7 @@
         },
         {
             "file": "site-preview/dist/itagsbuild.js",
-            "line": 36955,
+            "line": 36999,
             "description": "Inherit the prototype methods from one constructor into another.\n\nThe Function.prototype.inherits from lang.js rewritten as a standalone\nfunction (not on Function.prototype). NOTE: If this file is to be loaded\nduring bootstrapping this function needs to be rewritten using some native\nfunctions as prototype setup using normal JavaScript does not work as\nexpected during bootstrapping (see mirror.js in r114903).",
             "params": [
                 {
@@ -41932,7 +41932,7 @@
         },
         {
             "file": "src/i-select/i-select.js",
-            "line": 284,
+            "line": 289,
             "description": "Redefines the childNodes of both the vnode as well as its related dom-node. The new\ndefinition replaces any previous nodes. (without touching unmodified nodes).\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "_setChildNodes",
@@ -41953,7 +41953,7 @@
         },
         {
             "file": "src/i-tabpane/i-tabpane.js",
-            "line": 68,
+            "line": 69,
             "description": "Redefines the childNodes of both the vnode as well as its related dom-node. The new\ndefinition replaces any previous nodes. (without touching unmodified nodes).\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "_setChildNodes",
@@ -41973,7 +41973,7 @@
         },
         {
             "file": "src/i-tabpane/i-tabpane.js",
-            "line": 112,
+            "line": 127,
             "description": "Redefines the childNodes of both the vnode as well as its related dom-node. The new\ndefinition replaces any previous nodes. (without touching unmodified nodes).\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "_setChildNodes",
@@ -42325,7 +42325,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 585,
+            "line": 593,
             "description": "Binds a model to the itag-element, making element.model equals the bound model.\nImmediately syncs the itag with the new model-data.\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "bindModel",
@@ -42354,7 +42354,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 628,
+            "line": 636,
             "description": "Retrieves modeldata set by the server inside the itag-element and binds this data into element.model",
             "itemtype": "method",
             "name": "extractModel",
@@ -42375,7 +42375,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 662,
+            "line": 670,
             "description": "Retrieves content set by the definition of the iTag. The content should be inside a comment-node\ninside the itag. The returnvalue is a container-node (DIV) where the content\n-as is specified by the comment-node- lies within as true HTML.",
             "itemtype": "method",
             "name": "extractContent",
@@ -42396,7 +42396,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 699,
+            "line": 707,
             "description": "Function that can be used ad the `filterFn` of event-listeners.\nReturns true for any HTML-element that is a rendered itag.",
             "itemtype": "method",
             "name": "itagFilter",
@@ -42417,7 +42417,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 714,
+            "line": 722,
             "description": "Copies elemtn.model values into the attibute-values of the element.\nOnly processes the attributes that are defined through the Itag-class its `attrs`-property.",
             "itemtype": "method",
             "name": "modelToAttrs",
@@ -42434,7 +42434,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 733,
+            "line": 741,
             "description": "Searches through the dom for the specified itags and upgrades its HTMLElement.",
             "itemtype": "method",
             "name": "renderDomElements",
@@ -42451,7 +42451,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 753,
+            "line": 761,
             "description": "Defines which domevents should lead to a direct sync by the Event-finalizer.\nOnly needed for events that are in the list set by DEFAULT_DELAYED_FINALIZE_EVENTS:\n\n<ul>\n    <li>mousedown</li>\n    <li>mouseup</li>\n    <li>mousemove</li>\n    <li>panmove</li>\n    <li>panstart</li>\n    <li>panleft</li>\n    <li>panright</li>\n    <li>panup</li>\n    <li>pandown</li>\n    <li>pinchmove</li>\n    <li>rotatemove</li>\n    <li>focus</li>\n    <li>manualfocus</li>\n    <li>keydown</li>\n    <li>keyup</li>\n    <li>keypress</li>\n    <li>blur</li>\n    <li>resize</li>\n    <li>scroll</li>\n</ul>\n\nEvents that are not in this list don't need to be set: they always go through the finalizer immediatly.\n\nYou need to set this if the itag-definition its `sync`-method should be updated after one of the events in the list.",
             "itemtype": "method",
             "name": "setItagDirectEventResponse",
@@ -42473,7 +42473,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 827,
+            "line": 835,
             "description": "Defines the itag-element as being rendered.",
             "itemtype": "method",
             "name": "setRendered",
@@ -42490,7 +42490,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 842,
+            "line": 850,
             "description": "Sets up all general itag-emitters.",
             "itemtype": "method",
             "name": "setupEmitters",
@@ -42500,7 +42500,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 852,
+            "line": 860,
             "description": "Emitted when an itag changed its content",
             "itemtype": "event",
             "name": "*:change",
@@ -42524,7 +42524,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 869,
+            "line": 877,
             "description": "Sets up all itag-watchers, giving itags its life behaviour.",
             "itemtype": "method",
             "name": "setupWatchers",
@@ -42534,7 +42534,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 994,
+            "line": 1002,
             "description": "Upgrades the HTMLElement into an itag defined by domElementConstructor.",
             "itemtype": "method",
             "name": "upgradeElement",
@@ -42556,7 +42556,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 1077,
+            "line": 1085,
             "description": "Resets the focus on the right element inside an itag-instance after syncing.\nOnly when a focusmanager is active and has focus.",
             "itemtype": "method",
             "name": "manageFocus",
@@ -42575,7 +42575,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 1092,
+            "line": 1100,
             "description": "Reference to the original document.createElement.",
             "itemtype": "method",
             "name": "_createElement",
@@ -42598,7 +42598,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 1104,
+            "line": 1112,
             "description": "Binds a model to the itag-element, making element.model equals the bound model.\nImmediately syncs the itag with the new model-data.\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "bindModel",
@@ -42637,7 +42637,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 1160,
+            "line": 1168,
             "description": "Redefinition of document.createElement, enabling creation of itags.",
             "itemtype": "method",
             "name": "createElement",
@@ -42664,7 +42664,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 1185,
+            "line": 1193,
             "description": "Internal hash containing all DOM-events that are listened for (at `document`).",
             "itemtype": "property",
             "name": "createItag",
@@ -42695,7 +42695,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 1201,
+            "line": 1209,
             "description": "Refreshes all Itag-elements in the dom by syncing their element.model onto the attributes and calling their `sync`-method.",
             "itemtype": "method",
             "name": "refreshItags",
@@ -42706,7 +42706,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 1252,
+            "line": 1260,
             "description": "Backup of the original `mergePrototypes`-method.",
             "itemtype": "method",
             "name": "mergePrototypes",
@@ -42731,7 +42731,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 1264,
+            "line": 1272,
             "description": "Merges the given prototypes of properties into the `prototype` of the Class.\n\n**Note1 ** to be used on instances --> ONLY on Classes\n**Note2 ** properties with getters and/or unwritable will NOT be merged\n\nThe members in the hash prototypes will become members with\ninstances of the merged class.\n\nBy default, this method will not override existing prototype members,\nunless the second argument `force` is true.\n\nIn case of merging properties into an itag, a `*:prototypechange`-event gets emitted",
             "itemtype": "method",
             "name": "mergePrototypes",
@@ -42763,7 +42763,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 1295,
+            "line": 1303,
             "description": "Emitted when prototypes are set on an existing Itag-Class.",
             "itemtype": "event",
             "name": "*:prototypechange",
@@ -42792,7 +42792,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 1313,
+            "line": 1321,
             "description": "Subclasses in Itag-Class into a pseudo-class: retaining its tagname, yet still subclassing.\nThe pseudoclass gets identified by `i-parentclass#pseudo` and once rendered it has the signature of:\n&lt;i-parentclass&gt; is=\"pseudo\" &lt;/i-parentclass&gt;\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "pseudoClass",
@@ -42840,7 +42840,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 1346,
+            "line": 1354,
             "description": "Backup of the original `removePrototypes`-method.",
             "itemtype": "method",
             "name": "_removePrototypes",
@@ -42859,7 +42859,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 1357,
+            "line": 1365,
             "description": "Redefines the childNodes of both the vnode as well as its related dom-node. The new\ndefinition replaces any previous nodes. (without touching unmodified nodes).\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "removePrototypes",
@@ -42876,7 +42876,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 1377,
+            "line": 1385,
             "description": "Emitted when prototypes are removed off an existing Itag-Class.",
             "itemtype": "event",
             "name": "*:prototyperemove",
@@ -42900,7 +42900,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 1397,
+            "line": 1405,
             "description": "Backup of the original `setConstructor`-method.",
             "itemtype": "method",
             "name": "_setConstructor",
@@ -42932,7 +42932,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 1410,
+            "line": 1418,
             "description": "Redefines the constructor fo the Class",
             "itemtype": "method",
             "name": "setConstructor",
@@ -42963,7 +42963,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 1429,
+            "line": 1437,
             "description": "Redefines the childNodes of both the vnode as well as its related dom-node. The new\ndefinition replaces any previous nodes. (without touching unmodified nodes).\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "subClass",
@@ -43012,7 +43012,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 1541,
+            "line": 1549,
             "description": "Binds a model to the itag-element, making element.model equals the bound model.\nImmediately syncs the itag with the new model-data.\n\nSyncs the new vnode's childNodes with the dom.",
             "itemtype": "method",
             "name": "bindModel",
@@ -43046,7 +43046,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 1576,
+            "line": 1584,
             "description": "Removes the attribute from the Element.\nIn case of an Itag --> will remove the property of element.model\n\nUse removeAttr() to be able to chain.",
             "itemtype": "method",
             "name": "removeAttr",
@@ -43070,7 +43070,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 1602,
+            "line": 1610,
             "description": "Sets the attribute on the Element with the specified value.\nIn case of an Itag --> will remove the property of element.model\n\nAlias for setAttr(), BUT differs in a way that setAttr is chainable, setAttribute is not.",
             "itemtype": "method",
             "name": "setAttribute",
@@ -43099,7 +43099,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 1645,
+            "line": 1653,
             "description": "Flag that tells whether the HTMLElement is an Itag",
             "itemtype": "method",
             "name": "isItag",
@@ -43113,7 +43113,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 1661,
+            "line": 1669,
             "description": "Creates the base ItagClass: the highest Class in the hierarchy of all ItagClasses.\nWill get extra properties merge into its prototype, which leads into the formation of `ItagBaseClass`.",
             "itemtype": "method",
             "name": "createItagBaseClass",
@@ -43129,7 +43129,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 1675,
+            "line": 1683,
             "description": "The base ItagClass: the highest Class in the hierarchy of all ItagClasses.",
             "itemtype": "property",
             "name": "ItagBaseClass",
@@ -43140,7 +43140,7 @@
         },
         {
             "file": "src/itags.core/itags.core.js",
-            "line": 1688,
+            "line": 1696,
             "description": "Calculated value of the specified member at the parent-Class.",
             "itemtype": "method",
             "name": "$superProp",
@@ -45108,91 +45108,91 @@
         },
         {
             "message": "unknown tag: name",
-            "line": " site/dist/itagsbuild.js:32837"
+            "line": " site/dist/itagsbuild.js:32881"
         },
         {
             "message": "replacing incorrect tag: returns with return",
-            "line": " site/dist/itagsbuild.js:32879"
+            "line": " site/dist/itagsbuild.js:32923"
         },
         {
             "message": "replacing incorrect tag: returns with return",
-            "line": " site/dist/itagsbuild.js:32889"
+            "line": " site/dist/itagsbuild.js:32933"
         },
         {
             "message": "replacing incorrect tag: returns with return",
-            "line": " site/dist/itagsbuild.js:32905"
+            "line": " site/dist/itagsbuild.js:32949"
         },
         {
             "message": "unknown tag: memberof",
-            "line": " site/dist/itagsbuild.js:32918"
+            "line": " site/dist/itagsbuild.js:32962"
         },
         {
             "message": "unknown tag: name",
-            "line": " site/dist/itagsbuild.js:32918"
+            "line": " site/dist/itagsbuild.js:32962"
         },
         {
             "message": "replacing incorrect tag: returns with return",
-            "line": " site/dist/itagsbuild.js:32918"
+            "line": " site/dist/itagsbuild.js:32962"
         },
         {
             "message": "unknown tag: memberof",
-            "line": " site/dist/itagsbuild.js:32957"
+            "line": " site/dist/itagsbuild.js:33001"
         },
         {
             "message": "unknown tag: name",
-            "line": " site/dist/itagsbuild.js:32957"
+            "line": " site/dist/itagsbuild.js:33001"
         },
         {
             "message": "replacing incorrect tag: returns with return",
-            "line": " site/dist/itagsbuild.js:32957"
+            "line": " site/dist/itagsbuild.js:33001"
         },
         {
             "message": "replacing incorrect tag: returns with return",
-            "line": " site/dist/itagsbuild.js:32978"
+            "line": " site/dist/itagsbuild.js:33022"
         },
         {
             "message": "replacing incorrect tag: returns with return",
-            "line": " site/dist/itagsbuild.js:33000"
+            "line": " site/dist/itagsbuild.js:33044"
         },
         {
             "message": "unknown tag: memberof",
-            "line": " site/dist/itagsbuild.js:33032"
+            "line": " site/dist/itagsbuild.js:33076"
         },
         {
             "message": "replacing incorrect tag: returns with return",
-            "line": " site/dist/itagsbuild.js:33032"
+            "line": " site/dist/itagsbuild.js:33076"
         },
         {
             "message": "unknown tag: memberof",
-            "line": " site/dist/itagsbuild.js:33133"
+            "line": " site/dist/itagsbuild.js:33177"
         },
         {
             "message": "replacing incorrect tag: returns with return",
-            "line": " site/dist/itagsbuild.js:33133"
-        },
-        {
-            "message": "unknown tag: memberof",
-            "line": " site/dist/itagsbuild.js:33247"
-        },
-        {
-            "message": "replacing incorrect tag: returns with return",
-            "line": " site/dist/itagsbuild.js:33247"
-        },
-        {
-            "message": "unknown tag: memberof",
-            "line": " site/dist/itagsbuild.js:33265"
-        },
-        {
-            "message": "replacing incorrect tag: returns with return",
-            "line": " site/dist/itagsbuild.js:33265"
-        },
-        {
-            "message": "unknown tag: memberof",
-            "line": " site/dist/itagsbuild.js:33285"
+            "line": " site/dist/itagsbuild.js:33177"
         },
         {
             "message": "unknown tag: memberof",
             "line": " site/dist/itagsbuild.js:33291"
+        },
+        {
+            "message": "replacing incorrect tag: returns with return",
+            "line": " site/dist/itagsbuild.js:33291"
+        },
+        {
+            "message": "unknown tag: memberof",
+            "line": " site/dist/itagsbuild.js:33309"
+        },
+        {
+            "message": "replacing incorrect tag: returns with return",
+            "line": " site/dist/itagsbuild.js:33309"
+        },
+        {
+            "message": "unknown tag: memberof",
+            "line": " site/dist/itagsbuild.js:33329"
+        },
+        {
+            "message": "unknown tag: memberof",
+            "line": " site/dist/itagsbuild.js:33335"
         },
         {
             "message": "replacing incorrect tag: returns with return",
@@ -45444,91 +45444,91 @@
         },
         {
             "message": "unknown tag: name",
-            "line": " site-preview/dist/itagsbuild.js:32837"
+            "line": " site-preview/dist/itagsbuild.js:32881"
         },
         {
             "message": "replacing incorrect tag: returns with return",
-            "line": " site-preview/dist/itagsbuild.js:32879"
+            "line": " site-preview/dist/itagsbuild.js:32923"
         },
         {
             "message": "replacing incorrect tag: returns with return",
-            "line": " site-preview/dist/itagsbuild.js:32889"
+            "line": " site-preview/dist/itagsbuild.js:32933"
         },
         {
             "message": "replacing incorrect tag: returns with return",
-            "line": " site-preview/dist/itagsbuild.js:32905"
+            "line": " site-preview/dist/itagsbuild.js:32949"
         },
         {
             "message": "unknown tag: memberof",
-            "line": " site-preview/dist/itagsbuild.js:32918"
+            "line": " site-preview/dist/itagsbuild.js:32962"
         },
         {
             "message": "unknown tag: name",
-            "line": " site-preview/dist/itagsbuild.js:32918"
+            "line": " site-preview/dist/itagsbuild.js:32962"
         },
         {
             "message": "replacing incorrect tag: returns with return",
-            "line": " site-preview/dist/itagsbuild.js:32918"
+            "line": " site-preview/dist/itagsbuild.js:32962"
         },
         {
             "message": "unknown tag: memberof",
-            "line": " site-preview/dist/itagsbuild.js:32957"
+            "line": " site-preview/dist/itagsbuild.js:33001"
         },
         {
             "message": "unknown tag: name",
-            "line": " site-preview/dist/itagsbuild.js:32957"
+            "line": " site-preview/dist/itagsbuild.js:33001"
         },
         {
             "message": "replacing incorrect tag: returns with return",
-            "line": " site-preview/dist/itagsbuild.js:32957"
+            "line": " site-preview/dist/itagsbuild.js:33001"
         },
         {
             "message": "replacing incorrect tag: returns with return",
-            "line": " site-preview/dist/itagsbuild.js:32978"
+            "line": " site-preview/dist/itagsbuild.js:33022"
         },
         {
             "message": "replacing incorrect tag: returns with return",
-            "line": " site-preview/dist/itagsbuild.js:33000"
+            "line": " site-preview/dist/itagsbuild.js:33044"
         },
         {
             "message": "unknown tag: memberof",
-            "line": " site-preview/dist/itagsbuild.js:33032"
+            "line": " site-preview/dist/itagsbuild.js:33076"
         },
         {
             "message": "replacing incorrect tag: returns with return",
-            "line": " site-preview/dist/itagsbuild.js:33032"
+            "line": " site-preview/dist/itagsbuild.js:33076"
         },
         {
             "message": "unknown tag: memberof",
-            "line": " site-preview/dist/itagsbuild.js:33133"
+            "line": " site-preview/dist/itagsbuild.js:33177"
         },
         {
             "message": "replacing incorrect tag: returns with return",
-            "line": " site-preview/dist/itagsbuild.js:33133"
-        },
-        {
-            "message": "unknown tag: memberof",
-            "line": " site-preview/dist/itagsbuild.js:33247"
-        },
-        {
-            "message": "replacing incorrect tag: returns with return",
-            "line": " site-preview/dist/itagsbuild.js:33247"
-        },
-        {
-            "message": "unknown tag: memberof",
-            "line": " site-preview/dist/itagsbuild.js:33265"
-        },
-        {
-            "message": "replacing incorrect tag: returns with return",
-            "line": " site-preview/dist/itagsbuild.js:33265"
-        },
-        {
-            "message": "unknown tag: memberof",
-            "line": " site-preview/dist/itagsbuild.js:33285"
+            "line": " site-preview/dist/itagsbuild.js:33177"
         },
         {
             "message": "unknown tag: memberof",
             "line": " site-preview/dist/itagsbuild.js:33291"
+        },
+        {
+            "message": "replacing incorrect tag: returns with return",
+            "line": " site-preview/dist/itagsbuild.js:33291"
+        },
+        {
+            "message": "unknown tag: memberof",
+            "line": " site-preview/dist/itagsbuild.js:33309"
+        },
+        {
+            "message": "replacing incorrect tag: returns with return",
+            "line": " site-preview/dist/itagsbuild.js:33309"
+        },
+        {
+            "message": "unknown tag: memberof",
+            "line": " site-preview/dist/itagsbuild.js:33329"
+        },
+        {
+            "message": "unknown tag: memberof",
+            "line": " site-preview/dist/itagsbuild.js:33335"
         },
         {
             "message": "Missing item type\nRequire the given path.",
@@ -48136,135 +48136,135 @@
         },
         {
             "message": "Missing item type\nIf `TYPED_ARRAY_SUPPORT`:\n  === true    Use Uint8Array implementation (fastest)\n  === false   Use Object implementation (most compatible, even IE6)\n\nBrowsers that support typed arrays are IE 10+, Firefox 4+, Chrome 7+, Safari 5.1+,\nOpera 11.6+, iOS 4.2+.\n\nNote:\n\n- Implementation must support adding new properties to `Uint8Array` instances.\n  Firefox 4-29 lacked support, fixed in Firefox 30+.\n  See: https://bugzilla.mozilla.org/show_bug.cgi?id=695438.\n\n - Chrome 9-10 is missing the `TypedArray.prototype.subarray` function.\n\n - IE10 has a broken `TypedArray.prototype.subarray` function which returns arrays of\n   incorrect length in some situations.\n\nWe detect these buggy browsers and set `TYPED_ARRAY_SUPPORT` to `false` so they will\nget the Object implementation, which is slower but will work correctly.",
-            "line": " site/dist/itagsbuild.js:30528"
+            "line": " site/dist/itagsbuild.js:30572"
         },
         {
             "message": "Missing item type\nClass: Buffer\n=============\n\nThe Buffer constructor returns instances of `Uint8Array` that are augmented\nwith function properties for all the node `Buffer` API functions. We use\n`Uint8Array` so that square bracket notation works as expected -- it returns\na single octet.\n\nBy augmenting the instances, we can avoid modifying the `Uint8Array`\nprototype.",
-            "line": " site/dist/itagsbuild.js:30563"
+            "line": " site/dist/itagsbuild.js:30607"
         },
         {
             "message": "Missing item type\nCreates a new `ArrayBuffer` with the *copied* memory of the buffer instance.\nAdded in Node 0.12. Only available in browsers that support ArrayBuffer.",
-            "line": " site/dist/itagsbuild.js:31476"
+            "line": " site/dist/itagsbuild.js:31520"
         },
         {
             "message": "Missing item type\nAugment a Uint8Array *instance* (not the Uint8Array class!) with Buffer methods",
-            "line": " site/dist/itagsbuild.js:31501"
+            "line": " site/dist/itagsbuild.js:31545"
         },
         {
             "message": "Missing item type",
-            "line": " site/dist/itagsbuild.js:32828"
+            "line": " site/dist/itagsbuild.js:32872"
         },
         {
             "message": "Missing item type\nThe `punycode` object.",
-            "line": " site/dist/itagsbuild.js:32837"
+            "line": " site/dist/itagsbuild.js:32881"
         },
         {
             "message": "Missing item type",
-            "line": " site/dist/itagsbuild.js:32844"
+            "line": " site/dist/itagsbuild.js:32888"
         },
         {
             "message": "Missing item type",
-            "line": " site/dist/itagsbuild.js:32847"
+            "line": " site/dist/itagsbuild.js:32891"
         },
         {
             "message": "Missing item type",
-            "line": " site/dist/itagsbuild.js:32857"
+            "line": " site/dist/itagsbuild.js:32901"
         },
         {
             "message": "Missing item type",
-            "line": " site/dist/itagsbuild.js:32862"
+            "line": " site/dist/itagsbuild.js:32906"
         },
         {
             "message": "Missing item type",
-            "line": " site/dist/itagsbuild.js:32869"
+            "line": " site/dist/itagsbuild.js:32913"
         },
         {
             "message": "Missing item type",
-            "line": " site/dist/itagsbuild.js:32874"
-        },
-        {
-            "message": "Missing item type\nA generic error utility function.",
-            "line": " site/dist/itagsbuild.js:32879"
-        },
-        {
-            "message": "Missing item type\nA generic `Array#map` utility function.",
-            "line": " site/dist/itagsbuild.js:32889"
-        },
-        {
-            "message": "Missing item type\nA simple `Array#map`-like wrapper to work with domain name strings.",
-            "line": " site/dist/itagsbuild.js:32905"
-        },
-        {
-            "message": "Missing item type\nCreates an array containing the numeric code points of each Unicode\ncharacter in the string. While JavaScript uses UCS-2 internally,\nthis function will convert a pair of surrogate halves (each of which\nUCS-2 exposes as separate characters) into a single code point,\nmatching UTF-16.",
             "line": " site/dist/itagsbuild.js:32918"
         },
         {
+            "message": "Missing item type\nA generic error utility function.",
+            "line": " site/dist/itagsbuild.js:32923"
+        },
+        {
+            "message": "Missing item type\nA generic `Array#map` utility function.",
+            "line": " site/dist/itagsbuild.js:32933"
+        },
+        {
+            "message": "Missing item type\nA simple `Array#map`-like wrapper to work with domain name strings.",
+            "line": " site/dist/itagsbuild.js:32949"
+        },
+        {
+            "message": "Missing item type\nCreates an array containing the numeric code points of each Unicode\ncharacter in the string. While JavaScript uses UCS-2 internally,\nthis function will convert a pair of surrogate halves (each of which\nUCS-2 exposes as separate characters) into a single code point,\nmatching UTF-16.",
+            "line": " site/dist/itagsbuild.js:32962"
+        },
+        {
             "message": "Missing item type\nCreates a string based on an array of numeric code points.",
-            "line": " site/dist/itagsbuild.js:32957"
+            "line": " site/dist/itagsbuild.js:33001"
         },
         {
             "message": "Missing item type\nConverts a basic code point into a digit/integer.",
-            "line": " site/dist/itagsbuild.js:32978"
+            "line": " site/dist/itagsbuild.js:33022"
         },
         {
             "message": "Missing item type\nConverts a digit/integer into a basic code point.",
-            "line": " site/dist/itagsbuild.js:33000"
+            "line": " site/dist/itagsbuild.js:33044"
         },
         {
             "message": "Missing item type\nBias adaptation function as per section 3.4 of RFC 3492.\nhttp://tools.ietf.org/html/rfc3492#section-3.4",
-            "line": " site/dist/itagsbuild.js:33017"
+            "line": " site/dist/itagsbuild.js:33061"
         },
         {
             "message": "Missing item type\nConverts a Punycode string of ASCII-only symbols to a string of Unicode\nsymbols.",
-            "line": " site/dist/itagsbuild.js:33032"
+            "line": " site/dist/itagsbuild.js:33076"
         },
         {
             "message": "Missing item type",
-            "line": " site/dist/itagsbuild.js:33055"
+            "line": " site/dist/itagsbuild.js:33099"
         },
         {
             "message": "Missing item type\nConverts a string of Unicode symbols to a Punycode string of ASCII-only\nsymbols.",
-            "line": " site/dist/itagsbuild.js:33133"
+            "line": " site/dist/itagsbuild.js:33177"
         },
         {
             "message": "Missing item type",
-            "line": " site/dist/itagsbuild.js:33153"
+            "line": " site/dist/itagsbuild.js:33197"
         },
         {
             "message": "Missing item type",
-            "line": " site/dist/itagsbuild.js:33155"
+            "line": " site/dist/itagsbuild.js:33199"
         },
         {
             "message": "Missing item type\nConverts a Punycode string representing a domain name to Unicode. Only the\nPunycoded parts of the domain name will be converted, i.e. it doesn't\nmatter if you call it on a string that has already been converted to\nUnicode.",
-            "line": " site/dist/itagsbuild.js:33247"
-        },
-        {
-            "message": "Missing item type\nConverts a Unicode string representing a domain name to Punycode. Only the\nnon-ASCII parts of the domain name will be converted, i.e. it doesn't\nmatter if you call it with a domain that's already in ASCII.",
-            "line": " site/dist/itagsbuild.js:33265"
-        },
-        {
-            "message": "Missing item type",
-            "line": " site/dist/itagsbuild.js:33283"
-        },
-        {
-            "message": "Missing item type\nA string representing the current Punycode.js version number.",
-            "line": " site/dist/itagsbuild.js:33285"
-        },
-        {
-            "message": "Missing item type\nAn object of methods to convert from JavaScript's internal character\nrepresentation (UCS-2) to Unicode code points, and back.",
             "line": " site/dist/itagsbuild.js:33291"
         },
         {
+            "message": "Missing item type\nConverts a Unicode string representing a domain name to Punycode. Only the\nnon-ASCII parts of the domain name will be converted, i.e. it doesn't\nmatter if you call it with a domain that's already in ASCII.",
+            "line": " site/dist/itagsbuild.js:33309"
+        },
+        {
             "message": "Missing item type",
-            "line": " site/dist/itagsbuild.js:33308"
+            "line": " site/dist/itagsbuild.js:33327"
+        },
+        {
+            "message": "Missing item type\nA string representing the current Punycode.js version number.",
+            "line": " site/dist/itagsbuild.js:33329"
+        },
+        {
+            "message": "Missing item type\nAn object of methods to convert from JavaScript's internal character\nrepresentation (UCS-2) to Unicode code points, and back.",
+            "line": " site/dist/itagsbuild.js:33335"
+        },
+        {
+            "message": "Missing item type",
+            "line": " site/dist/itagsbuild.js:33352"
         },
         {
             "message": "Missing item type\nEchos the value of a value. Trys to print the value out\nin the best way possible given the different types.",
-            "line": " site/dist/itagsbuild.js:36515"
+            "line": " site/dist/itagsbuild.js:36559"
         },
         {
             "message": "Missing item type\nInherit the prototype methods from one constructor into another.\n\nThe Function.prototype.inherits from lang.js rewritten as a standalone\nfunction (not on Function.prototype). NOTE: If this file is to be loaded\nduring bootstrapping this function needs to be rewritten using some native\nfunctions as prototype setup using normal JavaScript does not work as\nexpected during bootstrapping (see mirror.js in r114903).",
-            "line": " site/dist/itagsbuild.js:36955"
+            "line": " site/dist/itagsbuild.js:36999"
         },
         {
             "message": "Missing item type\nUtility function takes `object` and `namespace` and overrides `valueOf`\nmethod of `object`, so that when called with a `namespace` argument,\n`private` object associated with this `namespace` is returned. If argument\nis different, `valueOf` falls back to original `valueOf` property.",
@@ -48940,135 +48940,135 @@
         },
         {
             "message": "Missing item type\nIf `TYPED_ARRAY_SUPPORT`:\n  === true    Use Uint8Array implementation (fastest)\n  === false   Use Object implementation (most compatible, even IE6)\n\nBrowsers that support typed arrays are IE 10+, Firefox 4+, Chrome 7+, Safari 5.1+,\nOpera 11.6+, iOS 4.2+.\n\nNote:\n\n- Implementation must support adding new properties to `Uint8Array` instances.\n  Firefox 4-29 lacked support, fixed in Firefox 30+.\n  See: https://bugzilla.mozilla.org/show_bug.cgi?id=695438.\n\n - Chrome 9-10 is missing the `TypedArray.prototype.subarray` function.\n\n - IE10 has a broken `TypedArray.prototype.subarray` function which returns arrays of\n   incorrect length in some situations.\n\nWe detect these buggy browsers and set `TYPED_ARRAY_SUPPORT` to `false` so they will\nget the Object implementation, which is slower but will work correctly.",
-            "line": " site-preview/dist/itagsbuild.js:30528"
+            "line": " site-preview/dist/itagsbuild.js:30572"
         },
         {
             "message": "Missing item type\nClass: Buffer\n=============\n\nThe Buffer constructor returns instances of `Uint8Array` that are augmented\nwith function properties for all the node `Buffer` API functions. We use\n`Uint8Array` so that square bracket notation works as expected -- it returns\na single octet.\n\nBy augmenting the instances, we can avoid modifying the `Uint8Array`\nprototype.",
-            "line": " site-preview/dist/itagsbuild.js:30563"
+            "line": " site-preview/dist/itagsbuild.js:30607"
         },
         {
             "message": "Missing item type\nCreates a new `ArrayBuffer` with the *copied* memory of the buffer instance.\nAdded in Node 0.12. Only available in browsers that support ArrayBuffer.",
-            "line": " site-preview/dist/itagsbuild.js:31476"
+            "line": " site-preview/dist/itagsbuild.js:31520"
         },
         {
             "message": "Missing item type\nAugment a Uint8Array *instance* (not the Uint8Array class!) with Buffer methods",
-            "line": " site-preview/dist/itagsbuild.js:31501"
+            "line": " site-preview/dist/itagsbuild.js:31545"
         },
         {
             "message": "Missing item type",
-            "line": " site-preview/dist/itagsbuild.js:32828"
+            "line": " site-preview/dist/itagsbuild.js:32872"
         },
         {
             "message": "Missing item type\nThe `punycode` object.",
-            "line": " site-preview/dist/itagsbuild.js:32837"
+            "line": " site-preview/dist/itagsbuild.js:32881"
         },
         {
             "message": "Missing item type",
-            "line": " site-preview/dist/itagsbuild.js:32844"
+            "line": " site-preview/dist/itagsbuild.js:32888"
         },
         {
             "message": "Missing item type",
-            "line": " site-preview/dist/itagsbuild.js:32847"
+            "line": " site-preview/dist/itagsbuild.js:32891"
         },
         {
             "message": "Missing item type",
-            "line": " site-preview/dist/itagsbuild.js:32857"
+            "line": " site-preview/dist/itagsbuild.js:32901"
         },
         {
             "message": "Missing item type",
-            "line": " site-preview/dist/itagsbuild.js:32862"
+            "line": " site-preview/dist/itagsbuild.js:32906"
         },
         {
             "message": "Missing item type",
-            "line": " site-preview/dist/itagsbuild.js:32869"
+            "line": " site-preview/dist/itagsbuild.js:32913"
         },
         {
             "message": "Missing item type",
-            "line": " site-preview/dist/itagsbuild.js:32874"
-        },
-        {
-            "message": "Missing item type\nA generic error utility function.",
-            "line": " site-preview/dist/itagsbuild.js:32879"
-        },
-        {
-            "message": "Missing item type\nA generic `Array#map` utility function.",
-            "line": " site-preview/dist/itagsbuild.js:32889"
-        },
-        {
-            "message": "Missing item type\nA simple `Array#map`-like wrapper to work with domain name strings.",
-            "line": " site-preview/dist/itagsbuild.js:32905"
-        },
-        {
-            "message": "Missing item type\nCreates an array containing the numeric code points of each Unicode\ncharacter in the string. While JavaScript uses UCS-2 internally,\nthis function will convert a pair of surrogate halves (each of which\nUCS-2 exposes as separate characters) into a single code point,\nmatching UTF-16.",
             "line": " site-preview/dist/itagsbuild.js:32918"
         },
         {
+            "message": "Missing item type\nA generic error utility function.",
+            "line": " site-preview/dist/itagsbuild.js:32923"
+        },
+        {
+            "message": "Missing item type\nA generic `Array#map` utility function.",
+            "line": " site-preview/dist/itagsbuild.js:32933"
+        },
+        {
+            "message": "Missing item type\nA simple `Array#map`-like wrapper to work with domain name strings.",
+            "line": " site-preview/dist/itagsbuild.js:32949"
+        },
+        {
+            "message": "Missing item type\nCreates an array containing the numeric code points of each Unicode\ncharacter in the string. While JavaScript uses UCS-2 internally,\nthis function will convert a pair of surrogate halves (each of which\nUCS-2 exposes as separate characters) into a single code point,\nmatching UTF-16.",
+            "line": " site-preview/dist/itagsbuild.js:32962"
+        },
+        {
             "message": "Missing item type\nCreates a string based on an array of numeric code points.",
-            "line": " site-preview/dist/itagsbuild.js:32957"
+            "line": " site-preview/dist/itagsbuild.js:33001"
         },
         {
             "message": "Missing item type\nConverts a basic code point into a digit/integer.",
-            "line": " site-preview/dist/itagsbuild.js:32978"
+            "line": " site-preview/dist/itagsbuild.js:33022"
         },
         {
             "message": "Missing item type\nConverts a digit/integer into a basic code point.",
-            "line": " site-preview/dist/itagsbuild.js:33000"
+            "line": " site-preview/dist/itagsbuild.js:33044"
         },
         {
             "message": "Missing item type\nBias adaptation function as per section 3.4 of RFC 3492.\nhttp://tools.ietf.org/html/rfc3492#section-3.4",
-            "line": " site-preview/dist/itagsbuild.js:33017"
+            "line": " site-preview/dist/itagsbuild.js:33061"
         },
         {
             "message": "Missing item type\nConverts a Punycode string of ASCII-only symbols to a string of Unicode\nsymbols.",
-            "line": " site-preview/dist/itagsbuild.js:33032"
+            "line": " site-preview/dist/itagsbuild.js:33076"
         },
         {
             "message": "Missing item type",
-            "line": " site-preview/dist/itagsbuild.js:33055"
+            "line": " site-preview/dist/itagsbuild.js:33099"
         },
         {
             "message": "Missing item type\nConverts a string of Unicode symbols to a Punycode string of ASCII-only\nsymbols.",
-            "line": " site-preview/dist/itagsbuild.js:33133"
+            "line": " site-preview/dist/itagsbuild.js:33177"
         },
         {
             "message": "Missing item type",
-            "line": " site-preview/dist/itagsbuild.js:33153"
+            "line": " site-preview/dist/itagsbuild.js:33197"
         },
         {
             "message": "Missing item type",
-            "line": " site-preview/dist/itagsbuild.js:33155"
+            "line": " site-preview/dist/itagsbuild.js:33199"
         },
         {
             "message": "Missing item type\nConverts a Punycode string representing a domain name to Unicode. Only the\nPunycoded parts of the domain name will be converted, i.e. it doesn't\nmatter if you call it on a string that has already been converted to\nUnicode.",
-            "line": " site-preview/dist/itagsbuild.js:33247"
-        },
-        {
-            "message": "Missing item type\nConverts a Unicode string representing a domain name to Punycode. Only the\nnon-ASCII parts of the domain name will be converted, i.e. it doesn't\nmatter if you call it with a domain that's already in ASCII.",
-            "line": " site-preview/dist/itagsbuild.js:33265"
-        },
-        {
-            "message": "Missing item type",
-            "line": " site-preview/dist/itagsbuild.js:33283"
-        },
-        {
-            "message": "Missing item type\nA string representing the current Punycode.js version number.",
-            "line": " site-preview/dist/itagsbuild.js:33285"
-        },
-        {
-            "message": "Missing item type\nAn object of methods to convert from JavaScript's internal character\nrepresentation (UCS-2) to Unicode code points, and back.",
             "line": " site-preview/dist/itagsbuild.js:33291"
         },
         {
+            "message": "Missing item type\nConverts a Unicode string representing a domain name to Punycode. Only the\nnon-ASCII parts of the domain name will be converted, i.e. it doesn't\nmatter if you call it with a domain that's already in ASCII.",
+            "line": " site-preview/dist/itagsbuild.js:33309"
+        },
+        {
             "message": "Missing item type",
-            "line": " site-preview/dist/itagsbuild.js:33308"
+            "line": " site-preview/dist/itagsbuild.js:33327"
+        },
+        {
+            "message": "Missing item type\nA string representing the current Punycode.js version number.",
+            "line": " site-preview/dist/itagsbuild.js:33329"
+        },
+        {
+            "message": "Missing item type\nAn object of methods to convert from JavaScript's internal character\nrepresentation (UCS-2) to Unicode code points, and back.",
+            "line": " site-preview/dist/itagsbuild.js:33335"
+        },
+        {
+            "message": "Missing item type",
+            "line": " site-preview/dist/itagsbuild.js:33352"
         },
         {
             "message": "Missing item type\nEchos the value of a value. Trys to print the value out\nin the best way possible given the different types.",
-            "line": " site-preview/dist/itagsbuild.js:36515"
+            "line": " site-preview/dist/itagsbuild.js:36559"
         },
         {
             "message": "Missing item type\nInherit the prototype methods from one constructor into another.\n\nThe Function.prototype.inherits from lang.js rewritten as a standalone\nfunction (not on Function.prototype). NOTE: If this file is to be loaded\nduring bootstrapping this function needs to be rewritten using some native\nfunctions as prototype setup using normal JavaScript does not work as\nexpected during bootstrapping (see mirror.js in r114903).",
-            "line": " site-preview/dist/itagsbuild.js:36955"
+            "line": " site-preview/dist/itagsbuild.js:36999"
         }
     ]
 }
