@@ -355,7 +355,6 @@ module.exports = function (window) {
             * @since 0.0.1
             */
             sync: function() {
-console.warn(&#x27;syncing i-tabpane&#x27;);
                 // inside sync, YOU CANNOT change attributes which are part of &#x60;attrs&#x60; !!!
                 // those actions will be ignored.
 
@@ -374,7 +373,6 @@ console.warn(&#x27;syncing i-tabpane&#x27;);
                     container = element.getElement(&#x27;div.container&#x27;),
                     content = &#x27;&#x27;,
                     i, tabItem, index;
-console.info(element.getOuterHTML());
                 index = pane - 1;
                 for (i=0; i&lt;len; i++) {
                     tabItem = tabs[i];

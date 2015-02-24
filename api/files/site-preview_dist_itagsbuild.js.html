@@ -9187,13 +9187,37 @@ module.exports = function (window) {
             zIndex: true
         },
         // CSS_PROPS_TO_CALCULATE.transform is set later on by the vendor specific transform-property
-        htmlToVFragments = function(html, nameSpace) {
-            var vnodes = htmlToVNodes(html, vNodeProto, nameSpace),
+        htmlToVFragments = function(html, nameSpace, allowScripts) {
+            var vnodes = htmlToVNodes(html, vNodeProto, nameSpace, null, null, allowScripts),
                 len = vnodes.length,
-                vnode, i, bkpAttrs, bkpVChildNodes;
+                _cleanupStyle = false,
+                vnode, i, bkpAttrs, bkpVChildNodes, scriptContent, _scripts, _scriptVNodes, scriptVNode;
+
             for (i=0; i&lt;len; i++) {
                 vnode = vnodes[i];
                 if (vnode.nodeType===1) {
+                    (vnode.tag===&#x27;STYLE&#x27;) &amp;&amp; (_cleanupStyle=true);
+                    if (vnode.tag===&#x27;SCRIPT&#x27;) {
+                        scriptContent = (vnode.attrs &amp;&amp; vnode.attrs.src) ? vnode.attrs.src : vnode.vChildNodes[0].text;
+                        // check if the parent has this script set:
+                        // parent didn&#x27;t had the script set: we will process
+                        // but we need to remove the node once it is set
+                        // also: the script&#x27;s content will be stored on is parent,
+                        // so we know can compare future comparision.
+                        _scripts || (_scripts=[]);
+                        _scripts[_scripts.length] = scriptContent;
+                        _scriptVNodes || (_scriptVNodes=[]);
+                        _scriptVNodes[_scriptVNodes.length] = vnode;
+                        // CREATE INNER TEXTNODE
+                        scriptVNode = Object.create(vNodeProto);
+                        scriptVNode.nodeType = 3;
+                        scriptVNode.domNode = DOCUMENT.createTextNode(scriptContent);
+                        // create circular reference:
+                        scriptVNode.domNode._vnode = scriptVNode;
+                        scriptVNode.text = scriptContent;
+                        scriptVNode.vParent = vnode;
+                        vnode.vChildNodes = [scriptVNode];
+                    }
                     // same tag --&gt; only update what is needed
                     bkpAttrs = vnode.attrs;
                     bkpVChildNodes = vnode.vChildNodes;
@@ -9212,7 +9236,10 @@ module.exports = function (window) {
             }
             return {
                 isFragment: true,
-                vnodes: vnodes
+                vnodes: vnodes,
+                _scripts: _scripts,
+                _scriptVNodes: _scriptVNodes,
+                _cleanupStyle: _cleanupStyle
             };
         },
         toCamelCase = function(input) {
@@ -9952,6 +9979,37 @@ module.exports = function (window) {
             return transitions;
         };
 
+        /**
+         * Inserts a system-HTMLElement. These are child-Elements, just like other children, but they have a slightly different behaviour:
+         *
+         * &lt;ul&gt;
+         *     &lt;li&gt;They get inserted as the first of the children&lt;/li&gt;
+         *     &lt;li&gt;They don&#x27;t show up when querying&lt;/li&gt;
+         *     &lt;li&gt;They retain whenever new content is set for the parent-Element&lt;/li&gt;
+         * &lt;/ul&gt;
+         *
+         * System-Elements are useful f.e. when you want to add special features to an Element, like scrolling or resizing. You can add &#x60;helper-elements&#x60;
+         * (the system-elements) which keep hidden (protected) and retain whenever the Element changes his content.
+         *
+         * @method addSystemElement
+         * @param content {Element|ElementArray|String} content to append
+         * @param [escape] {Boolean} whether to insert &#x60;escaped&#x60; content, leading it into only text inserted
+         * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
+         * @return {Element} the created Element (or the last when multiple)
+         */
+        ElementPrototype.addSystemElement = function(content, escape, silent) {
+            var instance = this,
+                vChildNodes = instance.vnode.vChildNodes,
+                len = vChildNodes.length,
+                systemElement, refElement, i;
+            for (i=0; (i&lt;len) &amp;&amp; !refElement; i++) {
+                vChildNodes[i]._systemNode || (refElement=vChildNodes[i].domNode);
+            }
+            systemElement = refElement ? instance.prepend(content, escape, refElement, silent) : instance.append(content, escape, refElement, silent);
+            systemElement.vnode._systemNode = true;
+            return systemElement;
+        };
+
        /**
         * Appends an Element or an Element&#x27;s string-representation at the end of Element&#x27;s innerHTML, or before the &#x60;refElement&#x60;.
         *
@@ -9961,14 +10019,15 @@ module.exports = function (window) {
         * @param [escape] {Boolean} whether to insert &#x60;escaped&#x60; content, leading it into only text inserted
         * @param [refElement] {Element} reference Element where the content should be appended
         * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
+        * @param [allowScripts=false] {Boolean} whether scripts are allowed --&gt; these should be defined with &#x60;xscript&#x60; instead of &#x60;script&#x60;
         * @return {Element} the created Element (or the last when multiple)
         * @since 0.0.1
         */
-        ElementPrototype.append = function(content, escape, refElement, silent) {
+        ElementPrototype.append = function(content, escape, refElement, silent, allowScripts) {
             var instance = this,
                 vnode = instance.vnode,
                 prevSuppress = DOCUMENT._suppressMutationEvents || false,
-                i, len, item, createdElement, vnodes, vRefElement,
+                i, len, item, createdElement, vnodes, vRefElement, _scripts, scriptcontent,
             doAppend = function(oneItem) {
                 escape &amp;&amp; (oneItem.nodeType===1) &amp;&amp; (oneItem=DOCUMENT.createTextNode(oneItem.getOuterHTML()));
                 createdElement = refElement ? vnode._insertBefore(oneItem.vnode, refElement.vnode) : vnode._appendChild(oneItem.vnode);
@@ -9979,13 +10038,27 @@ module.exports = function (window) {
                 vRefElement = refElement.vnode.vNext;
                 refElement = vRefElement &amp;&amp; vRefElement.domNode;
             }
-            (typeof content===STRING) &amp;&amp; (content=htmlToVFragments(content, vnode.ns));
+            (typeof content===STRING) &amp;&amp; (content=htmlToVFragments(content, vnode.ns, allowScripts));
             if (content.isFragment) {
                 vnodes = content.vnodes;
                 len = vnodes.length;
                 for (i=0; i&lt;len; i++) {
                     doAppend(vnodes[i].domNode);
                 }
+/*jshint boss:true */
+                if (_scripts=content._scripts) {
+/*jshint boss:false */
+                    len = _scripts.length;
+                    vnode._scripts || (vnode._scripts=[]);
+                    for (i=0; i&lt;len; i++) {
+                        scriptcontent = _scripts[i];
+                        if (!vnode._scripts.contains(scriptcontent)) {
+                            vnode._scripts[vnode._scripts.length] = scriptcontent;
+                        }
+                    }
+                }
+                // in case a style-tag was added, we need to cleanup double definitions:
+                content._cleanupStyle &amp;&amp; vnode._cleanupStyle();
             }
             else if (Array.isArray(content)) {
                 len = content.length;
@@ -10147,14 +10220,14 @@ module.exports = function (window) {
          * @method contains
          * @param otherElement {Element}
          * @param [excludeItself] {Boolean} to exclude itsefl as a hit
-         * @param [insideItags=false] {Boolean} no deepsearch in iTags --&gt; by default, these elements should be hidden
+         * @param [inspectProtectedNodes=false] {Boolean} no deepsearch in protected Nodes or iTags --&gt; by default, these elements should be hidden
          * @return {Boolean} whether this Element contains OR equals otherElement.
          */
-        ElementPrototype.contains = function(otherElement, excludeItself, insideItags) {
+        ElementPrototype.contains = function(otherElement, excludeItself, inspectProtectedNodes) {
             if (otherElement===this) {
                 return !excludeItself;
             }
-            return this.vnode.contains(otherElement.vnode, !insideItags);
+            return !!otherElement &amp;&amp; this.vnode.contains(otherElement.vnode, !inspectProtectedNodes);
         };
 
         /**
@@ -10223,13 +10296,14 @@ module.exports = function (window) {
         *
         * @method empty
         * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
+        * @param [full=false] {Boolean} whether system-nodes should be removed as well
         * @chainable
         * @since 0.0.1
         */
-        ElementPrototype.empty = function(silent) {
+        ElementPrototype.empty = function(silent, full) {
             var prevSuppress = DOCUMENT._suppressMutationEvents || false;
             silent &amp;&amp; DOCUMENT.suppressMutationEvents &amp;&amp; DOCUMENT.suppressMutationEvents(true);
-            this.vnode.empty();
+            this.vnode.empty(full);
             silent &amp;&amp; DOCUMENT.suppressMutationEvents &amp;&amp; DOCUMENT.suppressMutationEvents(prevSuppress);
         };
 
@@ -10395,12 +10469,12 @@ module.exports = function (window) {
          *
          * @method getAll
          * @param cssSelector {String} css-selector to match
-         * @param [insideItags=false] {Boolean} no deepsearch in iTags --&gt; by default, these elements should be hidden
+         * @param [inspectProtectedNodes=false] {Boolean} no deepsearch in protected Nodes or iTags --&gt; by default, these elements should be hidden
          * @return {ElementArray} ElementArray of Elements that match the css-selector
          * @since 0.0.1
          */
-        ElementPrototype.getAll = function(cssSelector, insideItags) {
-            return this.querySelectorAll(cssSelector, insideItags);
+        ElementPrototype.getAll = function(cssSelector, inspectProtectedNodes) {
+            return this.querySelectorAll(cssSelector, inspectProtectedNodes);
         };
 
        /**
@@ -10500,12 +10574,12 @@ module.exports = function (window) {
         *
         * @method getElement
         * @param cssSelector {String} css-selector to match
-        * @param [insideItags=false] {Boolean} no deepsearch in iTags --&gt; by default, these elements should be hidden
+         * @param [inspectProtectedNodes=false] {Boolean} no deepsearch in protected Nodes or iTags --&gt; by default, these elements should be hidden
         * @return {Element|null} the Element that was search for
         * @since 0.0.1
         */
-        ElementPrototype.getElement = function(cssSelector, insideItags) {
-            return ((cssSelector[0]===&#x27;#&#x27;) &amp;&amp; (cssSelector.indexOf(&#x27; &#x27;)===-1)) ? this.getElementById(cssSelector.substr(1)) : this.querySelector(cssSelector, insideItags);
+        ElementPrototype.getElement = function(cssSelector, inspectProtectedNodes) {
+            return ((cssSelector[0]===&#x27;#&#x27;) &amp;&amp; (cssSelector.indexOf(&#x27; &#x27;)===-1)) ? this.getElementById(cssSelector.substr(1)) : this.querySelector(cssSelector, inspectProtectedNodes);
         };
 
         /**
@@ -10513,13 +10587,13 @@ module.exports = function (window) {
          *
          * @method getElementById
          * @param id {String} id of the Element
-         * @param [insideItags=false] {Boolean} no deepsearch in iTags --&gt; by default, these elements should be hidden
+         * @param [inspectProtectedNodes=false] {Boolean} no deepsearch in protected Nodes or iTags --&gt; by default, these elements should be hidden
          * @return {Element|null}
          *
          */
-        ElementPrototype.getElementById = function(id, insideItags) {
+        ElementPrototype.getElementById = function(id, inspectProtectedNodes) {
             var element = nodeids[id];
-            if (element &amp;&amp; !this.contains(element, true, insideItags)) {
+            if (element &amp;&amp; !this.contains(element, true, inspectProtectedNodes)) {
                 // outside itself
                 return null;
             }
@@ -11185,14 +11259,15 @@ module.exports = function (window) {
         * @param [escape] {Boolean} whether to insert &#x60;escaped&#x60; content, leading it into only text inserted
         * @param [refElement] {Element} reference Element where the content should be prepended
         * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
+        * @param [allowScripts=false] {Boolean} whether scripts are allowed --&gt; these should be defined with &#x60;xscript&#x60; instead of &#x60;script&#x60;
         * @return {Element} the created Element (or the last when multiple)
         * @since 0.0.1
         */
-        ElementPrototype.prepend = function(content, escape, refElement, silent) {
+        ElementPrototype.prepend = function(content, escape, refElement, silent, allowScripts) {
             var instance = this,
                 vnode = instance.vnode,
                 prevSuppress = DOCUMENT._suppressMutationEvents || false,
-                i, len, item, createdElement, vnodes, vChildNodes, vRefElement,
+                i, len, item, createdElement, vnodes, vChildNodes, _scripts, scriptcontent,
             doPrepend = function(oneItem) {
                 escape &amp;&amp; (oneItem.nodeType===1) &amp;&amp; (oneItem=DOCUMENT.createTextNode(oneItem.getOuterHTML()));
                 createdElement = refElement ? vnode._insertBefore(oneItem.vnode, refElement.vnode) : vnode._appendChild(oneItem.vnode);
@@ -11203,10 +11278,14 @@ module.exports = function (window) {
             vnode._noSync()._normalizable(false);
             if (!refElement) {
                 vChildNodes = vnode.vChildNodes;
-                vRefElement = vChildNodes &amp;&amp; vChildNodes[0];
-                refElement = vRefElement &amp;&amp; vRefElement.domNode;
+                if (vChildNodes) {
+                    len = vChildNodes.length;
+                    for (i=0; (i&lt;len) &amp;&amp; !refElement; i++) {
+                        vChildNodes[i]._systemNode || (refElement=vChildNodes[i].domNode);
+                    }
+                }
             }
-            (typeof content===STRING) &amp;&amp; (content=htmlToVFragments(content, vnode.ns));
+            (typeof content===STRING) &amp;&amp; (content=htmlToVFragments(content, vnode.ns, allowScripts));
             if (content.isFragment) {
                 vnodes = content.vnodes;
                 len = vnodes.length;
@@ -11214,6 +11293,20 @@ module.exports = function (window) {
                 for (i=len-1; i&gt;=0; i--) {
                     doPrepend(vnodes[i].domNode);
                 }
+/*jshint boss:true */
+                if (_scripts=content._scripts) {
+/*jshint boss:false */
+                    len = _scripts.length;
+                    vnode._scripts || (vnode._scripts=[]);
+                    for (i=0; i&lt;len; i++) {
+                        scriptcontent = _scripts[i];
+                        if (!vnode._scripts.contains(scriptcontent)) {
+                            vnode._scripts[vnode._scripts.length] = scriptcontent;
+                        }
+                    }
+                }
+                // in case a style-tag was added, we need to cleanup double definitions:
+                content._cleanupStyle &amp;&amp; vnode._cleanupStyle();
             }
             else if (Array.isArray(content)) {
                 len = content.length;
@@ -11277,7 +11370,7 @@ module.exports = function (window) {
          *
          * @method querySelector
          * @param selectors {String} CSS-selector(s) that should match
-         * @param [insideItags=false] {Boolean} no deepsearch in iTags --&gt; by default, these elements should be hidden
+         * @param [inspectProtectedNodes=false] {Boolean} no deepsearch in protected Nodes or iTags --&gt; by default, these elements should be hidden
          * @param [refNode] {HTMLElement} reference-node where the found node should be &#x60;before&#x60; or &#x60;after&#x60;: specified by domPosition
          * @param [domPosition] {Number} The position to accept, compared to &#x60;refNode&#x60;. Should be either:
          * &lt;ul&gt;
@@ -11286,7 +11379,7 @@ module.exports = function (window) {
          * &lt;/ul&gt;
          * @return {Element}
          */
-        ElementPrototype.querySelector = function(selectors, insideItags, refNode, domPosition) {
+        ElementPrototype.querySelector = function(selectors, inspectProtectedNodes, refNode, domPosition) {
             var found,
                 i = -1,
                 thisvnode = this.vnode,
@@ -11296,13 +11389,25 @@ module.exports = function (window) {
             inspectChildren = function(vnode) {
                 var vChildren = vnode.vChildren,
                     len2 = vChildren ? vChildren.length : 0,
-                    j, vChildNode;
+                    j, vChildNode, noDeep;
                 for (j=0; (j&lt;len2) &amp;&amp; !found; j++) {
                     vChildNode = vChildren[j];
                     if (vChildNode.matchesSelector(selectors, thisvnode) &amp;&amp; (!refNode || ((vChildNode.domNode.compareDocumentPosition(refNode) &amp; domPosition)!==0))) {
-                        found = vChildNode.domNode;
+                        if (!vChildNode._systemNode || inspectProtectedNodes) {
+                            found = vChildNode.domNode;
+                        }
                     }
-                    found || (!insideItags &amp;&amp; vChildNode.isItag &amp;&amp; vChildNode.domNode.contentHidden) || inspectChildren(vChildNode); // not dive into itags (except from when content is not hidden)
+                    if (!found) {
+                        if (!inspectProtectedNodes) {
+                            if (vChildNode._systemNode || (vChildNode.isItag &amp;&amp; vChildNode.domNode.contentHidden)) {
+                                noDeep = true;
+                            }
+                        }
+                        else {
+                            noDeep = false;
+                        }
+                        noDeep || inspectChildren(vChildNode);
+                    }
                 }
             };
             while (!firstCharacter &amp;&amp; (++i&lt;len)) {
@@ -11322,7 +11427,7 @@ module.exports = function (window) {
          *
          * @method querySelectorAll
          * @param selectors {String} CSS-selector(s) that should match
-         * @param [insideItags=false] {Boolean} no deepsearch in iTags --&gt; by default, these elements should be hidden
+         * @param [inspectProtectedNodes=false] {Boolean} no deepsearch in protected Nodes or iTags --&gt; by default, these elements should be hidden
          * @param [refNode] {HTMLElement} reference-node where the found nodes should be &#x60;before&#x60; or &#x60;after&#x60;: specified by domPosition
          * @param [domPosition] {Number} The position to accept, compared to &#x60;refNode&#x60;. Should be either:
          * &lt;ul&gt;
@@ -11331,7 +11436,7 @@ module.exports = function (window) {
          * &lt;/ul&gt;
          * @return {ElementArray} non-life Array (snapshot) with Elements
          */
-        ElementPrototype.querySelectorAll = function(selectors, insideItags, refNode, domPosition) {
+        ElementPrototype.querySelectorAll = function(selectors, inspectProtectedNodes, refNode, domPosition) {
             var found = ElementArray.createArray(),
                 i = -1,
                 thisvnode = this.vnode,
@@ -11341,13 +11446,23 @@ module.exports = function (window) {
             inspectChildren = function(vnode) {
                 var vChildren = vnode.vChildren,
                     len2 = vChildren ? vChildren.length : 0,
-                    j, vChildNode;
+                    j, vChildNode, noDeep;
                 for (j=0; j&lt;len2; j++) {
                     vChildNode = vChildren[j];
                     if (vChildNode.matchesSelector(selectors, thisvnode) &amp;&amp; (!refNode || ((vChildNode.domNode.compareDocumentPosition(refNode) &amp; domPosition)!==0))) {
-                        found[found.length] = vChildNode.domNode;
+                        if (!vChildNode._systemNode || inspectProtectedNodes) {
+                            found[found.length] = vChildNode.domNode;
+                        }
                     }
-                    (!insideItags &amp;&amp; vChildNode.isItag &amp;&amp; vChildNode.domNode.contentHidden) || inspectChildren(vChildNode); // not dive into itags
+                    if (!inspectProtectedNodes) {
+                        if (vChildNode._systemNode || (vChildNode.isItag &amp;&amp; vChildNode.domNode.contentHidden)) {
+                            noDeep = true;
+                        }
+                    }
+                    else {
+                        noDeep = false;
+                    }
+                    noDeep || inspectChildren(vChildNode);
                 }
             };
             while (!firstCharacter &amp;&amp; (++i&lt;len)) {
@@ -12068,14 +12183,15 @@ module.exports = function (window) {
          * @method setHTML
          * @param val {String} the new value to be set
          * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
+         * @param [allowScripts=false] {Boolean} whether scripts are allowed --&gt; these should be defined with &#x60;xscript&#x60; instead of &#x60;script&#x60;
          * @chainable
          * @since 0.0.1
          */
-        ElementPrototype.setHTML = function(val, silent) {
+        ElementPrototype.setHTML = function(val, silent, allowScripts) {
             var instance = this,
                 prevSuppress = DOCUMENT._suppressMutationEvents || false;
             silent &amp;&amp; DOCUMENT.suppressMutationEvents &amp;&amp; DOCUMENT.suppressMutationEvents(true);
-            instance.vnode.innerHTML = val;
+            instance.vnode.setHTML(val, null, allowScripts);
             silent &amp;&amp; DOCUMENT.suppressMutationEvents &amp;&amp; DOCUMENT.suppressMutationEvents(prevSuppress);
             return instance;
         };
@@ -13690,7 +13806,7 @@ module.exports = function (window) {
          * @return {Array} array with &#x60;vnodes&#x60;
          * @since 0.0.1
          */
-        htmlToVNodes = window._ITSAmodules.HtmlParser = function(htmlString, vNodeProto, nameSpace, parentVNode, suppressItagRender) {
+        htmlToVNodes = window._ITSAmodules.HtmlParser = function(htmlString, vNodeProto, nameSpace, parentVNode, suppressItagRender, allowScripts) {
             var i = 0,
                 vnodes = [],
                 insideTagDefinition, insideComment, innerText, endTagCount, stringMarker, attributeisString, attribute, attributeValue, nestedComments,
@@ -13804,19 +13920,30 @@ module.exports = function (window) {
                             vnode.vChildNodes = [scriptVNode];
                         }
                         else {
-                            vnode.vChildNodes = (innerText!==&#x27;&#x27;) ? htmlToVNodes(innerText, vNodeProto, vnode.ns, vnode, suppressItagRender) : [];
+                            vnode.vChildNodes = (innerText!==&#x27;&#x27;) ? htmlToVNodes(innerText, vNodeProto, vnode.ns, vnode, suppressItagRender, allowScripts) : [];
                         }
                     }
                     else {
                         i++; // compensate for the &#x27;&gt;&#x27;
                     }
 
-                    //vnode.domNode can only be set after inspecting the attributes --&gt; there might be an &#x60;is&#x60; attribute
-                    tagdefinition = tag.toLowerCase();
-                    if (vnode.isItag &amp;&amp; (is=vnode.attrs.is) &amp;&amp; !is.contains(&#x27;-&#x27;)) {
-                        tagdefinition = tag + &#x27;#&#x27; + is;
+                    // just to be sure there won&#x27;t be a &#x60;script&#x60;-tag passed inside the argument (something modern browsers never let happen):
+                    (tag===&#x27;SCRIPT&#x27;) &amp;&amp; (tag===&#x27;XSCRIPT&#x27;);
+
+                    // the string-parser expects &lt;/xscript&gt; for &#x60;script&#x60;-tags
+                    if ((tag===&#x27;XSCRIPT&#x27;) &amp;&amp; allowScripts) {
+                        tagdefinition = &#x27;script&#x27;;
+                        vnode.tag = &#x27;SCRIPT&#x27;;
                     }
-                    vnode.domNode = vnode.ns ? DOCUMENT.createElementNS(vnode.ns, tagdefinition) : DOCUMENT.createElement(tagdefinition, suppressItagRender);
+                    else {
+                        tagdefinition = tag.toLowerCase();
+                        //vnode.domNode can only be set after inspecting the attributes --&gt; there might be an &#x60;is&#x60; attribute
+                        if (vnode.isItag &amp;&amp; (is=vnode.attrs.is) &amp;&amp; !is.contains(&#x27;-&#x27;)) {
+                            tagdefinition = tag + &#x27;#&#x27; + is;
+                        }
+                    }
+
+                    vnode.domNode = vnode.ns ? DOCUMENT.createElementNS(vnode.ns, tagdefinition) : DOCUMENT.createElement(tagdefinition, suppressItagRender, allowScripts);
                     // create circular reference:
                     vnode.domNode._vnode = vnode;
 
@@ -13989,7 +14116,7 @@ module.exports = function (window) {
         domNodeToVNode = window._ITSAmodules.NodeParser = function(domNode, parentVNode) {
             var nodeType = domNode.nodeType,
                 vnode, attributes, attr, i, len, childNodes, domChildNode, vChildNodes, tag,
-                childVNode, extractClass, extractStyle, attributeName;
+                childVNode, extractClass, extractStyle, attributeName, parentNode;
             if (!NS.VALID_NODE_TYPES[nodeType]) {
                 // only process ElementNodes, TextNodes and CommentNodes
                 return;
@@ -14043,18 +14170,27 @@ module.exports = function (window) {
                 }
 
                 if (!vnode.isVoid) {
-                    // in case of &#x27;SCRIPT&#x27; or &#x27;STYLE&#x27; tags --&gt; just use the innertext, all other tags need to be extracted
-                    if (NS.SCRIPT_OR_STYLE_TAG[tag]) {
-                        vnode.text = domNode.textContent;
+                    vChildNodes = vnode.vChildNodes = [];
+                    childNodes = domNode.childNodes;
+                    len = childNodes.length;
+                    for (i=0; i&lt;len; i++) {
+                        domChildNode = childNodes[i];
+                        childVNode = domNodeToVNode(domChildNode, vnode);
+                        vChildNodes[vChildNodes.length] = childVNode;
                     }
-                    else {
-                        vChildNodes = vnode.vChildNodes = [];
-                        childNodes = domNode.childNodes;
-                        len = childNodes.length;
-                        for (i=0; i&lt;len; i++) {
-                            domChildNode = childNodes[i];
-                            childVNode = domNodeToVNode(domChildNode, vnode);
-                            vChildNodes[vChildNodes.length] = childVNode;
+                    if (tag===&#x27;SCRIPT&#x27;) {
+                        // we register its content to its vParent and will remove it from the dom
+                        // asyncrouniously after the dom is parsed
+                        if (!parentVNode) {
+                            // try to look in the dom for its parent
+                            parentNode = domNode.parentNode;
+                            parentVNode = parentNode &amp;&amp; parentNode.vnode;
+                        }
+                        if (parentVNode) {
+                            if (len&gt;0) {
+                                parentVNode._scripts || (parentVNode._scripts=[]);
+                                parentVNode._scripts[parentVNode._scripts.length] = vChildNodes[0].text;
+                            }
                         }
                     }
                 }
@@ -14254,7 +14390,8 @@ module.exports = function (window) {
      * @since 0.0.1
      */
     NS.SCRIPT_OR_STYLE_TAG = createHashMap({
-        SCRIPT: true,
+        // the string-parser expects &lt;/xscript&gt; for &#x60;script&#x60;-tags
+        XSCRIPT: true,
         STYLE: true
     });
 
@@ -15231,13 +15368,16 @@ module.exports = function (window) {
         * @return {Boolean} whether the vnode&#x27;s domNode is equal, or contains the specified Element.
         * @since 0.0.1
         */
-        contains: function(otherVNode, noItagSearch) {
+        contains: function(otherVNode, noProtectedSearch) {
             var instance = this;
-            if (otherVNode &amp;&amp; otherVNode.destroyed) {
+            if (otherVNode &amp;&amp; (otherVNode.destroyed || (noProtectedSearch &amp;&amp; otherVNode._systemNode))) {
                 return false;
             }
-            while (otherVNode &amp;&amp; (otherVNode!==instance) &amp;&amp; (!noItagSearch || !instance.isItag || !instance.domNode.contentHidden)) {
+            while (otherVNode &amp;&amp; (otherVNode!==instance)) {
                 otherVNode = otherVNode.vParent;
+                if (otherVNode &amp;&amp; noProtectedSearch &amp;&amp; (otherVNode._systemNode || (otherVNode.isItag &amp;&amp; otherVNode.domNode.contentHidden))) {
+                    return false;
+                }
             }
             return (otherVNode===instance);
         },
@@ -15248,11 +15388,13 @@ module.exports = function (window) {
         * Syncs with the dom.
         *
         * @method empty
+        * @param [full=false] {Boolean} whether system-nodes should be removed as well
         * @chainable
         * @since 0.0.1
         */
-        empty: function() {
-            return this._setChildNodes([]);
+        empty: function(full) {
+            delete this._scripts;
+            return this._setChildNodes([], null, full);
         },
 
        /**
@@ -15301,7 +15443,7 @@ module.exports = function (window) {
                     vChildNode = vChildNodes[i];
                     switch (vChildNode.nodeType) {
                         case 1:
-                            exclude.contains(vChildNode.domNode) || (html+=vChildNode.outerHTML);
+                            exclude.contains(vChildNode.domNode) || vChildNode._systemNode || (html+=vChildNode.outerHTML);
                             break;
                         case 3:
                             html += vChildNode.text.replace(/&lt;/g, &#x27;&amp;lt;&#x27;).replace(/&gt;/g, &#x27;&amp;gt;&#x27;);
@@ -15491,12 +15633,13 @@ module.exports = function (window) {
         * @method setHTML
         * @param content {String} the innerHTML
         * @param [suppressItagRender] {Boolean} to suppress Itags from rendering
+        * @param [allowScripts=false] {Boolean} whether scripts are allowed --&gt; these should be defined with &#x60;xscript&#x60; instead of &#x60;script&#x60;
         * @chainable
         * @since 0.0.1
         */
-        setHTML: function(content, suppressItagRender) {
+        setHTML: function(content, suppressItagRender, allowScripts) {
             var instance = this;
-            instance._setChildNodes(htmlToVNodes(content, vNodeProto, instance.ns, null, suppressItagRender), suppressItagRender);
+            instance._setChildNodes(htmlToVNodes(content, vNodeProto, instance.ns, null, suppressItagRender, allowScripts), suppressItagRender);
             return instance;
         },
 
@@ -15544,20 +15687,30 @@ module.exports = function (window) {
         _appendChild: function(VNode) {
             var instance = this,
                 domNode = VNode.domNode,
-                size;
-            VNode._moveToParent(instance);
-            instance.domNode._appendChild(domNode);
-            if (VNode.nodeType===3) {
-                size = instance.vChildNodes.length;
-                instance._normalize();
-                // if the size changed, then the domNode was merged
-                (size===instance.vChildNodes.length) || (domNode=instance.vChildNodes[instance.vChildNodes.length-1].domNode);
+                size, noProccessScript, scriptContent;
+            if ((VNode.tag===&#x27;SCRIPT&#x27;) &amp;&amp; instance._scripts) {
+                // first check if the script already ran:
+                scriptContent = (VNode.attrs &amp;&amp; VNode.attrs.src) ? VNode.attrs.src : VNode.vChildNodes[0].text;
+                instance._scripts.some(function(script) {
+                    noProccessScript = (scriptContent===script);
+                    return noProccessScript;
+                });
             }
-            if (VNode.nodeType===1) {
-                VNode._addToTaglist();
-                VNode._emit(EV_INSERTED);
+            if (!noProccessScript) {
+                VNode._moveToParent(instance);
+                instance.domNode._appendChild(domNode);
+                if (VNode.nodeType===3) {
+                    size = instance.vChildNodes.length;
+                    instance._normalize();
+                    // if the size changed, then the domNode was merged
+                    (size===instance.vChildNodes.length) || (domNode=instance.vChildNodes[instance.vChildNodes.length-1].domNode);
+                }
+                if (VNode.nodeType===1) {
+                    VNode._addToTaglist();
+                    VNode._emit(EV_INSERTED);
+                }
+                return domNode;
             }
-            return domNode;
         },
 
        /**
@@ -15581,6 +15734,14 @@ module.exports = function (window) {
             return instance;
         },
 
+       /**
+        * Cleans up (empties) vnode&#x27;s &#x60;_data&#x60;
+        *
+        * @method _cleanData
+        * @private
+        * @chainable
+        * @since 0.0.1
+        */
         _cleanData: function() {
             var instance = this,
                 data = instance._data;
@@ -15590,6 +15751,38 @@ module.exports = function (window) {
                 }
             );
             return instance;
+        },
+
+       /**
+        * Cleans up (removes) duplicated &#x60;style&#x60; definitions.
+        *
+        * @method _cleanupStyle
+        * @private
+        * @chainable
+        * @since 0.0.1
+        */
+        _cleanupStyle: function() {
+            var instance = this,
+                compare = [],
+                removal = [],
+                vChildren = instance.vChildren,
+                len = vChildren.length,
+                vChild, i, styleContent;
+            for (i=0; i&lt;len; i++) {
+                vChild = vChildren[i];
+                if (vChild.tag===&#x27;STYLE&#x27;) {
+                    styleContent = vChild.vChildNodes[0].text;
+                    if (compare.contains(styleContent)) {
+                        removal[removal.length] = vChild;
+                    }
+                    else {
+                        compare[compare.length] = styleContent;
+                    }
+                }
+            }
+            removal.forEach(function(vnode) {
+                instance._removeChild(vnode);
+            });
         },
 
        /**
@@ -15632,6 +15825,8 @@ module.exports = function (window) {
                 if (DOCUMENT._itagList &amp;&amp; instance.isItag) {
                     DOCUMENT._itagList.remove(instance.domNode);
                 }
+
+                instance._scripts &amp;&amp; (instance._scripts.length=0);
 
                 // The definite cleanup needs to be done after a timeout:
                 // someone might need to handle the Element when removed (fe to cleanup specific things)
@@ -15800,17 +15995,32 @@ module.exports = function (window) {
         _insertBefore: function(newVNode, refVNode) {
             var instance = this,
                 domNode = newVNode.domNode,
-                index = instance.vChildNodes.indexOf(refVNode);
-            if (index!==-1) {
-                newVNode._moveToParent(instance, index);
-                instance.domNode._insertBefore(domNode, refVNode.domNode);
-                (newVNode.nodeType===3) &amp;&amp; instance._normalize();
-                if (newVNode.nodeType===1) {
-                    newVNode._addToTaglist();
-                    newVNode._emit(EV_INSERTED);
+                index = instance.vChildNodes.indexOf(refVNode),
+                noProccessScript, scriptContent;
+            if ((newVNode.tag===&#x27;SCRIPT&#x27;) &amp;&amp; instance._scripts) {
+                // first check if the script already ran:
+                scriptContent = (newVNode.attrs &amp;&amp; newVNode.attrs.src) ? newVNode.attrs.src : newVNode.vChildNodes[0].text;
+                instance._scripts.some(function(script) {
+                    noProccessScript = (scriptContent===script);
+                    return noProccessScript;
+                });
+            }
+            if (!noProccessScript) {
+                if (index!==-1) {
+                    newVNode._moveToParent(instance, index);
+                    instance.domNode._insertBefore(domNode, refVNode.domNode);
+                    (newVNode.nodeType===3) &amp;&amp; instance._normalize();
+                    if (newVNode.nodeType===1) {
+                        newVNode._addToTaglist();
+                        newVNode._emit(EV_INSERTED);
+                    }
+                    return domNode;
+                }
+                else {
+                    console.warn(&#x27;trying to insert before, but no ref-node found. Will append the new node&#x27;);
+                    return instance._appendChild(newVNode);
                 }
             }
-            return domNode;
         },
 
        /**
@@ -16172,105 +16382,152 @@ module.exports = function (window) {
         * @chainable
         * @since 0.0.1
         */
-        _setChildNodes: function(newVChildNodes, suppressItagRender) {
+        _setChildNodes: function(newVChildNodes, suppressItagRender, removeSystemElements) {
             // does sync the DOM
             var instance = this,
                 vChildNodes = instance.vChildNodes || [],
                 domNode = instance.domNode,
                 forRemoval = [],
-                i, oldChild, newChild, newLength, len, len2, childDomNode, nodeswitch, bkpAttrs, bkpChildNodes, needNormalize, prevSuppress;
+                i, oldChild, newChild, newLength, len, len2, childDomNode, nodeswitch, bkpAttrs, cleanupStyle,
+                process, bkpChildNodes, needNormalize, prevSuppress, scriptContent, _scripts, scriptLen, j;
 
             instance._noSync();
             // first: reset ._vChildren --&gt; by making it empty, its getter will refresh its list on a next call
             instance._vChildren = null;
             // if newVChildNodes is undefined, then we assume it to be empty --&gt; an empty array
             newVChildNodes || (newVChildNodes=[]);
+
             // quickest way to loop through array is by using for loops: http://jsperf.com/array-foreach-vs-for-loop/5
             len = vChildNodes.length;
+
+            // we need to add the systemNodes -if any- to the new newVChildNodes: they should be retained.
+            // SystemNodes are always places at the beginning, so they won&#x27;t get reshuffled:
+            if (!removeSystemElements) {
+                for (i=0; i&lt;len; i++) {
+                    oldChild = vChildNodes[i];
+                    if (oldChild._systemNode) {
+                        newVChildNodes.insertAt(oldChild, i);
+                    }
+                    else {
+                        break;
+                    }
+                }
+            }
             newLength = newVChildNodes.length;
             for (i=0; i&lt;len; i++) {
                 oldChild = vChildNodes[i];
                 childDomNode = oldChild.domNode;
+
                 if (i &lt; newLength) {
                     newChild = newVChildNodes[i];
                     newChild.vParent || (newChild.vParent=instance);
+                    // in case a &#x60;style&#x60; tag is set --&gt; we want to cleanup posible double definitions
+                    (newChild.tag===&#x27;STYLE&#x27;) &amp;&amp; (cleanupStyle=true);
 /*jshint boss:true */
                     switch (nodeswitch=NODESWITCH[oldChild.nodeType][newChild.nodeType]) {
 /*jshint boss:false */
                         case 1: // oldNodeType==Element, newNodeType==Element
-                            // iTagThatNeedsToRender = newChild.tag
-                            if ((oldChild.tag!==newChild.tag) ||
-                                ((oldChild.tag===newChild.tag) &amp;&amp; oldChild.isItag &amp;&amp; (oldChild.attrs.is!==newChild.attrs.is)) ||
-                                ((oldChild.tag===&#x27;SCRIPT&#x27;) &amp;&amp; (oldChild.text!==newChild.text))) {
-                                // new tag --&gt; completely replace
-                                bkpAttrs = newChild.attrs;
-                                bkpChildNodes = newChild.vChildNodes;
-                                oldChild.attrs.id &amp;&amp; (delete nodeids[oldChild.attrs.id]);
-/*jshint proto:true */
-                                oldChild.isItag &amp;&amp; oldChild.domNode.destroyUI &amp;&amp; oldChild.domNode.destroyUI(PROTO_SUPPORTED ? null : newChild.__proto__.constructor);
-/*jshint proto:false */
-                                newChild.attrs = {}; // reset to force defined by &#x60;_setAttrs&#x60;
-                                newChild.vChildNodes = []; // reset , to force defined by &#x60;_setAttrs&#x60;
-                                _tryReplaceChild(domNode, newChild.domNode, childDomNode);
-                                newChild.vParent = instance;
-                                newChild._setAttrs(bkpAttrs, suppressItagRender);
-                                newChild._setChildNodes(bkpChildNodes, suppressItagRender);
-                                newChild.id &amp;&amp; (nodeids[newChild.id]=newChild.domNode);
-                                oldChild._replaceAtParent(newChild);
-                                newChild._addToTaglist();
-                                newChild._emit(EV_INSERTED);
+                            // Firts check if the tag is a script:
+                            // Script-tags are removed from the dom after executed and stored inside parentVNode._scripts {Array}
+                            // where the innerHTML is stored. They don&#x27;t get re-inserted when they are already present inside this hash
+                            // This way we prevent scripts from running multiple times
+                            if (newChild.tag===&#x27;SCRIPT&#x27;) {
+                                scriptContent = (newChild.attrs &amp;&amp; newChild.attrs.src) ? newChild.attrs.src : newChild.vChildNodes[0].text;
+                                // check if the parent has this script set:
+                                process = true;
+/*jshint boss:true */
+                                if (_scripts=instance._scripts) {
+/*jshint boss:false */
+                                    scriptLen = _scripts.length;
+                                    for (j=0; process &amp;&amp; (j&lt;scriptLen); j++) {
+                                        process = (scriptContent!==scriptLen[j]);
+                                    }
+                                }
+                                if (process) {
+                                    // parent didn&#x27;t had the script set: we will process
+                                    // but we need to remove the node once it is set
+                                    // also: the script&#x27;s content will be stored on is parent,
+                                    // so we know can compare future comparision.
+                                    instance._scripts || (instance._scripts=[]);
+                                    instance._scripts[instance._scripts.length] = scriptContent;
+                                }
                             }
                             else {
-                                // same tag --&gt; only update what is needed
-                                // NOTE: when this._unchangableAttrs exists, an itag-element syncs its UI --&gt;
-                                if (oldChild._data) {
-                                    // we might need to set the class &#x60;itag-rendered&#x60; when the attributeData says so:
-                                    // this happens when an itag gets refreshed with an unrendered definition
-                                    if (oldChild._data.itagRendered &amp;&amp; !newChild.hasClass(&#x27;itag-rendered&#x27;)) {
-                                        newChild.classNames[&#x27;itag-rendered&#x27;] = true;
-                                        if (newChild.attrs[CLASS]) {
-                                            newChild.attrs[CLASS] = newChild.attrs[CLASS] + &#x27; &#x27;+&#x27;itag-rendered&#x27;;
-                                        }
-                                        else {
-                                            newChild.attrs[CLASS] = &#x27;itag-rendered&#x27;;
-                                        }
-                                    }
-                                    // we might need to set the class &#x60;focussed&#x60; when the attributeData says so:
-                                    // this happens when an itag gets rerendered: its renderFn doesn&#x27;t know if any elements
-                                    // were focussed
-                                    if (oldChild._data.focussed &amp;&amp; !newChild.hasClass(&#x27;focussed&#x27;)) {
-                                        newChild.classNames.focussed = true;
-                                        if (newChild.attrs[CLASS]) {
-                                            newChild.attrs[CLASS] = newChild.attrs[CLASS] + &#x27; &#x27; + &#x27;focussed&#x27;;
-                                        }
-                                        else {
-                                            newChild.attrs[CLASS] = &#x27;focussed&#x27;;
-                                        }
-                                    }
-                                    if (oldChild._data[&#x27;fm-tabindex&#x27;]) {
-                                        // node has the tabindex set by the focusmanager,
-                                        // but that info might got lost with re-rendering of the new element
-                                        newChild.attrs.tabindex = &#x27;0&#x27;;
-                                    }
-                                }
-                                if (oldChild.isItag) {
-                                    prevSuppress = DOCUMENT._suppressMutationEvents || false;
-                                    DOCUMENT.suppressMutationEvents &amp;&amp; DOCUMENT.suppressMutationEvents(true);
-/*jshint proto:true */
-                                    newChild.domNode.destroyUI &amp;&amp; newChild.domNode.destroyUI(PROTO_SUPPORTED ? null : newChild.__proto__.constructor);
-/*jshint proto:false */
-                                    oldChild._setAttrs(newChild.attrs, suppressItagRender);
-                                    newChild._destroy(true); // destroy through the vnode and removing from DOCUMENT._itagList
-                                    DOCUMENT.suppressMutationEvents &amp;&amp; DOCUMENT.suppressMutationEvents(prevSuppress);
+                                process = true;
+                            }
+                            if (process) {
+                                if ((oldChild.tag!==newChild.tag) ||
+                                    ((oldChild.tag===newChild.tag) &amp;&amp; oldChild.isItag &amp;&amp; (oldChild.attrs.is!==newChild.attrs.is))) {
+                                    // new tag --&gt; completely replace
+                                    bkpAttrs = newChild.attrs;
+                                    bkpChildNodes = newChild.vChildNodes;
+                                    oldChild.attrs.id &amp;&amp; (delete nodeids[oldChild.attrs.id]);
+    /*jshint proto:true */
+                                    oldChild.isItag &amp;&amp; oldChild.domNode.destroyUI &amp;&amp; oldChild.domNode.destroyUI(PROTO_SUPPORTED ? null : newChild.__proto__.constructor);
+    /*jshint proto:false */
+                                    newChild.attrs = {}; // reset to force defined by &#x60;_setAttrs&#x60;
+                                    newChild.vChildNodes = []; // reset , to force defined by &#x60;_setAttrs&#x60;
+                                    _tryReplaceChild(domNode, newChild.domNode, childDomNode);
+                                    newChild.vParent = instance;
+                                    newChild._setAttrs(bkpAttrs, suppressItagRender);
+                                    newChild._setChildNodes(bkpChildNodes, suppressItagRender);
+                                    newChild.id &amp;&amp; (nodeids[newChild.id]=newChild.domNode);
+                                    oldChild._replaceAtParent(newChild);
+                                    newChild._addToTaglist();
+                                    newChild._emit(EV_INSERTED);
                                 }
                                 else {
-                                    oldChild._setAttrs(newChild.attrs, suppressItagRender);
-                                    // next: sync the vChildNodes:
-                                    oldChild._setChildNodes(newChild.vChildNodes, suppressItagRender);
+                                    // same tag --&gt; only update what is needed
+                                    // NOTE: when this._unchangableAttrs exists, an itag-element syncs its UI --&gt;
+                                    if (oldChild._data) {
+                                        // we might need to set the class &#x60;itag-rendered&#x60; when the attributeData says so:
+                                        // this happens when an itag gets refreshed with an unrendered definition
+                                        if (oldChild._data.itagRendered &amp;&amp; !newChild.hasClass(&#x27;itag-rendered&#x27;)) {
+                                            newChild.classNames[&#x27;itag-rendered&#x27;] = true;
+                                            if (newChild.attrs[CLASS]) {
+                                                newChild.attrs[CLASS] = newChild.attrs[CLASS] + &#x27; &#x27;+&#x27;itag-rendered&#x27;;
+                                            }
+                                            else {
+                                                newChild.attrs[CLASS] = &#x27;itag-rendered&#x27;;
+                                            }
+                                        }
+                                        // we might need to set the class &#x60;focussed&#x60; when the attributeData says so:
+                                        // this happens when an itag gets rerendered: its renderFn doesn&#x27;t know if any elements
+                                        // were focussed
+                                        if (oldChild._data.focussed &amp;&amp; !newChild.hasClass(&#x27;focussed&#x27;)) {
+                                            newChild.classNames.focussed = true;
+                                            if (newChild.attrs[CLASS]) {
+                                                newChild.attrs[CLASS] = newChild.attrs[CLASS] + &#x27; &#x27; + &#x27;focussed&#x27;;
+                                            }
+                                            else {
+                                                newChild.attrs[CLASS] = &#x27;focussed&#x27;;
+                                            }
+                                        }
+                                        if (oldChild._data[&#x27;fm-tabindex&#x27;]) {
+                                            // node has the tabindex set by the focusmanager,
+                                            // but that info might got lost with re-rendering of the new element
+                                            newChild.attrs.tabindex = &#x27;0&#x27;;
+                                        }
+                                    }
+                                    if (oldChild.isItag) {
+                                        prevSuppress = DOCUMENT._suppressMutationEvents || false;
+                                        DOCUMENT.suppressMutationEvents &amp;&amp; DOCUMENT.suppressMutationEvents(true);
+    /*jshint proto:true */
+                                        newChild.domNode.destroyUI &amp;&amp; newChild.domNode.destroyUI(PROTO_SUPPORTED ? null : newChild.__proto__.constructor);
+    /*jshint proto:false */
+                                        oldChild._setAttrs(newChild.attrs, suppressItagRender);
+                                        newChild._destroy(true); // destroy through the vnode and removing from DOCUMENT._itagList
+                                        DOCUMENT.suppressMutationEvents &amp;&amp; DOCUMENT.suppressMutationEvents(prevSuppress);
+                                    }
+                                    else {
+                                        oldChild._setAttrs(newChild.attrs, suppressItagRender);
+                                        // next: sync the vChildNodes:
+                                        oldChild._setChildNodes(newChild.vChildNodes, suppressItagRender);
+                                    }
+                                    // reset ref. to the domNode, for it might have been changed by newChild:
+                                    oldChild.id &amp;&amp; (nodeids[oldChild.id]=childDomNode);
+                                    newVChildNodes[i] = oldChild;
                                 }
-                                // reset ref. to the domNode, for it might have been changed by newChild:
-                                oldChild.id &amp;&amp; (nodeids[oldChild.id]=childDomNode);
-                                newVChildNodes[i] = oldChild;
                             }
                             break;
                         case 2: // oldNodeType==Element, newNodeType==TextNode
@@ -16339,17 +16596,49 @@ module.exports = function (window) {
             for (i = len; i &lt; newLength; i++) {
                 newChild = newVChildNodes[i];
                 newChild.vParent = instance;
+                // in case a &#x60;style&#x60; tag is set --&gt; we want to cleanup posible double definitions
+                (newChild.tag===&#x27;STYLE&#x27;) &amp;&amp; (cleanupStyle=true);
                 switch (newChild.nodeType) {
                     case 1: // Element
-                        bkpAttrs = newChild.attrs;
-                        bkpChildNodes = newChild.vChildNodes;
-                        newChild.attrs = {}; // reset, to force defined by &#x60;_setAttrs&#x60;
-                        newChild.vChildNodes = []; // reset to current state, to force defined by &#x60;_setAttrs&#x60;
-                        domNode._appendChild(newChild.domNode);
-                        newChild._setAttrs(bkpAttrs, suppressItagRender);
-                        newChild._setChildNodes(bkpChildNodes, suppressItagRender);
-                        newChild._addToTaglist();
-                        newChild._emit(EV_INSERTED);
+                        // Firts check if the tag is a script:
+                        // Script-tags are removed from the dom after executed and stored inside parentVNode._scripts {Array}
+                        // where the innerHTML is stored. They don&#x27;t get re-inserted when they are already present inside this hash
+                        // This way we prevent scripts from running multiple times
+                        if (newChild.tag===&#x27;SCRIPT&#x27;) {
+                            scriptContent = (newChild.attrs &amp;&amp; newChild.attrs.src) ? newChild.attrs.src : newChild.vChildNodes[0].text;
+                            // check if the parent has this script set:
+                            process = true;
+/*jshint boss:true */
+                            if (_scripts=instance._scripts) {
+/*jshint boss:false */
+                                scriptLen = _scripts.length;
+                                for (j=0; process &amp;&amp; (j&lt;scriptLen); j++) {
+                                    process = (scriptContent!==scriptLen[j]);
+                                }
+                            }
+                            if (process) {
+                                // parent didn&#x27;t had the script set: we will process
+                                // but we need to remove the node once it is set
+                                // also: the script&#x27;s content will be stored on is parent,
+                                // so we know can compare future comparision.
+                                instance._scripts || (instance._scripts=[]);
+                                instance._scripts[instance._scripts.length] = scriptContent;
+                            }
+                        }
+                        else {
+                            process = true;
+                        }
+                        if (process) {
+                            bkpAttrs = newChild.attrs;
+                            bkpChildNodes = newChild.vChildNodes;
+                            newChild.attrs = {}; // reset, to force defined by &#x60;_setAttrs&#x60;
+                            newChild.vChildNodes = []; // reset to current state, to force defined by &#x60;_setAttrs&#x60;
+                            domNode._appendChild(newChild.domNode);
+                            newChild._setAttrs(bkpAttrs, suppressItagRender);
+                            newChild._setChildNodes(bkpChildNodes, suppressItagRender);
+                            newChild._addToTaglist();
+                            newChild._emit(EV_INSERTED);
+                        }
                         break;
                     case 3: // TextNode
                         needNormalize = true;
@@ -16365,6 +16654,7 @@ module.exports = function (window) {
             }
             instance.vChildNodes = newVChildNodes;
             needNormalize &amp;&amp; instance._normalize();
+            cleanupStyle &amp;&amp; instance._cleanupStyle();
             return instance;
         },
 
@@ -16532,7 +16822,7 @@ module.exports = function (window) {
                     instance.isVoid &amp;&amp; (html += &#x27;/&#x27;);
                     html += &#x27;&gt;&#x27;;
                     if (!instance.isVoid) {
-                        html += instance.innerHTML + &#x27;&lt;/&#x27; + instance.tag.toLowerCase() + &#x27;&gt;&#x27;;
+                        html += (instance.isItag ? &#x27;&#x27; : instance.innerHTML) + &#x27;&lt;/&#x27; + instance.tag.toLowerCase() + &#x27;&gt;&#x27;;
                     }
                 }
                 return html;
@@ -16867,7 +17157,8 @@ module.exports = function (window) {
 
 require(&#x27;js-ext/lib/object.js&#x27;);
 
-var createHashMap = require(&#x27;js-ext/extra/hashmap.js&#x27;).createMap;
+var createHashMap = require(&#x27;js-ext/extra/hashmap.js&#x27;).createMap,
+    laterSilent = require(&#x27;utils/lib/timers.js&#x27;).laterSilent;
 
 module.exports = function (window) {
 
@@ -16897,6 +17188,12 @@ module.exports = function (window) {
             // now reset:
             vnode._setAttr(&#x27;style&#x27;, rightStyle);
         });
+        // cleanup duplicated &#x60;style&#x60; elements - if any
+        // this can be done async with a small delay: no one will notice
+        laterSilent(function() {
+            var head = DOCUMENT.getElement(&#x27;head&#x27;);
+            head.vnode._cleanupStyle();
+        }, 500);
     }
     else {
         // if no HTML, then return an empty Plugin-object
@@ -16907,7 +17204,7 @@ module.exports = function (window) {
 
     return vdom;
 };
-},{&quot;./partials/element-plugin.js&quot;:75,&quot;./partials/extend-document.js&quot;:76,&quot;./partials/extend-element.js&quot;:77,&quot;./partials/node-parser.js&quot;:79,&quot;js-ext/extra/hashmap.js&quot;:43,&quot;js-ext/lib/object.js&quot;:46}],83:[function(require,module,exports){
+},{&quot;./partials/element-plugin.js&quot;:75,&quot;./partials/extend-document.js&quot;:76,&quot;./partials/extend-element.js&quot;:77,&quot;./partials/node-parser.js&quot;:79,&quot;js-ext/extra/hashmap.js&quot;:43,&quot;js-ext/lib/object.js&quot;:46,&quot;utils/lib/timers.js&quot;:62}],83:[function(require,module,exports){
 module.exports=require(17)
 },{}],84:[function(require,module,exports){
 require(&#x27;./lib/function.js&#x27;);
@@ -17160,7 +17457,7 @@ module.exports=require(80)
 module.exports=require(81)
 },{&quot;./attribute-extractor.js&quot;:138,&quot;./html-parser.js&quot;:143,&quot;./vdom-ns.js&quot;:145,&quot;js-ext/extra/hashmap.js&quot;:108,&quot;js-ext/extra/lightmap.js&quot;:109,&quot;js-ext/lib/array.js&quot;:110,&quot;js-ext/lib/object.js&quot;:111,&quot;js-ext/lib/string.js&quot;:113,&quot;polyfill&quot;:124,&quot;utils/lib/timers.js&quot;:127}],147:[function(require,module,exports){
 module.exports=require(82)
-},{&quot;./partials/element-plugin.js&quot;:140,&quot;./partials/extend-document.js&quot;:141,&quot;./partials/extend-element.js&quot;:142,&quot;./partials/node-parser.js&quot;:144,&quot;js-ext/extra/hashmap.js&quot;:108,&quot;js-ext/lib/object.js&quot;:111}],148:[function(require,module,exports){
+},{&quot;./partials/element-plugin.js&quot;:140,&quot;./partials/extend-document.js&quot;:141,&quot;./partials/extend-element.js&quot;:142,&quot;./partials/node-parser.js&quot;:144,&quot;js-ext/extra/hashmap.js&quot;:108,&quot;js-ext/lib/object.js&quot;:111,&quot;utils/lib/timers.js&quot;:127}],148:[function(require,module,exports){
 module.exports=require(66)
 },{&quot;./lib/sizes.js&quot;:149}],149:[function(require,module,exports){
 module.exports=require(67)
@@ -17318,7 +17615,7 @@ module.exports=require(80)
 module.exports=require(81)
 },{&quot;./attribute-extractor.js&quot;:217,&quot;./html-parser.js&quot;:222,&quot;./vdom-ns.js&quot;:224,&quot;js-ext/extra/hashmap.js&quot;:187,&quot;js-ext/extra/lightmap.js&quot;:188,&quot;js-ext/lib/array.js&quot;:189,&quot;js-ext/lib/object.js&quot;:190,&quot;js-ext/lib/string.js&quot;:192,&quot;polyfill&quot;:203,&quot;utils/lib/timers.js&quot;:206}],226:[function(require,module,exports){
 module.exports=require(82)
-},{&quot;./partials/element-plugin.js&quot;:219,&quot;./partials/extend-document.js&quot;:220,&quot;./partials/extend-element.js&quot;:221,&quot;./partials/node-parser.js&quot;:223,&quot;js-ext/extra/hashmap.js&quot;:187,&quot;js-ext/lib/object.js&quot;:190}],227:[function(require,module,exports){
+},{&quot;./partials/element-plugin.js&quot;:219,&quot;./partials/extend-document.js&quot;:220,&quot;./partials/extend-element.js&quot;:221,&quot;./partials/node-parser.js&quot;:223,&quot;js-ext/extra/hashmap.js&quot;:187,&quot;js-ext/lib/object.js&quot;:190,&quot;utils/lib/timers.js&quot;:206}],227:[function(require,module,exports){
 module.exports=require(17)
 },{}],228:[function(require,module,exports){
 module.exports=require(84)
@@ -17430,7 +17727,7 @@ module.exports=require(80)
 module.exports=require(81)
 },{&quot;./attribute-extractor.js&quot;:273,&quot;./html-parser.js&quot;:278,&quot;./vdom-ns.js&quot;:280,&quot;js-ext/extra/hashmap.js&quot;:243,&quot;js-ext/extra/lightmap.js&quot;:244,&quot;js-ext/lib/array.js&quot;:245,&quot;js-ext/lib/object.js&quot;:246,&quot;js-ext/lib/string.js&quot;:248,&quot;polyfill&quot;:259,&quot;utils/lib/timers.js&quot;:262}],282:[function(require,module,exports){
 module.exports=require(82)
-},{&quot;./partials/element-plugin.js&quot;:275,&quot;./partials/extend-document.js&quot;:276,&quot;./partials/extend-element.js&quot;:277,&quot;./partials/node-parser.js&quot;:279,&quot;js-ext/extra/hashmap.js&quot;:243,&quot;js-ext/lib/object.js&quot;:246}],283:[function(require,module,exports){
+},{&quot;./partials/element-plugin.js&quot;:275,&quot;./partials/extend-document.js&quot;:276,&quot;./partials/extend-element.js&quot;:277,&quot;./partials/node-parser.js&quot;:279,&quot;js-ext/extra/hashmap.js&quot;:243,&quot;js-ext/lib/object.js&quot;:246,&quot;utils/lib/timers.js&quot;:262}],283:[function(require,module,exports){
 module.exports=require(66)
 },{&quot;./lib/sizes.js&quot;:284}],284:[function(require,module,exports){
 module.exports=require(67)
@@ -18178,7 +18475,7 @@ module.exports=require(80)
 module.exports=require(81)
 },{&quot;./attribute-extractor.js&quot;:356,&quot;./html-parser.js&quot;:361,&quot;./vdom-ns.js&quot;:363,&quot;js-ext/extra/hashmap.js&quot;:326,&quot;js-ext/extra/lightmap.js&quot;:327,&quot;js-ext/lib/array.js&quot;:328,&quot;js-ext/lib/object.js&quot;:329,&quot;js-ext/lib/string.js&quot;:331,&quot;polyfill&quot;:342,&quot;utils/lib/timers.js&quot;:345}],365:[function(require,module,exports){
 module.exports=require(82)
-},{&quot;./partials/element-plugin.js&quot;:358,&quot;./partials/extend-document.js&quot;:359,&quot;./partials/extend-element.js&quot;:360,&quot;./partials/node-parser.js&quot;:362,&quot;js-ext/extra/hashmap.js&quot;:326,&quot;js-ext/lib/object.js&quot;:329}],366:[function(require,module,exports){
+},{&quot;./partials/element-plugin.js&quot;:358,&quot;./partials/extend-document.js&quot;:359,&quot;./partials/extend-element.js&quot;:360,&quot;./partials/node-parser.js&quot;:362,&quot;js-ext/extra/hashmap.js&quot;:326,&quot;js-ext/lib/object.js&quot;:329,&quot;utils/lib/timers.js&quot;:345}],366:[function(require,module,exports){
 &quot;use strict&quot;;
 
 /**
@@ -20817,7 +21114,7 @@ module.exports=require(80)
 module.exports=require(81)
 },{&quot;./attribute-extractor.js&quot;:430,&quot;./html-parser.js&quot;:435,&quot;./vdom-ns.js&quot;:437,&quot;js-ext/extra/hashmap.js&quot;:400,&quot;js-ext/extra/lightmap.js&quot;:401,&quot;js-ext/lib/array.js&quot;:402,&quot;js-ext/lib/object.js&quot;:403,&quot;js-ext/lib/string.js&quot;:405,&quot;polyfill&quot;:416,&quot;utils/lib/timers.js&quot;:419}],439:[function(require,module,exports){
 module.exports=require(82)
-},{&quot;./partials/element-plugin.js&quot;:432,&quot;./partials/extend-document.js&quot;:433,&quot;./partials/extend-element.js&quot;:434,&quot;./partials/node-parser.js&quot;:436,&quot;js-ext/extra/hashmap.js&quot;:400,&quot;js-ext/lib/object.js&quot;:403}],440:[function(require,module,exports){
+},{&quot;./partials/element-plugin.js&quot;:432,&quot;./partials/extend-document.js&quot;:433,&quot;./partials/extend-element.js&quot;:434,&quot;./partials/node-parser.js&quot;:436,&quot;js-ext/extra/hashmap.js&quot;:400,&quot;js-ext/lib/object.js&quot;:403,&quot;utils/lib/timers.js&quot;:419}],440:[function(require,module,exports){
 module.exports=require(35)
 },{&quot;./lib/idgenerator.js&quot;:441,&quot;./lib/timers.js&quot;:442}],441:[function(require,module,exports){
 module.exports=require(36)
@@ -21213,7 +21510,7 @@ require(&#x27;polyfill&#x27;);
 var NAME = &#x27;[focusmanager]: &#x27;,
     async = require(&#x27;utils&#x27;).async,
     createHashMap = require(&#x27;js-ext/extra/hashmap.js&#x27;).createMap,
-    DEFAULT_SELECTOR = &#x27;input, button, select, textarea, .focusable, [fm-manage]&#x27;,
+    DEFAULT_SELECTOR = &#x27;input, button, select, textarea, .focusable, [fm-manage], [itag-formelement=&quot;true&quot;]&#x27;,
     // SPECIAL_KEYS needs to be a native Object --&gt; we need .some()
     SPECIAL_KEYS = {
         shift: &#x27;shiftKey&#x27;,
@@ -21796,7 +22093,7 @@ module.exports=require(80)
 module.exports=require(81)
 },{&quot;./attribute-extractor.js&quot;:532,&quot;./html-parser.js&quot;:537,&quot;./vdom-ns.js&quot;:539,&quot;js-ext/extra/hashmap.js&quot;:502,&quot;js-ext/extra/lightmap.js&quot;:503,&quot;js-ext/lib/array.js&quot;:504,&quot;js-ext/lib/object.js&quot;:505,&quot;js-ext/lib/string.js&quot;:507,&quot;polyfill&quot;:518,&quot;utils/lib/timers.js&quot;:521}],541:[function(require,module,exports){
 module.exports=require(82)
-},{&quot;./partials/element-plugin.js&quot;:534,&quot;./partials/extend-document.js&quot;:535,&quot;./partials/extend-element.js&quot;:536,&quot;./partials/node-parser.js&quot;:538,&quot;js-ext/extra/hashmap.js&quot;:502,&quot;js-ext/lib/object.js&quot;:505}],542:[function(require,module,exports){
+},{&quot;./partials/element-plugin.js&quot;:534,&quot;./partials/extend-document.js&quot;:535,&quot;./partials/extend-element.js&quot;:536,&quot;./partials/node-parser.js&quot;:538,&quot;js-ext/extra/hashmap.js&quot;:502,&quot;js-ext/lib/object.js&quot;:505,&quot;utils/lib/timers.js&quot;:521}],542:[function(require,module,exports){
 module.exports=require(35)
 },{&quot;./lib/idgenerator.js&quot;:543,&quot;./lib/timers.js&quot;:544}],543:[function(require,module,exports){
 module.exports=require(36)
@@ -21920,7 +22217,7 @@ module.exports=require(80)
 module.exports=require(81)
 },{&quot;./attribute-extractor.js&quot;:594,&quot;./html-parser.js&quot;:599,&quot;./vdom-ns.js&quot;:601,&quot;js-ext/extra/hashmap.js&quot;:564,&quot;js-ext/extra/lightmap.js&quot;:565,&quot;js-ext/lib/array.js&quot;:566,&quot;js-ext/lib/object.js&quot;:567,&quot;js-ext/lib/string.js&quot;:569,&quot;polyfill&quot;:580,&quot;utils/lib/timers.js&quot;:583}],603:[function(require,module,exports){
 module.exports=require(82)
-},{&quot;./partials/element-plugin.js&quot;:596,&quot;./partials/extend-document.js&quot;:597,&quot;./partials/extend-element.js&quot;:598,&quot;./partials/node-parser.js&quot;:600,&quot;js-ext/extra/hashmap.js&quot;:564,&quot;js-ext/lib/object.js&quot;:567}],604:[function(require,module,exports){
+},{&quot;./partials/element-plugin.js&quot;:596,&quot;./partials/extend-document.js&quot;:597,&quot;./partials/extend-element.js&quot;:598,&quot;./partials/node-parser.js&quot;:600,&quot;js-ext/extra/hashmap.js&quot;:564,&quot;js-ext/lib/object.js&quot;:567,&quot;utils/lib/timers.js&quot;:583}],604:[function(require,module,exports){
 module.exports=require(66)
 },{&quot;./lib/sizes.js&quot;:605}],605:[function(require,module,exports){
 module.exports=require(67)
@@ -24882,7 +25179,7 @@ module.exports=require(80)
 module.exports=require(81)
 },{&quot;./attribute-extractor.js&quot;:713,&quot;./html-parser.js&quot;:718,&quot;./vdom-ns.js&quot;:720,&quot;js-ext/extra/hashmap.js&quot;:683,&quot;js-ext/extra/lightmap.js&quot;:684,&quot;js-ext/lib/array.js&quot;:685,&quot;js-ext/lib/object.js&quot;:686,&quot;js-ext/lib/string.js&quot;:688,&quot;polyfill&quot;:699,&quot;utils/lib/timers.js&quot;:702}],722:[function(require,module,exports){
 module.exports=require(82)
-},{&quot;./partials/element-plugin.js&quot;:715,&quot;./partials/extend-document.js&quot;:716,&quot;./partials/extend-element.js&quot;:717,&quot;./partials/node-parser.js&quot;:719,&quot;js-ext/extra/hashmap.js&quot;:683,&quot;js-ext/lib/object.js&quot;:686}],723:[function(require,module,exports){
+},{&quot;./partials/element-plugin.js&quot;:715,&quot;./partials/extend-document.js&quot;:716,&quot;./partials/extend-element.js&quot;:717,&quot;./partials/node-parser.js&quot;:719,&quot;js-ext/extra/hashmap.js&quot;:683,&quot;js-ext/lib/object.js&quot;:686,&quot;utils/lib/timers.js&quot;:702}],723:[function(require,module,exports){
 module.exports=require(66)
 },{&quot;./lib/sizes.js&quot;:724}],724:[function(require,module,exports){
 module.exports=require(67)
@@ -28024,7 +28321,7 @@ module.exports = function (window) {
             currentToReset: function() {
                 // will set the current value as the reset-value: for all form elements
                 this.getAll(&#x27;[itag-formelement]&#x27;).forEach(function(element) {
-                    element.currentToReset &amp;&amp; currentToReset.reset();
+                    element.currentToReset &amp;&amp; element.currentToReset();
                 });
             },
 
@@ -28081,7 +28378,7 @@ module.exports = function (window) {
 };
 
 },{&quot;itags.core&quot;:758}],749:[function(require,module,exports){
-var css = &quot;/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a &#x60;dummy&#x60; css-rule    */\n/* for the dummy-element: &#x60;itag-css&#x60; --&gt; its property (also dummy) &#x60;i-tag&#x60; /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-input;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-input:not(.itag-rendered) {\n    /* don&#x27;t set visibility to hidden --&gt; you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-input:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\ni-input {\n    margin: 0;\n    display: inline-block;\n    width: 12em;\n    position: relative;\n    vertical-align: middle;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-input &gt; input {\n    color: inherit;\n    font: inherit;\n    margin: 0;\n    padding: 0.5em 0.6em;\n    display: inline-block;\n    border: 1px solid #ccc;\n    box-shadow: inset 0 1px 3px #ddd;\n    border-radius: 4px;\n    line-height: normal;\n    width: 100%; /* within the i-input always 100% */\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\nhtml i-input[disabled] &gt; input {\n    cursor: not-allowed;\n    background-color: #eaeded;\n    color: #cad2d3;\n}\n\ni-input &gt; input::-moz-focus-inner {\n  border: 0;\n  padding: 0;\n}\n\n\ni-input &gt; input:focus,\ni-input.focussed &gt; input {\n    outline: 0;\n    outline: thin dotted \\9; /* IE6-9 */\n    border-color: #129FEA;\n}\n\ni-input[readonly] &gt; input {\n    background: #eee; /* menu hover bg color */\n    color: #777; /* menu text color */\n    border-color: #ccc;\n}\n\ni-input &gt; input:focus:invalid {\n    color: #b94a48;\n    border-color: #ee5f5b;\n}\n\ni-input &gt; input:focus:invalid:focus {\n    border-color: #e9322d;\n}\n\ni-input.i-rounded &gt; input {\n    border-radius: 2em;\n    padding: 0.5em 1em;\n}\n\ni-input.i-input-1 {\n    width: 100%;\n}\ni-input.i-input-2-3 {\n    width: 66%;\n}\ni-input.i-input-1-2 {\n    width: 50%;\n}\ni-input.i-input-1-3 {\n    width: 33%;\n}\ni-input.i-input-1-4 {\n    width: 25%;\n}\n\n@media only screen and (max-width : 480px) {\n    i-input {\n        margin-bottom: 0.3em;\n        display: block;\n    }\n}\n\n&quot;; (require(&quot;/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify&quot;))(css); module.exports = css;
+var css = &quot;/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a &#x60;dummy&#x60; css-rule    */\n/* for the dummy-element: &#x60;itag-css&#x60; --&gt; its property (also dummy) &#x60;i-tag&#x60; /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-input;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-input:not(.itag-rendered) {\n    /* don&#x27;t set visibility to hidden --&gt; you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-input:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\ni-input {\n    margin: 0;\n    display: inline-block;\n    width: 12em;\n    position: relative;\n    vertical-align: middle;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-input &gt; input {\n    color: inherit;\n    font: inherit;\n    margin: 0;\n    padding: 0.5em 0.6em;\n    display: inline-block;\n    border: 1px solid #ccc;\n    box-shadow: inset 0 1px 3px #ddd;\n    border-radius: 4px;\n    line-height: normal;\n    width: 100%; /* within the i-input always 100% */\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\nhtml i-input[disabled] &gt; input {\n    cursor: not-allowed;\n    background-color: #eaeded;\n    color: #cad2d3;\n}\n\ni-input &gt; input::-moz-focus-inner {\n  border: 0;\n  padding: 0;\n}\n\n\ni-input &gt; input:focus,\ni-input.focussed &gt; input {\n    outline: 0;\n    outline: thin dotted \\9; /* IE6-9 */\n    border-color: #129FEA;\n}\n\ni-input[readonly=\&quot;true\&quot;] &gt; input {\n    background: #eee; /* menu hover bg color */\n    color: #777; /* menu text color */\n    border-color: #ccc;\n}\n\ni-input &gt; input:focus:invalid {\n    color: #b94a48;\n    border-color: #ee5f5b;\n}\n\ni-input &gt; input:focus:invalid:focus {\n    border-color: #e9322d;\n}\n\ni-input.i-rounded &gt; input {\n    border-radius: 2em;\n    padding: 0.5em 1em;\n}\n\ni-input.i-input-1 {\n    width: 100%;\n}\ni-input.i-input-2-3 {\n    width: 66%;\n}\ni-input.i-input-1-2 {\n    width: 50%;\n}\ni-input.i-input-1-3 {\n    width: 33%;\n}\ni-input.i-input-1-4 {\n    width: 25%;\n}\n\n@media only screen and (max-width : 480px) {\n    i-input {\n        margin-bottom: 0.3em;\n        display: block;\n    }\n}\n\n&quot;; (require(&quot;/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify&quot;))(css); module.exports = css;
 },{&quot;/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify&quot;:1}],750:[function(require,module,exports){
 module.exports = function (window) {
     &quot;use strict&quot;;
@@ -28454,8 +28751,6 @@ module.exports = function (window) {
                     laterSilent(function() {
                         element.removeData(&#x27;_suppressClose&#x27;);
                     }, SUPPRESS_DELAY);
-                    // ulNode = element.getElement(&#x27;ul[fm-manage]&#x27;);
-                    // ulNode &amp;&amp; ulNode.focus(true);
                 }
             }
         }, &#x27;i-select &gt; button&#x27;);
@@ -28865,7 +29160,6 @@ module.exports = function (window) {
             * @since 0.0.1
             */
             sync: function() {
-console.warn(&#x27;syncing i-tabpane&#x27;);
                 // inside sync, YOU CANNOT change attributes which are part of &#x60;attrs&#x60; !!!
                 // those actions will be ignored.
 
@@ -28884,7 +29178,6 @@ console.warn(&#x27;syncing i-tabpane&#x27;);
                     container = element.getElement(&#x27;div.container&#x27;),
                     content = &#x27;&#x27;,
                     i, tabItem, index;
-console.info(element.getOuterHTML());
                 index = pane - 1;
                 for (i=0; i&lt;len; i++) {
                     tabItem = tabs[i];
