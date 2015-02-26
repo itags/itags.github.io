@@ -337,13 +337,18 @@ module.exports = function (window) {
                 var element = this,
                     value = element.model.checked,
                     designNode = element.getDesignNode(),
-                    options = designNode.getAll(&#x27;&gt;option&#x27;),
-                    content, innerDiv, borderLeftWidth;
+                    options = designNode.getAll(&#x27;&gt;option&#x27;);
 
                 // set the reset-value to the inital-value in case &#x60;reset-value&#x60; was not present
                 element.defineWhenUndefined(&#x27;reset-value&#x27;, value)
-                       .defineWhenUndefined(&#x27;onText&#x27;, options[0] ? options[0].getHTML() : DEFAULT_ON_TEXT)
-                       .defineWhenUndefined(&#x27;offText&#x27;, options[1] ? options[1].getHTML() : DEFAULT_OFF_TEXT);
+                       .defineWhenUndefined(&#x27;on-text&#x27;, options[0] ? options[0].getHTML() : DEFAULT_ON_TEXT)
+                       .defineWhenUndefined(&#x27;off-text&#x27;, options[1] ? options[1].getHTML() : DEFAULT_OFF_TEXT);
+                registeredElements.push(element);
+            },
+
+            render: function() {
+                var element = this,
+                    content, innerDiv, borderLeftWidth;
 
                 content = &#x27;&lt;div tabindex=&quot;0&quot;&gt;&#x27;+
                               &#x27;&lt;div class=&quot;i-constrain&quot;&gt;&#x27;+
@@ -360,7 +365,6 @@ module.exports = function (window) {
                 element.setData(&#x27;_leftBorder&#x27;, borderLeftWidth);
                 element.setData(&#x27;_vertBorders&#x27;, parseInt(innerDiv.getStyle(&#x27;border-top-width&#x27;), 10) + parseInt(innerDiv.getStyle(&#x27;border-bottom-width&#x27;), 10));
                 element.setData(&#x27;_horBorders&#x27;, borderLeftWidth + parseInt(innerDiv.getStyle(&#x27;border-right-width&#x27;), 10));
-                registeredElements.push(element);
             },
 
             _fitCheckbox: function() {
@@ -421,11 +425,12 @@ module.exports = function (window) {
                     model = element.model;
                 element._fitCheckbox();
                 element._setUIState(model.checked);
-                itemContainers[0].setHTML(model.onText);
-                itemContainers[1].setHTML(model.offText);
+                itemContainers[0].setHTML(model[&#x27;on-text&#x27;]);
+                itemContainers[1].setHTML(model[&#x27;off-text&#x27;]);
             },
 
             currentToReset: function() {
+                var model = this.model;
                 model[&#x27;reset-value&#x27;] = model.checked;
             },
 

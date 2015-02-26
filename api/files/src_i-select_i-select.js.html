@@ -301,17 +301,17 @@ module.exports = function (window) {
                 else {
                     inactive = element.hasData(&#x27;_suppressClose&#x27;);
                     if (inactive) {
-                        console.warn(&#x27;not reacting to &#x27;+e_type+&#x27;-event: button is in pauzed state&#x27;);
+                        console.info(&#x27;not reacting to &#x27;+e_type+&#x27;-event: button is in pauzed state&#x27;);
                         return;
                     }
                     model.expanded = !model.expanded;
                     if (!model.expanded) {
-                        liNode = element.getElement(&#x27;ul[fm-manage] &gt;li[fm-defaultitem]&#x27;);
+                        liNode = element.getElement(&#x27;ul[plugin-fm=&quot;true&quot;] &gt;li[fm-defaultitem]&#x27;);
                         liNode &amp;&amp; liNode.focus(true);
                     }
                 }
                 if (model.expanded) {
-                    ulNode = element.getElement(&#x27;ul[fm-manage]&#x27;);
+                    ulNode = element.getElement(&#x27;ul[plugin-fm=&quot;true&quot;]&#x27;);
                     ulNode &amp;&amp; ulNode.focus(true);
                 }
                 if (model.expanded || (e_type===&#x27;tap&#x27;)) {
@@ -334,7 +334,7 @@ module.exports = function (window) {
                 if (model.expanded) {
                     inactive = element.hasData(&#x27;_suppressClose&#x27;);
                     if (inactive) {
-                        console.warn(&#x27;not reacting to &#x27;+e_type+&#x27;-event: button is in pauzed state&#x27;);
+                        console.info(&#x27;not reacting to &#x27;+e_type+&#x27;-event: button is in pauzed state&#x27;);
                         return;
                     }
                     model = element.model;
@@ -347,7 +347,7 @@ module.exports = function (window) {
                         laterSilent(function() {
                             element.removeData(&#x27;_suppressClose&#x27;);
                         }, SUPPRESS_DELAY);
-                        ulNode = element.getElement(&#x27;ul[fm-manage]&#x27;);
+                        ulNode = element.getElement(&#x27;ul[plugin-fm=&quot;true&quot;]&#x27;);
                         ulNode &amp;&amp; ulNode.focus(true);
                     }
                     // prevent that the focus will be reset to the focusmanager
@@ -358,7 +358,7 @@ module.exports = function (window) {
                     });
                 }
             }
-        }, &#x27;i-select ul[fm-manage] &gt; li&#x27;);
+        }, &#x27;i-select ul[plugin-fm=&quot;true&quot;] &gt; li&#x27;);
 
         Event.defineEvent(itagName+&#x27;:valuechange&#x27;)
              .unPreventable()
@@ -416,9 +416,7 @@ module.exports = function (window) {
             *
             * Syncs the new vnode&#x27;s childNodes with the dom.
             *
-            * @method _setChildNodes
-            * @param newVChildNodes {Array} array with vnodes which represent the new childNodes
-            * @private
+            * @method init
             * @chainable
             * @since 0.0.1
             */
@@ -428,8 +426,7 @@ module.exports = function (window) {
                     itemNodes = designNode.getAll(&#x27;&gt;option&#x27;),
                     items = [],
                     buttonTexts = [],
-                    value = element.model.value,
-                    content;
+                    value = element.model.value;
                 itemNodes.forEach(function(node, i) {
                     var header = node.getElement(&#x27;span[is=&quot;button&quot;]&#x27;);
                     if (header) {
@@ -446,6 +443,23 @@ module.exports = function (window) {
                 // store its current value, so that valueChange-event can fire:
                 element.setData(&#x27;i-select-value&#x27;, value);
 
+                element.cleanupEvents();
+                element.setupEvents();
+            },
+
+           /**
+            * Redefines the childNodes of both the vnode as well as its related dom-node. The new
+            * definition replaces any previous nodes. (without touching unmodified nodes).
+            *
+            * Syncs the new vnode&#x27;s childNodes with the dom.
+            *
+            * @method render
+            * @chainable
+            * @since 0.0.1
+            */
+            render: function() {
+                var element = this,
+                    content;
                 // building the template of the itag:
                 content = &#x27;&lt;button&gt;&lt;div class=&quot;pointer&quot;&gt;&lt;/div&gt;&lt;div class=&quot;btntext&quot;&gt;&lt;/div&gt;&lt;/button&gt;&#x27;;
                 // first: outerdiv which will be relative positioned
@@ -453,12 +467,9 @@ module.exports = function (window) {
                 // also: hide the container by default --&gt; updateUI could make it shown
                 content += &#x27;&lt;div class=&quot;itsa-hidden&quot;&gt;&#x27; +
                              &#x27;&lt;div&gt;&#x27;+
-                               &#x27;&lt;ul fm-manage=&quot;li&quot; fm-keyup=&quot;38&quot; fm-keydown=&quot;40&quot; fm-noloop=&quot;true&quot;&gt;&lt;/ul&gt;&#x27;;
+                               &#x27;&lt;ul plugin-fm=&quot;true&quot; fm-manage=&quot;li&quot; fm-keyup=&quot;38&quot; fm-keydown=&quot;40&quot; fm-noloop=&quot;true&quot;&gt;&lt;/ul&gt;&#x27;;
                              &#x27;&lt;/div&gt;&#x27;+
                            &#x27;&lt;/div&gt;&#x27;;
-
-                element.cleanupEvents();
-                element.setupEvents();
                 // set the content:
                 element.setHTML(content);
             },
@@ -563,7 +574,7 @@ module.exports = function (window) {
                     container.setData(&#x27;_hiddenTimer&#x27;, hiddenTimer);
                 }
 
-                itemsContainer = element.getElement(&#x27;ul[fm-manage]&#x27;);
+                itemsContainer = element.getElement(&#x27;ul[plugin-fm=&quot;true&quot;]&#x27;);
                 content = &#x27;&#x27;;
                 for (i=0; i&lt;len; i++) {
                     item = items[i];

@@ -232,6 +232,7 @@ module.exports = function (window) {
         DOCUMENT = window.document,
         ITSA = window.ITSA,
         Event = ITSA.Event,
+        SUPPRESS_DELAY = 150, // to prevent flickr due to focusmanager when clicked on li-elements
         Itag;
 
     if (!window.ITAGS[itagName]) {
@@ -257,15 +258,25 @@ module.exports = function (window) {
                 ul = node.getParent(),
                 element = ul.getParent(),
                 model = element.model,
-                liNodes;
+                liNodes, newPane;
             liNodes = ul.getAll(&#x27;li&#x27;);
-            model.pane = liNodes.indexOf(node) + 1;
-        }, &#x27;i-tabpane &gt; ul li&#x27;);
-
-        Event.before([&#x27;tap&#x27;, &#x27;press&#x27;], function(e) {
-            // don&#x27;t double render (especially not BEFORE the tab changes)
-            // rendering will be done because of the focus-event
-            e.preventRender();
+            newPane = liNodes.indexOf(node) + 1;
+            if (!element.hasData(&#x27;_suppressTabSwitch&#x27;)) {
+                model.pane = newPane;
+                element.setData(&#x27;_suppressTabSwitch&#x27;, true);
+                ITSA.later(function() {
+                    element.removeData(&#x27;_suppressTabSwitch&#x27;);
+/*jshint boss:true */
+                    if (newPane=element.getData(&#x27;_newPane&#x27;)) {
+/*jshint boss:false */
+                        model.pane = newPane;
+                        element.removeData(&#x27;_newPane&#x27;);
+                    }
+                }, SUPPRESS_DELAY);
+            }
+            else {
+                element.setData(&#x27;_newPane&#x27;, newPane);
+            }
         }, &#x27;i-tabpane &gt; ul li&#x27;);
 
         Itag = DOCUMENT.createItag(itagName, {
@@ -290,9 +301,7 @@ module.exports = function (window) {
             *
             * Syncs the new vnode&#x27;s childNodes with the dom.
             *
-            * @method _setChildNodes
-            * @param newVChildNodes {Array} array with vnodes which represent the new childNodes
-            * @private
+            * @method init
             * @chainable
             * @since 0.0.1
             */
@@ -303,8 +312,7 @@ module.exports = function (window) {
                     model = element.model,
                     pane = model.pane,
                     panes = [],
-                    tabs = [],
-                    content;
+                    tabs = [];
                 itemNodes.forEach(function(node, i) {
                     var header = node.getElement(&#x27;span[is=&quot;tab&quot;]&#x27;);
                     if (header) {
@@ -313,7 +321,7 @@ module.exports = function (window) {
                     else {
                         tabs[i] = &#x27;&amp;nbsp;&#x27;;
                     }
-                    panes[panes.length] = node.getHTML(header);
+                    panes[panes.length] = node.getHTML(header, true);
                 });
 
                 element.defineWhenUndefined(&#x27;panes&#x27;, panes)
@@ -323,9 +331,22 @@ module.exports = function (window) {
 
                 // store its current value, so that valueChange-event can fire:
                 element.setData(&#x27;i-select-pane&#x27;, pane);
+            },
 
-                // note: the container wil excist of a div inside a div --&gt; to make the css work (100% height within i-tabpane)
-                content = &#x27;&lt;ul fm-manage=&quot;li&quot; fm-keyup=&quot;37&quot; fm-keydown=&quot;39&quot; fm-noloop=&quot;true&quot;&gt;&lt;/ul&gt;&lt;div&gt;&lt;div class=&quot;container&quot;&gt;&lt;/div&gt;&lt;/div&gt;&#x27;;
+           /**
+            * Redefines the childNodes of both the vnode as well as its related dom-node. The new
+            * definition replaces any previous nodes. (without touching unmodified nodes).
+            *
+            * Syncs the new vnode&#x27;s childNodes with the dom.
+            *
+            * @method render
+            * @chainable
+            * @since 0.0.1
+            */
+            render: function() {
+                var element = this,
+                    // note: the container wil excist of a div inside a div --&gt; to make the css work (100% height within i-tabpane)
+                    content = &#x27;&lt;ul plugin-fm=&quot;true&quot; fm-manage=&quot;li&quot; fm-keyup=&quot;37&quot; fm-keydown=&quot;39&quot; fm-noloop=&quot;true&quot;&gt;&lt;/ul&gt;&lt;div&gt;&lt;div class=&quot;container&quot;&gt;&lt;/div&gt;&lt;/div&gt;&#x27;;
                 // set the content:
                 element.setHTML(content);
             },

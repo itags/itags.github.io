@@ -278,13 +278,6 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
                                 
                             </li>
                         
-                            <li class="index-item method private">
-                                <a href="#method__setChildNodes">_setChildNodes</a>
-
-                                
-                                
-                            </li>
-                        
                             <li class="index-item method">
                                 <a href="#method_attrsToModel">attrsToModel</a>
 
@@ -391,6 +384,13 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
                             </li>
                         
                             <li class="index-item method">
+                                <a href="#method_init">init</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
                                 <a href="#method_itagFilter">itagFilter</a>
 
                                 
@@ -448,6 +448,13 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
                         
                             <li class="index-item method">
                                 <a href="#method_modelToAttrs">modelToAttrs</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
+                                <a href="#method_render">render</a>
 
                                 
                                 
@@ -701,7 +708,7 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
             
         
         
-        <a href="../files/src_i-tabpane_i-tabpane.js.html#l127"><code>src&#x2F;i-tabpane&#x2F;i-tabpane.js:127</code></a>
+        <a href="../files/src_i-tabpane_i-tabpane.js.html#l148"><code>src&#x2F;i-tabpane&#x2F;i-tabpane.js:148</code></a>
         
         </p>
 
@@ -752,8 +759,8 @@ definition replaces any previous nodes. (without touching unmodified nodes).</p>
 </div>
 
                 
-                    <div id="method__setChildNodes" class="method item private">
-    <h3 class="name"><code>_setChildNodes</code></h3>
+                    <div id="method_attrsToModel" class="method item">
+    <h3 class="name"><code>attrsToModel</code></h3>
 
     
         <div class="args">
@@ -761,7 +768,7 @@ definition replaces any previous nodes. (without touching unmodified nodes).</p>
             
                 <li class="arg">
                     
-                        <code>newVChildNodes</code>
+                        <code>domElement</code>
                     
                 </li>
             
@@ -774,7 +781,1576 @@ definition replaces any previous nodes. (without touching unmodified nodes).</p>
     
 
     
-        <span class="flag private">private</span>
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site_dist_itagsbuild.js.html#l31566"><code>site&#x2F;dist&#x2F;itagsbuild.js:31566</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Copies the attibute-values into element.model.
+Only processes the attributes that are defined through the Itag-class its <code>attrs</code>-property.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">domElement</code>
+                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>the itag that should be processed.</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="method_attrsToModel" class="method item">
+    <h3 class="name"><code>attrsToModel</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>domElement</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_itags.core_itags.core.js.html#l642"><code>src&#x2F;itags.core&#x2F;itags.core.js:642</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Copies the attibute-values into element.model.
+Only processes the attributes that are defined through the Itag-class its <code>attrs</code>-property.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">domElement</code>
+                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>the itag that should be processed.</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="method_attrsToModel" class="method item">
+    <h3 class="name"><code>attrsToModel</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>domElement</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l31566"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:31566</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Copies the attibute-values into element.model.
+Only processes the attributes that are defined through the Itag-class its <code>attrs</code>-property.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">domElement</code>
+                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>the itag that should be processed.</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="method_bindModel" class="method item">
+    <h3 class="name"><code>bindModel</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>element</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>model</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code class="optional">[mergeCurrent=false]</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_itags.core_itags.core.js.html#l690"><code>src&#x2F;itags.core&#x2F;itags.core.js:690</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Binds a model to the itag-element, making element.model equals the bound model.
+Immediately syncs the itag with the new model-data.</p>
+<p>Syncs the new vnode&#39;s childNodes with the dom.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">element</code>
+                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>element, which should be an Itag</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">model</code>
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>the model to bind to the itag-element</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name optional">[mergeCurrent=false]</code>
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Boolean" class="crosslink external" target="_blank">Boolean</a></span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>when set true, current properties on the iTag&#39;s model that aren&#39;t defined
+       in the new model, get merged into the new model.</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="method_bindModel" class="method item">
+    <h3 class="name"><code>bindModel</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>element</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>model</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code class="optional">[mergeCurrent=false]</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site_dist_itagsbuild.js.html#l31614"><code>site&#x2F;dist&#x2F;itagsbuild.js:31614</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Binds a model to the itag-element, making element.model equals the bound model.
+Immediately syncs the itag with the new model-data.</p>
+<p>Syncs the new vnode&#39;s childNodes with the dom.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">element</code>
+                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>element, which should be an Itag</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">model</code>
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>the model to bind to the itag-element</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name optional">[mergeCurrent=false]</code>
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Boolean" class="crosslink external" target="_blank">Boolean</a></span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>when set true, current properties on the iTag&#39;s model that aren&#39;t defined
+       in the new model, get merged into the new model.</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="method_bindModel" class="method item">
+    <h3 class="name"><code>bindModel</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>element</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>model</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code class="optional">[mergeCurrent=false]</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l31614"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:31614</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Binds a model to the itag-element, making element.model equals the bound model.
+Immediately syncs the itag with the new model-data.</p>
+<p>Syncs the new vnode&#39;s childNodes with the dom.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">element</code>
+                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>element, which should be an Itag</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">model</code>
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>the model to bind to the itag-element</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name optional">[mergeCurrent=false]</code>
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Boolean" class="crosslink external" target="_blank">Boolean</a></span>
+                        <span class="flag optional" title="This parameter is optional.">optional</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>when set true, current properties on the iTag&#39;s model that aren&#39;t defined
+       in the new model, get merged into the new model.</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="method_createItagBaseClass" class="method item protected">
+    <h3 class="name"><code>createItagBaseClass</code></h3>
+
+    
+        <span class="paren">()</span>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type">Class</span>
+        </span>
+    
+
+    
+
+    
+        <span class="flag protected">protected</span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l32693"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:32693</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Creates the base ItagClass: the highest Class in the hierarchy of all ItagClasses.
+Will get extra properties merge into its prototype, which leads into the formation of <code>ItagBaseClass</code>.</p>
+
+    </div>
+
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">Class</span>:
+                    
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_createItagBaseClass" class="method item protected">
+    <h3 class="name"><code>createItagBaseClass</code></h3>
+
+    
+        <span class="paren">()</span>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type">Class</span>
+        </span>
+    
+
+    
+
+    
+        <span class="flag protected">protected</span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_itags.core_itags.core.js.html#l1769"><code>src&#x2F;itags.core&#x2F;itags.core.js:1769</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Creates the base ItagClass: the highest Class in the hierarchy of all ItagClasses.
+Will get extra properties merge into its prototype, which leads into the formation of <code>ItagBaseClass</code>.</p>
+
+    </div>
+
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">Class</span>:
+                    
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_createItagBaseClass" class="method item protected">
+    <h3 class="name"><code>createItagBaseClass</code></h3>
+
+    
+        <span class="paren">()</span>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type">Class</span>
+        </span>
+    
+
+    
+
+    
+        <span class="flag protected">protected</span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site_dist_itagsbuild.js.html#l32693"><code>site&#x2F;dist&#x2F;itagsbuild.js:32693</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Creates the base ItagClass: the highest Class in the hierarchy of all ItagClasses.
+Will get extra properties merge into its prototype, which leads into the formation of <code>ItagBaseClass</code>.</p>
+
+    </div>
+
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type">Class</span>:
+                    
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_extractContent" class="method item">
+    <h3 class="name"><code>extractContent</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>domElement</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_itags.core_itags.core.js.html#l769"><code>src&#x2F;itags.core&#x2F;itags.core.js:769</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Retrieves content set by the definition of the iTag. The content should be inside a comment-node
+inside the itag. The returnvalue is a container-node (DIV) where the content
+-as is specified by the comment-node- lies within as true HTML.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">domElement</code>
+                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>the itag that should be processed.</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>:
+                    
+                    <p>a DIV-container with HTML inside</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_extractContent" class="method item">
+    <h3 class="name"><code>extractContent</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>domElement</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l31693"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:31693</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Retrieves content set by the definition of the iTag. The content should be inside a comment-node
+inside the itag. The returnvalue is a container-node (DIV) where the content
+-as is specified by the comment-node- lies within as true HTML.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">domElement</code>
+                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>the itag that should be processed.</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>:
+                    
+                    <p>a DIV-container with HTML inside</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_extractContent" class="method item">
+    <h3 class="name"><code>extractContent</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>domElement</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site_dist_itagsbuild.js.html#l31693"><code>site&#x2F;dist&#x2F;itagsbuild.js:31693</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Retrieves content set by the definition of the iTag. The content should be inside a comment-node
+inside the itag. The returnvalue is a container-node (DIV) where the content
+-as is specified by the comment-node- lies within as true HTML.</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">domElement</code>
+                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>the itag that should be processed.</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>:
+                    
+                    <p>a DIV-container with HTML inside</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_extractModel" class="method item">
+    <h3 class="name"><code>extractModel</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>domElement</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a> | Null</span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_itags.core_itags.core.js.html#l735"><code>src&#x2F;itags.core&#x2F;itags.core.js:735</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Retrieves modeldata set by the server inside the itag-element and binds this data into element.model</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">domElement</code>
+                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>the itag that should be processed.</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a> | Null</span>:
+                    
+                    <p>the modeldata or null when not supplied</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_extractModel" class="method item">
+    <h3 class="name"><code>extractModel</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>domElement</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a> | Null</span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l31659"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:31659</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Retrieves modeldata set by the server inside the itag-element and binds this data into element.model</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">domElement</code>
+                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>the itag that should be processed.</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a> | Null</span>:
+                    
+                    <p>the modeldata or null when not supplied</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_extractModel" class="method item">
+    <h3 class="name"><code>extractModel</code></h3>
+
+    
+        <div class="args">
+            <span class="paren">(</span><ul class="args-list inline commas">
+            
+                <li class="arg">
+                    
+                        <code>domElement</code>
+                    
+                </li>
+            
+            </ul><span class="paren">)</span>
+        </div>
+    
+
+    
+        <span class="returns-inline">
+            <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a> | Null</span>
+        </span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site_dist_itagsbuild.js.html#l31659"><code>site&#x2F;dist&#x2F;itagsbuild.js:31659</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Retrieves modeldata set by the server inside the itag-element and binds this data into element.model</p>
+
+    </div>
+
+    
+        <div class="params">
+            <h4>Parameters:</h4>
+
+            <ul class="params-list">
+            
+                <li class="param">
+                    
+                        <code class="param-name">domElement</code>
+                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>the itag that should be processed.</p>
+
+                    </div>
+
+                    
+                </li>
+            
+            </ul>
+        </div>
+    
+
+    
+        <div class="returns">
+            <h4>Returns:</h4>
+
+            <div class="returns-description">
+                
+                    
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a> | Null</span>:
+                    
+                    <p>the modeldata or null when not supplied</p>
+
+                
+            </div>
+        </div>
+    
+
+    
+</div>
+
+                
+                    <div id="method_init" class="method item">
+    <h3 class="name"><code>init</code></h3>
+
+    
+        <span class="paren">()</span>
+    
+
+    
+
+    
+
     
 
     
@@ -800,7 +2376,7 @@ definition replaces any previous nodes. (without touching unmodified nodes).</p>
             
         
         
-        <a href="../files/src_i-tabpane_i-tabpane.js.html#l69"><code>src&#x2F;i-tabpane&#x2F;i-tabpane.js:69</code></a>
+        <a href="../files/src_i-tabpane_i-tabpane.js.html#l80"><code>src&#x2F;i-tabpane&#x2F;i-tabpane.js:80</code></a>
         
         </p>
 
@@ -820,1612 +2396,7 @@ definition replaces any previous nodes. (without touching unmodified nodes).</p>
     </div>
 
     
-        <div class="params">
-            <h4>Parameters:</h4>
 
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">newVChildNodes</code>
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array" class="crosslink external" target="_blank">Array</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>array with vnodes which represent the new childNodes</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-
-    
-</div>
-
-                
-                    <div id="method_attrsToModel" class="method item">
-    <h3 class="name"><code>attrsToModel</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>domElement</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/site_dist_itagsbuild.js.html#l29540"><code>site&#x2F;dist&#x2F;itagsbuild.js:29540</code></a>
-        
-        </p>
-
-
-        
-
-        
-            <p>Available since 0.0.1</p>
-        
-    </div>
-
-    <div class="description">
-        <p>Copies the attibute-values into element.model.
-Only processes the attributes that are defined through the Itag-class its <code>attrs</code>-property.</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">domElement</code>
-                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>the itag that should be processed.</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-
-    
-</div>
-
-                
-                    <div id="method_attrsToModel" class="method item">
-    <h3 class="name"><code>attrsToModel</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>domElement</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_itags.core_itags.core.js.html#l545"><code>src&#x2F;itags.core&#x2F;itags.core.js:545</code></a>
-        
-        </p>
-
-
-        
-
-        
-            <p>Available since 0.0.1</p>
-        
-    </div>
-
-    <div class="description">
-        <p>Copies the attibute-values into element.model.
-Only processes the attributes that are defined through the Itag-class its <code>attrs</code>-property.</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">domElement</code>
-                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>the itag that should be processed.</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-
-    
-</div>
-
-                
-                    <div id="method_attrsToModel" class="method item">
-    <h3 class="name"><code>attrsToModel</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>domElement</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l29540"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:29540</code></a>
-        
-        </p>
-
-
-        
-
-        
-            <p>Available since 0.0.1</p>
-        
-    </div>
-
-    <div class="description">
-        <p>Copies the attibute-values into element.model.
-Only processes the attributes that are defined through the Itag-class its <code>attrs</code>-property.</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">domElement</code>
-                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>the itag that should be processed.</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-
-    
-</div>
-
-                
-                    <div id="method_bindModel" class="method item">
-    <h3 class="name"><code>bindModel</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>element</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>model</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code class="optional">[mergeCurrent=false]</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_itags.core_itags.core.js.html#l593"><code>src&#x2F;itags.core&#x2F;itags.core.js:593</code></a>
-        
-        </p>
-
-
-        
-
-        
-            <p>Available since 0.0.1</p>
-        
-    </div>
-
-    <div class="description">
-        <p>Binds a model to the itag-element, making element.model equals the bound model.
-Immediately syncs the itag with the new model-data.</p>
-<p>Syncs the new vnode&#39;s childNodes with the dom.</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">element</code>
-                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>element, which should be an Itag</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">model</code>
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>the model to bind to the itag-element</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[mergeCurrent=false]</code>
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Boolean" class="crosslink external" target="_blank">Boolean</a></span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>when set true, current properties on the iTag that aren&#39;t defined
-                                      in the new model, get merged into the new model.</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-
-    
-</div>
-
-                
-                    <div id="method_bindModel" class="method item">
-    <h3 class="name"><code>bindModel</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>element</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>model</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code class="optional">[mergeCurrent=false]</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/site_dist_itagsbuild.js.html#l29588"><code>site&#x2F;dist&#x2F;itagsbuild.js:29588</code></a>
-        
-        </p>
-
-
-        
-
-        
-            <p>Available since 0.0.1</p>
-        
-    </div>
-
-    <div class="description">
-        <p>Binds a model to the itag-element, making element.model equals the bound model.
-Immediately syncs the itag with the new model-data.</p>
-<p>Syncs the new vnode&#39;s childNodes with the dom.</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">element</code>
-                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>element, which should be an Itag</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">model</code>
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>the model to bind to the itag-element</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[mergeCurrent=false]</code>
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Boolean" class="crosslink external" target="_blank">Boolean</a></span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>when set true, current properties on the iTag that aren&#39;t defined
-                                      in the new model, get merged into the new model.</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-
-    
-</div>
-
-                
-                    <div id="method_bindModel" class="method item">
-    <h3 class="name"><code>bindModel</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>element</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>model</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code class="optional">[mergeCurrent=false]</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l29588"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:29588</code></a>
-        
-        </p>
-
-
-        
-
-        
-            <p>Available since 0.0.1</p>
-        
-    </div>
-
-    <div class="description">
-        <p>Binds a model to the itag-element, making element.model equals the bound model.
-Immediately syncs the itag with the new model-data.</p>
-<p>Syncs the new vnode&#39;s childNodes with the dom.</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">element</code>
-                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>element, which should be an Itag</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">model</code>
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>the model to bind to the itag-element</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[mergeCurrent=false]</code>
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Boolean" class="crosslink external" target="_blank">Boolean</a></span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>when set true, current properties on the iTag that aren&#39;t defined
-                                      in the new model, get merged into the new model.</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-
-    
-</div>
-
-                
-                    <div id="method_createItagBaseClass" class="method item protected">
-    <h3 class="name"><code>createItagBaseClass</code></h3>
-
-    
-        <span class="paren">()</span>
-    
-
-    
-        <span class="returns-inline">
-            <span class="type">Class</span>
-        </span>
-    
-
-    
-
-    
-        <span class="flag protected">protected</span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l30664"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:30664</code></a>
-        
-        </p>
-
-
-        
-
-        
-            <p>Available since 0.0.1</p>
-        
-    </div>
-
-    <div class="description">
-        <p>Creates the base ItagClass: the highest Class in the hierarchy of all ItagClasses.
-Will get extra properties merge into its prototype, which leads into the formation of <code>ItagBaseClass</code>.</p>
-
-    </div>
-
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type">Class</span>:
-                    
-                
-            </div>
-        </div>
-    
-
-    
-</div>
-
-                
-                    <div id="method_createItagBaseClass" class="method item protected">
-    <h3 class="name"><code>createItagBaseClass</code></h3>
-
-    
-        <span class="paren">()</span>
-    
-
-    
-        <span class="returns-inline">
-            <span class="type">Class</span>
-        </span>
-    
-
-    
-
-    
-        <span class="flag protected">protected</span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_itags.core_itags.core.js.html#l1669"><code>src&#x2F;itags.core&#x2F;itags.core.js:1669</code></a>
-        
-        </p>
-
-
-        
-
-        
-            <p>Available since 0.0.1</p>
-        
-    </div>
-
-    <div class="description">
-        <p>Creates the base ItagClass: the highest Class in the hierarchy of all ItagClasses.
-Will get extra properties merge into its prototype, which leads into the formation of <code>ItagBaseClass</code>.</p>
-
-    </div>
-
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type">Class</span>:
-                    
-                
-            </div>
-        </div>
-    
-
-    
-</div>
-
-                
-                    <div id="method_createItagBaseClass" class="method item protected">
-    <h3 class="name"><code>createItagBaseClass</code></h3>
-
-    
-        <span class="paren">()</span>
-    
-
-    
-        <span class="returns-inline">
-            <span class="type">Class</span>
-        </span>
-    
-
-    
-
-    
-        <span class="flag protected">protected</span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/site_dist_itagsbuild.js.html#l30664"><code>site&#x2F;dist&#x2F;itagsbuild.js:30664</code></a>
-        
-        </p>
-
-
-        
-
-        
-            <p>Available since 0.0.1</p>
-        
-    </div>
-
-    <div class="description">
-        <p>Creates the base ItagClass: the highest Class in the hierarchy of all ItagClasses.
-Will get extra properties merge into its prototype, which leads into the formation of <code>ItagBaseClass</code>.</p>
-
-    </div>
-
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type">Class</span>:
-                    
-                
-            </div>
-        </div>
-    
-
-    
-</div>
-
-                
-                    <div id="method_extractContent" class="method item">
-    <h3 class="name"><code>extractContent</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>domElement</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-        <span class="returns-inline">
-            <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
-        </span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/site_dist_itagsbuild.js.html#l29665"><code>site&#x2F;dist&#x2F;itagsbuild.js:29665</code></a>
-        
-        </p>
-
-
-        
-
-        
-            <p>Available since 0.0.1</p>
-        
-    </div>
-
-    <div class="description">
-        <p>Retrieves content set by the definition of the iTag. The content should be inside a comment-node
-inside the itag. The returnvalue is a container-node (DIV) where the content
--as is specified by the comment-node- lies within as true HTML.</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">domElement</code>
-                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>the itag that should be processed.</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>:
-                    
-                    <p>a DIV-container with HTML inside</p>
-
-                
-            </div>
-        </div>
-    
-
-    
-</div>
-
-                
-                    <div id="method_extractContent" class="method item">
-    <h3 class="name"><code>extractContent</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>domElement</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-        <span class="returns-inline">
-            <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
-        </span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l29665"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:29665</code></a>
-        
-        </p>
-
-
-        
-
-        
-            <p>Available since 0.0.1</p>
-        
-    </div>
-
-    <div class="description">
-        <p>Retrieves content set by the definition of the iTag. The content should be inside a comment-node
-inside the itag. The returnvalue is a container-node (DIV) where the content
--as is specified by the comment-node- lies within as true HTML.</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">domElement</code>
-                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>the itag that should be processed.</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>:
-                    
-                    <p>a DIV-container with HTML inside</p>
-
-                
-            </div>
-        </div>
-    
-
-    
-</div>
-
-                
-                    <div id="method_extractContent" class="method item">
-    <h3 class="name"><code>extractContent</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>domElement</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-        <span class="returns-inline">
-            <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
-        </span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_itags.core_itags.core.js.html#l670"><code>src&#x2F;itags.core&#x2F;itags.core.js:670</code></a>
-        
-        </p>
-
-
-        
-
-        
-            <p>Available since 0.0.1</p>
-        
-    </div>
-
-    <div class="description">
-        <p>Retrieves content set by the definition of the iTag. The content should be inside a comment-node
-inside the itag. The returnvalue is a container-node (DIV) where the content
--as is specified by the comment-node- lies within as true HTML.</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">domElement</code>
-                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>the itag that should be processed.</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>:
-                    
-                    <p>a DIV-container with HTML inside</p>
-
-                
-            </div>
-        </div>
-    
-
-    
-</div>
-
-                
-                    <div id="method_extractModel" class="method item">
-    <h3 class="name"><code>extractModel</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>domElement</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-        <span class="returns-inline">
-            <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a> | Null</span>
-        </span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l29631"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:29631</code></a>
-        
-        </p>
-
-
-        
-
-        
-            <p>Available since 0.0.1</p>
-        
-    </div>
-
-    <div class="description">
-        <p>Retrieves modeldata set by the server inside the itag-element and binds this data into element.model</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">domElement</code>
-                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>the itag that should be processed.</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a> | Null</span>:
-                    
-                    <p>the modeldata or null when not supplied</p>
-
-                
-            </div>
-        </div>
-    
-
-    
-</div>
-
-                
-                    <div id="method_extractModel" class="method item">
-    <h3 class="name"><code>extractModel</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>domElement</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-        <span class="returns-inline">
-            <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a> | Null</span>
-        </span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/src_itags.core_itags.core.js.html#l636"><code>src&#x2F;itags.core&#x2F;itags.core.js:636</code></a>
-        
-        </p>
-
-
-        
-
-        
-            <p>Available since 0.0.1</p>
-        
-    </div>
-
-    <div class="description">
-        <p>Retrieves modeldata set by the server inside the itag-element and binds this data into element.model</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">domElement</code>
-                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>the itag that should be processed.</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a> | Null</span>:
-                    
-                    <p>the modeldata or null when not supplied</p>
-
-                
-            </div>
-        </div>
-    
-
-    
-</div>
-
-                
-                    <div id="method_extractModel" class="method item">
-    <h3 class="name"><code>extractModel</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>domElement</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-        <span class="returns-inline">
-            <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a> | Null</span>
-        </span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/site_dist_itagsbuild.js.html#l29631"><code>site&#x2F;dist&#x2F;itagsbuild.js:29631</code></a>
-        
-        </p>
-
-
-        
-
-        
-            <p>Available since 0.0.1</p>
-        
-    </div>
-
-    <div class="description">
-        <p>Retrieves modeldata set by the server inside the itag-element and binds this data into element.model</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">domElement</code>
-                        <span class="type"><a href="../classes/HTMLElement.html" class="crosslink">HTMLElement</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>the itag that should be processed.</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a> | Null</span>:
-                    
-                    <p>the modeldata or null when not supplied</p>
-
-                
-            </div>
-        </div>
     
 
     
@@ -2478,7 +2449,7 @@ inside the itag. The returnvalue is a container-node (DIV) where the content
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l29702"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:29702</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l31730"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:31730</code></a>
         
         </p>
 
@@ -2588,7 +2559,7 @@ Returns true for any HTML-element that is a rendered itag.</p>
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l29702"><code>site&#x2F;dist&#x2F;itagsbuild.js:29702</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l31730"><code>site&#x2F;dist&#x2F;itagsbuild.js:31730</code></a>
         
         </p>
 
@@ -2698,7 +2669,7 @@ Returns true for any HTML-element that is a rendered itag.</p>
             
         
         
-        <a href="../files/src_itags.core_itags.core.js.html#l707"><code>src&#x2F;itags.core&#x2F;itags.core.js:707</code></a>
+        <a href="../files/src_itags.core_itags.core.js.html#l806"><code>src&#x2F;itags.core&#x2F;itags.core.js:806</code></a>
         
         </p>
 
@@ -2806,7 +2777,7 @@ Returns true for any HTML-element that is a rendered itag.</p>
             
         
         
-        <a href="../files/src_itags.core_itags.core.js.html#l1085"><code>src&#x2F;itags.core&#x2F;itags.core.js:1085</code></a>
+        <a href="../files/src_itags.core_itags.core.js.html#l1185"><code>src&#x2F;itags.core&#x2F;itags.core.js:1185</code></a>
         
         </p>
 
@@ -2900,7 +2871,7 @@ Only when a focusmanager is active and has focus.</p>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l30080"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:30080</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l32109"><code>site&#x2F;dist&#x2F;itagsbuild.js:32109</code></a>
         
         </p>
 
@@ -2994,7 +2965,7 @@ Only when a focusmanager is active and has focus.</p>
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l30080"><code>site&#x2F;dist&#x2F;itagsbuild.js:30080</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l32109"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:32109</code></a>
         
         </p>
 
@@ -3086,7 +3057,7 @@ Only when a focusmanager is active and has focus.</p>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l29717"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:29717</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l31745"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:31745</code></a>
         
         </p>
 
@@ -3178,7 +3149,7 @@ Only processes the attributes that are defined through the Itag-class its <code>
             
         
         
-        <a href="../files/src_itags.core_itags.core.js.html#l722"><code>src&#x2F;itags.core&#x2F;itags.core.js:722</code></a>
+        <a href="../files/src_itags.core_itags.core.js.html#l821"><code>src&#x2F;itags.core&#x2F;itags.core.js:821</code></a>
         
         </p>
 
@@ -3270,7 +3241,7 @@ Only processes the attributes that are defined through the Itag-class its <code>
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l29717"><code>site&#x2F;dist&#x2F;itagsbuild.js:29717</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l31745"><code>site&#x2F;dist&#x2F;itagsbuild.js:31745</code></a>
         
         </p>
 
@@ -3312,6 +3283,69 @@ Only processes the attributes that are defined through the Itag-class its <code>
             
             </ul>
         </div>
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="method_render" class="method item">
+    <h3 class="name"><code>render</code></h3>
+
+    
+        <span class="paren">()</span>
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <span class="flag chainable">chainable</span>
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                    <p>Provided by the <a href="../modules/vdom.html">vdom</a> module.</p>
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/src_i-tabpane_i-tabpane.js.html#l118"><code>src&#x2F;i-tabpane&#x2F;i-tabpane.js:118</code></a>
+        
+        </p>
+
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Redefines the childNodes of both the vnode as well as its related dom-node. The new
+definition replaces any previous nodes. (without touching unmodified nodes).</p>
+<p>Syncs the new vnode&#39;s childNodes with the dom.</p>
+
+    </div>
+
     
 
     
@@ -3362,7 +3396,7 @@ Only processes the attributes that are defined through the Itag-class its <code>
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l29736"><code>site&#x2F;dist&#x2F;itagsbuild.js:29736</code></a>
+        <a href="../files/src_itags.core_itags.core.js.html#l840"><code>src&#x2F;itags.core&#x2F;itags.core.js:840</code></a>
         
         </p>
 
@@ -3453,7 +3487,7 @@ Only processes the attributes that are defined through the Itag-class its <code>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l29736"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:29736</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l31764"><code>site&#x2F;dist&#x2F;itagsbuild.js:31764</code></a>
         
         </p>
 
@@ -3544,7 +3578,7 @@ Only processes the attributes that are defined through the Itag-class its <code>
             
         
         
-        <a href="../files/src_itags.core_itags.core.js.html#l741"><code>src&#x2F;itags.core&#x2F;itags.core.js:741</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l31764"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:31764</code></a>
         
         </p>
 
@@ -3641,7 +3675,7 @@ Only processes the attributes that are defined through the Itag-class its <code>
             
         
         
-        <a href="../files/src_itags.core_itags.core.js.html#l761"><code>src&#x2F;itags.core&#x2F;itags.core.js:761</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l31784"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:31784</code></a>
         
         </p>
 
@@ -3779,7 +3813,7 @@ Only needed for events that are in the list set by DEFAULT_DELAYED_FINALIZE_EVEN
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l29756"><code>site&#x2F;dist&#x2F;itagsbuild.js:29756</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l31784"><code>site&#x2F;dist&#x2F;itagsbuild.js:31784</code></a>
         
         </p>
 
@@ -3917,7 +3951,7 @@ Only needed for events that are in the list set by DEFAULT_DELAYED_FINALIZE_EVEN
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l29756"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:29756</code></a>
+        <a href="../files/src_itags.core_itags.core.js.html#l860"><code>src&#x2F;itags.core&#x2F;itags.core.js:860</code></a>
         
         </p>
 
@@ -4049,7 +4083,7 @@ Only needed for events that are in the list set by DEFAULT_DELAYED_FINALIZE_EVEN
             
         
         
-        <a href="../files/src_itags.core_itags.core.js.html#l835"><code>src&#x2F;itags.core&#x2F;itags.core.js:835</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l31858"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:31858</code></a>
         
         </p>
 
@@ -4140,7 +4174,7 @@ Only needed for events that are in the list set by DEFAULT_DELAYED_FINALIZE_EVEN
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l29830"><code>site&#x2F;dist&#x2F;itagsbuild.js:29830</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l31858"><code>site&#x2F;dist&#x2F;itagsbuild.js:31858</code></a>
         
         </p>
 
@@ -4231,7 +4265,7 @@ Only needed for events that are in the list set by DEFAULT_DELAYED_FINALIZE_EVEN
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l29830"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:29830</code></a>
+        <a href="../files/src_itags.core_itags.core.js.html#l934"><code>src&#x2F;itags.core&#x2F;itags.core.js:934</code></a>
         
         </p>
 
@@ -4312,7 +4346,7 @@ Only needed for events that are in the list set by DEFAULT_DELAYED_FINALIZE_EVEN
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l29845"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:29845</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l31873"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:31873</code></a>
         
         </p>
 
@@ -4369,7 +4403,7 @@ Only needed for events that are in the list set by DEFAULT_DELAYED_FINALIZE_EVEN
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l29845"><code>site&#x2F;dist&#x2F;itagsbuild.js:29845</code></a>
+        <a href="../files/src_itags.core_itags.core.js.html#l949"><code>src&#x2F;itags.core&#x2F;itags.core.js:949</code></a>
         
         </p>
 
@@ -4426,7 +4460,7 @@ Only needed for events that are in the list set by DEFAULT_DELAYED_FINALIZE_EVEN
             
         
         
-        <a href="../files/src_itags.core_itags.core.js.html#l850"><code>src&#x2F;itags.core&#x2F;itags.core.js:850</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l31873"><code>site&#x2F;dist&#x2F;itagsbuild.js:31873</code></a>
         
         </p>
 
@@ -4483,7 +4517,7 @@ Only needed for events that are in the list set by DEFAULT_DELAYED_FINALIZE_EVEN
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l29872"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:29872</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l31900"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:31900</code></a>
         
         </p>
 
@@ -4540,7 +4574,7 @@ Only needed for events that are in the list set by DEFAULT_DELAYED_FINALIZE_EVEN
             
         
         
-        <a href="../files/src_itags.core_itags.core.js.html#l877"><code>src&#x2F;itags.core&#x2F;itags.core.js:877</code></a>
+        <a href="../files/src_itags.core_itags.core.js.html#l976"><code>src&#x2F;itags.core&#x2F;itags.core.js:976</code></a>
         
         </p>
 
@@ -4597,7 +4631,7 @@ Only needed for events that are in the list set by DEFAULT_DELAYED_FINALIZE_EVEN
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l29872"><code>site&#x2F;dist&#x2F;itagsbuild.js:29872</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l31900"><code>site&#x2F;dist&#x2F;itagsbuild.js:31900</code></a>
         
         </p>
 
@@ -4670,7 +4704,7 @@ Only needed for events that are in the list set by DEFAULT_DELAYED_FINALIZE_EVEN
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l29997"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:29997</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l32025"><code>site&#x2F;dist&#x2F;itagsbuild.js:32025</code></a>
         
         </p>
 
@@ -4783,7 +4817,7 @@ Only needed for events that are in the list set by DEFAULT_DELAYED_FINALIZE_EVEN
             
         
         
-        <a href="../files/src_itags.core_itags.core.js.html#l1002"><code>src&#x2F;itags.core&#x2F;itags.core.js:1002</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l32025"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:32025</code></a>
         
         </p>
 
@@ -4896,7 +4930,7 @@ Only needed for events that are in the list set by DEFAULT_DELAYED_FINALIZE_EVEN
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l29997"><code>site&#x2F;dist&#x2F;itagsbuild.js:29997</code></a>
+        <a href="../files/src_itags.core_itags.core.js.html#l1101"><code>src&#x2F;itags.core&#x2F;itags.core.js:1101</code></a>
         
         </p>
 
@@ -4994,7 +5028,7 @@ Only needed for events that are in the list set by DEFAULT_DELAYED_FINALIZE_EVEN
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l29040"><code>site&#x2F;dist&#x2F;itagsbuild.js:29040</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l30969"><code>site&#x2F;dist&#x2F;itagsbuild.js:30969</code></a>
         
         </p>
 
@@ -5045,7 +5079,7 @@ Only needed for events that are in the list set by DEFAULT_DELAYED_FINALIZE_EVEN
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l29040"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:29040</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l30969"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:30969</code></a>
         
         </p>
 
@@ -5155,7 +5189,7 @@ Only needed for events that are in the list set by DEFAULT_DELAYED_FINALIZE_EVEN
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l29855"><code>site&#x2F;dist&#x2F;itagsbuild.js:29855</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l31883"><code>site&#x2F;dist&#x2F;itagsbuild.js:31883</code></a>
         
         </p>
 
@@ -5243,7 +5277,7 @@ Only needed for events that are in the list set by DEFAULT_DELAYED_FINALIZE_EVEN
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l29855"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:29855</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l31883"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:31883</code></a>
         
         </p>
 
@@ -5331,7 +5365,7 @@ Only needed for events that are in the list set by DEFAULT_DELAYED_FINALIZE_EVEN
             
         
         
-        <a href="../files/src_itags.core_itags.core.js.html#l860"><code>src&#x2F;itags.core&#x2F;itags.core.js:860</code></a>
+        <a href="../files/src_itags.core_itags.core.js.html#l959"><code>src&#x2F;itags.core&#x2F;itags.core.js:959</code></a>
         
         </p>
 

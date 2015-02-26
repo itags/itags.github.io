@@ -173,6 +173,7 @@ module.exports.byUrl = function(url) {
         dragdrop;
 
     require('event/extra/objectobserve.js')(window);
+    require('vdom')(window);
 
     /**
      * Reference to the `idGenerator` function in [utils](../modules/utils.html)
@@ -181,8 +182,7 @@ module.exports.byUrl = function(url) {
      * @type function
      * @static
     */
-
-    ITSA.Plugins.merge(require('vdom')(window).Plugins);
+    ITSA.Plugins.merge(require('node-plugin')(window));
 
     ITSA.merge(require('utils'));
     ITSA.RESERVED_WORDS = require('js-ext/extra/reserved-words.js');
@@ -232,7 +232,7 @@ module.exports.byUrl = function(url) {
 })(global.window || require('node-win'));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"css":6,"drag-drop":8,"event":451,"event-dom/extra/blurnode.js":291,"event-dom/extra/focusnode.js":292,"event-dom/extra/hover.js":293,"event-dom/extra/valuechange.js":294,"event-mobile":366,"event/extra/objectobserve.js":449,"focusmanager":467,"io/extra/io-cors-ie9.js":611,"io/extra/io-stream.js":612,"io/extra/io-transfer.js":613,"io/extra/io-xml.js":614,"js-ext/extra/reserved-words.js":639,"js-ext/js-ext.js":640,"node-win":652,"polyfill/polyfill.js":665,"useragent":674,"utils":675,"vdom":722,"window-ext":723}],3:[function(require,module,exports){
+},{"css":6,"drag-drop":8,"event":767,"event-dom/extra/blurnode.js":609,"event-dom/extra/focusnode.js":610,"event-dom/extra/hover.js":611,"event-dom/extra/valuechange.js":612,"event-mobile":683,"event/extra/objectobserve.js":765,"focusmanager":783,"io/extra/io-cors-ie9.js":1045,"io/extra/io-stream.js":1046,"io/extra/io-transfer.js":1047,"io/extra/io-xml.js":1048,"js-ext/extra/reserved-words.js":1073,"js-ext/js-ext.js":1074,"node-plugin":1085,"node-win":1247,"polyfill/polyfill.js":1260,"useragent":1269,"utils":1270,"vdom":1316,"window-ext":1317}],3:[function(require,module,exports){
 var css = "*:focus {\n    outline: 0;\n}\n\na[target=\"_blank\"]:focus {\n    outline: 1px solid #129fea;\n}\n\n/* because we think the padding and margin should always be part of the size,\n   we define \"box-sizing: border-box\" for all elements */\n\n* {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
 },{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],4:[function(require,module,exports){
 var css = ".pure-menu.pure-menu-open {\n    z-index: 3; /* prevent graph from crossing the menuarea */\n}\n\n.pure-button.pure-button-bordered,\n.pure-button.pure-button-bordered[disabled] {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n}\n\n.pure-button-active,\n.pure-button:active,\n.pure-button.pure-button-bordered.pure-button-active,\n.pure-button.pure-button-bordered.pure-button-active[disabled],\n.pure-button.pure-button-bordered:active,\n.pure-button.pure-button-bordered[disabled]:active {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.4) inset, 0 0 6px rgba(0,0,0, 0.2) inset;\n}\n\n.pure-button.pure-button-bordered:focus,\n.pure-button.pure-button-bordered[disabled]:focus,\n.pure-button.pure-button-bordered:focus,\n.pure-button.pure-button-bordered[disabled]:focus,\n.pure-button.pure-button-bordered.focussed,\n.pure-button.pure-button-bordered[disabled].focussed,\n.pure-button.pure-button-bordered.focussed,\n.pure-button.pure-button-bordered[disabled].focussed {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.6) inset;\n}\n\n/* restore pure-button:active */\n.pure-button.pure-button-bordered:active,\n.pure-button.pure-button-bordered.pure-button-active,\n.pure-button:active:focus,\n.pure-button.pure-button-active:focus {\n    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6) inset, 0 0 10px rgba(0, 0, 0, 0.2) inset;\n}\n\n.pure-button.pure-button-rounded {\n    border-radius: 0.3em;\n}\n\n.pure-button.pure-button-heavyrounded {\n    border-radius: 0.5em;\n}\n\n.pure-button.pure-button-oval {\n    border-radius: 50%;\n}\n\n.pure-button.pure-button-halfoval {\n    border-radius: 25%;\n}\n"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
@@ -415,12 +415,16 @@ var DRAG = 'drag',
     DRAGGABLE = DRAG+'gable',
     DEL_DRAGGABLE = 'del-'+DRAGGABLE,
     DD_MINUS = 'dd-',
+    DZ_MINUS = 'dz-',
+    PLUGIN_DD = 'plugin-dd',
+    DZ_DROPZONE = DZ_MINUS+DROPZONE,
     DD_DRAGGING_CLASS = DD_MINUS+DRAG+'ging',
     DD_MASTER_CLASS = DD_MINUS+'master',
     DD_HANDLE = DD_MINUS+'handle',
     DD_SOURCE_ISCOPIED_CLASS = DD_MINUS+COPY+SOURCE,
     DD_COPIED_CLASS = DD_MINUS+COPY,
-    DD_DROPZONE_MOVABLE = DD_MINUS+DROPZONE+'-movable',
+    DROPZONE_MOVABLE = DROPZONE+'-movable',
+    DD_DROPZONE_MOVABLE = DD_MINUS+DROPZONE_MOVABLE,
     CONSTRAIN_ATTR = 'constrain-selector',
     MOUSE = 'mouse',
     DROPZONE_OVER = DROPZONE+'-over',
@@ -451,8 +455,9 @@ var DRAG = 'drag',
     PANMOVE = 'pan'+MOVE,
     DD_FAKE_MOUSEMOVE = DD_FAKE+MOUSEMOVE,
     UI = 'UI',
-    DROPZONE_BRACKETS = '[' + DD_DROPZONE + ']',
-    DD_EFFECT_ALLOWED = DD_MINUS+'effect-allowed',
+    DROPZONE_BRACKETS = '[' + DZ_DROPZONE + ']',
+    EFFECT_ALLOWED = 'effect-allowed',
+    DD_EFFECT_ALLOWED = DD_MINUS+EFFECT_ALLOWED,
     BORDER = 'border',
     WIDTH = 'width',
     BORDER_LEFT_WIDTH = BORDER+'-left-'+WIDTH,
@@ -465,7 +470,7 @@ var DRAG = 'drag',
     ABSOLUTE = 'absolute',
     TRUE = 'true',
     DD_MINUSDRAGGABLE = DD_MINUS+DRAGGABLE,
-    PLUGIN_ATTRS = [DD_DROPZONE, CONSTRAIN_ATTR, DD_EMITTER, DD_HANDLE, DD_EFFECT_ALLOWED, DD_DROPZONE_MOVABLE];
+    PLUGIN_ATTRS = [PLUGIN_DD, DD_DROPZONE, CONSTRAIN_ATTR, DD_EMITTER, DD_HANDLE, DD_EFFECT_ALLOWED, DD_DROPZONE_MOVABLE];
 
 require('polyfill/polyfill-base.js');
 require('js-ext');
@@ -480,7 +485,6 @@ module.exports = function (window) {
     }
 
     var Event = require('event-dom')(window),
-        nodePlugin = require('vdom')(window).Plugins.nodePlugin,
         DragModule = require('drag')(window),
         $superInit = DragModule.DD.init,
         ctrlPressed = false,
@@ -491,6 +495,8 @@ module.exports = function (window) {
         mobileEvents = supportHammer && isMobile,
         DD, DD_Object;
 
+    require('vdom')(window);
+    require('node-plugin')(window);
     require('window-ext')(window);
 
     DD = {
@@ -546,7 +552,7 @@ module.exports = function (window) {
                 PLUGIN_ATTRS.forEach(function(attribute) {
                     var data = '_del_'+attribute;
                     if (dragNode.getData(data)) {
-                        dragNode.removeAttr(attribute);
+                        delete dragNode.plugin.dd.model[attribute];
                         dragNode.removeData(data);
                     }
                 });
@@ -675,12 +681,11 @@ module.exports = function (window) {
                             overDropzone = true;
                             return;
                         }
-                        var dropzoneAccept = dropzone.getAttr(DD_DROPZONE) || '',
+                        var dropzoneAccept = dropzone.getAttr(DZ_DROPZONE) || '',
                             dropzoneMove = REGEXP_MOVE.test(dropzoneAccept),
                             dropzoneCopy = REGEXP_COPY.test(dropzoneAccept),
                             dropzoneDefDraggable = dragNode.getAttr(DD_DROPZONE),
                             dragOverPromise, dragOutEvent, effectAllowed, emitterAllowed, dropzoneEmitter, xMouseLast, yMouseLast, dropzoneAllowed;
-
                         // check if the mouse is inside the dropzone
                         // also check if the mouse is inside the dragged node: the dragged node might have been constrained
                         // and check if the dragged node is effectAllowed to go into the dropzone
@@ -706,7 +711,7 @@ module.exports = function (window) {
                                     function(e3) {
                                         var effectAllowed, dropzoneAccept, dropzoneMove, dropzoneCopy;
                                         if (e3.type===DD_FAKE_MOUSEMOVE) {
-                                            dropzoneAccept = dropzone.getAttr(DD_DROPZONE) || '';
+                                            dropzoneAccept = dropzone.getAttr(DZ_DROPZONE) || '';
                                             dropzoneMove = REGEXP_MOVE.test(dropzoneAccept);
                                             dropzoneCopy = REGEXP_COPY.test(dropzoneAccept);
                                             effectAllowed = (!dropzoneMove && !dropzoneCopy) || (dropzoneCopy && (dropEffect===COPY)) || (dropzoneMove && (dropEffect===MOVE));
@@ -826,7 +831,7 @@ module.exports = function (window) {
                 dropzoneIsDelegated = dropzoneDelegatedDraggable && (dropzoneNode.getAttr(DD_MINUSDRAGGABLE)!=='true');
                 copyToDropzone = function(nodeSource, nodeDrag, shiftX, shiftY) {
                     if (delegatedDragging) {
-                        dropzoneIsDelegated || nodeDrag.setAttr(DD_MINUSDRAGGABLE, TRUE);
+                        dropzoneIsDelegated || (nodeDrag.plugin.dd.model[DRAGGABLE]=TRUE);
                         nodeDrag.removeClass(DEL_DRAGGABLE);
                     }
                     PLUGIN_ATTRS.forEach(function(attribute) {
@@ -834,12 +839,12 @@ module.exports = function (window) {
                             attr = sourceNode.getData(data);
                         if (attr) {
                             if (dropzoneIsDelegated) {
-                                nodeDrag.removeAttr(attribute);
+                                delete nodeDrag.plugin.dd.model[attribute];
                             }
                             else {
-                                nodeDrag.setAttr(attribute, attr);
+                                nodeDrag.plugin.dd.model[attribute] = attr;
                             }
-                            nodeSource.removeAttr(attribute);
+                            delete nodeSource.plugin.dd.model[attribute];
                             nodeSource.removeData(data);
                             nodeDrag.removeData(data);
                         }
@@ -849,12 +854,15 @@ module.exports = function (window) {
                     nodeSource.removeClass(DD_SOURCE_ISCOPIED_CLASS);
                     nodeDrag.setXY(dragNodeX+shiftX, dragNodeY+shiftY, constrainRectangle, true);
                     // make the new HtmlElement non-copyable: it only can be replaced inside its dropzone
-                    dropzoneIsDelegated || nodeDrag.setAttr(DD_EFFECT_ALLOWED, MOVE).setAttr(DD_DROPZONE_MOVABLE, TRUE); // to make moving inside the dropzone possible without return to its startposition
+                    if (!dropzoneIsDelegated) {
+                        nodeDrag.plugin.dd.model[EFFECT_ALLOWED] = MOVE;
+                        nodeDrag.plugin.dd.model[DROPZONE_MOVABLE] = TRUE;
+                    }
                 };
                 moveToDropzone = function(nodeSource, nodeDrag, shiftX, shiftY) {
                     nodeSource.setInlineStyle(POSITION, ABSOLUTE);
                     if (delegatedDragging) {
-                        dropzoneIsDelegated || nodeSource.setAttr(DD_MINUSDRAGGABLE, TRUE);
+                        dropzoneIsDelegated || (nodeSource.plugin.dd.model[DRAGGABLE]=TRUE);
                         nodeSource.removeClass(DEL_DRAGGABLE);
                     }
                     PLUGIN_ATTRS.forEach(function(attribute) {
@@ -862,10 +870,10 @@ module.exports = function (window) {
                             attr = sourceNode.getData(data);
                         if (attr) {
                             if (dropzoneIsDelegated) {
-                                nodeSource.removeAttr(attribute);
+                                delete nodeSource.plugin.dd.model[attribute];
                             }
                             else {
-                                nodeSource.setAttr(attribute, attr);
+                                nodeSource.plugin.dd.model[attribute] = attr;
                             }
                             nodeSource.removeData(data);
                         }
@@ -873,7 +881,10 @@ module.exports = function (window) {
                     dropzoneNode.append(nodeSource);
                     nodeSource.setXY(dragNodeX+shiftX, dragNodeY+shiftY, constrainRectangle, true);
                     // make the new HtmlElement non-copyable: it only can be replaced inside its dropzone
-                    dropzoneIsDelegated || nodeSource.setAttr(DD_EFFECT_ALLOWED, MOVE).setAttr(DD_DROPZONE_MOVABLE, TRUE); // to make moving inside the dropzone possible without return to its startposition
+                    if (!dropzoneIsDelegated) {
+                        nodeSource.plugin.dd.model[EFFECT_ALLOWED] = MOVE;
+                        nodeSource.plugin.dd.model[DROPZONE_MOVABLE] = TRUE;
+                    }
                     nodeSource.removeClass(DD_HIDDEN_SOURCE_CLASS);
                     nodeDrag.remove();
                 };
@@ -928,10 +939,10 @@ module.exports = function (window) {
                                 attr = dragNode.getData(data);
                             if (attr) {
                                 if (dropzoneIsDelegated) {
-                                    nodeSource.removeAttr(attribute);
+                                    delete nodeSource.plugin.dd.model[attribute];
                                 }
                                 else {
-                                    nodeSource.setAttr(attribute, attr);
+                                    nodeSource.plugin.dd.model[attribute] = attr;
                                 }
                                 nodeSource.removeData(data);
                             }
@@ -1046,8 +1057,8 @@ module.exports = function (window) {
                         PLUGIN_ATTRS.forEach(function(attribute) {
                             var data = '_del_'+attribute;
                             if (sourceNode.getData(data)) {
-                                sourceNode.removeAttr(attribute)
-                                          .removeData(data);
+                                sourceNode.removeData(data);
+                                delete sourceNode.plugin.dd.model[attribute];
                             }
                         });
                     }
@@ -1301,18 +1312,38 @@ module.exports = function (window) {
 
     };
 
+    DragModule.DD.merge(DD, {force: true});
+    DragModule.Plugins.DD.mergePrototypes({
+        attrs: {
+            draggable: 'string',
+            constrain: 'string',
+            handle: 'string',
+            emitter: 'string',
+            'effect-allowed': 'string',
+            'dropzone-movable': 'string',
+            dropzone: 'string'
+        }
+    }, true);
+
     DD_Object = window._ITSAmodules.DragDrop = {
-        DD: DragModule.DD.merge(DD, {force: true}),
+        DD: DragModule.DD,
         Plugins: {
-            nodeDD: DragModule.Plugins.nodeDD,
-            nodeDropzone: nodePlugin.definePlugin('dd', {dropzone: 'true'})
+            DD: DragModule.Plugins.DD,
+            Dropzone: DOCUMENT.definePlugin('dz', null, {
+                attrs: {
+                    dropzone: 'string'
+                },
+                defaults: {
+                    dropzone: 'true'
+                }
+            })
         }
     };
 
     return DD_Object;
 
 };
-},{"./css/drag-drop.css":7,"drag":10,"event-dom":155,"js-ext":228,"js-ext/extra/hashmap.js":227,"polyfill/polyfill-base.js":240,"useragent":674,"vdom":282,"window-ext":283}],9:[function(require,module,exports){
+},{"./css/drag-drop.css":7,"drag":10,"event-dom":314,"js-ext":386,"js-ext/extra/hashmap.js":385,"node-plugin":396,"polyfill/polyfill-base.js":559,"useragent":1269,"vdom":600,"window-ext":601}],9:[function(require,module,exports){
 module.exports=require(7)
 },{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],10:[function(require,module,exports){
 "use strict";
@@ -1394,13 +1425,15 @@ module.exports = function (window) {
     }
 
     var Event = require('event-dom')(window),
-        nodePlugin = require('vdom')(window).Plugins.nodePlugin,
         isMobile = require('useragent')(window).isMobile,
-        bodyNode = window.document.body,
+        DOCUMENT = window.document,
+        bodyNode = DOCUMENT.body,
         supportHammer = !!Event.Hammer,
         mobileEvents = supportHammer && isMobile,
         DD, DD_Object;
 
+    require('vdom')(window);
+    require('node-plugin')(window);
     require('window-ext')(window);
 
     DD = {
@@ -1532,7 +1565,7 @@ module.exports = function (window) {
             PLUGIN_ATTRS.forEach(function(attribute) {
                 var data = '_del_'+attribute;
                 if (dragNode.getData(data)) {
-                    dragNode.removeAttr(attribute);
+                    delete dragNode.plugin.dd.model[attribute];
                     dragNode.removeData(data);
                 }
             });
@@ -1558,7 +1591,7 @@ module.exports = function (window) {
             customEvent = e.emitter + ':'+DD_DRAG;
             console.log(NAME, '_defFnStart: default function UI:dd-start. Defining customEvent '+customEvent);
             Event.defineEvent(customEvent).defaultFn(instance._defFnDrag.bind(instance));
-            window.document.getAll('.'+DD_MASTER_CLASS).removeClass(DD_MASTER_CLASS);
+            DOCUMENT.getAll('.'+DD_MASTER_CLASS).removeClass(DD_MASTER_CLASS);
             instance._initializeDrag(e);
         },
 
@@ -1874,7 +1907,7 @@ module.exports = function (window) {
                     }
                 );
                 if (foundNode) {
-                    e.currentTarget = container;
+                    // e.currentTarget = container;
                     e.target = foundNode;
                     // Mark the delegated node, so it has the same style as [draggable]:
                     foundNode.setClass(DEL_DRAGGABLE);
@@ -1884,7 +1917,7 @@ module.exports = function (window) {
                         var attr = container.getAttr(attribute);
                         if (attr && !foundNode.hasAttr(attribute)) {
                             foundNode.setData('_del_'+attribute, attr);
-                            foundNode.setAttr(attribute, attr);
+                            foundNode.plugin.dd.model[attribute] = attr;
                         }
                     });
                     nodeTargetFn(e);
@@ -1958,13 +1991,23 @@ module.exports = function (window) {
     DD_Object = window._ITSAmodules.Drag = {
         DD: DD,
         Plugins: {
-            nodeDD: nodePlugin.definePlugin('dd', {draggable: 'true'})
+            DD: DOCUMENT.definePlugin('dd', null, {
+                attrs: {
+                    draggable: 'string',
+                    constrain: 'string',
+                    handle: 'string',
+                    emitter: 'string'
+                },
+                defaults: {
+                    draggable: 'true'
+                }
+            })
         }
     };
 
     return DD_Object;
 };
-},{"./css/drag.css":9,"event-dom":11,"js-ext":84,"js-ext/extra/hashmap.js":83,"polyfill":96,"useragent":105,"vdom":147,"window-ext":148}],11:[function(require,module,exports){
+},{"./css/drag.css":9,"event-dom":11,"js-ext":83,"js-ext/extra/hashmap.js":82,"node-plugin":93,"polyfill":256,"useragent":265,"vdom":306,"window-ext":307}],11:[function(require,module,exports){
 "use strict";
 
 /**
@@ -2724,7 +2767,7 @@ module.exports = function (window) {
     return Event;
 };
 
-},{"event":15,"js-ext/extra/hashmap.js":25,"js-ext/lib/array.js":26,"js-ext/lib/object.js":27,"js-ext/lib/string.js":28,"polyfill/polyfill-base.js":34,"utils":35,"vdom":82}],12:[function(require,module,exports){
+},{"event":15,"js-ext/extra/hashmap.js":25,"js-ext/lib/array.js":26,"js-ext/lib/object.js":27,"js-ext/lib/string.js":28,"polyfill/polyfill-base.js":34,"utils":35,"vdom":81}],12:[function(require,module,exports){
 (function (global){
 /**
  * Defines the Event-Class, which should be instantiated to get its functionality
@@ -4860,7 +4903,8 @@ require('../lib/object.js');
                     context.__classCarier__ = constructorClosure.constructor;
                     context.__origProp__ = 'constructor';
                     originalConstructor.apply(context, arguments);
-
+                    // only call aferInit on the last constructor of the chain:
+                    (constructorClosure.constructor===context.constructor) && context.afterInit();
                 };
             })(constructor);
 
@@ -4907,6 +4951,17 @@ require('../lib/object.js');
         * @since 0.0.1
         */
         _destroy: NOOP,
+
+       /**
+        * Transformed from `destroy` --> when `destroy` gets invoked, the instance will invoke `_destroy` through the whole chain.
+        * Defaults to `NOOP`, so that it can be always be invoked.
+        *
+        * @method afterInit
+        * @private
+        * @chainable
+        * @since 0.0.1
+        */
+        afterInit: NOOP,
 
        /**
         * Calls `_destroy` on through the class-chain on every level (bottom-up).
@@ -5492,13 +5547,14 @@ defineProperties(Object.prototype, {
      * @param [options.force=false] {Boolean} If true, the properties in `obj` will override those of the same name
      *        in the original object
      * @param [options.full=false] {Boolean} If true, also any non-enumerable properties will be merged
+     * @param [options.replace=false] {Boolean} If true, only properties that already exist on the instance will be merged (forced replaced). No need to set force as well.
      * @param [options.descriptors=false] {Boolean} If true, the full descriptors will be set. This takes more time, but avoids any info to be lost.
      * @chainable
      */
     merge: function (obj, options) {
         var instance = this,
             i = -1,
-            keys, l, key, force, descriptors, propDescriptor;
+            keys, l, key, force, replace, descriptors, propDescriptor;
         if (!Object.isObject(obj)) {
             return instance;
         }
@@ -5506,11 +5562,12 @@ defineProperties(Object.prototype, {
         keys = options.full ? Object.getOwnPropertyNames(obj) : Object.keys(obj);
         l = keys.length;
         force = options.force;
+        replace = options.replace;
         descriptors = options.descriptors;
         // we cannot use obj.each --> obj might be an object defined through Object.create(null) and missing Object.prototype!
         while (++i < l) {
             key = keys[i];
-            if (force || !(key in instance)) {
+            if ((force && !replace) || (!replace && !(key in instance)) || (replace && (key in instance))) {
                 if (descriptors) {
                     propDescriptor = Object.getOwnPropertyDescriptor(obj, key);
                     if (!propDescriptor.writable) {
@@ -7973,139 +8030,6 @@ module.exports = function (window) {
 "use strict";
 
 /**
- * Integrates DOM-events to event. more about DOM-events:
- * http://www.smashingmagazine.com/2013/11/12/an-introduction-to-dom-events/
- *
- *
- * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
- * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
- *
- *
- * @module vdom
- * @submodule element-plugin
- * @class Plugins
- * @since 0.0.1
-*/
-
-require('js-ext/lib/object.js');
-require('js-ext/lib/string.js');
-require('polyfill');
-
-var createHashMap = require('js-ext/extra/hashmap.js').createMap,
-    fromCamelCase = function(input) {
-        return input.replace(/[a-z]([A-Z])/g, function(match, group) {
-            return match[0]+'-'+group.toLowerCase();
-        });
-    };
-
-module.exports = function (window) {
-
-    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
-
-    if (window._ITSAmodules.ElementPlugin) {
-        return window._ITSAmodules.ElementPlugin; // ElementPlugin was already created
-    }
-
-    var nodePlugin, nodeConstrain, ElementPlugin;
-
-    // also extend window.Element:
-    window.Element && (function(ElementPrototype) {
-       /**
-        * Checks whether the plugin is plugged in at the HtmlElement. Checks whether all its attributes are set.
-        *
-        * @method isPlugged
-        * @param pluginClass {NodePlugin} The plugin that should be plugged. Needs to be the Class, not an instance!
-        * @return {Boolean} whether the plugin is plugged in
-        * @since 0.0.1
-        */
-        ElementPrototype.isPlugged = function(nodePlugin) {
-            return nodePlugin.validate(this);
-        };
-
-       /**
-        * Plugs in the plugin on the HtmlElement, and gives is special behaviour by setting the appropriate attributes.
-        *
-        * @method plug
-        * @param pluginClass {NodePlugin} The plugin that should be plugged. Needs to be the Class, not an instance!
-        * @param config {Object} any config that should be passed through when the class is instantiated.
-        * @chainable
-        * @since 0.0.1
-        */
-        ElementPrototype.plug = function(nodePlugin, config) {
-            nodePlugin.setup(this, config);
-            return this;
-        };
-
-       /**
-        * Unplugs a NodePlugin from the HtmlElement.
-        *
-        * @method unplug
-        * @param pluginClass {NodePlugin} The plugin that should be unplugged. Needs to be the Class, not an instance!
-        * @chainable
-        * @since 0.0.1
-        */
-        ElementPrototype.unplug = function(nodePlugin) {
-            nodePlugin.teardown(this);
-            return this;
-        };
-    }(window.Element.prototype));
-
-    nodePlugin = {
-        setup: function (hostElement, config) {
-            var instance = this,
-                attrs = instance.defaults.shallowClone();
-            attrs.merge(config, {force: true});
-            attrs.each(
-                function(value, key) {
-                    key = fromCamelCase(key);
-                    value && hostElement.setAttr(instance.ns+'-'+key, value);
-                }
-            );
-        } ,
-        teardown: function (hostElement) {
-            var instance = this,
-                attrs = hostElement.vnode.attrs,
-                ns = instance.ns+'-';
-            attrs.each(
-                function(value, key) {
-                     key.startsWith(ns) && hostElement.removeAttr(key);
-                }
-            );
-        },
-        validate: function (hostElement) {
-            var instance = this,
-                attrs = hostElement.vnode.attrs,
-                ns = instance.ns+'-';
-            return attrs.some(
-                function(value, key) {
-                    return key.startsWith(ns);
-                }
-            );
-        },
-        definePlugin: function (ns, defaults) {
-            var newPlugin = Object.create(nodePlugin);
-            Object.isObject(defaults) || (defaults = {});
-            (typeof ns==='string') || (ns = 'invalid_ns');
-            ns = ns.replace(/ /g, '').replace(/-/g, '');
-            Object.protectedProp(newPlugin, 'ns', ns);
-            newPlugin.defaults = defaults;
-            return newPlugin;
-        }
-    };
-
-    nodeConstrain = nodePlugin.definePlugin('constrain', {selector: 'window'});
-
-    ElementPlugin = window._ITSAmodules.ElementPlugin = {
-        nodePlugin: nodePlugin,
-        nodeConstrain: nodeConstrain
-    };
-
-    return ElementPlugin;
-};
-},{"js-ext/extra/hashmap.js":43,"js-ext/lib/object.js":46,"js-ext/lib/string.js":48,"polyfill":59}],76:[function(require,module,exports){
-"use strict";
-
-/**
  * Provides several methods that override native document-methods to work with the vdom.
  *
  *
@@ -8165,11 +8089,12 @@ module.exports = function (window) {
      * @method contains
      * @param otherElement {Element}
      * @param [insideItags=false] {Boolean} no deepsearch in iTags --> by default, these elements should be hidden
+     * @param [inspectProtectedNodes=false] {Boolean} no deepsearch in protected Nodes or iTags --> by default, these elements should be hidden
      * @return {Boolean} whether the Element is inside the dom.
      * @since 0.0.1
      */
-    DOCUMENT.contains = function(otherElement, insideItags) {
-        return DOCUMENT.documentElement.contains(otherElement, insideItags);
+    DOCUMENT.contains = function(otherElement, insideItags, inspectProtectedNodes) {
+        return DOCUMENT.documentElement.contains(otherElement, insideItags, inspectProtectedNodes);
     };
 
     /**
@@ -8815,7 +8740,7 @@ module.exports = function (window) {
 
 
 
-},{"js-ext/extra/hashmap.js":43,"js-ext/lib/object.js":46,"js-ext/lib/string.js":48,"polyfill":59}],77:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":43,"js-ext/lib/object.js":46,"js-ext/lib/string.js":48,"polyfill":59}],76:[function(require,module,exports){
 (function (global){
 "use strict";
 
@@ -9882,12 +9807,29 @@ module.exports = function (window) {
         ElementPrototype.cloneNode = function(deep) {
             var instance = this,
                 vnode = instance.vnode,
+                plugins = [],
                 cloned = instance._cloneNode(deep),
                 cloneData = function(srcVNode, targetVNode) {
                     if (srcVNode._data) {
                         Object.protectedProp(targetVNode, '_data', {});
                         targetVNode._data.merge(srcVNode._data);
                     }
+                },
+                updatePlugins = function(srcVNode, targetVNode) {
+                    targetVNode.attrs && targetVNode.attrs.each(function(value, key) {
+                        var pluginName;
+                        if (key.substr(0, 7)==='plugin-') {
+                            pluginName = key.substr(7);
+                            // remove and reset the plugin with shallowcloned modeldata
+                            // needs to be scheduled --> when deep cloned the full node needs t be build up first
+                            // otherwise we could get doube rendered nodes.
+                            plugins[plugins.length] = {
+                                domNode: targetVNode.domNode,
+                                pluginName: pluginName,
+                                model: srcVNode.domNode.plugin[pluginName].model.shallowClone()
+                            };
+                        }
+                    });
                 },
                 cloneDeepData = function(srcVNode, targetVNode) {
                     var srcVChildren = srcVNode.vChildren,
@@ -9898,13 +9840,23 @@ module.exports = function (window) {
                         childSrcVNode = srcVChildren[i];
                         childTargetVNode = targetVChildren[i];
                         cloneData(childSrcVNode, childTargetVNode);
+                        updatePlugins(childSrcVNode, childTargetVNode);
                         childSrcVNode.hasVChildren() && cloneDeepData(childSrcVNode, childTargetVNode);
                     }
-                };
+                },
+                i, len, PluginClass, pluginDef;
             cloned.vnode = domNodeToVNode(cloned);
             cloneData(vnode, cloned.vnode);
+            updatePlugins(vnode, cloned.vnode);
             // if deep, then we need to merge _data of all deeper nodes
             deep && vnode.hasVChildren() && cloneDeepData(vnode, cloned.vnode);
+            len = plugins.length;
+            for (i=0; i<len; i++) {
+                pluginDef = plugins[i];
+                PluginClass = window._ITSAPlugins[pluginDef.pluginName];
+                pluginDef.domNode.unplug(PluginClass);
+                pluginDef.domNode.plug(PluginClass, null, pluginDef.model);
+            }
             return cloned;
         };
 
@@ -9932,7 +9884,7 @@ module.exports = function (window) {
             if (instance===otherElement) {
                 return 0;
             }
-            if (!DOCUMENT.contains(instance) || !DOCUMENT.contains(otherElement)) {
+            if (!DOCUMENT.contains(instance, null, true) || !DOCUMENT.contains(otherElement, null, true)) {
                 return 1;
             }
             else if (instance.contains(otherElement)) {
@@ -9995,6 +9947,7 @@ module.exports = function (window) {
             }
         };
 
+        ElementPrototype._contains = ElementPrototype.contains; // backup native _contains --> mutationobserver needs it
         /**
          * Indicating whether this Element contains OR equals otherElement. If you need only to be sure the other Element lies inside,
          * but not equals itself, set `excludeItself` true.
@@ -10390,11 +10343,12 @@ module.exports = function (window) {
          *
          * @method getHTML
          * @param [exclude] {Array|HTMLElement} an array of HTMLElements - or just 1 - to be excluded
+         * @param [includeSystemNodes=false] {Boolean} whether system-nodes and i-tag inner-content should be returned. By default, they stay hidden.
          * @return {String}
          * @since 0.0.1
          */
-        ElementPrototype.getHTML = function(exclude) {
-            return exclude ? this.vnode.getHTML(exclude) : this.vnode.innerHTML;
+        ElementPrototype.getHTML = function(exclude, includeSystemNodes) {
+            return this.vnode.getHTML(exclude, includeSystemNodes);
         };
 
        /**
@@ -10466,11 +10420,13 @@ module.exports = function (window) {
          * Use this method instead of `outerHTML`
          *
          * @method getOuterHTML
+         * @param [exclude] {Array|HTMLElement} an array of HTMLElements - or just 1 - to be excluded
+         * @param [includeSystemNodes=false] {Boolean} whether system-nodes and i-tag inner-content should be returned. By default, they stay hidden.
          * @return {String}
          * @since 0.0.1
          */
-        ElementPrototype.getOuterHTML = function() {
-            return this.vnode.outerHTML;
+        ElementPrototype.getOuterHTML = function(exclude, includeSystemNodes) {
+            return this.vnode.getOuterHTML(exclude, includeSystemNodes);
         };
 
         /**
@@ -12957,11 +12913,16 @@ module.exports = function (window) {
                         vnode.text = node.nodeValue;
                     }
                     else {
-                        // remove the childNodes that are no longer there:
+                        // remove the childNodes that are no longer there,
+                        // but ONLY when they are not in the dom --> nodes might get
+                        // replaced inside other nodes, which leads into 'remove'-observer,
+                        // yet we still need them
                         len = removedChildNodes.length;
                         for (i=len-1; i>=0; i--) {
-                            childVNode = removedChildNodes[i].vnode;
-                            childVNode && childVNode._destroy();
+                            childDomNode = removedChildNodes[i];
+                            childVNode = childDomNode.vnode;
+                            // need to cheack with native `_contains` --> the vdom its `contains` won't work for it isn't updated yet:
+                            childVNode && !DOCUMENT.documentElement._contains(childDomNode) && childVNode._destroy();
                         }
                        // add the new childNodes:
                         len = addedChildNodes.length;
@@ -13480,7 +13441,7 @@ for (j=0; j<len2; j++) {
 * @since 0.0.1
 */
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../css/element.css":41,"./attribute-extractor.js":73,"./element-array.js":74,"./html-parser.js":78,"./node-parser.js":79,"./vdom-ns.js":80,"./vnode.js":81,"js-ext/extra/hashmap.js":43,"js-ext/lib/object.js":46,"js-ext/lib/promise.js":47,"js-ext/lib/string.js":48,"polyfill":59,"polyfill/extra/transition.js":54,"polyfill/extra/transitionend.js":55,"polyfill/extra/vendorCSS.js":56,"utils":60,"window-ext":66}],78:[function(require,module,exports){
+},{"../css/element.css":41,"./attribute-extractor.js":73,"./element-array.js":74,"./html-parser.js":77,"./node-parser.js":78,"./vdom-ns.js":79,"./vnode.js":80,"js-ext/extra/hashmap.js":43,"js-ext/lib/object.js":46,"js-ext/lib/promise.js":47,"js-ext/lib/string.js":48,"polyfill":59,"polyfill/extra/transition.js":54,"polyfill/extra/transitionend.js":55,"polyfill/extra/vendorCSS.js":56,"utils":60,"window-ext":66}],77:[function(require,module,exports){
 "use strict";
 
 /**
@@ -13851,7 +13812,7 @@ module.exports = function (window) {
     return htmlToVNodes;
 
 };
-},{"./attribute-extractor.js":73,"./vdom-ns.js":80,"js-ext/extra/hashmap.js":43,"js-ext/lib/object.js":46,"polyfill":59}],79:[function(require,module,exports){
+},{"./attribute-extractor.js":73,"./vdom-ns.js":79,"js-ext/extra/hashmap.js":43,"js-ext/lib/object.js":46,"polyfill":59}],78:[function(require,module,exports){
 "use strict";
 
 /**
@@ -13990,7 +13951,7 @@ module.exports = function (window) {
     return domNodeToVNode;
 
 };
-},{"./attribute-extractor.js":73,"./vdom-ns.js":80,"./vnode.js":81,"js-ext/extra/hashmap.js":43,"js-ext/lib/object.js":46,"polyfill":59}],80:[function(require,module,exports){
+},{"./attribute-extractor.js":73,"./vdom-ns.js":79,"./vnode.js":80,"js-ext/extra/hashmap.js":43,"js-ext/lib/object.js":46,"polyfill":59}],79:[function(require,module,exports){
 /**
  * Creates a Namespace that can be used accros multiple vdom-modules to share information.
  *
@@ -14221,7 +14182,7 @@ module.exports = function (window) {
 
     return NS;
 };
-},{"js-ext/extra/hashmap.js":43,"js-ext/lib/object.js":46,"polyfill":59}],81:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":43,"js-ext/lib/object.js":46,"polyfill":59}],80:[function(require,module,exports){
 "use strict";
 
 /**
@@ -15210,14 +15171,17 @@ module.exports = function (window) {
          *
          * @method getHTML
          * @param [exclude] {Array|HTMLElement} an array of HTMLElements - or just 1 - to be excluded
+         * @param [includeSystemNodes=false] {Boolean} whether system-nodes and i-tag inner-content should be returned. By default, they stay hidden.
          * @return {String|undefined} the innerHTML without the elements specified, or `undefined` when not an HTMLElement
          * @since 0.0.1
          */
-        getHTML: function(exclude) {
+        getHTML: function(exclude, includeSystemNodes) {
             var instance = this,
                 html, vChildNodes, len, i, vChildNode;
             if (instance.nodeType===1) {
-                Array.isArray(exclude) || (exclude=[exclude]);
+                if (exclude) {
+                    Array.isArray(exclude) || (exclude=[exclude]);
+                }
                 html = '';
                 vChildNodes = instance.vChildNodes;
                 len = vChildNodes ? vChildNodes.length : 0;
@@ -15225,7 +15189,7 @@ module.exports = function (window) {
                     vChildNode = vChildNodes[i];
                     switch (vChildNode.nodeType) {
                         case 1:
-                            exclude.contains(vChildNode.domNode) || vChildNode._systemNode || (html+=vChildNode.outerHTML);
+                            (exclude && exclude.contains(vChildNode.domNode)) || (!includeSystemNodes && vChildNode._systemNode) || (html+=vChildNode.getOuterHTML(exclude, includeSystemNodes));
                             break;
                         case 3:
                             html += vChildNode.text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -15233,6 +15197,37 @@ module.exports = function (window) {
                         case 8:
                             html += '<!--' + vChildNode.text.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '-->';
                     }
+                }
+            }
+            return html;
+        },
+
+        /**
+         * Gets the outerHTML of the vnode representing the dom-node.
+         * You may exclude HTMLElement (node-type=1) by specifying `exclude`.
+         *
+         * @method getOuterHTML
+         * @param [exclude] {Array|HTMLElement} an array of HTMLElements - or just 1 - to be excluded
+         * @param [includeSystemNodes=false] {Boolean} whether system-nodes and i-tag inner-content should be returned. By default, they stay hidden.
+         * @return {String} the outerHTML
+         * @since 0.0.1
+         */
+        getOuterHTML: function(exclude, includeSystemNodes) {
+            var instance = this,
+                html,
+                attrs = instance.attrs;
+            if (instance.nodeType===1) {
+                if (instance.nodeType!==1) {
+                    return instance.textContent;
+                }
+                html = '<' + instance.tag.toLowerCase();
+                attrs.each(function(value, key) {
+                    html += ' '+key+'="'+value+'"';
+                });
+                instance.isVoid && (html += '/');
+                html += '>';
+                if (!instance.isVoid) {
+                    html += ((!includeSystemNodes && instance.isItag) ? '' : instance.getHTML(exclude, includeSystemNodes)) + '</' + instance.tag.toLowerCase() + '>';
                 }
             }
             return html;
@@ -16022,7 +16017,9 @@ module.exports = function (window) {
                 attributeNameSplitted, ns;
 
             if (instance.isItag && !force && !suppressItagRender && ((instance._unchangableAttrs && instance._unchangableAttrs[attributeName]) || ((attributeName.length===2) && (attributeName.toLowerCase()==='is')))) {
-                console.warn('Not allowed to set the attribute '+attributeName);
+                if (prevVal!=value) {
+                    console.warn('Not allowed to set the attribute '+attributeName);
+                }
                 return instance;
             }
             // don't check by !== --> value isn't parsed into a String yet
@@ -16590,24 +16587,7 @@ module.exports = function (window) {
          */
         outerHTML: {
             get: function() {
-                var instance = this,
-                    html,
-                    attrs = instance.attrs;
-                if (instance.nodeType===1) {
-                    if (instance.nodeType!==1) {
-                        return instance.textContent;
-                    }
-                    html = '<' + instance.tag.toLowerCase();
-                    attrs.each(function(value, key) {
-                        html += ' '+key+'="'+value+'"';
-                    });
-                    instance.isVoid && (html += '/');
-                    html += '>';
-                    if (!instance.isVoid) {
-                        html += (instance.isItag ? '' : instance.innerHTML) + '</' + instance.tag.toLowerCase() + '>';
-                    }
-                }
-                return html;
+                return this.getOuterHTML();
             },
             set: function(v) {
                 var instance = this,
@@ -16934,7 +16914,7 @@ module.exports = function (window) {
     return vNodeProto;
 
 };
-},{"./attribute-extractor.js":73,"./html-parser.js":78,"./vdom-ns.js":80,"js-ext/extra/hashmap.js":43,"js-ext/extra/lightmap.js":44,"js-ext/lib/array.js":45,"js-ext/lib/object.js":46,"js-ext/lib/string.js":48,"polyfill":59,"utils/lib/timers.js":62}],82:[function(require,module,exports){
+},{"./attribute-extractor.js":73,"./html-parser.js":77,"./vdom-ns.js":79,"js-ext/extra/hashmap.js":43,"js-ext/extra/lightmap.js":44,"js-ext/lib/array.js":45,"js-ext/lib/object.js":46,"js-ext/lib/string.js":48,"polyfill":59,"utils/lib/timers.js":62}],81:[function(require,module,exports){
 "use strict";
 
 require('js-ext/lib/object.js');
@@ -16950,16 +16930,13 @@ module.exports = function (window) {
         return window._ITSAmodules.VDOM; // VDOM was already created
     }
 
-    var DOCUMENT = window.document, vdom;
+    var DOCUMENT = window.document;
 
     if (DOCUMENT.doctype.name==='html') {
         require('./partials/extend-element.js')(window);
         require('./partials/extend-document.js')(window);
         // now parsing and virtualize the complete DOM:
         require('./partials/node-parser.js')(window)(DOCUMENT.documentElement);
-        vdom = {
-            Plugins: require('./partials/element-plugin.js')(window)
-        };
         // if there is any Element with inline `transform` that is not compatible with the current browser:
         // we can revert it into the right `transform`, because the vdom knows the right transform-name:
         DOCUMENT.getAll('[style*="transform:"]').forEach(function(node) {
@@ -16977,27 +16954,21 @@ module.exports = function (window) {
             head.vnode._cleanupStyle();
         }, 500);
     }
-    else {
-        // if no HTML, then return an empty Plugin-object
-        vdom = {Plugins: {}};
-    }
 
-    window._ITSAmodules.VDOM = vdom;
-
-    return vdom;
+    window._ITSAmodules.VDOM = true;
 };
-},{"./partials/element-plugin.js":75,"./partials/extend-document.js":76,"./partials/extend-element.js":77,"./partials/node-parser.js":79,"js-ext/extra/hashmap.js":43,"js-ext/lib/object.js":46,"utils/lib/timers.js":62}],83:[function(require,module,exports){
+},{"./partials/extend-document.js":75,"./partials/extend-element.js":76,"./partials/node-parser.js":78,"js-ext/extra/hashmap.js":43,"js-ext/lib/object.js":46,"utils/lib/timers.js":62}],82:[function(require,module,exports){
 module.exports=require(17)
-},{}],84:[function(require,module,exports){
+},{}],83:[function(require,module,exports){
 require('./lib/function.js');
 require('./lib/object.js');
 require('./lib/string.js');
 require('./lib/array.js');
 require('./lib/json.js');
 require('./lib/promise.js');
-},{"./lib/array.js":85,"./lib/function.js":86,"./lib/json.js":87,"./lib/object.js":88,"./lib/promise.js":89,"./lib/string.js":90}],85:[function(require,module,exports){
+},{"./lib/array.js":84,"./lib/function.js":85,"./lib/json.js":86,"./lib/object.js":87,"./lib/promise.js":88,"./lib/string.js":89}],84:[function(require,module,exports){
 module.exports=require(26)
-},{"polyfill/polyfill-base.js":93}],86:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":92}],85:[function(require,module,exports){
 /**
  *
  * Pollyfils for often used functionality for Functions
@@ -17056,7 +17027,7 @@ var NAME = '[Function]: ';
 
 }(Function.prototype));
 
-},{"polyfill/polyfill-base.js":93}],87:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":92}],86:[function(require,module,exports){
 /**
  *
  * Pollyfils for often used functionality for Arrays
@@ -17081,41 +17052,1482 @@ var REVIVER = function(key, value) {
 JSON.parseWithDate = function(stringifiedObj) {
     return this.parse(stringifiedObj, REVIVER);
 };
-},{"polyfill/polyfill-base.js":93}],88:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":92}],87:[function(require,module,exports){
 module.exports=require(18)
-},{"js-ext/extra/hashmap.js":83,"polyfill/polyfill-base.js":93}],89:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":82,"polyfill/polyfill-base.js":92}],88:[function(require,module,exports){
 module.exports=require(47)
-},{"polyfill":93}],90:[function(require,module,exports){
+},{"polyfill":92}],89:[function(require,module,exports){
 module.exports=require(28)
+},{}],90:[function(require,module,exports){
+module.exports=require(19)
 },{}],91:[function(require,module,exports){
-module.exports=require(19)
+module.exports=require(20)
 },{}],92:[function(require,module,exports){
-module.exports=require(20)
-},{}],93:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":91,"./lib/window.console.js":92}],94:[function(require,module,exports){
-module.exports=require(19)
-},{}],95:[function(require,module,exports){
-module.exports=require(20)
-},{}],96:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":94,"./lib/window.console.js":95}],97:[function(require,module,exports){
+},{"./lib/matchesselector.js":90,"./lib/window.console.js":91}],93:[function(require,module,exports){
+"use strict";
+module.exports = function (window) {
+    require('./lib/element-plugin.js')(window);
+    return {
+        Constrain: require('./lib/constrain.js')(window)
+    };
+};
+},{"./lib/constrain.js":94,"./lib/element-plugin.js":95}],94:[function(require,module,exports){
+"use strict";
+module.exports = function (window) {
+    require('./element-plugin.js')(window);
+
+    var createHashMap = require('js-ext/extra/hashmap.js').createMap,
+        PluginConstrain;
+
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
+
+/*jshint boss:true */
+    if (PluginConstrain=window._ITSAmodules.PluginConstrain) {
+/*jshint boss:false */
+        return PluginConstrain;
+    }
+
+    window._ITSAmodules.PluginConstrain = PluginConstrain = window.document.definePlugin('constrain', null, {
+            attrs: {
+                selector: 'string'
+            },
+            defaults: {
+                selector: 'window'
+            }
+        }
+    );
+
+    return PluginConstrain;
+};
+},{"./element-plugin.js":95,"js-ext/extra/hashmap.js":199}],95:[function(require,module,exports){
+"use strict";
+
+/**
+ * Integrates DOM-events to event. more about DOM-events:
+ * http://www.smashingmagazine.com/2013/11/12/an-introduction-to-dom-events/
+ *
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ *
+ * @module vdom
+ * @submodule element-plugin
+ * @class Plugins
+ * @since 0.0.1
+*/
+
+require('js-ext/lib/object.js');
+require('js-ext/lib/string.js');
+require('js-ext/lib/promise.js');
+require('polyfill');
+require('event/extra/timer-finalize.js');
+
+var createHashMap = require('js-ext/extra/hashmap.js').createMap,
+    fromCamelCase = function(input) {
+        return input.replace(/[a-z]([A-Z])/g, function(match, group) {
+            return match[0]+'-'+group.toLowerCase();
+        });
+    };
+
+module.exports = function (window) {
+
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
+
+    if (window._ITSAmodules.ElementPlugin) {
+        return; // ElementPlugin was already created
+    }
+
+    require('vdom')(window);
+    var NAME = '[ElementPlugin]: ',
+        Classes = require('js-ext/extra/classes.js'),
+        timers = require('utils/lib/timers.js'),
+        IO = require('io')(window),
+        Event = require('event-dom')(window),
+        asyncSilent = timers.asyncSilent,
+        laterSilent = timers.laterSilent,
+        DELAY_DESTRUCTION = 5000, // must be kept below vnode.js its DESTROY_DELAY (which is currently 60000)
+        DELAYED_EVT_TIME = 500,
+        NATIVE_OBJECT_OBSERVE = !!Object.observe,
+        DOCUMENT = window.document,
+        types = [],
+        NODE = 'node',
+        REMOVE = 'remove',
+        INSERT = 'insert',
+        CHANGE = 'change',
+        ATTRIBUTE = 'attribute',
+        NODE_REMOVE = NODE+REMOVE,
+        NODE_INSERT = NODE+INSERT,
+        NODE_CONTENT_CHANGE = NODE+'content'+CHANGE,
+        ATTRIBUTE_REMOVE = ATTRIBUTE+REMOVE,
+        ATTRIBUTE_CHANGE = ATTRIBUTE+CHANGE,
+        ATTRIBUTE_INSERT = ATTRIBUTE+INSERT,
+        MUTATION_EVENTS = [NODE_REMOVE, NODE_INSERT, NODE_CONTENT_CHANGE, ATTRIBUTE_REMOVE, ATTRIBUTE_CHANGE, ATTRIBUTE_INSERT],
+        Base, pluginDOM, modelToAttrs, attrsToModel, syncPlugin, autoRefreshPlugin, pluginDOMresync, DEFAULT_DELAYED_FINALIZE_EVENTS;
+
+    Object.protectedProp(window, '_ITSAPlugins', createHashMap());
+
+    /**
+     * Default internal hash containing all DOM-events that will not directly call `event-finalize`
+     * but after a delay of 1 second
+     *
+     * @property DEFAULT_DELAYED_FINALIZE_EVENTS
+     * @default {
+     *    mousedown: true,
+     *    mouseup: true,
+     *    mousemove: true,
+     *    panmove: true,
+     *    panstart: true,
+     *    panleft: true,
+     *    panright: true,
+     *    panup: true,
+     *    pandown: true,
+     *    pinchmove: true,
+     *    rotatemove: true,
+     *    focus: true,
+     *    manualfocus: true,
+     *    keydown: true,
+     *    keyup: true,
+     *    keypress: true,
+     *    blur: true,
+     *    resize: true,
+     *    scroll: true
+     * }
+     * @type Object
+     * @private
+     * @since 0.0.1
+    */
+    DEFAULT_DELAYED_FINALIZE_EVENTS = {
+        mousedown: true,
+        mouseup: true,
+        mousemove: true,
+        panmove: true,
+        panstart: true,
+        panleft: true,
+        panright: true,
+        panup: true,
+        pandown: true,
+        pinchmove: true,
+        rotatemove: true,
+        focus: true,
+        manualfocus: true,
+        keydown: true,
+        keyup: true,
+        keypress: true,
+        blur: true,
+        resize: true,
+        scroll: true
+    };
+
+    pluginDOM = function(NewClass) {
+        // asynchroniously we check all current elements and render when needed:
+        var ns = NewClass.prototype.$ns;
+        asyncSilent(function() {
+            var elements = DOCUMENT.getAll('[plugin-'+ns+'="true"]'),
+                len = elements.length,
+                element, i;
+            for (i=0; i<len; i++) {
+                element = elements[i];
+                element.plug(NewClass);
+            }
+        });
+    };
+
+    pluginDOMresync = function(NewClass) {
+        // asynchroniously we check all current elements and render when needed:
+        var ns = NewClass.prototype.$ns;
+        asyncSilent(function() {
+            var elements = DOCUMENT.getAll('[plugin-'+ns+'="true"]'),
+                len = elements.length,
+                element, i;
+            for (i=0; i<len; i++) {
+                element = elements[i];
+                syncPlugin(element[ns]);
+            }
+        });
+    };
+
+    attrsToModel = function(plugin, config) {
+        var host = plugin.host,
+            attrs = plugin.attrs,
+            defaults = plugin.defaults,
+            ns = plugin.$ns + '-',
+            attrValue, validValue;
+        config || (config={});
+        // read the current ns-attributes on the node, overrule them with config and set the new attributes
+        attrs.each(function(value, key) {
+            attrValue = config[key] || host.getAttr(ns+key) || defaults[key];
+            if (attrValue) {
+                switch (value.toLowerCase()) {
+                    case 'boolean':
+                        validValue = attrValue.validateBoolean();
+                        attrValue = (attrValue==='true');
+                        break;
+                    case 'number':
+                        validValue = attrValue.validateFloat();
+                        attrValue = parseFloat(attrValue);
+                        break;
+                    case 'date':
+                        validValue = attrValue.validateDate();
+                        attrValue = attrValue.toDate();
+                        break;
+                    case 'string':
+                        validValue = true;
+                        break;
+                    default:
+                        validValue = false;
+                }
+            }
+            else if (value.toLowerCase()==='boolean') {
+                // undefined `boolean` attributes need to be stored as `false`
+                validValue = true;
+                attrValue = false;
+            }
+            else {
+                validValue = false;
+            }
+            if (validValue && !plugin.model[key]) {
+                plugin.model[key] = attrValue;
+            }
+        });
+    };
+
+    modelToAttrs = function(plugin) {
+        console.log(NAME+'modelToAttrs');
+        var attrs = plugin.attrs,
+            model = plugin.model,
+            domElement = plugin.host,
+            ns = plugin.$ns,
+            newAttrs = [];
+        attrs.each(function(value, key) {
+            model[key] && (newAttrs[newAttrs.length] = {name: ns+'-'+fromCamelCase(key), value: model[key]});
+        });
+        if (newAttrs.length>0) {
+            domElement.setAttrs(newAttrs, true);
+        }
+    };
+
+    syncPlugin = function(plugin) {
+        modelToAttrs(plugin);
+        plugin.sync();
+    };
+
+    autoRefreshPlugin = function(plugin) {
+        if (!NATIVE_OBJECT_OBSERVE) {
+            plugin._EventFinalizer = Event.finalize(function(e) {
+                var type = e.type;
+                if (!e._noRender && (!e.status || !e.status.renderPrevented)) {
+                    if (!MUTATION_EVENTS[type] && !type.endsWith('outside')) {
+                        if (plugin._DELAYED_FINALIZE_EVENTS[type]) {
+                            types.push(type);
+                            plugin.constructor.$registerDelay || (plugin.constructor.$registerDelay = laterSilent(function() {
+                                console.info('Event-finalizer will delayed-refresh itags because of events: '+JSON.stringify(types));
+                                syncPlugin(plugin);
+                                types.length = 0;
+                                plugin.constructor.$registerDelay = null;
+                            }, DELAYED_EVT_TIME));
+                        }
+                        else {
+                            console.info('Event-finalizer will refresh itags because of event: '+type);
+                            syncPlugin(plugin);
+                        }
+                    }
+                }
+            });
+
+            plugin._IOFinalizer = IO.finalize(function() {
+                syncPlugin(plugin);
+            });
+        }
+    };
+
+    // extend window.Element:
+    window.Element && (function(HTMLElementPrototype) {
+       /**
+        * Checks whether the plugin is plugged in at the HtmlElement. Checks whether all its attributes are set.
+        *
+        * @method isPlugged
+        * @param PluginClass {NodePlugin} The plugin that should be plugged. Needs to be the Class, not an instance!
+        * @return {Boolean} whether the plugin is plugged in
+        * @since 0.0.1
+        */
+        HTMLElementPrototype.isPlugged = function(PluginClass) {
+            return !!this.plugin && !!this.plugin[PluginClass.prototype.$ns];
+        };
+
+       /**
+        * Checks whether the plugin is ready to be used.
+        *
+        * @method pluginReady
+        * @param PluginClass {NodePlugin} The plugin that should be plugged. Needs to be the Class, not an instance!
+        * @return {Promise} whether the plugin is plugged in
+        * @since 0.0.1
+        */
+        HTMLElementPrototype.pluginReady = function(PluginClass) {
+            var instance = this,
+                ns = PluginClass.prototype.$ns;
+            instance._pluginReadyInfo || (instance._pluginReadyInfo={});
+            instance._pluginReadyInfo[ns] || (instance._pluginReadyInfo[ns]=window.Promise.manage());
+            return instance._pluginReadyInfo[ns];
+        };
+
+       /**
+        * Plugs in the plugin on the HtmlElement, and gives is special behaviour by setting the appropriate attributes.
+        *
+        * @method plug
+        * @param PluginClass {NodePlugin} The plugin that should be plugged. Needs to be the Class, not an instance!
+        * @param [config] {Object} any config that should be passed through when the class is instantiated.
+        * @param [model] {Object} model to used as `ns.model`
+        * @chainable
+        * @since 0.0.1
+        */
+        HTMLElementPrototype.plug = function(PluginClass, config, model) {
+            var instance = this;
+            if (!instance.isPlugged(PluginClass)) {
+                instance.plugin || Object.protectedProp(instance, 'plugin', {});
+                instance.plugin[PluginClass.prototype.$ns] = new PluginClass(instance, config, model);
+            }
+            else {
+                console.info('ElementPlugin '+PluginClass.prototype.$ns+' already plugged in');
+                model && instance.plugin[PluginClass.prototype.$ns].bindModel(model);
+            }
+            return instance;
+        };
+
+       /**
+        * Unplugs a NodePlugin from the HtmlElement.
+        *
+        * @method unplug
+        * @param PluginClass {NodePlugin} The plugin that should be unplugged. Needs to be the Class, not an instance!
+        * @chainable
+        * @since 0.0.1
+        */
+        HTMLElementPrototype.unplug = function(PluginClass) {
+            var instance = this;
+            if (instance.isPlugged(PluginClass)) {
+                instance.plugin[PluginClass.prototype.$ns].destroy();
+            }
+            return instance;
+        };
+    }(window.HTMLElement.prototype));
+
+    Base = Classes.createClass(
+        function (hostElement, config, model) {
+            var instance = this;
+            instance.host = hostElement;
+            instance.model = {};
+            attrsToModel(instance, config);
+            hostElement.setAttr('plugin-'+instance.$ns, 'true', true);
+            model && instance.bindModel(model, true);
+            syncPlugin(instance);
+            autoRefreshPlugin(instance);
+        },
+        {
+            _DELAYED_FINALIZE_EVENTS: DEFAULT_DELAYED_FINALIZE_EVENTS.shallowClone(),
+            attrs: {},
+            defaults: {},
+           /**
+            * Binds a model to the plugin, making plugin.model equals the bound model.
+            * Immediately syncs the plugin with the new model-data.
+            *
+            * Syncs the new vnode's childNodes with the dom.
+            *
+            * @method bindModel
+            * @param model {Object} the model to bind to the itag-element
+            * @param [mergeCurrent=false] {Boolean} when set true, current properties on the plugin's model that aren't defined
+            *        in the new model, get merged into the new model.
+            * @since 0.0.1
+            */
+            bindModel: function(model, mergeCurrent) {
+                console.log(NAME+'bindModel');
+                var instance = this,
+                    observer;
+                if (Object.isObject(model) && (instance.model!==model)) {
+                    instance.host.removeAttr('bound-model');
+                    if (NATIVE_OBJECT_OBSERVE) {
+                        observer = instance._observer;
+                        observer && Object.unobserve(instance.model, observer);
+                    }
+                    mergeCurrent && (model.merge(instance.model, {full: true}));
+                    instance.model = model;
+                    if (NATIVE_OBJECT_OBSERVE) {
+                        observer = function() {
+                            syncPlugin(instance);
+                        };
+                        Object.observe(instance.model, observer);
+                        instance._observer = observer;
+                    }
+                    syncPlugin(instance);
+                }
+            },
+            afterInit: function() {
+                var instance = this,
+                    ns = instance.$ns,
+                    host = instance.host;
+                if (host.getAttr(ns+'-ready')!=='true') {
+                    instance.render();
+                    host.setAttr(ns+'-ready', 'true', true);
+                }
+                host._pluginReadyInfo || (host._pluginReadyInfo={});
+                host._pluginReadyInfo[ns] || (host._pluginReadyInfo[ns]=window.Promise.manage());
+                host._pluginReadyInfo[ns].fulfill();
+            },
+           /**
+            * Defines which domevents should lead to a direct sync by the Event-finalizer.
+            * Only needed for events that are in the list set by DEFAULT_DELAYED_FINALIZE_EVENTS:
+            *
+            * <ul>
+            *     <li>mousedown</li>
+            *     <li>mouseup</li>
+            *     <li>mousemove</li>
+            *     <li>panmove</li>
+            *     <li>panstart</li>
+            *     <li>panleft</li>
+            *     <li>panright</li>
+            *     <li>panup</li>
+            *     <li>pandown</li>
+            *     <li>pinchmove</li>
+            *     <li>rotatemove</li>
+            *     <li>focus</li>
+            *     <li>manualfocus</li>
+            *     <li>keydown</li>
+            *     <li>keyup</li>
+            *     <li>keypress</li>
+            *     <li>blur</li>
+            *     <li>resize</li>
+            *     <li>scroll</li>
+            * </ul>
+            *
+            * Events that are not in this list don't need to be set: they always go through the finalizer immediatly.
+            *
+            * You need to set this if the itag-definition its `sync`-method should be updated after one of the events in the list.
+            *
+            * @method setItagDirectEventResponse
+            * @param ItagClass {Class} The ItagClass that wants to register
+            * @param domEvents {Array|String} the domevents that should directly make the itag sync
+            * @since 0.0.1
+            */
+            setDirectEventResponse :function(domEvents) {
+                console.log(NAME+'setDirectEventResponse');
+                var instance = this;
+                if (!NATIVE_OBJECT_OBSERVE) {
+                    Array.isArray(domEvents) || (domEvents=[domEvents]);
+                    domEvents.forEach(function(domEvent) {
+                        domEvent.endsWith('outside') && (domEvent=domEvent.substr(0, domEvent.length-7));
+                        domEvent = domEvent.toLowerCase();
+                        if (domEvent==='blur') {
+                            console.warn('the event "blur" cannot be delayed, for it would lead to extremely many syncing before anything changes which you don\'t need');
+                        }
+                        else {
+                            if (DEFAULT_DELAYED_FINALIZE_EVENTS[domEvent]) {
+                                ('DELAYED_FINALIZE_EVENTS' in instance.constructor.prototypes) || instance.mergePrototypes({'DELAYED_FINALIZE_EVENTS': DEFAULT_DELAYED_FINALIZE_EVENTS.shallowClone()});
+                                delete instance.DELAYED_FINALIZE_EVENTS[domEvent];
+                            }
+                        }
+                    });
+                }
+            },
+            render: function() {
+                // defaults to NOOP
+            },
+            sync: function() {
+                // defaults to NOOP
+            },
+            destroy: function () {
+                var instance = this,
+                    host = instance.host,
+                    attrs = instance.attrs,
+                    ns = instance.$ns,
+                    observer;
+                if (NATIVE_OBJECT_OBSERVE) {
+                    observer = instance._observer;
+                    if (observer) {
+                        Object.unobserve(instance.model, observer);
+                        delete instance._observer;
+                    }
+                }
+                else {
+                    instance._EventFinalizer.detach();
+                    instance._IOFinalizer.detach();
+                }
+                attrs.each(
+                    function(value, key) {
+                        host.removeAttr(ns+'-'+fromCamelCase(key), true);
+                    }
+                );
+                host.removeAttr('plugin-'+ns, true);
+                host.removeAttr(ns+'-ready', true);
+                delete host.plugin[ns];
+            },
+            $ns: 'undefined-namespace'
+        }
+    );
+
+    // Whenever elements are added: check for plugins and initialize them
+    Event.after(['UI:'+ATTRIBUTE_CHANGE, 'UI:'+ATTRIBUTE_INSERT], function(e) {
+        var element = e.target,
+            ns, Plugin;
+        // to prevent less userexperience, we plug asynchroniously
+        asyncSilent(function() {
+            e.changed.forEach(function(item) {
+                if (item.attribute.substr(0, 7)==='plugin-') {
+                    ns = item.attribute.substr(7);
+                    Plugin = window._ITSAPlugins[ns];
+                    if (Plugin) {
+                        if (item.newValue==='true') {
+                            element.plug(Plugin);
+                            console.log(NAME, 'plug: '+ns+' due to attribute change');
+                        }
+                        else {
+                            element.unplug(Plugin);
+                            console.log(NAME, 'unplug: '+ns+' due to attribute change');
+                        }
+                    }
+                }
+            });
+        });
+    });
+
+    // Whenever elements are added: check for plugins and initialize them
+    Event.after('UI:'+ATTRIBUTE_REMOVE, function(e) {
+        var element = e.target,
+            ns, Plugin;
+        // to prevent less userexperience, we plug asynchroniously
+        asyncSilent(function() {
+            e.changed.forEach(function(attribute) {
+                if (attribute.substr(0, 7)==='plugin-') {
+                    ns = attribute.substr(7);
+                    Plugin = window._ITSAPlugins[ns];
+                    if (Plugin) {
+                        element.unplug(Plugin);
+                        console.log(NAME, 'unplug: '+ns+' due to attribute removal');
+                    }
+                }
+            });
+        });
+    });
+
+    // Whenever elements are added: check for plugins and initialize them
+    Event.after('UI:'+NODE_INSERT, function(e) {
+        var element = e.target;
+        // to prevent less userexperience, we plug asynchroniously
+        asyncSilent(function() {
+            var attrs = element.vnode.attrs,
+                ns, Plugin;
+            attrs && attrs.each(function(value, key) {
+                if (key.substr(0, 7)==='plugin-') {
+                    ns = key.substr(7);
+                    Plugin = window._ITSAPlugins[ns];
+                    if (Plugin) {
+                        element.plug(Plugin);
+                        console.log(NAME, 'plug: '+ns+' due to node insert with the plugin-attribute');
+                    }
+                }
+            });
+        });
+    });
+
+    // Whenever elements are removed: check for plugins and destoy (unplug) them
+    Event.after('UI:'+NODE_REMOVE, function(e) {
+        var element = e.target;
+        // to prevent less userexperience, we unplug after a delay
+        laterSilent(function() {
+            var Plugin;
+            if (element.plugin) {
+                element.plugin.each(function(value, ns) {
+                    Plugin = window._ITSAPlugins[ns];
+                    if (Plugin) {
+                        element.unplug(Plugin);
+                        console.log(NAME, 'unplug: '+ns+' due to node removal with this plugin');
+                    }
+                });
+            }
+        }, DELAY_DESTRUCTION);
+    });
+
+    Event.after(
+        ['*:prototypechange', '*:prototyperemove'],
+        function(e) {
+            pluginDOMresync(e.target);
+        },
+        function(e) {
+            return !!e.target.prototype.$ns;
+        }
+    );
+
+   /**
+    * Creates a new Element-PluginClass.
+    *
+    * @method definePlugin
+    * @param ns {String} the namespace of the plugin
+    * @param [constructor] {Function} The function that will serve as constructor for the new class.
+    *        If `undefined` defaults to `NOOP`
+    * @param [prototypes] {Object} Hash map of properties to be added to the prototype of the new class.
+    * @return {PluginClass}
+    * @since 0.0.1
+    */
+    DOCUMENT.definePlugin = function(ns, constructor, prototypes) {
+        var NewClass;
+        if ((typeof ns==='string') && (ns=ns.replaceAll(' ', '')) && (ns.length>0) && !ns.contains('-')) {
+/*jshint boss:true */
+            if (NewClass=window._ITSAPlugins[ns]) {
+/*jshint boss:false */
+                console.warn(NAME+'definePlugin cannot redefine Plugin '+ns+' --> already exists');
+            }
+            else {
+                console.log(NAME+'definePlugin');
+                NewClass = Base.subClass(ns, constructor, prototypes).mergePrototypes({$ns: ns}, true);
+            }
+        }
+        else {
+            console.warn(NAME+'definePlugin cannot create Plugin: invalid ns: '+ns);
+        }
+        return NewClass;
+    };
+
+    (function(FunctionPrototype) {
+        var originalSubClass = FunctionPrototype.subClass;
+        /**
+         * Returns a newly created class inheriting from this class
+         * using the given `constructor` with the
+         * prototypes listed in `prototypes` merged in.
+         *
+         *
+         * The newly created class has the `$$super` static property
+         * available to access all of is ancestor's instance methods.
+         *
+         * Further methods can be added via the [mergePrototypes](#method_mergePrototypes).
+         *
+         * @example
+         *
+         *  var Circle = Shape.subClass(
+         *      function (x, y, r) {
+         *          // arguments will automaticly be passed through to Shape's constructor
+         *          this.r = r;
+         *      },
+         *      {
+         *          area: function () {
+         *              return this.r * this.r * Math.PI;
+         *          }
+         *      }
+         *  );
+         *
+         * @method subClass
+         * @param ns {String} the namespace of the plugin
+         * @param [constructor] {Function} The function that will serve as constructor for the new class.
+         *        If `undefined` defaults to `NOOP`
+         * @param [prototypes] {Object} Hash map of properties to be added to the prototype of the new class.
+         * @param [chainConstruct=true] {Boolean} Whether -during instance creation- to automaticly construct in the complete hierarchy with the given constructor arguments.
+         * @return {Plugin|undefined} undefined when no valid namespace is given
+         */
+        FunctionPrototype.subClass = function (ns, constructor, prototypes /*, chainConstruct */) {
+            var instance = this,
+                NewClass;
+            if (instance.prototype.$ns) {
+                if ((typeof ns==='string') && (ns=ns.replaceAll(' ', '')) && (ns.length>0) && !ns.contains('-')) {
+/*jshint boss:true */
+                    if (NewClass=window._ITSAPlugins[ns]) {
+/*jshint boss:false */
+                        console.warn(NAME+'definePlugin cannot redefine Plugin '+ns+' --> already exists');
+                    }
+                    else {
+                        // change the constructor, so that it will end by calling `_finishInit`
+                        NewClass = originalSubClass.call(instance, constructor, prototypes).mergePrototypes({$ns: ns}, true);
+                        window._ITSAPlugins[ns] = NewClass;
+                        pluginDOM(NewClass);
+                    }
+                    return NewClass;
+                }
+                else {
+                    console.warn(NAME+'subClass cannot create Plugin: invalid ns: '+ns);
+                }
+            }
+            else {
+                // Original subclassing
+                return originalSubClass.apply(instance, arguments);
+            }
+        };
+    }(Function.prototype));
+
+    window._ITSAmodules.ElementPlugin = true;
+};
+},{"event-dom":96,"event/extra/timer-finalize.js":168,"io":177,"js-ext/extra/classes.js":198,"js-ext/extra/hashmap.js":199,"js-ext/lib/object.js":200,"js-ext/lib/promise.js":201,"js-ext/lib/string.js":202,"polyfill":208,"utils/lib/timers.js":209,"vdom":253}],96:[function(require,module,exports){
+module.exports=require(11)
+},{"event":100,"js-ext/extra/hashmap.js":110,"js-ext/lib/array.js":111,"js-ext/lib/object.js":112,"js-ext/lib/string.js":113,"polyfill/polyfill-base.js":119,"utils":120,"vdom":166}],97:[function(require,module,exports){
+module.exports=require(12)
+},{"js-ext/extra/hashmap.js":102,"js-ext/lib/object.js":103,"polyfill/polyfill-base.js":109}],98:[function(require,module,exports){
+module.exports=require(13)
+},{"./event-base.js":97}],99:[function(require,module,exports){
+module.exports=require(14)
+},{"./event-base.js":97,"js-ext/extra/classes.js":101,"js-ext/lib/object.js":103}],100:[function(require,module,exports){
+module.exports=require(15)
+},{"./event-base.js":97,"./event-emitter.js":98,"./event-listener.js":99}],101:[function(require,module,exports){
+module.exports=require(16)
+},{"../lib/object.js":103,"js-ext/extra/hashmap.js":102,"polyfill/polyfill-base.js":106}],102:[function(require,module,exports){
 module.exports=require(17)
-},{}],98:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":97,"polyfill/polyfill-base.js":101}],99:[function(require,module,exports){
-module.exports=require(19)
-},{}],100:[function(require,module,exports){
-module.exports=require(20)
-},{}],101:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":99,"./lib/window.console.js":100}],102:[function(require,module,exports){
-module.exports=require(19)
 },{}],103:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":102,"polyfill/polyfill-base.js":106}],104:[function(require,module,exports){
+module.exports=require(19)
+},{}],105:[function(require,module,exports){
 module.exports=require(20)
-},{}],104:[function(require,module,exports){
+},{}],106:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":102,"./lib/window.console.js":103}],105:[function(require,module,exports){
+},{"./lib/matchesselector.js":104,"./lib/window.console.js":105}],107:[function(require,module,exports){
+module.exports=require(19)
+},{}],108:[function(require,module,exports){
+module.exports=require(20)
+},{}],109:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":107,"./lib/window.console.js":108}],110:[function(require,module,exports){
+module.exports=require(17)
+},{}],111:[function(require,module,exports){
+module.exports=require(26)
+},{"polyfill/polyfill-base.js":116}],112:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":110,"polyfill/polyfill-base.js":116}],113:[function(require,module,exports){
+module.exports=require(28)
+},{}],114:[function(require,module,exports){
+module.exports=require(19)
+},{}],115:[function(require,module,exports){
+module.exports=require(20)
+},{}],116:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":114,"./lib/window.console.js":115}],117:[function(require,module,exports){
+module.exports=require(19)
+},{}],118:[function(require,module,exports){
+module.exports=require(20)
+},{}],119:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":117,"./lib/window.console.js":118}],120:[function(require,module,exports){
+module.exports=require(35)
+},{"./lib/idgenerator.js":121,"./lib/timers.js":122}],121:[function(require,module,exports){
+module.exports=require(36)
+},{"js-ext/extra/hashmap.js":110,"polyfill/polyfill-base.js":125}],122:[function(require,module,exports){
+module.exports=require(37)
+},{"polyfill/polyfill-base.js":125}],123:[function(require,module,exports){
+module.exports=require(19)
+},{}],124:[function(require,module,exports){
+module.exports=require(20)
+},{}],125:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":123,"./lib/window.console.js":124}],126:[function(require,module,exports){
+module.exports=require(41)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],127:[function(require,module,exports){
+module.exports=require(16)
+},{"../lib/object.js":131,"js-ext/extra/hashmap.js":128,"polyfill/polyfill-base.js":137}],128:[function(require,module,exports){
+module.exports=require(17)
+},{}],129:[function(require,module,exports){
+module.exports=require(44)
+},{"../lib/array.js":130,"../lib/object.js":131,"./classes.js":127,"js-ext/extra/hashmap.js":128,"polyfill/lib/weakmap.js":135}],130:[function(require,module,exports){
+module.exports=require(26)
+},{"polyfill/polyfill-base.js":137}],131:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":128,"polyfill/polyfill-base.js":137}],132:[function(require,module,exports){
+module.exports=require(47)
+},{"polyfill":137}],133:[function(require,module,exports){
+module.exports=require(28)
+},{}],134:[function(require,module,exports){
+module.exports=require(19)
+},{}],135:[function(require,module,exports){
+module.exports=require(50)
+},{}],136:[function(require,module,exports){
+module.exports=require(20)
+},{}],137:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":134,"./lib/window.console.js":136}],138:[function(require,module,exports){
+module.exports=require(53)
+},{}],139:[function(require,module,exports){
+module.exports=require(54)
+},{"../bin/local-hashmap.js":138}],140:[function(require,module,exports){
+module.exports=require(55)
+},{"../bin/local-hashmap.js":138}],141:[function(require,module,exports){
+module.exports=require(56)
+},{"../bin/local-hashmap.js":138}],142:[function(require,module,exports){
+module.exports=require(19)
+},{}],143:[function(require,module,exports){
+module.exports=require(20)
+},{}],144:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":142,"./lib/window.console.js":143}],145:[function(require,module,exports){
+module.exports=require(35)
+},{"./lib/idgenerator.js":146,"./lib/timers.js":147}],146:[function(require,module,exports){
+module.exports=require(36)
+},{"js-ext/extra/hashmap.js":128,"polyfill/polyfill-base.js":150}],147:[function(require,module,exports){
+module.exports=require(37)
+},{"polyfill/polyfill-base.js":150}],148:[function(require,module,exports){
+module.exports=require(19)
+},{}],149:[function(require,module,exports){
+module.exports=require(20)
+},{}],150:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":148,"./lib/window.console.js":149}],151:[function(require,module,exports){
+module.exports=require(66)
+},{"./lib/sizes.js":152}],152:[function(require,module,exports){
+module.exports=require(67)
+},{"js-ext/extra/hashmap.js":153,"js-ext/lib/object.js":154}],153:[function(require,module,exports){
+module.exports=require(17)
+},{}],154:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":153,"polyfill/polyfill-base.js":157}],155:[function(require,module,exports){
+module.exports=require(19)
+},{}],156:[function(require,module,exports){
+module.exports=require(20)
+},{}],157:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":155,"./lib/window.console.js":156}],158:[function(require,module,exports){
+module.exports=require(73)
+},{"js-ext/extra/hashmap.js":128,"js-ext/lib/object.js":131,"js-ext/lib/string.js":133,"polyfill":144,"polyfill/extra/transition.js":139,"polyfill/extra/vendorCSS.js":141}],159:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":128,"js-ext/lib/object.js":131,"polyfill":144}],160:[function(require,module,exports){
+module.exports=require(75)
+},{"js-ext/extra/hashmap.js":128,"js-ext/lib/object.js":131,"js-ext/lib/string.js":133,"polyfill":144}],161:[function(require,module,exports){
+module.exports=require(76)
+},{"../css/element.css":126,"./attribute-extractor.js":158,"./element-array.js":159,"./html-parser.js":162,"./node-parser.js":163,"./vdom-ns.js":164,"./vnode.js":165,"js-ext/extra/hashmap.js":128,"js-ext/lib/object.js":131,"js-ext/lib/promise.js":132,"js-ext/lib/string.js":133,"polyfill":144,"polyfill/extra/transition.js":139,"polyfill/extra/transitionend.js":140,"polyfill/extra/vendorCSS.js":141,"utils":145,"window-ext":151}],162:[function(require,module,exports){
+module.exports=require(77)
+},{"./attribute-extractor.js":158,"./vdom-ns.js":164,"js-ext/extra/hashmap.js":128,"js-ext/lib/object.js":131,"polyfill":144}],163:[function(require,module,exports){
+module.exports=require(78)
+},{"./attribute-extractor.js":158,"./vdom-ns.js":164,"./vnode.js":165,"js-ext/extra/hashmap.js":128,"js-ext/lib/object.js":131,"polyfill":144}],164:[function(require,module,exports){
+module.exports=require(79)
+},{"js-ext/extra/hashmap.js":128,"js-ext/lib/object.js":131,"polyfill":144}],165:[function(require,module,exports){
+module.exports=require(80)
+},{"./attribute-extractor.js":158,"./html-parser.js":162,"./vdom-ns.js":164,"js-ext/extra/hashmap.js":128,"js-ext/extra/lightmap.js":129,"js-ext/lib/array.js":130,"js-ext/lib/object.js":131,"js-ext/lib/string.js":133,"polyfill":144,"utils/lib/timers.js":147}],166:[function(require,module,exports){
+module.exports=require(81)
+},{"./partials/extend-document.js":160,"./partials/extend-element.js":161,"./partials/node-parser.js":163,"js-ext/extra/hashmap.js":128,"js-ext/lib/object.js":131,"utils/lib/timers.js":147}],167:[function(require,module,exports){
+module.exports=require(12)
+},{"js-ext/extra/hashmap.js":169,"js-ext/lib/object.js":170,"polyfill/polyfill-base.js":176}],168:[function(require,module,exports){
+(function (global){
+(function (global) {
+
+    "use strict";
+
+    var NAME = '[event-timer-finalize]: ',
+        createHashMap = require('js-ext/extra/hashmap.js').createMap,
+        Event, setTimeoutBKP, setIntervalBKP, setImmediateBKP;
+
+    global._ITSAmodules || Object.protectedProp(global, '_ITSAmodules', createHashMap());
+
+    if (global._ITSAmodules.EventTimerFinalize) {
+        return;
+    }
+
+    Event = require('../event-base.js');
+    // we patch the global timer functions in order to run `refreshItags` afterwards:
+    setTimeoutBKP = global.setTimeout;
+    setIntervalBKP = global.setInterval;
+
+    global.setTimeout = function() {
+        var args = arguments;
+        args[0] = (function(originalFn) {
+            return function() {
+                var eventObject = {
+                        type: '',
+                        emitter: 'global',
+                        target: global
+                    };
+                originalFn();
+                console.log(NAME, 'setTimeOut will run Event.runFinalizers');
+                Event.runFinalizers(eventObject);
+            };
+        })(args[0]);
+        setTimeoutBKP.apply(this, arguments);
+    };
+
+    global.setInterval = function() {
+        var args = arguments;
+        args[0] = (function(originalFn) {
+            return function() {
+                var eventObject = {
+                        type: '',
+                        emitter: 'global',
+                        target: global
+                    };
+                originalFn();
+                console.log(NAME, 'setInterval will run Event.runFinalizers');
+                Event.runFinalizers(eventObject);
+            };
+        })(args[0]);
+        setIntervalBKP.apply(this, arguments);
+    };
+
+    if (typeof global.setImmediate !== 'undefined') {
+        setImmediateBKP = global.setInterval;
+        global.setImmediate = function() {
+            var args = arguments;
+            args[0] = (function(originalFn) {
+                return function() {
+                    var eventObject = {
+                            type: '',
+                            emitter: 'global',
+                            target: global
+                        };
+                    originalFn();
+                    console.log(NAME, 'setImmediate will run Event.runFinalizers');
+                    Event.runFinalizers(eventObject);
+                };
+            })(args[0]);
+            setImmediateBKP.apply(this, arguments);
+        };
+    }
+
+    global._ITSAmodules.EventTimerFinalize = true;
+
+}(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this));
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"../event-base.js":167,"js-ext/extra/hashmap.js":169}],169:[function(require,module,exports){
+module.exports=require(17)
+},{}],170:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":169,"polyfill/polyfill-base.js":173}],171:[function(require,module,exports){
+module.exports=require(19)
+},{}],172:[function(require,module,exports){
+module.exports=require(20)
+},{}],173:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":171,"./lib/window.console.js":172}],174:[function(require,module,exports){
+module.exports=require(19)
+},{}],175:[function(require,module,exports){
+module.exports=require(20)
+},{}],176:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":174,"./lib/window.console.js":175}],177:[function(require,module,exports){
+(function (global){
+/**
+ * Provides core IO-functionality.
+ *
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ * @module io
+ * @class IO
+*/
+
+"use strict";
+
+require('polyfill/polyfill-base.js');
+require('js-ext');
+
+var NAME = '[io]: ',
+    GET = 'GET',
+    createHashMap = require('js-ext/extra/hashmap.js').createMap,
+    asyncSilent = require('utils').asyncSilent,
+    DEF_REQ_TIMEOUT = 300000, // don't create an ever-lasting request: always quit after 5 minutes
+    BODY_METHODS = createHashMap({
+        POST: 1,
+        PUT: 1
+    }),
+    CONTENT_TYPE = 'Content-Type',
+    MIME_JSON = 'application/json',
+    DEF_CONTENT_TYPE_POST = 'application/x-www-form-urlencoded; charset=UTF-8',
+    ERROR_NO_XHR = 'no valid xhr transport-mechanism available',
+    REQUEST_TIMEOUT = 'Request-timeout',
+    UNKNOW_ERROR = 'Unknown response-error',
+    XHR_ERROR = 'XHR Error',
+    ABORTED = 'Request aborted',
+    NO_XHR = 'No valid xhr found on this browser';
+
+module.exports = function (window) {
+
+    // to prevent multiple IO instances
+    // (which might happen: http://nodejs.org/docs/latest/api/modules.html#modules_module_caching_caveats)
+    // we make sure IO is defined only once. Therefore we bind it to `window` and return it if created before
+    // We need a singleton IO, because submodules might merge in. You can't have them merging
+    // into some other IO-instance than which is used.
+    var Glob = (typeof global !== 'undefined' ? global : /* istanbul ignore next */ this);
+
+    Glob._ITSAmodules || Object.protectedProp(Glob, '_ITSAmodules', createHashMap());
+
+    if (Glob._ITSAmodules.IO) {
+        return Glob._ITSAmodules.IO;
+    }
+
+    var ENCODE_URI_COMPONENT = encodeURIComponent,
+        IO;
+
+    IO = {
+        config: {},
+
+        //===============================================================================================
+        // private methods:
+        //===============================================================================================
+
+        _xhrList: [],
+
+        /**
+         * Initializes the xhr-instance, based on the config-params.
+         * This method is the standard way of doing xhr-requests without processing streams.
+         *
+         * @method _initXHR
+         * @param xhr {Object} xhr-instance
+         * @param options {Object}
+         *    @param [options.url] {String} The url to which the request is sent.
+         *    @param [options.method='GET'] {String} The HTTP method to use.
+         *    can be ignored, even if streams are used --> the returned Promise will always hold all data
+         *    @param [options.sync=false] {boolean} By default, all requests are sent asynchronously. To send synchronous requests, set to true.
+         *           This feature only works in the browser: nodejs will always perform asynchronous requests.
+         *    @param [options.data] {Object} Data to be sent to the server, either to be used by `query-params` or `body`.
+         *    @param [options.headers] {Object} HTTP request headers.
+         *    @param [options.responseType] {String} Force the response type.
+         *    @param [options.timeout=3000] {number} to timeout the request, leading into a rejected Promise.
+         *    @param [options.withCredentials=false] {boolean} Whether or not to send credentials on the request.
+         * @param fulfill {Function} reference to xhr-promise's fulfill-function
+         * @param reject {Function} reference to xhr-promise's reject-function
+         * @param promise {Promise} the xhr-promise which will be extended with the `abort()`-method
+         * @private
+        */
+        _initXHR: function (xhr, options, promise) {
+            console.log(NAME, '_initXHR');
+            var instance = this,
+                url = options.url,
+                method = options.method || GET,
+                headers = options.headers || {}, // all request will get some headers
+                async = !options.sync,
+                data = options.data,
+                reject = promise.reject;
+            // xhr will be null in case of a CORS-request when no CORS is possible
+            if (!xhr) {
+                console.error(NAME, '_initXHR fails: '+ERROR_NO_XHR);
+                reject(new Error(ERROR_NO_XHR));
+                return;
+            }
+            console.log(NAME, '_initXHR succesfully created '+(xhr._isXHR2 ? 'XMLHttpRequest2' : (xhr._isXDR ? 'XDomainRequest' : 'XMLHttpRequest1'))+'-instance');
+
+            // method-name should be in uppercase:
+            method = method.toUpperCase();
+
+            // in case of BODY-method: eliminate any data behind querystring:
+            // else: append data-object behind querystring
+            if (BODY_METHODS[method]) {
+                url = url.split('?'); // now url is an array
+                url = url[0]; // now url is a String again
+            }
+            else if (data) {
+                url += ((url.indexOf('?') > 0) ? '&' : '?') + instance._toQueryString(data);
+            }
+
+            xhr.open(method, url, async);
+            // xhr.responseType = options.responseType || 'text';
+            options.withCredentials && (xhr.withCredentials=true);
+
+
+            // more initialisation might be needed by extended modules:
+            instance._xhrInitList.each(
+                function(fn) {
+                    fn(xhr, promise, headers, method);
+                }
+            );
+
+            // send the request:
+            xhr.send((BODY_METHODS[method] && data) ? (((headers[CONTENT_TYPE]===MIME_JSON) || xhr._isXDR) ? JSON.stringify(data) : instance._toQueryString(data)) : null);
+
+            console.log(NAME, 'xhr send to '+url+' with method '+method);
+
+            // now add xhr.abort() to the promise, so we can call from within the returned promise-instance
+            promise.abort = function() {
+                console.log(NAME, 'xhr aborted');
+                reject(new Error(ABORTED));
+                xhr._aborted = true; // must be set: IE9 won't allow to read anything on xhr after being aborted
+                xhr.abort();
+            };
+
+            // in case synchronous transfer: force an xhr.onreadystatechange:
+            async || xhr.onreadystatechange();
+        },
+
+        /**
+         * Adds the `headers`-object to `xhr`-headers.
+         *
+         * @method _setHeaders
+         * @param xhr {Object} containing the xhr-instance
+         * @param headers {Object} containing all headers
+         * @param method {String} the request-method used
+         * @private
+        */
+        _setHeaders: function(xhr, promise, headers, method) {
+            // XDR cannot set requestheaders, only XHR:
+            if (!xhr._isXDR) {
+                console.log(NAME, '_setHeaders');
+                var name;
+                if ((method!=='POST') && (method!=='PUT')) {
+                    // force GET-request to make a request instead of using cache (like IE does):
+                    headers['If-Modified-Since'] = 'Wed, 15 Nov 1995 01:00:00 GMT';
+                    // header 'Content-Type' should only be set with POST or PUT requests:
+                    delete headers[CONTENT_TYPE];
+                }
+                // set all headers
+                for (name in headers) {
+                    xhr.setRequestHeader(name, headers[name]);
+                }
+
+                // in case of POST or PUT method: always make sure 'Content-Type' is specified
+                ((method!=='POST') && (method!=='PUT')) || (headers && (CONTENT_TYPE in headers)) || xhr.setRequestHeader(CONTENT_TYPE, DEF_CONTENT_TYPE_POST);
+            }
+        },
+
+        /**
+         * Adds 2 methods on the xhr-instance which are used by xhr when events occur:
+         *
+         * xhr.onreadystatechange()
+         * xhr.ontimeout()  // only XMLHttpRequest2
+         *
+         * These events are responsible for making the Promise resolve.
+         * @method _setReadyHandle
+         * @param xhr {Object} containing the xhr-instance
+         * @param fulfill {Function} reference to the Promise fulfill-function
+         * @param reject {Function} reference to the Promise reject-function
+         * @private
+        */
+        _setReadyHandle: function(xhr, promise) {
+            console.log(NAME, '_setReadyHandle');
+            // for XDomainRequest, we need 'onload' instead of 'onreadystatechange'
+            xhr.onreadystatechange = function() {
+                // CANNOT console xhr.responseText here! IE9 will throw an error:
+                // you can only acces it after (xhr.readyState===4)
+                // also check xhr._aborted --> IE9 comes here after aborted and will throw an error when reading xhr's native properties
+                if (!xhr._aborted && (xhr.readyState===4)) {
+                    clearTimeout(xhr._timer);
+                    if ((xhr.status>=200) && (xhr.status<300)) {
+                        console.log(NAME, 'xhr.onreadystatechange will fulfill xhr-instance: '+xhr.responseText);
+                        // In case streamback function is set, but when no intermediate stream-data was send
+                        // (or in case of XDR: below 2kb it doesn't call onprogress)
+                        // --> we might need to call onprogress ourselve.
+                        if (xhr._isStream && !xhr._gotstreamed) {
+                            xhr.onprogress(xhr.responseText);
+                        }
+                        promise.fulfill(xhr);
+                    }
+                    else {
+                        console.warn(NAME, 'xhr.onreadystatechange will reject xhr-instance: '+xhr.statusText);
+                        promise.reject(new Error(xhr.statusText || UNKNOW_ERROR+' '+xhr.status));
+                    }
+                }
+            };
+            xhr.onerror = function() {
+                clearTimeout(xhr._timer);
+                promise.reject(new Error(XHR_ERROR));
+            };
+        },
+
+        /**
+         * Stringifies an object into one string with every pair separated by `&`
+         *
+         * @method _toQueryString
+         * @param data {Object} containing key-value pairs
+         * @return {String} stringified presentation of the object, with every pair separated by `&`
+         * @private
+        */
+        _toQueryString: function(data) {
+            var paramArray = [],
+                key, value;
+        // TODO: use `object` module
+            for (key in data) {
+                value = data[key];
+                key = ENCODE_URI_COMPONENT(key);
+                paramArray.push((value === null) ? key : (key + '=' + ENCODE_URI_COMPONENT(value)));
+            }
+            console.log(NAME, '_toQueryString --> '+paramArray.join('&'));
+            return paramArray.join('&');
+        },
+
+        /**
+         * Sends a HTTP request to the server and returns a Promise with an additional .abort() method to cancel the request.
+         * This method is the standard way of doing xhr-requests without processing streams.
+         *
+         * @method request
+         * @param options {Object}
+         *    @param [options.url] {String} The url to which the request is sent.
+         *    @param [options.method='GET'] {String} The HTTP method to use.
+         *    can be ignored, even if streams are used --> the returned Promise will always hold all data
+         *    @param [options.sync=false] {boolean} By default, all requests are sent asynchronously. To send synchronous requests, set to true.
+         *    @param [options.data] {Object} Data to be sent to the server, either to be used by `query-params` or `body`.
+         *    @param [options.headers] {Object} HTTP request headers.
+         *    @param [options.responseType] {String} Force the response type.
+         *    @param [options.timeout=3000] {number} to timeout the request, leading into a rejected Promise.
+         *    @param [options.withCredentials=false] {boolean} Whether or not to send credentials on the request.
+         *    @param [options.streamback] {Function} callbackfunction in case you want to process streams (needs io-stream module).
+         * @return {Promise} Promise holding the request. Has an additional .abort() method to cancel the request.
+         * <ul>
+         *     <li>on success: xhr {XMLHttpRequest1|XMLHttpRequest2} xhr-response</li>
+         *     <li>on failure: reason {Error}</li>
+         * </ul>
+        */
+        request: function(options) {
+            console.log(NAME, 'request');
+            var instance = this,
+                props = {},
+                xhr, promise;
+            options || (options={});
+            promise = Promise.manage(options.streamback);
+
+            xhr = new window.XMLHttpRequest();
+            props._isXHR2 = ('withCredentials' in xhr) || (window.navigator.userAgent==='fake');
+            // it could be other modules like io-cors or io-stream have subscribed
+            // xhr might be changed, also private properties might be extended
+            instance._xhrList.each(
+                function(fn) {
+                    xhr = fn(xhr, props, options, promise);
+                }
+            );
+            if (!xhr) {
+                return Promise.reject(NO_XHR);
+            }
+            xhr.merge(props);
+            console.log(NAME, 'request creating xhr of type: '+ (props._isXHR2 ? 'XMLHttpRequest2' : (props._isXDR ? 'XDomainRequest' : 'XMLHttpRequest1')));
+            console.log(NAME, 'CORS-IE: '+ props._CORS_IE + ', canStream: '+props._canStream);
+
+            // Don't use xhr.timeout --> IE<10 throws an error when set xhr.timeout
+            // We use a timer that aborts the request
+            Object.defineProperty(xhr, '_timer', {
+                configurable: false,
+                enumerable: false,
+                writable: false,
+                value: setTimeout(function() {
+                           promise.reject(new Error(REQUEST_TIMEOUT));
+                           xhr._aborted = true; // must be set: IE9 won't allow to read anything on xhr after being aborted
+                           xhr.abort();
+                       }, options.timeout || instance.config.timeout || DEF_REQ_TIMEOUT)
+            });
+
+            instance._initXHR(xhr, options, promise);
+
+            // to make any routine informed for the end of xhr.
+            // to make sure they get informed after aother routines have handled the response,
+            // we go async
+            promise.then(function() {
+                asyncSilent(function() {
+                    instance._final.forEach(function(finallySubscriber) {
+                        finallySubscriber(xhr);
+                    });
+                });
+            });
+
+            return promise;
+        },
+
+        /**
+         * Adds a subscriber to the finalization-cycle, which happens after the xhr finishes.
+         * Only gets invoked on fulfilled io.
+         *
+         * @method finalize
+         * @param finallySubscriber {Function} callback to be invoked
+         *        Function recieves `xhr` as its only argument
+         * @return {Object} handler with a `detach()`-method which can be used to detach the subscriber
+         * @since 0.0.1
+         */
+        finalize: function (finallySubscriber) {
+            console.log(NAME, 'finalize');
+            var finalHash = this._final;
+            finalHash.push(finallySubscriber);
+            return {
+                detach: function() {
+                    console.log(NAME, 'detach finalizer');
+                    var index = finalHash.indexOf(finallySubscriber);
+                    (index===-1) || finalHash.splice(index, 1);
+                }
+            };
+        }
+
+    };
+
+    /**
+     * Internal list of finalize-subscribers which are invoked at the end of a successful xhr,
+     * Is an array of function-references.
+     *
+     * @property _final
+     * @default []
+     * @type Array
+     * @private
+     * @since 0.0.1
+    */
+    Object.protectedProp(IO, '_final', []);
+
+    IO._xhrInitList = [
+        IO._setReadyHandle,
+        IO._setHeaders
+    ];
+
+    Glob._ITSAmodules.IO = IO;
+
+    return IO;
+};
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"js-ext":179,"js-ext/extra/hashmap.js":178,"polyfill/polyfill-base.js":191,"utils":192}],178:[function(require,module,exports){
+module.exports=require(17)
+},{}],179:[function(require,module,exports){
+module.exports=require(83)
+},{"./lib/array.js":180,"./lib/function.js":181,"./lib/json.js":182,"./lib/object.js":183,"./lib/promise.js":184,"./lib/string.js":185}],180:[function(require,module,exports){
+module.exports=require(26)
+},{"polyfill/polyfill-base.js":188}],181:[function(require,module,exports){
+module.exports=require(85)
+},{"polyfill/polyfill-base.js":188}],182:[function(require,module,exports){
+module.exports=require(86)
+},{"polyfill/polyfill-base.js":188}],183:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":178,"polyfill/polyfill-base.js":188}],184:[function(require,module,exports){
+module.exports=require(47)
+},{"polyfill":188}],185:[function(require,module,exports){
+module.exports=require(28)
+},{}],186:[function(require,module,exports){
+module.exports=require(19)
+},{}],187:[function(require,module,exports){
+module.exports=require(20)
+},{}],188:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":186,"./lib/window.console.js":187}],189:[function(require,module,exports){
+module.exports=require(19)
+},{}],190:[function(require,module,exports){
+module.exports=require(20)
+},{}],191:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":189,"./lib/window.console.js":190}],192:[function(require,module,exports){
+module.exports=require(35)
+},{"./lib/idgenerator.js":193,"./lib/timers.js":194}],193:[function(require,module,exports){
+module.exports=require(36)
+},{"js-ext/extra/hashmap.js":178,"polyfill/polyfill-base.js":197}],194:[function(require,module,exports){
+module.exports=require(37)
+},{"polyfill/polyfill-base.js":197}],195:[function(require,module,exports){
+module.exports=require(19)
+},{}],196:[function(require,module,exports){
+module.exports=require(20)
+},{}],197:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":195,"./lib/window.console.js":196}],198:[function(require,module,exports){
+module.exports=require(16)
+},{"../lib/object.js":200,"js-ext/extra/hashmap.js":199,"polyfill/polyfill-base.js":205}],199:[function(require,module,exports){
+module.exports=require(17)
+},{}],200:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":199,"polyfill/polyfill-base.js":205}],201:[function(require,module,exports){
+module.exports=require(47)
+},{"polyfill":205}],202:[function(require,module,exports){
+module.exports=require(28)
+},{}],203:[function(require,module,exports){
+module.exports=require(19)
+},{}],204:[function(require,module,exports){
+module.exports=require(20)
+},{}],205:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":203,"./lib/window.console.js":204}],206:[function(require,module,exports){
+module.exports=require(19)
+},{}],207:[function(require,module,exports){
+module.exports=require(20)
+},{}],208:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":206,"./lib/window.console.js":207}],209:[function(require,module,exports){
+module.exports=require(37)
+},{"polyfill/polyfill-base.js":212}],210:[function(require,module,exports){
+module.exports=require(19)
+},{}],211:[function(require,module,exports){
+module.exports=require(20)
+},{}],212:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":210,"./lib/window.console.js":211}],213:[function(require,module,exports){
+module.exports=require(41)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],214:[function(require,module,exports){
+module.exports=require(16)
+},{"../lib/object.js":218,"js-ext/extra/hashmap.js":215,"polyfill/polyfill-base.js":224}],215:[function(require,module,exports){
+module.exports=require(17)
+},{}],216:[function(require,module,exports){
+module.exports=require(44)
+},{"../lib/array.js":217,"../lib/object.js":218,"./classes.js":214,"js-ext/extra/hashmap.js":215,"polyfill/lib/weakmap.js":222}],217:[function(require,module,exports){
+module.exports=require(26)
+},{"polyfill/polyfill-base.js":224}],218:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":215,"polyfill/polyfill-base.js":224}],219:[function(require,module,exports){
+module.exports=require(47)
+},{"polyfill":224}],220:[function(require,module,exports){
+module.exports=require(28)
+},{}],221:[function(require,module,exports){
+module.exports=require(19)
+},{}],222:[function(require,module,exports){
+module.exports=require(50)
+},{}],223:[function(require,module,exports){
+module.exports=require(20)
+},{}],224:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":221,"./lib/window.console.js":223}],225:[function(require,module,exports){
+module.exports=require(53)
+},{}],226:[function(require,module,exports){
+module.exports=require(54)
+},{"../bin/local-hashmap.js":225}],227:[function(require,module,exports){
+module.exports=require(55)
+},{"../bin/local-hashmap.js":225}],228:[function(require,module,exports){
+module.exports=require(56)
+},{"../bin/local-hashmap.js":225}],229:[function(require,module,exports){
+module.exports=require(19)
+},{}],230:[function(require,module,exports){
+module.exports=require(20)
+},{}],231:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":229,"./lib/window.console.js":230}],232:[function(require,module,exports){
+module.exports=require(35)
+},{"./lib/idgenerator.js":233,"./lib/timers.js":234}],233:[function(require,module,exports){
+module.exports=require(36)
+},{"js-ext/extra/hashmap.js":215,"polyfill/polyfill-base.js":237}],234:[function(require,module,exports){
+module.exports=require(37)
+},{"polyfill/polyfill-base.js":237}],235:[function(require,module,exports){
+module.exports=require(19)
+},{}],236:[function(require,module,exports){
+module.exports=require(20)
+},{}],237:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":235,"./lib/window.console.js":236}],238:[function(require,module,exports){
+module.exports=require(66)
+},{"./lib/sizes.js":239}],239:[function(require,module,exports){
+module.exports=require(67)
+},{"js-ext/extra/hashmap.js":240,"js-ext/lib/object.js":241}],240:[function(require,module,exports){
+module.exports=require(17)
+},{}],241:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":240,"polyfill/polyfill-base.js":244}],242:[function(require,module,exports){
+module.exports=require(19)
+},{}],243:[function(require,module,exports){
+module.exports=require(20)
+},{}],244:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":242,"./lib/window.console.js":243}],245:[function(require,module,exports){
+module.exports=require(73)
+},{"js-ext/extra/hashmap.js":215,"js-ext/lib/object.js":218,"js-ext/lib/string.js":220,"polyfill":231,"polyfill/extra/transition.js":226,"polyfill/extra/vendorCSS.js":228}],246:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":215,"js-ext/lib/object.js":218,"polyfill":231}],247:[function(require,module,exports){
+module.exports=require(75)
+},{"js-ext/extra/hashmap.js":215,"js-ext/lib/object.js":218,"js-ext/lib/string.js":220,"polyfill":231}],248:[function(require,module,exports){
+module.exports=require(76)
+},{"../css/element.css":213,"./attribute-extractor.js":245,"./element-array.js":246,"./html-parser.js":249,"./node-parser.js":250,"./vdom-ns.js":251,"./vnode.js":252,"js-ext/extra/hashmap.js":215,"js-ext/lib/object.js":218,"js-ext/lib/promise.js":219,"js-ext/lib/string.js":220,"polyfill":231,"polyfill/extra/transition.js":226,"polyfill/extra/transitionend.js":227,"polyfill/extra/vendorCSS.js":228,"utils":232,"window-ext":238}],249:[function(require,module,exports){
+module.exports=require(77)
+},{"./attribute-extractor.js":245,"./vdom-ns.js":251,"js-ext/extra/hashmap.js":215,"js-ext/lib/object.js":218,"polyfill":231}],250:[function(require,module,exports){
+module.exports=require(78)
+},{"./attribute-extractor.js":245,"./vdom-ns.js":251,"./vnode.js":252,"js-ext/extra/hashmap.js":215,"js-ext/lib/object.js":218,"polyfill":231}],251:[function(require,module,exports){
+module.exports=require(79)
+},{"js-ext/extra/hashmap.js":215,"js-ext/lib/object.js":218,"polyfill":231}],252:[function(require,module,exports){
+module.exports=require(80)
+},{"./attribute-extractor.js":245,"./html-parser.js":249,"./vdom-ns.js":251,"js-ext/extra/hashmap.js":215,"js-ext/extra/lightmap.js":216,"js-ext/lib/array.js":217,"js-ext/lib/object.js":218,"js-ext/lib/string.js":220,"polyfill":231,"utils/lib/timers.js":234}],253:[function(require,module,exports){
+module.exports=require(81)
+},{"./partials/extend-document.js":247,"./partials/extend-element.js":248,"./partials/node-parser.js":250,"js-ext/extra/hashmap.js":215,"js-ext/lib/object.js":218,"utils/lib/timers.js":234}],254:[function(require,module,exports){
+module.exports=require(19)
+},{}],255:[function(require,module,exports){
+module.exports=require(20)
+},{}],256:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":254,"./lib/window.console.js":255}],257:[function(require,module,exports){
+module.exports=require(17)
+},{}],258:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":257,"polyfill/polyfill-base.js":261}],259:[function(require,module,exports){
+module.exports=require(19)
+},{}],260:[function(require,module,exports){
+module.exports=require(20)
+},{}],261:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":259,"./lib/window.console.js":260}],262:[function(require,module,exports){
+module.exports=require(19)
+},{}],263:[function(require,module,exports){
+module.exports=require(20)
+},{}],264:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":262,"./lib/window.console.js":263}],265:[function(require,module,exports){
 "use strict";
 
 /**
@@ -17133,8 +18545,7 @@ module.exports=require(21)
 require('polyfill');
 require('js-ext/lib/object.js');
 
-var NAME = '[useragent]: ',
-    createHashMap = require('js-ext/extra/hashmap.js').createMap;
+var createHashMap = require('js-ext/extra/hashmap.js').createMap;
 
 module.exports = function (window) {
 
@@ -17155,377 +18566,693 @@ module.exports = function (window) {
 
     return UserAgent;
 };
-},{"js-ext/extra/hashmap.js":97,"js-ext/lib/object.js":98,"polyfill":104}],106:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":257,"js-ext/lib/object.js":258,"polyfill":264}],266:[function(require,module,exports){
 module.exports=require(41)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],107:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],267:[function(require,module,exports){
 module.exports=require(16)
-},{"../lib/object.js":111,"js-ext/extra/hashmap.js":108,"polyfill/polyfill-base.js":117}],108:[function(require,module,exports){
-module.exports=require(17)
-},{}],109:[function(require,module,exports){
-module.exports=require(44)
-},{"../lib/array.js":110,"../lib/object.js":111,"./classes.js":107,"js-ext/extra/hashmap.js":108,"polyfill/lib/weakmap.js":115}],110:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":117}],111:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":108,"polyfill/polyfill-base.js":117}],112:[function(require,module,exports){
-module.exports=require(47)
-},{"polyfill":117}],113:[function(require,module,exports){
-module.exports=require(28)
-},{}],114:[function(require,module,exports){
-module.exports=require(19)
-},{}],115:[function(require,module,exports){
-module.exports=require(50)
-},{}],116:[function(require,module,exports){
-module.exports=require(20)
-},{}],117:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":114,"./lib/window.console.js":116}],118:[function(require,module,exports){
-module.exports=require(53)
-},{}],119:[function(require,module,exports){
-module.exports=require(54)
-},{"../bin/local-hashmap.js":118}],120:[function(require,module,exports){
-module.exports=require(55)
-},{"../bin/local-hashmap.js":118}],121:[function(require,module,exports){
-module.exports=require(56)
-},{"../bin/local-hashmap.js":118}],122:[function(require,module,exports){
-module.exports=require(19)
-},{}],123:[function(require,module,exports){
-module.exports=require(20)
-},{}],124:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":122,"./lib/window.console.js":123}],125:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":126,"./lib/timers.js":127}],126:[function(require,module,exports){
-module.exports=require(36)
-},{"js-ext/extra/hashmap.js":108,"polyfill/polyfill-base.js":130}],127:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":130}],128:[function(require,module,exports){
-module.exports=require(19)
-},{}],129:[function(require,module,exports){
-module.exports=require(20)
-},{}],130:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":128,"./lib/window.console.js":129}],131:[function(require,module,exports){
-module.exports=require(66)
-},{"./lib/sizes.js":132}],132:[function(require,module,exports){
-module.exports=require(67)
-},{"js-ext/extra/hashmap.js":133,"js-ext/lib/object.js":134}],133:[function(require,module,exports){
-module.exports=require(17)
-},{}],134:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":133,"polyfill/polyfill-base.js":137}],135:[function(require,module,exports){
-module.exports=require(19)
-},{}],136:[function(require,module,exports){
-module.exports=require(20)
-},{}],137:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":135,"./lib/window.console.js":136}],138:[function(require,module,exports){
-module.exports=require(73)
-},{"js-ext/extra/hashmap.js":108,"js-ext/lib/object.js":111,"js-ext/lib/string.js":113,"polyfill":124,"polyfill/extra/transition.js":119,"polyfill/extra/vendorCSS.js":121}],139:[function(require,module,exports){
-module.exports=require(74)
-},{"js-ext/extra/hashmap.js":108,"js-ext/lib/object.js":111,"polyfill":124}],140:[function(require,module,exports){
-module.exports=require(75)
-},{"js-ext/extra/hashmap.js":108,"js-ext/lib/object.js":111,"js-ext/lib/string.js":113,"polyfill":124}],141:[function(require,module,exports){
-module.exports=require(76)
-},{"js-ext/extra/hashmap.js":108,"js-ext/lib/object.js":111,"js-ext/lib/string.js":113,"polyfill":124}],142:[function(require,module,exports){
-module.exports=require(77)
-},{"../css/element.css":106,"./attribute-extractor.js":138,"./element-array.js":139,"./html-parser.js":143,"./node-parser.js":144,"./vdom-ns.js":145,"./vnode.js":146,"js-ext/extra/hashmap.js":108,"js-ext/lib/object.js":111,"js-ext/lib/promise.js":112,"js-ext/lib/string.js":113,"polyfill":124,"polyfill/extra/transition.js":119,"polyfill/extra/transitionend.js":120,"polyfill/extra/vendorCSS.js":121,"utils":125,"window-ext":131}],143:[function(require,module,exports){
-module.exports=require(78)
-},{"./attribute-extractor.js":138,"./vdom-ns.js":145,"js-ext/extra/hashmap.js":108,"js-ext/lib/object.js":111,"polyfill":124}],144:[function(require,module,exports){
-module.exports=require(79)
-},{"./attribute-extractor.js":138,"./vdom-ns.js":145,"./vnode.js":146,"js-ext/extra/hashmap.js":108,"js-ext/lib/object.js":111,"polyfill":124}],145:[function(require,module,exports){
-module.exports=require(80)
-},{"js-ext/extra/hashmap.js":108,"js-ext/lib/object.js":111,"polyfill":124}],146:[function(require,module,exports){
-module.exports=require(81)
-},{"./attribute-extractor.js":138,"./html-parser.js":143,"./vdom-ns.js":145,"js-ext/extra/hashmap.js":108,"js-ext/extra/lightmap.js":109,"js-ext/lib/array.js":110,"js-ext/lib/object.js":111,"js-ext/lib/string.js":113,"polyfill":124,"utils/lib/timers.js":127}],147:[function(require,module,exports){
-module.exports=require(82)
-},{"./partials/element-plugin.js":140,"./partials/extend-document.js":141,"./partials/extend-element.js":142,"./partials/node-parser.js":144,"js-ext/extra/hashmap.js":108,"js-ext/lib/object.js":111,"utils/lib/timers.js":127}],148:[function(require,module,exports){
-module.exports=require(66)
-},{"./lib/sizes.js":149}],149:[function(require,module,exports){
-module.exports=require(67)
-},{"js-ext/extra/hashmap.js":150,"js-ext/lib/object.js":151}],150:[function(require,module,exports){
-module.exports=require(17)
-},{}],151:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":150,"polyfill/polyfill-base.js":154}],152:[function(require,module,exports){
-module.exports=require(19)
-},{}],153:[function(require,module,exports){
-module.exports=require(20)
-},{}],154:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":152,"./lib/window.console.js":153}],155:[function(require,module,exports){
-module.exports=require(11)
-},{"event":159,"js-ext/extra/hashmap.js":169,"js-ext/lib/array.js":170,"js-ext/lib/object.js":171,"js-ext/lib/string.js":172,"polyfill/polyfill-base.js":178,"utils":179,"vdom":226}],156:[function(require,module,exports){
-module.exports=require(12)
-},{"js-ext/extra/hashmap.js":161,"js-ext/lib/object.js":162,"polyfill/polyfill-base.js":168}],157:[function(require,module,exports){
-module.exports=require(13)
-},{"./event-base.js":156}],158:[function(require,module,exports){
-module.exports=require(14)
-},{"./event-base.js":156,"js-ext/extra/classes.js":160,"js-ext/lib/object.js":162}],159:[function(require,module,exports){
-module.exports=require(15)
-},{"./event-base.js":156,"./event-emitter.js":157,"./event-listener.js":158}],160:[function(require,module,exports){
-module.exports=require(16)
-},{"../lib/object.js":162,"js-ext/extra/hashmap.js":161,"polyfill/polyfill-base.js":165}],161:[function(require,module,exports){
-module.exports=require(17)
-},{}],162:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":161,"polyfill/polyfill-base.js":165}],163:[function(require,module,exports){
-module.exports=require(19)
-},{}],164:[function(require,module,exports){
-module.exports=require(20)
-},{}],165:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":163,"./lib/window.console.js":164}],166:[function(require,module,exports){
-module.exports=require(19)
-},{}],167:[function(require,module,exports){
-module.exports=require(20)
-},{}],168:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":166,"./lib/window.console.js":167}],169:[function(require,module,exports){
-module.exports=require(17)
-},{}],170:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":175}],171:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":169,"polyfill/polyfill-base.js":175}],172:[function(require,module,exports){
-module.exports=require(28)
-},{}],173:[function(require,module,exports){
-module.exports=require(19)
-},{}],174:[function(require,module,exports){
-module.exports=require(20)
-},{}],175:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":173,"./lib/window.console.js":174}],176:[function(require,module,exports){
-module.exports=require(19)
-},{}],177:[function(require,module,exports){
-module.exports=require(20)
-},{}],178:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":176,"./lib/window.console.js":177}],179:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":180,"./lib/timers.js":181}],180:[function(require,module,exports){
-module.exports=require(36)
-},{"js-ext/extra/hashmap.js":169,"polyfill/polyfill-base.js":184}],181:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":184}],182:[function(require,module,exports){
-module.exports=require(19)
-},{}],183:[function(require,module,exports){
-module.exports=require(20)
-},{}],184:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":182,"./lib/window.console.js":183}],185:[function(require,module,exports){
-module.exports=require(41)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],186:[function(require,module,exports){
-module.exports=require(16)
-},{"../lib/object.js":190,"js-ext/extra/hashmap.js":187,"polyfill/polyfill-base.js":196}],187:[function(require,module,exports){
-module.exports=require(17)
-},{}],188:[function(require,module,exports){
-module.exports=require(44)
-},{"../lib/array.js":189,"../lib/object.js":190,"./classes.js":186,"js-ext/extra/hashmap.js":187,"polyfill/lib/weakmap.js":194}],189:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":196}],190:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":187,"polyfill/polyfill-base.js":196}],191:[function(require,module,exports){
-module.exports=require(47)
-},{"polyfill":196}],192:[function(require,module,exports){
-module.exports=require(28)
-},{}],193:[function(require,module,exports){
-module.exports=require(19)
-},{}],194:[function(require,module,exports){
-module.exports=require(50)
-},{}],195:[function(require,module,exports){
-module.exports=require(20)
-},{}],196:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":193,"./lib/window.console.js":195}],197:[function(require,module,exports){
-module.exports=require(53)
-},{}],198:[function(require,module,exports){
-module.exports=require(54)
-},{"../bin/local-hashmap.js":197}],199:[function(require,module,exports){
-module.exports=require(55)
-},{"../bin/local-hashmap.js":197}],200:[function(require,module,exports){
-module.exports=require(56)
-},{"../bin/local-hashmap.js":197}],201:[function(require,module,exports){
-module.exports=require(19)
-},{}],202:[function(require,module,exports){
-module.exports=require(20)
-},{}],203:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":201,"./lib/window.console.js":202}],204:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":205,"./lib/timers.js":206}],205:[function(require,module,exports){
-module.exports=require(36)
-},{"js-ext/extra/hashmap.js":187,"polyfill/polyfill-base.js":209}],206:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":209}],207:[function(require,module,exports){
-module.exports=require(19)
-},{}],208:[function(require,module,exports){
-module.exports=require(20)
-},{}],209:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":207,"./lib/window.console.js":208}],210:[function(require,module,exports){
-module.exports=require(66)
-},{"./lib/sizes.js":211}],211:[function(require,module,exports){
-module.exports=require(67)
-},{"js-ext/extra/hashmap.js":212,"js-ext/lib/object.js":213}],212:[function(require,module,exports){
-module.exports=require(17)
-},{}],213:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":212,"polyfill/polyfill-base.js":216}],214:[function(require,module,exports){
-module.exports=require(19)
-},{}],215:[function(require,module,exports){
-module.exports=require(20)
-},{}],216:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":214,"./lib/window.console.js":215}],217:[function(require,module,exports){
-module.exports=require(73)
-},{"js-ext/extra/hashmap.js":187,"js-ext/lib/object.js":190,"js-ext/lib/string.js":192,"polyfill":203,"polyfill/extra/transition.js":198,"polyfill/extra/vendorCSS.js":200}],218:[function(require,module,exports){
-module.exports=require(74)
-},{"js-ext/extra/hashmap.js":187,"js-ext/lib/object.js":190,"polyfill":203}],219:[function(require,module,exports){
-module.exports=require(75)
-},{"js-ext/extra/hashmap.js":187,"js-ext/lib/object.js":190,"js-ext/lib/string.js":192,"polyfill":203}],220:[function(require,module,exports){
-module.exports=require(76)
-},{"js-ext/extra/hashmap.js":187,"js-ext/lib/object.js":190,"js-ext/lib/string.js":192,"polyfill":203}],221:[function(require,module,exports){
-module.exports=require(77)
-},{"../css/element.css":185,"./attribute-extractor.js":217,"./element-array.js":218,"./html-parser.js":222,"./node-parser.js":223,"./vdom-ns.js":224,"./vnode.js":225,"js-ext/extra/hashmap.js":187,"js-ext/lib/object.js":190,"js-ext/lib/promise.js":191,"js-ext/lib/string.js":192,"polyfill":203,"polyfill/extra/transition.js":198,"polyfill/extra/transitionend.js":199,"polyfill/extra/vendorCSS.js":200,"utils":204,"window-ext":210}],222:[function(require,module,exports){
-module.exports=require(78)
-},{"./attribute-extractor.js":217,"./vdom-ns.js":224,"js-ext/extra/hashmap.js":187,"js-ext/lib/object.js":190,"polyfill":203}],223:[function(require,module,exports){
-module.exports=require(79)
-},{"./attribute-extractor.js":217,"./vdom-ns.js":224,"./vnode.js":225,"js-ext/extra/hashmap.js":187,"js-ext/lib/object.js":190,"polyfill":203}],224:[function(require,module,exports){
-module.exports=require(80)
-},{"js-ext/extra/hashmap.js":187,"js-ext/lib/object.js":190,"polyfill":203}],225:[function(require,module,exports){
-module.exports=require(81)
-},{"./attribute-extractor.js":217,"./html-parser.js":222,"./vdom-ns.js":224,"js-ext/extra/hashmap.js":187,"js-ext/extra/lightmap.js":188,"js-ext/lib/array.js":189,"js-ext/lib/object.js":190,"js-ext/lib/string.js":192,"polyfill":203,"utils/lib/timers.js":206}],226:[function(require,module,exports){
-module.exports=require(82)
-},{"./partials/element-plugin.js":219,"./partials/extend-document.js":220,"./partials/extend-element.js":221,"./partials/node-parser.js":223,"js-ext/extra/hashmap.js":187,"js-ext/lib/object.js":190,"utils/lib/timers.js":206}],227:[function(require,module,exports){
-module.exports=require(17)
-},{}],228:[function(require,module,exports){
-module.exports=require(84)
-},{"./lib/array.js":229,"./lib/function.js":230,"./lib/json.js":231,"./lib/object.js":232,"./lib/promise.js":233,"./lib/string.js":234}],229:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":237}],230:[function(require,module,exports){
-module.exports=require(86)
-},{"polyfill/polyfill-base.js":237}],231:[function(require,module,exports){
-module.exports=require(87)
-},{"polyfill/polyfill-base.js":237}],232:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":227,"polyfill/polyfill-base.js":237}],233:[function(require,module,exports){
-module.exports=require(47)
-},{"polyfill":237}],234:[function(require,module,exports){
-module.exports=require(28)
-},{}],235:[function(require,module,exports){
-module.exports=require(19)
-},{}],236:[function(require,module,exports){
-module.exports=require(20)
-},{}],237:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":235,"./lib/window.console.js":236}],238:[function(require,module,exports){
-module.exports=require(19)
-},{}],239:[function(require,module,exports){
-module.exports=require(20)
-},{}],240:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":238,"./lib/window.console.js":239}],241:[function(require,module,exports){
-module.exports=require(41)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],242:[function(require,module,exports){
-module.exports=require(16)
-},{"../lib/object.js":246,"js-ext/extra/hashmap.js":243,"polyfill/polyfill-base.js":252}],243:[function(require,module,exports){
-module.exports=require(17)
-},{}],244:[function(require,module,exports){
-module.exports=require(44)
-},{"../lib/array.js":245,"../lib/object.js":246,"./classes.js":242,"js-ext/extra/hashmap.js":243,"polyfill/lib/weakmap.js":250}],245:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":252}],246:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":243,"polyfill/polyfill-base.js":252}],247:[function(require,module,exports){
-module.exports=require(47)
-},{"polyfill":252}],248:[function(require,module,exports){
-module.exports=require(28)
-},{}],249:[function(require,module,exports){
-module.exports=require(19)
-},{}],250:[function(require,module,exports){
-module.exports=require(50)
-},{}],251:[function(require,module,exports){
-module.exports=require(20)
-},{}],252:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":249,"./lib/window.console.js":251}],253:[function(require,module,exports){
-module.exports=require(53)
-},{}],254:[function(require,module,exports){
-module.exports=require(54)
-},{"../bin/local-hashmap.js":253}],255:[function(require,module,exports){
-module.exports=require(55)
-},{"../bin/local-hashmap.js":253}],256:[function(require,module,exports){
-module.exports=require(56)
-},{"../bin/local-hashmap.js":253}],257:[function(require,module,exports){
-module.exports=require(19)
-},{}],258:[function(require,module,exports){
-module.exports=require(20)
-},{}],259:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":257,"./lib/window.console.js":258}],260:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":261,"./lib/timers.js":262}],261:[function(require,module,exports){
-module.exports=require(36)
-},{"js-ext/extra/hashmap.js":243,"polyfill/polyfill-base.js":265}],262:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":265}],263:[function(require,module,exports){
-module.exports=require(19)
-},{}],264:[function(require,module,exports){
-module.exports=require(20)
-},{}],265:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":263,"./lib/window.console.js":264}],266:[function(require,module,exports){
-module.exports=require(66)
-},{"./lib/sizes.js":267}],267:[function(require,module,exports){
-module.exports=require(67)
-},{"js-ext/extra/hashmap.js":268,"js-ext/lib/object.js":269}],268:[function(require,module,exports){
+},{"../lib/object.js":271,"js-ext/extra/hashmap.js":268,"polyfill/polyfill-base.js":277}],268:[function(require,module,exports){
 module.exports=require(17)
 },{}],269:[function(require,module,exports){
+module.exports=require(44)
+},{"../lib/array.js":270,"../lib/object.js":271,"./classes.js":267,"js-ext/extra/hashmap.js":268,"polyfill/lib/weakmap.js":275}],270:[function(require,module,exports){
+module.exports=require(26)
+},{"polyfill/polyfill-base.js":277}],271:[function(require,module,exports){
 module.exports=require(18)
-},{"js-ext/extra/hashmap.js":268,"polyfill/polyfill-base.js":272}],270:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":268,"polyfill/polyfill-base.js":277}],272:[function(require,module,exports){
+module.exports=require(47)
+},{"polyfill":277}],273:[function(require,module,exports){
+module.exports=require(28)
+},{}],274:[function(require,module,exports){
 module.exports=require(19)
-},{}],271:[function(require,module,exports){
+},{}],275:[function(require,module,exports){
+module.exports=require(50)
+},{}],276:[function(require,module,exports){
 module.exports=require(20)
-},{}],272:[function(require,module,exports){
+},{}],277:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":270,"./lib/window.console.js":271}],273:[function(require,module,exports){
-module.exports=require(73)
-},{"js-ext/extra/hashmap.js":243,"js-ext/lib/object.js":246,"js-ext/lib/string.js":248,"polyfill":259,"polyfill/extra/transition.js":254,"polyfill/extra/vendorCSS.js":256}],274:[function(require,module,exports){
-module.exports=require(74)
-},{"js-ext/extra/hashmap.js":243,"js-ext/lib/object.js":246,"polyfill":259}],275:[function(require,module,exports){
-module.exports=require(75)
-},{"js-ext/extra/hashmap.js":243,"js-ext/lib/object.js":246,"js-ext/lib/string.js":248,"polyfill":259}],276:[function(require,module,exports){
-module.exports=require(76)
-},{"js-ext/extra/hashmap.js":243,"js-ext/lib/object.js":246,"js-ext/lib/string.js":248,"polyfill":259}],277:[function(require,module,exports){
-module.exports=require(77)
-},{"../css/element.css":241,"./attribute-extractor.js":273,"./element-array.js":274,"./html-parser.js":278,"./node-parser.js":279,"./vdom-ns.js":280,"./vnode.js":281,"js-ext/extra/hashmap.js":243,"js-ext/lib/object.js":246,"js-ext/lib/promise.js":247,"js-ext/lib/string.js":248,"polyfill":259,"polyfill/extra/transition.js":254,"polyfill/extra/transitionend.js":255,"polyfill/extra/vendorCSS.js":256,"utils":260,"window-ext":266}],278:[function(require,module,exports){
-module.exports=require(78)
-},{"./attribute-extractor.js":273,"./vdom-ns.js":280,"js-ext/extra/hashmap.js":243,"js-ext/lib/object.js":246,"polyfill":259}],279:[function(require,module,exports){
-module.exports=require(79)
-},{"./attribute-extractor.js":273,"./vdom-ns.js":280,"./vnode.js":281,"js-ext/extra/hashmap.js":243,"js-ext/lib/object.js":246,"polyfill":259}],280:[function(require,module,exports){
-module.exports=require(80)
-},{"js-ext/extra/hashmap.js":243,"js-ext/lib/object.js":246,"polyfill":259}],281:[function(require,module,exports){
-module.exports=require(81)
-},{"./attribute-extractor.js":273,"./html-parser.js":278,"./vdom-ns.js":280,"js-ext/extra/hashmap.js":243,"js-ext/extra/lightmap.js":244,"js-ext/lib/array.js":245,"js-ext/lib/object.js":246,"js-ext/lib/string.js":248,"polyfill":259,"utils/lib/timers.js":262}],282:[function(require,module,exports){
-module.exports=require(82)
-},{"./partials/element-plugin.js":275,"./partials/extend-document.js":276,"./partials/extend-element.js":277,"./partials/node-parser.js":279,"js-ext/extra/hashmap.js":243,"js-ext/lib/object.js":246,"utils/lib/timers.js":262}],283:[function(require,module,exports){
-module.exports=require(66)
-},{"./lib/sizes.js":284}],284:[function(require,module,exports){
-module.exports=require(67)
-},{"js-ext/extra/hashmap.js":285,"js-ext/lib/object.js":286}],285:[function(require,module,exports){
-module.exports=require(17)
-},{}],286:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":285,"polyfill/polyfill-base.js":289}],287:[function(require,module,exports){
+},{"./lib/matchesselector.js":274,"./lib/window.console.js":276}],278:[function(require,module,exports){
+module.exports=require(53)
+},{}],279:[function(require,module,exports){
+module.exports=require(54)
+},{"../bin/local-hashmap.js":278}],280:[function(require,module,exports){
+module.exports=require(55)
+},{"../bin/local-hashmap.js":278}],281:[function(require,module,exports){
+module.exports=require(56)
+},{"../bin/local-hashmap.js":278}],282:[function(require,module,exports){
 module.exports=require(19)
-},{}],288:[function(require,module,exports){
+},{}],283:[function(require,module,exports){
 module.exports=require(20)
+},{}],284:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":282,"./lib/window.console.js":283}],285:[function(require,module,exports){
+module.exports=require(35)
+},{"./lib/idgenerator.js":286,"./lib/timers.js":287}],286:[function(require,module,exports){
+module.exports=require(36)
+},{"js-ext/extra/hashmap.js":268,"polyfill/polyfill-base.js":290}],287:[function(require,module,exports){
+module.exports=require(37)
+},{"polyfill/polyfill-base.js":290}],288:[function(require,module,exports){
+module.exports=require(19)
 },{}],289:[function(require,module,exports){
+module.exports=require(20)
+},{}],290:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":287,"./lib/window.console.js":288}],290:[function(require,module,exports){
+},{"./lib/matchesselector.js":288,"./lib/window.console.js":289}],291:[function(require,module,exports){
+module.exports=require(66)
+},{"./lib/sizes.js":292}],292:[function(require,module,exports){
+module.exports=require(67)
+},{"js-ext/extra/hashmap.js":293,"js-ext/lib/object.js":294}],293:[function(require,module,exports){
+module.exports=require(17)
+},{}],294:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":293,"polyfill/polyfill-base.js":297}],295:[function(require,module,exports){
+module.exports=require(19)
+},{}],296:[function(require,module,exports){
+module.exports=require(20)
+},{}],297:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":295,"./lib/window.console.js":296}],298:[function(require,module,exports){
+module.exports=require(73)
+},{"js-ext/extra/hashmap.js":268,"js-ext/lib/object.js":271,"js-ext/lib/string.js":273,"polyfill":284,"polyfill/extra/transition.js":279,"polyfill/extra/vendorCSS.js":281}],299:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":268,"js-ext/lib/object.js":271,"polyfill":284}],300:[function(require,module,exports){
+module.exports=require(75)
+},{"js-ext/extra/hashmap.js":268,"js-ext/lib/object.js":271,"js-ext/lib/string.js":273,"polyfill":284}],301:[function(require,module,exports){
+module.exports=require(76)
+},{"../css/element.css":266,"./attribute-extractor.js":298,"./element-array.js":299,"./html-parser.js":302,"./node-parser.js":303,"./vdom-ns.js":304,"./vnode.js":305,"js-ext/extra/hashmap.js":268,"js-ext/lib/object.js":271,"js-ext/lib/promise.js":272,"js-ext/lib/string.js":273,"polyfill":284,"polyfill/extra/transition.js":279,"polyfill/extra/transitionend.js":280,"polyfill/extra/vendorCSS.js":281,"utils":285,"window-ext":291}],302:[function(require,module,exports){
+module.exports=require(77)
+},{"./attribute-extractor.js":298,"./vdom-ns.js":304,"js-ext/extra/hashmap.js":268,"js-ext/lib/object.js":271,"polyfill":284}],303:[function(require,module,exports){
+module.exports=require(78)
+},{"./attribute-extractor.js":298,"./vdom-ns.js":304,"./vnode.js":305,"js-ext/extra/hashmap.js":268,"js-ext/lib/object.js":271,"polyfill":284}],304:[function(require,module,exports){
+module.exports=require(79)
+},{"js-ext/extra/hashmap.js":268,"js-ext/lib/object.js":271,"polyfill":284}],305:[function(require,module,exports){
+module.exports=require(80)
+},{"./attribute-extractor.js":298,"./html-parser.js":302,"./vdom-ns.js":304,"js-ext/extra/hashmap.js":268,"js-ext/extra/lightmap.js":269,"js-ext/lib/array.js":270,"js-ext/lib/object.js":271,"js-ext/lib/string.js":273,"polyfill":284,"utils/lib/timers.js":287}],306:[function(require,module,exports){
+module.exports=require(81)
+},{"./partials/extend-document.js":300,"./partials/extend-element.js":301,"./partials/node-parser.js":303,"js-ext/extra/hashmap.js":268,"js-ext/lib/object.js":271,"utils/lib/timers.js":287}],307:[function(require,module,exports){
+module.exports=require(66)
+},{"./lib/sizes.js":308}],308:[function(require,module,exports){
+module.exports=require(67)
+},{"js-ext/extra/hashmap.js":309,"js-ext/lib/object.js":310}],309:[function(require,module,exports){
+module.exports=require(17)
+},{}],310:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":309,"polyfill/polyfill-base.js":313}],311:[function(require,module,exports){
+module.exports=require(19)
+},{}],312:[function(require,module,exports){
+module.exports=require(20)
+},{}],313:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":311,"./lib/window.console.js":312}],314:[function(require,module,exports){
 module.exports=require(11)
-},{"event":298,"js-ext/extra/hashmap.js":308,"js-ext/lib/array.js":309,"js-ext/lib/object.js":310,"js-ext/lib/string.js":311,"polyfill/polyfill-base.js":317,"utils":318,"vdom":365}],291:[function(require,module,exports){
+},{"event":318,"js-ext/extra/hashmap.js":328,"js-ext/lib/array.js":329,"js-ext/lib/object.js":330,"js-ext/lib/string.js":331,"polyfill/polyfill-base.js":337,"utils":338,"vdom":384}],315:[function(require,module,exports){
+module.exports=require(12)
+},{"js-ext/extra/hashmap.js":320,"js-ext/lib/object.js":321,"polyfill/polyfill-base.js":327}],316:[function(require,module,exports){
+module.exports=require(13)
+},{"./event-base.js":315}],317:[function(require,module,exports){
+module.exports=require(14)
+},{"./event-base.js":315,"js-ext/extra/classes.js":319,"js-ext/lib/object.js":321}],318:[function(require,module,exports){
+module.exports=require(15)
+},{"./event-base.js":315,"./event-emitter.js":316,"./event-listener.js":317}],319:[function(require,module,exports){
+module.exports=require(16)
+},{"../lib/object.js":321,"js-ext/extra/hashmap.js":320,"polyfill/polyfill-base.js":324}],320:[function(require,module,exports){
+module.exports=require(17)
+},{}],321:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":320,"polyfill/polyfill-base.js":324}],322:[function(require,module,exports){
+module.exports=require(19)
+},{}],323:[function(require,module,exports){
+module.exports=require(20)
+},{}],324:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":322,"./lib/window.console.js":323}],325:[function(require,module,exports){
+module.exports=require(19)
+},{}],326:[function(require,module,exports){
+module.exports=require(20)
+},{}],327:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":325,"./lib/window.console.js":326}],328:[function(require,module,exports){
+module.exports=require(17)
+},{}],329:[function(require,module,exports){
+module.exports=require(26)
+},{"polyfill/polyfill-base.js":334}],330:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":328,"polyfill/polyfill-base.js":334}],331:[function(require,module,exports){
+module.exports=require(28)
+},{}],332:[function(require,module,exports){
+module.exports=require(19)
+},{}],333:[function(require,module,exports){
+module.exports=require(20)
+},{}],334:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":332,"./lib/window.console.js":333}],335:[function(require,module,exports){
+module.exports=require(19)
+},{}],336:[function(require,module,exports){
+module.exports=require(20)
+},{}],337:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":335,"./lib/window.console.js":336}],338:[function(require,module,exports){
+module.exports=require(35)
+},{"./lib/idgenerator.js":339,"./lib/timers.js":340}],339:[function(require,module,exports){
+module.exports=require(36)
+},{"js-ext/extra/hashmap.js":328,"polyfill/polyfill-base.js":343}],340:[function(require,module,exports){
+module.exports=require(37)
+},{"polyfill/polyfill-base.js":343}],341:[function(require,module,exports){
+module.exports=require(19)
+},{}],342:[function(require,module,exports){
+module.exports=require(20)
+},{}],343:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":341,"./lib/window.console.js":342}],344:[function(require,module,exports){
+module.exports=require(41)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],345:[function(require,module,exports){
+module.exports=require(16)
+},{"../lib/object.js":349,"js-ext/extra/hashmap.js":346,"polyfill/polyfill-base.js":355}],346:[function(require,module,exports){
+module.exports=require(17)
+},{}],347:[function(require,module,exports){
+module.exports=require(44)
+},{"../lib/array.js":348,"../lib/object.js":349,"./classes.js":345,"js-ext/extra/hashmap.js":346,"polyfill/lib/weakmap.js":353}],348:[function(require,module,exports){
+module.exports=require(26)
+},{"polyfill/polyfill-base.js":355}],349:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":346,"polyfill/polyfill-base.js":355}],350:[function(require,module,exports){
+module.exports=require(47)
+},{"polyfill":355}],351:[function(require,module,exports){
+module.exports=require(28)
+},{}],352:[function(require,module,exports){
+module.exports=require(19)
+},{}],353:[function(require,module,exports){
+module.exports=require(50)
+},{}],354:[function(require,module,exports){
+module.exports=require(20)
+},{}],355:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":352,"./lib/window.console.js":354}],356:[function(require,module,exports){
+module.exports=require(53)
+},{}],357:[function(require,module,exports){
+module.exports=require(54)
+},{"../bin/local-hashmap.js":356}],358:[function(require,module,exports){
+module.exports=require(55)
+},{"../bin/local-hashmap.js":356}],359:[function(require,module,exports){
+module.exports=require(56)
+},{"../bin/local-hashmap.js":356}],360:[function(require,module,exports){
+module.exports=require(19)
+},{}],361:[function(require,module,exports){
+module.exports=require(20)
+},{}],362:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":360,"./lib/window.console.js":361}],363:[function(require,module,exports){
+module.exports=require(35)
+},{"./lib/idgenerator.js":364,"./lib/timers.js":365}],364:[function(require,module,exports){
+module.exports=require(36)
+},{"js-ext/extra/hashmap.js":346,"polyfill/polyfill-base.js":368}],365:[function(require,module,exports){
+module.exports=require(37)
+},{"polyfill/polyfill-base.js":368}],366:[function(require,module,exports){
+module.exports=require(19)
+},{}],367:[function(require,module,exports){
+module.exports=require(20)
+},{}],368:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":366,"./lib/window.console.js":367}],369:[function(require,module,exports){
+module.exports=require(66)
+},{"./lib/sizes.js":370}],370:[function(require,module,exports){
+module.exports=require(67)
+},{"js-ext/extra/hashmap.js":371,"js-ext/lib/object.js":372}],371:[function(require,module,exports){
+module.exports=require(17)
+},{}],372:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":371,"polyfill/polyfill-base.js":375}],373:[function(require,module,exports){
+module.exports=require(19)
+},{}],374:[function(require,module,exports){
+module.exports=require(20)
+},{}],375:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":373,"./lib/window.console.js":374}],376:[function(require,module,exports){
+module.exports=require(73)
+},{"js-ext/extra/hashmap.js":346,"js-ext/lib/object.js":349,"js-ext/lib/string.js":351,"polyfill":362,"polyfill/extra/transition.js":357,"polyfill/extra/vendorCSS.js":359}],377:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":346,"js-ext/lib/object.js":349,"polyfill":362}],378:[function(require,module,exports){
+module.exports=require(75)
+},{"js-ext/extra/hashmap.js":346,"js-ext/lib/object.js":349,"js-ext/lib/string.js":351,"polyfill":362}],379:[function(require,module,exports){
+module.exports=require(76)
+},{"../css/element.css":344,"./attribute-extractor.js":376,"./element-array.js":377,"./html-parser.js":380,"./node-parser.js":381,"./vdom-ns.js":382,"./vnode.js":383,"js-ext/extra/hashmap.js":346,"js-ext/lib/object.js":349,"js-ext/lib/promise.js":350,"js-ext/lib/string.js":351,"polyfill":362,"polyfill/extra/transition.js":357,"polyfill/extra/transitionend.js":358,"polyfill/extra/vendorCSS.js":359,"utils":363,"window-ext":369}],380:[function(require,module,exports){
+module.exports=require(77)
+},{"./attribute-extractor.js":376,"./vdom-ns.js":382,"js-ext/extra/hashmap.js":346,"js-ext/lib/object.js":349,"polyfill":362}],381:[function(require,module,exports){
+module.exports=require(78)
+},{"./attribute-extractor.js":376,"./vdom-ns.js":382,"./vnode.js":383,"js-ext/extra/hashmap.js":346,"js-ext/lib/object.js":349,"polyfill":362}],382:[function(require,module,exports){
+module.exports=require(79)
+},{"js-ext/extra/hashmap.js":346,"js-ext/lib/object.js":349,"polyfill":362}],383:[function(require,module,exports){
+module.exports=require(80)
+},{"./attribute-extractor.js":376,"./html-parser.js":380,"./vdom-ns.js":382,"js-ext/extra/hashmap.js":346,"js-ext/extra/lightmap.js":347,"js-ext/lib/array.js":348,"js-ext/lib/object.js":349,"js-ext/lib/string.js":351,"polyfill":362,"utils/lib/timers.js":365}],384:[function(require,module,exports){
+module.exports=require(81)
+},{"./partials/extend-document.js":378,"./partials/extend-element.js":379,"./partials/node-parser.js":381,"js-ext/extra/hashmap.js":346,"js-ext/lib/object.js":349,"utils/lib/timers.js":365}],385:[function(require,module,exports){
+module.exports=require(17)
+},{}],386:[function(require,module,exports){
+module.exports=require(83)
+},{"./lib/array.js":387,"./lib/function.js":388,"./lib/json.js":389,"./lib/object.js":390,"./lib/promise.js":391,"./lib/string.js":392}],387:[function(require,module,exports){
+module.exports=require(26)
+},{"polyfill/polyfill-base.js":395}],388:[function(require,module,exports){
+module.exports=require(85)
+},{"polyfill/polyfill-base.js":395}],389:[function(require,module,exports){
+module.exports=require(86)
+},{"polyfill/polyfill-base.js":395}],390:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":385,"polyfill/polyfill-base.js":395}],391:[function(require,module,exports){
+module.exports=require(47)
+},{"polyfill":395}],392:[function(require,module,exports){
+module.exports=require(28)
+},{}],393:[function(require,module,exports){
+module.exports=require(19)
+},{}],394:[function(require,module,exports){
+module.exports=require(20)
+},{}],395:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":393,"./lib/window.console.js":394}],396:[function(require,module,exports){
+module.exports=require(93)
+},{"./lib/constrain.js":397,"./lib/element-plugin.js":398}],397:[function(require,module,exports){
+module.exports=require(94)
+},{"./element-plugin.js":398,"js-ext/extra/hashmap.js":502}],398:[function(require,module,exports){
+module.exports=require(95)
+},{"event-dom":399,"event/extra/timer-finalize.js":471,"io":480,"js-ext/extra/classes.js":501,"js-ext/extra/hashmap.js":502,"js-ext/lib/object.js":503,"js-ext/lib/promise.js":504,"js-ext/lib/string.js":505,"polyfill":511,"utils/lib/timers.js":512,"vdom":556}],399:[function(require,module,exports){
+module.exports=require(11)
+},{"event":403,"js-ext/extra/hashmap.js":413,"js-ext/lib/array.js":414,"js-ext/lib/object.js":415,"js-ext/lib/string.js":416,"polyfill/polyfill-base.js":422,"utils":423,"vdom":469}],400:[function(require,module,exports){
+module.exports=require(12)
+},{"js-ext/extra/hashmap.js":405,"js-ext/lib/object.js":406,"polyfill/polyfill-base.js":412}],401:[function(require,module,exports){
+module.exports=require(13)
+},{"./event-base.js":400}],402:[function(require,module,exports){
+module.exports=require(14)
+},{"./event-base.js":400,"js-ext/extra/classes.js":404,"js-ext/lib/object.js":406}],403:[function(require,module,exports){
+module.exports=require(15)
+},{"./event-base.js":400,"./event-emitter.js":401,"./event-listener.js":402}],404:[function(require,module,exports){
+module.exports=require(16)
+},{"../lib/object.js":406,"js-ext/extra/hashmap.js":405,"polyfill/polyfill-base.js":409}],405:[function(require,module,exports){
+module.exports=require(17)
+},{}],406:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":405,"polyfill/polyfill-base.js":409}],407:[function(require,module,exports){
+module.exports=require(19)
+},{}],408:[function(require,module,exports){
+module.exports=require(20)
+},{}],409:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":407,"./lib/window.console.js":408}],410:[function(require,module,exports){
+module.exports=require(19)
+},{}],411:[function(require,module,exports){
+module.exports=require(20)
+},{}],412:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":410,"./lib/window.console.js":411}],413:[function(require,module,exports){
+module.exports=require(17)
+},{}],414:[function(require,module,exports){
+module.exports=require(26)
+},{"polyfill/polyfill-base.js":419}],415:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":413,"polyfill/polyfill-base.js":419}],416:[function(require,module,exports){
+module.exports=require(28)
+},{}],417:[function(require,module,exports){
+module.exports=require(19)
+},{}],418:[function(require,module,exports){
+module.exports=require(20)
+},{}],419:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":417,"./lib/window.console.js":418}],420:[function(require,module,exports){
+module.exports=require(19)
+},{}],421:[function(require,module,exports){
+module.exports=require(20)
+},{}],422:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":420,"./lib/window.console.js":421}],423:[function(require,module,exports){
+module.exports=require(35)
+},{"./lib/idgenerator.js":424,"./lib/timers.js":425}],424:[function(require,module,exports){
+module.exports=require(36)
+},{"js-ext/extra/hashmap.js":413,"polyfill/polyfill-base.js":428}],425:[function(require,module,exports){
+module.exports=require(37)
+},{"polyfill/polyfill-base.js":428}],426:[function(require,module,exports){
+module.exports=require(19)
+},{}],427:[function(require,module,exports){
+module.exports=require(20)
+},{}],428:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":426,"./lib/window.console.js":427}],429:[function(require,module,exports){
+module.exports=require(41)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],430:[function(require,module,exports){
+module.exports=require(16)
+},{"../lib/object.js":434,"js-ext/extra/hashmap.js":431,"polyfill/polyfill-base.js":440}],431:[function(require,module,exports){
+module.exports=require(17)
+},{}],432:[function(require,module,exports){
+module.exports=require(44)
+},{"../lib/array.js":433,"../lib/object.js":434,"./classes.js":430,"js-ext/extra/hashmap.js":431,"polyfill/lib/weakmap.js":438}],433:[function(require,module,exports){
+module.exports=require(26)
+},{"polyfill/polyfill-base.js":440}],434:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":431,"polyfill/polyfill-base.js":440}],435:[function(require,module,exports){
+module.exports=require(47)
+},{"polyfill":440}],436:[function(require,module,exports){
+module.exports=require(28)
+},{}],437:[function(require,module,exports){
+module.exports=require(19)
+},{}],438:[function(require,module,exports){
+module.exports=require(50)
+},{}],439:[function(require,module,exports){
+module.exports=require(20)
+},{}],440:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":437,"./lib/window.console.js":439}],441:[function(require,module,exports){
+module.exports=require(53)
+},{}],442:[function(require,module,exports){
+module.exports=require(54)
+},{"../bin/local-hashmap.js":441}],443:[function(require,module,exports){
+module.exports=require(55)
+},{"../bin/local-hashmap.js":441}],444:[function(require,module,exports){
+module.exports=require(56)
+},{"../bin/local-hashmap.js":441}],445:[function(require,module,exports){
+module.exports=require(19)
+},{}],446:[function(require,module,exports){
+module.exports=require(20)
+},{}],447:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":445,"./lib/window.console.js":446}],448:[function(require,module,exports){
+module.exports=require(35)
+},{"./lib/idgenerator.js":449,"./lib/timers.js":450}],449:[function(require,module,exports){
+module.exports=require(36)
+},{"js-ext/extra/hashmap.js":431,"polyfill/polyfill-base.js":453}],450:[function(require,module,exports){
+module.exports=require(37)
+},{"polyfill/polyfill-base.js":453}],451:[function(require,module,exports){
+module.exports=require(19)
+},{}],452:[function(require,module,exports){
+module.exports=require(20)
+},{}],453:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":451,"./lib/window.console.js":452}],454:[function(require,module,exports){
+module.exports=require(66)
+},{"./lib/sizes.js":455}],455:[function(require,module,exports){
+module.exports=require(67)
+},{"js-ext/extra/hashmap.js":456,"js-ext/lib/object.js":457}],456:[function(require,module,exports){
+module.exports=require(17)
+},{}],457:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":456,"polyfill/polyfill-base.js":460}],458:[function(require,module,exports){
+module.exports=require(19)
+},{}],459:[function(require,module,exports){
+module.exports=require(20)
+},{}],460:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":458,"./lib/window.console.js":459}],461:[function(require,module,exports){
+module.exports=require(73)
+},{"js-ext/extra/hashmap.js":431,"js-ext/lib/object.js":434,"js-ext/lib/string.js":436,"polyfill":447,"polyfill/extra/transition.js":442,"polyfill/extra/vendorCSS.js":444}],462:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":431,"js-ext/lib/object.js":434,"polyfill":447}],463:[function(require,module,exports){
+module.exports=require(75)
+},{"js-ext/extra/hashmap.js":431,"js-ext/lib/object.js":434,"js-ext/lib/string.js":436,"polyfill":447}],464:[function(require,module,exports){
+module.exports=require(76)
+},{"../css/element.css":429,"./attribute-extractor.js":461,"./element-array.js":462,"./html-parser.js":465,"./node-parser.js":466,"./vdom-ns.js":467,"./vnode.js":468,"js-ext/extra/hashmap.js":431,"js-ext/lib/object.js":434,"js-ext/lib/promise.js":435,"js-ext/lib/string.js":436,"polyfill":447,"polyfill/extra/transition.js":442,"polyfill/extra/transitionend.js":443,"polyfill/extra/vendorCSS.js":444,"utils":448,"window-ext":454}],465:[function(require,module,exports){
+module.exports=require(77)
+},{"./attribute-extractor.js":461,"./vdom-ns.js":467,"js-ext/extra/hashmap.js":431,"js-ext/lib/object.js":434,"polyfill":447}],466:[function(require,module,exports){
+module.exports=require(78)
+},{"./attribute-extractor.js":461,"./vdom-ns.js":467,"./vnode.js":468,"js-ext/extra/hashmap.js":431,"js-ext/lib/object.js":434,"polyfill":447}],467:[function(require,module,exports){
+module.exports=require(79)
+},{"js-ext/extra/hashmap.js":431,"js-ext/lib/object.js":434,"polyfill":447}],468:[function(require,module,exports){
+module.exports=require(80)
+},{"./attribute-extractor.js":461,"./html-parser.js":465,"./vdom-ns.js":467,"js-ext/extra/hashmap.js":431,"js-ext/extra/lightmap.js":432,"js-ext/lib/array.js":433,"js-ext/lib/object.js":434,"js-ext/lib/string.js":436,"polyfill":447,"utils/lib/timers.js":450}],469:[function(require,module,exports){
+module.exports=require(81)
+},{"./partials/extend-document.js":463,"./partials/extend-element.js":464,"./partials/node-parser.js":466,"js-ext/extra/hashmap.js":431,"js-ext/lib/object.js":434,"utils/lib/timers.js":450}],470:[function(require,module,exports){
+module.exports=require(12)
+},{"js-ext/extra/hashmap.js":472,"js-ext/lib/object.js":473,"polyfill/polyfill-base.js":479}],471:[function(require,module,exports){
+module.exports=require(168)
+},{"../event-base.js":470,"js-ext/extra/hashmap.js":472}],472:[function(require,module,exports){
+module.exports=require(17)
+},{}],473:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":472,"polyfill/polyfill-base.js":476}],474:[function(require,module,exports){
+module.exports=require(19)
+},{}],475:[function(require,module,exports){
+module.exports=require(20)
+},{}],476:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":474,"./lib/window.console.js":475}],477:[function(require,module,exports){
+module.exports=require(19)
+},{}],478:[function(require,module,exports){
+module.exports=require(20)
+},{}],479:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":477,"./lib/window.console.js":478}],480:[function(require,module,exports){
+module.exports=require(177)
+},{"js-ext":482,"js-ext/extra/hashmap.js":481,"polyfill/polyfill-base.js":494,"utils":495}],481:[function(require,module,exports){
+module.exports=require(17)
+},{}],482:[function(require,module,exports){
+module.exports=require(83)
+},{"./lib/array.js":483,"./lib/function.js":484,"./lib/json.js":485,"./lib/object.js":486,"./lib/promise.js":487,"./lib/string.js":488}],483:[function(require,module,exports){
+module.exports=require(26)
+},{"polyfill/polyfill-base.js":491}],484:[function(require,module,exports){
+module.exports=require(85)
+},{"polyfill/polyfill-base.js":491}],485:[function(require,module,exports){
+module.exports=require(86)
+},{"polyfill/polyfill-base.js":491}],486:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":481,"polyfill/polyfill-base.js":491}],487:[function(require,module,exports){
+module.exports=require(47)
+},{"polyfill":491}],488:[function(require,module,exports){
+module.exports=require(28)
+},{}],489:[function(require,module,exports){
+module.exports=require(19)
+},{}],490:[function(require,module,exports){
+module.exports=require(20)
+},{}],491:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":489,"./lib/window.console.js":490}],492:[function(require,module,exports){
+module.exports=require(19)
+},{}],493:[function(require,module,exports){
+module.exports=require(20)
+},{}],494:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":492,"./lib/window.console.js":493}],495:[function(require,module,exports){
+module.exports=require(35)
+},{"./lib/idgenerator.js":496,"./lib/timers.js":497}],496:[function(require,module,exports){
+module.exports=require(36)
+},{"js-ext/extra/hashmap.js":481,"polyfill/polyfill-base.js":500}],497:[function(require,module,exports){
+module.exports=require(37)
+},{"polyfill/polyfill-base.js":500}],498:[function(require,module,exports){
+module.exports=require(19)
+},{}],499:[function(require,module,exports){
+module.exports=require(20)
+},{}],500:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":498,"./lib/window.console.js":499}],501:[function(require,module,exports){
+module.exports=require(16)
+},{"../lib/object.js":503,"js-ext/extra/hashmap.js":502,"polyfill/polyfill-base.js":508}],502:[function(require,module,exports){
+module.exports=require(17)
+},{}],503:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":502,"polyfill/polyfill-base.js":508}],504:[function(require,module,exports){
+module.exports=require(47)
+},{"polyfill":508}],505:[function(require,module,exports){
+module.exports=require(28)
+},{}],506:[function(require,module,exports){
+module.exports=require(19)
+},{}],507:[function(require,module,exports){
+module.exports=require(20)
+},{}],508:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":506,"./lib/window.console.js":507}],509:[function(require,module,exports){
+module.exports=require(19)
+},{}],510:[function(require,module,exports){
+module.exports=require(20)
+},{}],511:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":509,"./lib/window.console.js":510}],512:[function(require,module,exports){
+module.exports=require(37)
+},{"polyfill/polyfill-base.js":515}],513:[function(require,module,exports){
+module.exports=require(19)
+},{}],514:[function(require,module,exports){
+module.exports=require(20)
+},{}],515:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":513,"./lib/window.console.js":514}],516:[function(require,module,exports){
+module.exports=require(41)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],517:[function(require,module,exports){
+module.exports=require(16)
+},{"../lib/object.js":521,"js-ext/extra/hashmap.js":518,"polyfill/polyfill-base.js":527}],518:[function(require,module,exports){
+module.exports=require(17)
+},{}],519:[function(require,module,exports){
+module.exports=require(44)
+},{"../lib/array.js":520,"../lib/object.js":521,"./classes.js":517,"js-ext/extra/hashmap.js":518,"polyfill/lib/weakmap.js":525}],520:[function(require,module,exports){
+module.exports=require(26)
+},{"polyfill/polyfill-base.js":527}],521:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":518,"polyfill/polyfill-base.js":527}],522:[function(require,module,exports){
+module.exports=require(47)
+},{"polyfill":527}],523:[function(require,module,exports){
+module.exports=require(28)
+},{}],524:[function(require,module,exports){
+module.exports=require(19)
+},{}],525:[function(require,module,exports){
+module.exports=require(50)
+},{}],526:[function(require,module,exports){
+module.exports=require(20)
+},{}],527:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":524,"./lib/window.console.js":526}],528:[function(require,module,exports){
+module.exports=require(53)
+},{}],529:[function(require,module,exports){
+module.exports=require(54)
+},{"../bin/local-hashmap.js":528}],530:[function(require,module,exports){
+module.exports=require(55)
+},{"../bin/local-hashmap.js":528}],531:[function(require,module,exports){
+module.exports=require(56)
+},{"../bin/local-hashmap.js":528}],532:[function(require,module,exports){
+module.exports=require(19)
+},{}],533:[function(require,module,exports){
+module.exports=require(20)
+},{}],534:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":532,"./lib/window.console.js":533}],535:[function(require,module,exports){
+module.exports=require(35)
+},{"./lib/idgenerator.js":536,"./lib/timers.js":537}],536:[function(require,module,exports){
+module.exports=require(36)
+},{"js-ext/extra/hashmap.js":518,"polyfill/polyfill-base.js":540}],537:[function(require,module,exports){
+module.exports=require(37)
+},{"polyfill/polyfill-base.js":540}],538:[function(require,module,exports){
+module.exports=require(19)
+},{}],539:[function(require,module,exports){
+module.exports=require(20)
+},{}],540:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":538,"./lib/window.console.js":539}],541:[function(require,module,exports){
+module.exports=require(66)
+},{"./lib/sizes.js":542}],542:[function(require,module,exports){
+module.exports=require(67)
+},{"js-ext/extra/hashmap.js":543,"js-ext/lib/object.js":544}],543:[function(require,module,exports){
+module.exports=require(17)
+},{}],544:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":543,"polyfill/polyfill-base.js":547}],545:[function(require,module,exports){
+module.exports=require(19)
+},{}],546:[function(require,module,exports){
+module.exports=require(20)
+},{}],547:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":545,"./lib/window.console.js":546}],548:[function(require,module,exports){
+module.exports=require(73)
+},{"js-ext/extra/hashmap.js":518,"js-ext/lib/object.js":521,"js-ext/lib/string.js":523,"polyfill":534,"polyfill/extra/transition.js":529,"polyfill/extra/vendorCSS.js":531}],549:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":518,"js-ext/lib/object.js":521,"polyfill":534}],550:[function(require,module,exports){
+module.exports=require(75)
+},{"js-ext/extra/hashmap.js":518,"js-ext/lib/object.js":521,"js-ext/lib/string.js":523,"polyfill":534}],551:[function(require,module,exports){
+module.exports=require(76)
+},{"../css/element.css":516,"./attribute-extractor.js":548,"./element-array.js":549,"./html-parser.js":552,"./node-parser.js":553,"./vdom-ns.js":554,"./vnode.js":555,"js-ext/extra/hashmap.js":518,"js-ext/lib/object.js":521,"js-ext/lib/promise.js":522,"js-ext/lib/string.js":523,"polyfill":534,"polyfill/extra/transition.js":529,"polyfill/extra/transitionend.js":530,"polyfill/extra/vendorCSS.js":531,"utils":535,"window-ext":541}],552:[function(require,module,exports){
+module.exports=require(77)
+},{"./attribute-extractor.js":548,"./vdom-ns.js":554,"js-ext/extra/hashmap.js":518,"js-ext/lib/object.js":521,"polyfill":534}],553:[function(require,module,exports){
+module.exports=require(78)
+},{"./attribute-extractor.js":548,"./vdom-ns.js":554,"./vnode.js":555,"js-ext/extra/hashmap.js":518,"js-ext/lib/object.js":521,"polyfill":534}],554:[function(require,module,exports){
+module.exports=require(79)
+},{"js-ext/extra/hashmap.js":518,"js-ext/lib/object.js":521,"polyfill":534}],555:[function(require,module,exports){
+module.exports=require(80)
+},{"./attribute-extractor.js":548,"./html-parser.js":552,"./vdom-ns.js":554,"js-ext/extra/hashmap.js":518,"js-ext/extra/lightmap.js":519,"js-ext/lib/array.js":520,"js-ext/lib/object.js":521,"js-ext/lib/string.js":523,"polyfill":534,"utils/lib/timers.js":537}],556:[function(require,module,exports){
+module.exports=require(81)
+},{"./partials/extend-document.js":550,"./partials/extend-element.js":551,"./partials/node-parser.js":553,"js-ext/extra/hashmap.js":518,"js-ext/lib/object.js":521,"utils/lib/timers.js":537}],557:[function(require,module,exports){
+module.exports=require(19)
+},{}],558:[function(require,module,exports){
+module.exports=require(20)
+},{}],559:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":557,"./lib/window.console.js":558}],560:[function(require,module,exports){
+module.exports=require(41)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],561:[function(require,module,exports){
+module.exports=require(16)
+},{"../lib/object.js":565,"js-ext/extra/hashmap.js":562,"polyfill/polyfill-base.js":571}],562:[function(require,module,exports){
+module.exports=require(17)
+},{}],563:[function(require,module,exports){
+module.exports=require(44)
+},{"../lib/array.js":564,"../lib/object.js":565,"./classes.js":561,"js-ext/extra/hashmap.js":562,"polyfill/lib/weakmap.js":569}],564:[function(require,module,exports){
+module.exports=require(26)
+},{"polyfill/polyfill-base.js":571}],565:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":562,"polyfill/polyfill-base.js":571}],566:[function(require,module,exports){
+module.exports=require(47)
+},{"polyfill":571}],567:[function(require,module,exports){
+module.exports=require(28)
+},{}],568:[function(require,module,exports){
+module.exports=require(19)
+},{}],569:[function(require,module,exports){
+module.exports=require(50)
+},{}],570:[function(require,module,exports){
+module.exports=require(20)
+},{}],571:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":568,"./lib/window.console.js":570}],572:[function(require,module,exports){
+module.exports=require(53)
+},{}],573:[function(require,module,exports){
+module.exports=require(54)
+},{"../bin/local-hashmap.js":572}],574:[function(require,module,exports){
+module.exports=require(55)
+},{"../bin/local-hashmap.js":572}],575:[function(require,module,exports){
+module.exports=require(56)
+},{"../bin/local-hashmap.js":572}],576:[function(require,module,exports){
+module.exports=require(19)
+},{}],577:[function(require,module,exports){
+module.exports=require(20)
+},{}],578:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":576,"./lib/window.console.js":577}],579:[function(require,module,exports){
+module.exports=require(35)
+},{"./lib/idgenerator.js":580,"./lib/timers.js":581}],580:[function(require,module,exports){
+module.exports=require(36)
+},{"js-ext/extra/hashmap.js":562,"polyfill/polyfill-base.js":584}],581:[function(require,module,exports){
+module.exports=require(37)
+},{"polyfill/polyfill-base.js":584}],582:[function(require,module,exports){
+module.exports=require(19)
+},{}],583:[function(require,module,exports){
+module.exports=require(20)
+},{}],584:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":582,"./lib/window.console.js":583}],585:[function(require,module,exports){
+module.exports=require(66)
+},{"./lib/sizes.js":586}],586:[function(require,module,exports){
+module.exports=require(67)
+},{"js-ext/extra/hashmap.js":587,"js-ext/lib/object.js":588}],587:[function(require,module,exports){
+module.exports=require(17)
+},{}],588:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":587,"polyfill/polyfill-base.js":591}],589:[function(require,module,exports){
+module.exports=require(19)
+},{}],590:[function(require,module,exports){
+module.exports=require(20)
+},{}],591:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":589,"./lib/window.console.js":590}],592:[function(require,module,exports){
+module.exports=require(73)
+},{"js-ext/extra/hashmap.js":562,"js-ext/lib/object.js":565,"js-ext/lib/string.js":567,"polyfill":578,"polyfill/extra/transition.js":573,"polyfill/extra/vendorCSS.js":575}],593:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":562,"js-ext/lib/object.js":565,"polyfill":578}],594:[function(require,module,exports){
+module.exports=require(75)
+},{"js-ext/extra/hashmap.js":562,"js-ext/lib/object.js":565,"js-ext/lib/string.js":567,"polyfill":578}],595:[function(require,module,exports){
+module.exports=require(76)
+},{"../css/element.css":560,"./attribute-extractor.js":592,"./element-array.js":593,"./html-parser.js":596,"./node-parser.js":597,"./vdom-ns.js":598,"./vnode.js":599,"js-ext/extra/hashmap.js":562,"js-ext/lib/object.js":565,"js-ext/lib/promise.js":566,"js-ext/lib/string.js":567,"polyfill":578,"polyfill/extra/transition.js":573,"polyfill/extra/transitionend.js":574,"polyfill/extra/vendorCSS.js":575,"utils":579,"window-ext":585}],596:[function(require,module,exports){
+module.exports=require(77)
+},{"./attribute-extractor.js":592,"./vdom-ns.js":598,"js-ext/extra/hashmap.js":562,"js-ext/lib/object.js":565,"polyfill":578}],597:[function(require,module,exports){
+module.exports=require(78)
+},{"./attribute-extractor.js":592,"./vdom-ns.js":598,"./vnode.js":599,"js-ext/extra/hashmap.js":562,"js-ext/lib/object.js":565,"polyfill":578}],598:[function(require,module,exports){
+module.exports=require(79)
+},{"js-ext/extra/hashmap.js":562,"js-ext/lib/object.js":565,"polyfill":578}],599:[function(require,module,exports){
+module.exports=require(80)
+},{"./attribute-extractor.js":592,"./html-parser.js":596,"./vdom-ns.js":598,"js-ext/extra/hashmap.js":562,"js-ext/extra/lightmap.js":563,"js-ext/lib/array.js":564,"js-ext/lib/object.js":565,"js-ext/lib/string.js":567,"polyfill":578,"utils/lib/timers.js":581}],600:[function(require,module,exports){
+module.exports=require(81)
+},{"./partials/extend-document.js":594,"./partials/extend-element.js":595,"./partials/node-parser.js":597,"js-ext/extra/hashmap.js":562,"js-ext/lib/object.js":565,"utils/lib/timers.js":581}],601:[function(require,module,exports){
+module.exports=require(66)
+},{"./lib/sizes.js":602}],602:[function(require,module,exports){
+module.exports=require(67)
+},{"js-ext/extra/hashmap.js":603,"js-ext/lib/object.js":604}],603:[function(require,module,exports){
+module.exports=require(17)
+},{}],604:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":603,"polyfill/polyfill-base.js":607}],605:[function(require,module,exports){
+module.exports=require(19)
+},{}],606:[function(require,module,exports){
+module.exports=require(20)
+},{}],607:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":605,"./lib/window.console.js":606}],608:[function(require,module,exports){
+module.exports=require(11)
+},{"event":616,"js-ext/extra/hashmap.js":626,"js-ext/lib/array.js":627,"js-ext/lib/object.js":628,"js-ext/lib/string.js":629,"polyfill/polyfill-base.js":635,"utils":636,"vdom":682}],609:[function(require,module,exports){
 "use strict";
 
 /**
@@ -17625,7 +19352,7 @@ module.exports = function (window) {
     return Event;
 };
 
-},{"../event-dom.js":290,"js-ext/extra/hashmap.js":308,"js-ext/lib/object.js":310}],292:[function(require,module,exports){
+},{"../event-dom.js":608,"js-ext/extra/hashmap.js":626,"js-ext/lib/object.js":628}],610:[function(require,module,exports){
 "use strict";
 
 /**
@@ -17726,7 +19453,7 @@ module.exports = function (window) {
     return Event;
 };
 
-},{"../event-dom.js":290,"js-ext/extra/hashmap.js":308,"js-ext/lib/object.js":310}],293:[function(require,module,exports){
+},{"../event-dom.js":608,"js-ext/extra/hashmap.js":626,"js-ext/lib/object.js":628}],611:[function(require,module,exports){
 "use strict";
 
 /**
@@ -17828,7 +19555,7 @@ module.exports = function (window) {
     return Event;
 };
 
-},{"../event-dom.js":290,"js-ext/extra/hashmap.js":308,"js-ext/lib/object.js":310}],294:[function(require,module,exports){
+},{"../event-dom.js":608,"js-ext/extra/hashmap.js":626,"js-ext/lib/object.js":628}],612:[function(require,module,exports){
 "use strict";
 
 /**
@@ -18115,149 +19842,147 @@ module.exports = function (window) {
     return Event;
 };
 
-},{"../event-dom.js":290,"js-ext/extra/hashmap.js":308,"js-ext/lib/object.js":310,"utils":318,"vdom":365}],295:[function(require,module,exports){
+},{"../event-dom.js":608,"js-ext/extra/hashmap.js":626,"js-ext/lib/object.js":628,"utils":636,"vdom":682}],613:[function(require,module,exports){
 module.exports=require(12)
-},{"js-ext/extra/hashmap.js":300,"js-ext/lib/object.js":301,"polyfill/polyfill-base.js":307}],296:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":618,"js-ext/lib/object.js":619,"polyfill/polyfill-base.js":625}],614:[function(require,module,exports){
 module.exports=require(13)
-},{"./event-base.js":295}],297:[function(require,module,exports){
+},{"./event-base.js":613}],615:[function(require,module,exports){
 module.exports=require(14)
-},{"./event-base.js":295,"js-ext/extra/classes.js":299,"js-ext/lib/object.js":301}],298:[function(require,module,exports){
+},{"./event-base.js":613,"js-ext/extra/classes.js":617,"js-ext/lib/object.js":619}],616:[function(require,module,exports){
 module.exports=require(15)
-},{"./event-base.js":295,"./event-emitter.js":296,"./event-listener.js":297}],299:[function(require,module,exports){
+},{"./event-base.js":613,"./event-emitter.js":614,"./event-listener.js":615}],617:[function(require,module,exports){
 module.exports=require(16)
-},{"../lib/object.js":301,"js-ext/extra/hashmap.js":300,"polyfill/polyfill-base.js":304}],300:[function(require,module,exports){
+},{"../lib/object.js":619,"js-ext/extra/hashmap.js":618,"polyfill/polyfill-base.js":622}],618:[function(require,module,exports){
 module.exports=require(17)
-},{}],301:[function(require,module,exports){
+},{}],619:[function(require,module,exports){
 module.exports=require(18)
-},{"js-ext/extra/hashmap.js":300,"polyfill/polyfill-base.js":304}],302:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":618,"polyfill/polyfill-base.js":622}],620:[function(require,module,exports){
 module.exports=require(19)
-},{}],303:[function(require,module,exports){
+},{}],621:[function(require,module,exports){
 module.exports=require(20)
-},{}],304:[function(require,module,exports){
+},{}],622:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":302,"./lib/window.console.js":303}],305:[function(require,module,exports){
+},{"./lib/matchesselector.js":620,"./lib/window.console.js":621}],623:[function(require,module,exports){
 module.exports=require(19)
-},{}],306:[function(require,module,exports){
+},{}],624:[function(require,module,exports){
 module.exports=require(20)
-},{}],307:[function(require,module,exports){
+},{}],625:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":305,"./lib/window.console.js":306}],308:[function(require,module,exports){
+},{"./lib/matchesselector.js":623,"./lib/window.console.js":624}],626:[function(require,module,exports){
 module.exports=require(17)
-},{}],309:[function(require,module,exports){
+},{}],627:[function(require,module,exports){
 module.exports=require(26)
-},{"polyfill/polyfill-base.js":314}],310:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":632}],628:[function(require,module,exports){
 module.exports=require(18)
-},{"js-ext/extra/hashmap.js":308,"polyfill/polyfill-base.js":314}],311:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":626,"polyfill/polyfill-base.js":632}],629:[function(require,module,exports){
 module.exports=require(28)
-},{}],312:[function(require,module,exports){
+},{}],630:[function(require,module,exports){
 module.exports=require(19)
-},{}],313:[function(require,module,exports){
+},{}],631:[function(require,module,exports){
 module.exports=require(20)
-},{}],314:[function(require,module,exports){
+},{}],632:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":312,"./lib/window.console.js":313}],315:[function(require,module,exports){
+},{"./lib/matchesselector.js":630,"./lib/window.console.js":631}],633:[function(require,module,exports){
 module.exports=require(19)
-},{}],316:[function(require,module,exports){
+},{}],634:[function(require,module,exports){
 module.exports=require(20)
-},{}],317:[function(require,module,exports){
+},{}],635:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":315,"./lib/window.console.js":316}],318:[function(require,module,exports){
+},{"./lib/matchesselector.js":633,"./lib/window.console.js":634}],636:[function(require,module,exports){
 module.exports=require(35)
-},{"./lib/idgenerator.js":319,"./lib/timers.js":320}],319:[function(require,module,exports){
+},{"./lib/idgenerator.js":637,"./lib/timers.js":638}],637:[function(require,module,exports){
 module.exports=require(36)
-},{"js-ext/extra/hashmap.js":308,"polyfill/polyfill-base.js":323}],320:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":626,"polyfill/polyfill-base.js":641}],638:[function(require,module,exports){
 module.exports=require(37)
-},{"polyfill/polyfill-base.js":323}],321:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":641}],639:[function(require,module,exports){
 module.exports=require(19)
-},{}],322:[function(require,module,exports){
+},{}],640:[function(require,module,exports){
 module.exports=require(20)
-},{}],323:[function(require,module,exports){
+},{}],641:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":321,"./lib/window.console.js":322}],324:[function(require,module,exports){
+},{"./lib/matchesselector.js":639,"./lib/window.console.js":640}],642:[function(require,module,exports){
 module.exports=require(41)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],325:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],643:[function(require,module,exports){
 module.exports=require(16)
-},{"../lib/object.js":329,"js-ext/extra/hashmap.js":326,"polyfill/polyfill-base.js":335}],326:[function(require,module,exports){
+},{"../lib/object.js":647,"js-ext/extra/hashmap.js":644,"polyfill/polyfill-base.js":653}],644:[function(require,module,exports){
 module.exports=require(17)
-},{}],327:[function(require,module,exports){
+},{}],645:[function(require,module,exports){
 module.exports=require(44)
-},{"../lib/array.js":328,"../lib/object.js":329,"./classes.js":325,"js-ext/extra/hashmap.js":326,"polyfill/lib/weakmap.js":333}],328:[function(require,module,exports){
+},{"../lib/array.js":646,"../lib/object.js":647,"./classes.js":643,"js-ext/extra/hashmap.js":644,"polyfill/lib/weakmap.js":651}],646:[function(require,module,exports){
 module.exports=require(26)
-},{"polyfill/polyfill-base.js":335}],329:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":653}],647:[function(require,module,exports){
 module.exports=require(18)
-},{"js-ext/extra/hashmap.js":326,"polyfill/polyfill-base.js":335}],330:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":644,"polyfill/polyfill-base.js":653}],648:[function(require,module,exports){
 module.exports=require(47)
-},{"polyfill":335}],331:[function(require,module,exports){
+},{"polyfill":653}],649:[function(require,module,exports){
 module.exports=require(28)
-},{}],332:[function(require,module,exports){
+},{}],650:[function(require,module,exports){
 module.exports=require(19)
-},{}],333:[function(require,module,exports){
+},{}],651:[function(require,module,exports){
 module.exports=require(50)
-},{}],334:[function(require,module,exports){
+},{}],652:[function(require,module,exports){
 module.exports=require(20)
-},{}],335:[function(require,module,exports){
+},{}],653:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":332,"./lib/window.console.js":334}],336:[function(require,module,exports){
+},{"./lib/matchesselector.js":650,"./lib/window.console.js":652}],654:[function(require,module,exports){
 module.exports=require(53)
-},{}],337:[function(require,module,exports){
+},{}],655:[function(require,module,exports){
 module.exports=require(54)
-},{"../bin/local-hashmap.js":336}],338:[function(require,module,exports){
+},{"../bin/local-hashmap.js":654}],656:[function(require,module,exports){
 module.exports=require(55)
-},{"../bin/local-hashmap.js":336}],339:[function(require,module,exports){
+},{"../bin/local-hashmap.js":654}],657:[function(require,module,exports){
 module.exports=require(56)
-},{"../bin/local-hashmap.js":336}],340:[function(require,module,exports){
+},{"../bin/local-hashmap.js":654}],658:[function(require,module,exports){
 module.exports=require(19)
-},{}],341:[function(require,module,exports){
+},{}],659:[function(require,module,exports){
 module.exports=require(20)
-},{}],342:[function(require,module,exports){
+},{}],660:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":340,"./lib/window.console.js":341}],343:[function(require,module,exports){
+},{"./lib/matchesselector.js":658,"./lib/window.console.js":659}],661:[function(require,module,exports){
 module.exports=require(35)
-},{"./lib/idgenerator.js":344,"./lib/timers.js":345}],344:[function(require,module,exports){
+},{"./lib/idgenerator.js":662,"./lib/timers.js":663}],662:[function(require,module,exports){
 module.exports=require(36)
-},{"js-ext/extra/hashmap.js":326,"polyfill/polyfill-base.js":348}],345:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":644,"polyfill/polyfill-base.js":666}],663:[function(require,module,exports){
 module.exports=require(37)
-},{"polyfill/polyfill-base.js":348}],346:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":666}],664:[function(require,module,exports){
 module.exports=require(19)
-},{}],347:[function(require,module,exports){
+},{}],665:[function(require,module,exports){
 module.exports=require(20)
-},{}],348:[function(require,module,exports){
+},{}],666:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":346,"./lib/window.console.js":347}],349:[function(require,module,exports){
+},{"./lib/matchesselector.js":664,"./lib/window.console.js":665}],667:[function(require,module,exports){
 module.exports=require(66)
-},{"./lib/sizes.js":350}],350:[function(require,module,exports){
+},{"./lib/sizes.js":668}],668:[function(require,module,exports){
 module.exports=require(67)
-},{"js-ext/extra/hashmap.js":351,"js-ext/lib/object.js":352}],351:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":669,"js-ext/lib/object.js":670}],669:[function(require,module,exports){
 module.exports=require(17)
-},{}],352:[function(require,module,exports){
+},{}],670:[function(require,module,exports){
 module.exports=require(18)
-},{"js-ext/extra/hashmap.js":351,"polyfill/polyfill-base.js":355}],353:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":669,"polyfill/polyfill-base.js":673}],671:[function(require,module,exports){
 module.exports=require(19)
-},{}],354:[function(require,module,exports){
+},{}],672:[function(require,module,exports){
 module.exports=require(20)
-},{}],355:[function(require,module,exports){
+},{}],673:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":353,"./lib/window.console.js":354}],356:[function(require,module,exports){
+},{"./lib/matchesselector.js":671,"./lib/window.console.js":672}],674:[function(require,module,exports){
 module.exports=require(73)
-},{"js-ext/extra/hashmap.js":326,"js-ext/lib/object.js":329,"js-ext/lib/string.js":331,"polyfill":342,"polyfill/extra/transition.js":337,"polyfill/extra/vendorCSS.js":339}],357:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":644,"js-ext/lib/object.js":647,"js-ext/lib/string.js":649,"polyfill":660,"polyfill/extra/transition.js":655,"polyfill/extra/vendorCSS.js":657}],675:[function(require,module,exports){
 module.exports=require(74)
-},{"js-ext/extra/hashmap.js":326,"js-ext/lib/object.js":329,"polyfill":342}],358:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":644,"js-ext/lib/object.js":647,"polyfill":660}],676:[function(require,module,exports){
 module.exports=require(75)
-},{"js-ext/extra/hashmap.js":326,"js-ext/lib/object.js":329,"js-ext/lib/string.js":331,"polyfill":342}],359:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":644,"js-ext/lib/object.js":647,"js-ext/lib/string.js":649,"polyfill":660}],677:[function(require,module,exports){
 module.exports=require(76)
-},{"js-ext/extra/hashmap.js":326,"js-ext/lib/object.js":329,"js-ext/lib/string.js":331,"polyfill":342}],360:[function(require,module,exports){
+},{"../css/element.css":642,"./attribute-extractor.js":674,"./element-array.js":675,"./html-parser.js":678,"./node-parser.js":679,"./vdom-ns.js":680,"./vnode.js":681,"js-ext/extra/hashmap.js":644,"js-ext/lib/object.js":647,"js-ext/lib/promise.js":648,"js-ext/lib/string.js":649,"polyfill":660,"polyfill/extra/transition.js":655,"polyfill/extra/transitionend.js":656,"polyfill/extra/vendorCSS.js":657,"utils":661,"window-ext":667}],678:[function(require,module,exports){
 module.exports=require(77)
-},{"../css/element.css":324,"./attribute-extractor.js":356,"./element-array.js":357,"./html-parser.js":361,"./node-parser.js":362,"./vdom-ns.js":363,"./vnode.js":364,"js-ext/extra/hashmap.js":326,"js-ext/lib/object.js":329,"js-ext/lib/promise.js":330,"js-ext/lib/string.js":331,"polyfill":342,"polyfill/extra/transition.js":337,"polyfill/extra/transitionend.js":338,"polyfill/extra/vendorCSS.js":339,"utils":343,"window-ext":349}],361:[function(require,module,exports){
+},{"./attribute-extractor.js":674,"./vdom-ns.js":680,"js-ext/extra/hashmap.js":644,"js-ext/lib/object.js":647,"polyfill":660}],679:[function(require,module,exports){
 module.exports=require(78)
-},{"./attribute-extractor.js":356,"./vdom-ns.js":363,"js-ext/extra/hashmap.js":326,"js-ext/lib/object.js":329,"polyfill":342}],362:[function(require,module,exports){
+},{"./attribute-extractor.js":674,"./vdom-ns.js":680,"./vnode.js":681,"js-ext/extra/hashmap.js":644,"js-ext/lib/object.js":647,"polyfill":660}],680:[function(require,module,exports){
 module.exports=require(79)
-},{"./attribute-extractor.js":356,"./vdom-ns.js":363,"./vnode.js":364,"js-ext/extra/hashmap.js":326,"js-ext/lib/object.js":329,"polyfill":342}],363:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":644,"js-ext/lib/object.js":647,"polyfill":660}],681:[function(require,module,exports){
 module.exports=require(80)
-},{"js-ext/extra/hashmap.js":326,"js-ext/lib/object.js":329,"polyfill":342}],364:[function(require,module,exports){
+},{"./attribute-extractor.js":674,"./html-parser.js":678,"./vdom-ns.js":680,"js-ext/extra/hashmap.js":644,"js-ext/extra/lightmap.js":645,"js-ext/lib/array.js":646,"js-ext/lib/object.js":647,"js-ext/lib/string.js":649,"polyfill":660,"utils/lib/timers.js":663}],682:[function(require,module,exports){
 module.exports=require(81)
-},{"./attribute-extractor.js":356,"./html-parser.js":361,"./vdom-ns.js":363,"js-ext/extra/hashmap.js":326,"js-ext/extra/lightmap.js":327,"js-ext/lib/array.js":328,"js-ext/lib/object.js":329,"js-ext/lib/string.js":331,"polyfill":342,"utils/lib/timers.js":345}],365:[function(require,module,exports){
-module.exports=require(82)
-},{"./partials/element-plugin.js":358,"./partials/extend-document.js":359,"./partials/extend-element.js":360,"./partials/node-parser.js":362,"js-ext/extra/hashmap.js":326,"js-ext/lib/object.js":329,"utils/lib/timers.js":345}],366:[function(require,module,exports){
+},{"./partials/extend-document.js":676,"./partials/extend-element.js":677,"./partials/node-parser.js":679,"js-ext/extra/hashmap.js":644,"js-ext/lib/object.js":647,"utils/lib/timers.js":663}],683:[function(require,module,exports){
 "use strict";
 
 /**
@@ -18361,7 +20086,7 @@ module.exports = function (window) {
     return Event;
 };
 
-},{"./lib/hammer-2.0.4.js":367,"event-dom":368}],367:[function(require,module,exports){
+},{"./lib/hammer-2.0.4.js":684,"event-dom":685}],684:[function(require,module,exports){
 /* Changes mad to native hammerjs:
  *
  * Wrapped "(function(window, DOCUMENT, exportName, undefined) {"
@@ -20752,169 +22477,167 @@ module.exports = function (window) {
 
 };
 
-},{"utils":440}],368:[function(require,module,exports){
+},{"utils":756}],685:[function(require,module,exports){
 module.exports=require(11)
-},{"event":372,"js-ext/extra/hashmap.js":382,"js-ext/lib/array.js":383,"js-ext/lib/object.js":384,"js-ext/lib/string.js":385,"polyfill/polyfill-base.js":391,"utils":392,"vdom":439}],369:[function(require,module,exports){
+},{"event":689,"js-ext/extra/hashmap.js":699,"js-ext/lib/array.js":700,"js-ext/lib/object.js":701,"js-ext/lib/string.js":702,"polyfill/polyfill-base.js":708,"utils":709,"vdom":755}],686:[function(require,module,exports){
 module.exports=require(12)
-},{"js-ext/extra/hashmap.js":374,"js-ext/lib/object.js":375,"polyfill/polyfill-base.js":381}],370:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":691,"js-ext/lib/object.js":692,"polyfill/polyfill-base.js":698}],687:[function(require,module,exports){
 module.exports=require(13)
-},{"./event-base.js":369}],371:[function(require,module,exports){
+},{"./event-base.js":686}],688:[function(require,module,exports){
 module.exports=require(14)
-},{"./event-base.js":369,"js-ext/extra/classes.js":373,"js-ext/lib/object.js":375}],372:[function(require,module,exports){
+},{"./event-base.js":686,"js-ext/extra/classes.js":690,"js-ext/lib/object.js":692}],689:[function(require,module,exports){
 module.exports=require(15)
-},{"./event-base.js":369,"./event-emitter.js":370,"./event-listener.js":371}],373:[function(require,module,exports){
+},{"./event-base.js":686,"./event-emitter.js":687,"./event-listener.js":688}],690:[function(require,module,exports){
 module.exports=require(16)
-},{"../lib/object.js":375,"js-ext/extra/hashmap.js":374,"polyfill/polyfill-base.js":378}],374:[function(require,module,exports){
+},{"../lib/object.js":692,"js-ext/extra/hashmap.js":691,"polyfill/polyfill-base.js":695}],691:[function(require,module,exports){
 module.exports=require(17)
-},{}],375:[function(require,module,exports){
+},{}],692:[function(require,module,exports){
 module.exports=require(18)
-},{"js-ext/extra/hashmap.js":374,"polyfill/polyfill-base.js":378}],376:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":691,"polyfill/polyfill-base.js":695}],693:[function(require,module,exports){
 module.exports=require(19)
-},{}],377:[function(require,module,exports){
+},{}],694:[function(require,module,exports){
 module.exports=require(20)
-},{}],378:[function(require,module,exports){
+},{}],695:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":376,"./lib/window.console.js":377}],379:[function(require,module,exports){
+},{"./lib/matchesselector.js":693,"./lib/window.console.js":694}],696:[function(require,module,exports){
 module.exports=require(19)
-},{}],380:[function(require,module,exports){
+},{}],697:[function(require,module,exports){
 module.exports=require(20)
-},{}],381:[function(require,module,exports){
+},{}],698:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":379,"./lib/window.console.js":380}],382:[function(require,module,exports){
+},{"./lib/matchesselector.js":696,"./lib/window.console.js":697}],699:[function(require,module,exports){
 module.exports=require(17)
-},{}],383:[function(require,module,exports){
+},{}],700:[function(require,module,exports){
 module.exports=require(26)
-},{"polyfill/polyfill-base.js":388}],384:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":705}],701:[function(require,module,exports){
 module.exports=require(18)
-},{"js-ext/extra/hashmap.js":382,"polyfill/polyfill-base.js":388}],385:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":699,"polyfill/polyfill-base.js":705}],702:[function(require,module,exports){
 module.exports=require(28)
-},{}],386:[function(require,module,exports){
+},{}],703:[function(require,module,exports){
 module.exports=require(19)
-},{}],387:[function(require,module,exports){
+},{}],704:[function(require,module,exports){
 module.exports=require(20)
-},{}],388:[function(require,module,exports){
+},{}],705:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":386,"./lib/window.console.js":387}],389:[function(require,module,exports){
+},{"./lib/matchesselector.js":703,"./lib/window.console.js":704}],706:[function(require,module,exports){
 module.exports=require(19)
-},{}],390:[function(require,module,exports){
+},{}],707:[function(require,module,exports){
 module.exports=require(20)
-},{}],391:[function(require,module,exports){
+},{}],708:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":389,"./lib/window.console.js":390}],392:[function(require,module,exports){
+},{"./lib/matchesselector.js":706,"./lib/window.console.js":707}],709:[function(require,module,exports){
 module.exports=require(35)
-},{"./lib/idgenerator.js":393,"./lib/timers.js":394}],393:[function(require,module,exports){
+},{"./lib/idgenerator.js":710,"./lib/timers.js":711}],710:[function(require,module,exports){
 module.exports=require(36)
-},{"js-ext/extra/hashmap.js":382,"polyfill/polyfill-base.js":397}],394:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":699,"polyfill/polyfill-base.js":714}],711:[function(require,module,exports){
 module.exports=require(37)
-},{"polyfill/polyfill-base.js":397}],395:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":714}],712:[function(require,module,exports){
 module.exports=require(19)
-},{}],396:[function(require,module,exports){
+},{}],713:[function(require,module,exports){
 module.exports=require(20)
-},{}],397:[function(require,module,exports){
+},{}],714:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":395,"./lib/window.console.js":396}],398:[function(require,module,exports){
+},{"./lib/matchesselector.js":712,"./lib/window.console.js":713}],715:[function(require,module,exports){
 module.exports=require(41)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],399:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],716:[function(require,module,exports){
 module.exports=require(16)
-},{"../lib/object.js":403,"js-ext/extra/hashmap.js":400,"polyfill/polyfill-base.js":409}],400:[function(require,module,exports){
+},{"../lib/object.js":720,"js-ext/extra/hashmap.js":717,"polyfill/polyfill-base.js":726}],717:[function(require,module,exports){
 module.exports=require(17)
-},{}],401:[function(require,module,exports){
+},{}],718:[function(require,module,exports){
 module.exports=require(44)
-},{"../lib/array.js":402,"../lib/object.js":403,"./classes.js":399,"js-ext/extra/hashmap.js":400,"polyfill/lib/weakmap.js":407}],402:[function(require,module,exports){
+},{"../lib/array.js":719,"../lib/object.js":720,"./classes.js":716,"js-ext/extra/hashmap.js":717,"polyfill/lib/weakmap.js":724}],719:[function(require,module,exports){
 module.exports=require(26)
-},{"polyfill/polyfill-base.js":409}],403:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":726}],720:[function(require,module,exports){
 module.exports=require(18)
-},{"js-ext/extra/hashmap.js":400,"polyfill/polyfill-base.js":409}],404:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":717,"polyfill/polyfill-base.js":726}],721:[function(require,module,exports){
 module.exports=require(47)
-},{"polyfill":409}],405:[function(require,module,exports){
+},{"polyfill":726}],722:[function(require,module,exports){
 module.exports=require(28)
-},{}],406:[function(require,module,exports){
+},{}],723:[function(require,module,exports){
 module.exports=require(19)
-},{}],407:[function(require,module,exports){
+},{}],724:[function(require,module,exports){
 module.exports=require(50)
-},{}],408:[function(require,module,exports){
+},{}],725:[function(require,module,exports){
 module.exports=require(20)
-},{}],409:[function(require,module,exports){
+},{}],726:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":406,"./lib/window.console.js":408}],410:[function(require,module,exports){
+},{"./lib/matchesselector.js":723,"./lib/window.console.js":725}],727:[function(require,module,exports){
 module.exports=require(53)
-},{}],411:[function(require,module,exports){
+},{}],728:[function(require,module,exports){
 module.exports=require(54)
-},{"../bin/local-hashmap.js":410}],412:[function(require,module,exports){
+},{"../bin/local-hashmap.js":727}],729:[function(require,module,exports){
 module.exports=require(55)
-},{"../bin/local-hashmap.js":410}],413:[function(require,module,exports){
+},{"../bin/local-hashmap.js":727}],730:[function(require,module,exports){
 module.exports=require(56)
-},{"../bin/local-hashmap.js":410}],414:[function(require,module,exports){
+},{"../bin/local-hashmap.js":727}],731:[function(require,module,exports){
 module.exports=require(19)
-},{}],415:[function(require,module,exports){
+},{}],732:[function(require,module,exports){
 module.exports=require(20)
-},{}],416:[function(require,module,exports){
+},{}],733:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":414,"./lib/window.console.js":415}],417:[function(require,module,exports){
+},{"./lib/matchesselector.js":731,"./lib/window.console.js":732}],734:[function(require,module,exports){
 module.exports=require(35)
-},{"./lib/idgenerator.js":418,"./lib/timers.js":419}],418:[function(require,module,exports){
+},{"./lib/idgenerator.js":735,"./lib/timers.js":736}],735:[function(require,module,exports){
 module.exports=require(36)
-},{"js-ext/extra/hashmap.js":400,"polyfill/polyfill-base.js":422}],419:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":717,"polyfill/polyfill-base.js":739}],736:[function(require,module,exports){
 module.exports=require(37)
-},{"polyfill/polyfill-base.js":422}],420:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":739}],737:[function(require,module,exports){
 module.exports=require(19)
-},{}],421:[function(require,module,exports){
+},{}],738:[function(require,module,exports){
 module.exports=require(20)
-},{}],422:[function(require,module,exports){
+},{}],739:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":420,"./lib/window.console.js":421}],423:[function(require,module,exports){
+},{"./lib/matchesselector.js":737,"./lib/window.console.js":738}],740:[function(require,module,exports){
 module.exports=require(66)
-},{"./lib/sizes.js":424}],424:[function(require,module,exports){
+},{"./lib/sizes.js":741}],741:[function(require,module,exports){
 module.exports=require(67)
-},{"js-ext/extra/hashmap.js":425,"js-ext/lib/object.js":426}],425:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":742,"js-ext/lib/object.js":743}],742:[function(require,module,exports){
 module.exports=require(17)
-},{}],426:[function(require,module,exports){
+},{}],743:[function(require,module,exports){
 module.exports=require(18)
-},{"js-ext/extra/hashmap.js":425,"polyfill/polyfill-base.js":429}],427:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":742,"polyfill/polyfill-base.js":746}],744:[function(require,module,exports){
 module.exports=require(19)
-},{}],428:[function(require,module,exports){
+},{}],745:[function(require,module,exports){
 module.exports=require(20)
-},{}],429:[function(require,module,exports){
+},{}],746:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":427,"./lib/window.console.js":428}],430:[function(require,module,exports){
+},{"./lib/matchesselector.js":744,"./lib/window.console.js":745}],747:[function(require,module,exports){
 module.exports=require(73)
-},{"js-ext/extra/hashmap.js":400,"js-ext/lib/object.js":403,"js-ext/lib/string.js":405,"polyfill":416,"polyfill/extra/transition.js":411,"polyfill/extra/vendorCSS.js":413}],431:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":717,"js-ext/lib/object.js":720,"js-ext/lib/string.js":722,"polyfill":733,"polyfill/extra/transition.js":728,"polyfill/extra/vendorCSS.js":730}],748:[function(require,module,exports){
 module.exports=require(74)
-},{"js-ext/extra/hashmap.js":400,"js-ext/lib/object.js":403,"polyfill":416}],432:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":717,"js-ext/lib/object.js":720,"polyfill":733}],749:[function(require,module,exports){
 module.exports=require(75)
-},{"js-ext/extra/hashmap.js":400,"js-ext/lib/object.js":403,"js-ext/lib/string.js":405,"polyfill":416}],433:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":717,"js-ext/lib/object.js":720,"js-ext/lib/string.js":722,"polyfill":733}],750:[function(require,module,exports){
 module.exports=require(76)
-},{"js-ext/extra/hashmap.js":400,"js-ext/lib/object.js":403,"js-ext/lib/string.js":405,"polyfill":416}],434:[function(require,module,exports){
+},{"../css/element.css":715,"./attribute-extractor.js":747,"./element-array.js":748,"./html-parser.js":751,"./node-parser.js":752,"./vdom-ns.js":753,"./vnode.js":754,"js-ext/extra/hashmap.js":717,"js-ext/lib/object.js":720,"js-ext/lib/promise.js":721,"js-ext/lib/string.js":722,"polyfill":733,"polyfill/extra/transition.js":728,"polyfill/extra/transitionend.js":729,"polyfill/extra/vendorCSS.js":730,"utils":734,"window-ext":740}],751:[function(require,module,exports){
 module.exports=require(77)
-},{"../css/element.css":398,"./attribute-extractor.js":430,"./element-array.js":431,"./html-parser.js":435,"./node-parser.js":436,"./vdom-ns.js":437,"./vnode.js":438,"js-ext/extra/hashmap.js":400,"js-ext/lib/object.js":403,"js-ext/lib/promise.js":404,"js-ext/lib/string.js":405,"polyfill":416,"polyfill/extra/transition.js":411,"polyfill/extra/transitionend.js":412,"polyfill/extra/vendorCSS.js":413,"utils":417,"window-ext":423}],435:[function(require,module,exports){
+},{"./attribute-extractor.js":747,"./vdom-ns.js":753,"js-ext/extra/hashmap.js":717,"js-ext/lib/object.js":720,"polyfill":733}],752:[function(require,module,exports){
 module.exports=require(78)
-},{"./attribute-extractor.js":430,"./vdom-ns.js":437,"js-ext/extra/hashmap.js":400,"js-ext/lib/object.js":403,"polyfill":416}],436:[function(require,module,exports){
+},{"./attribute-extractor.js":747,"./vdom-ns.js":753,"./vnode.js":754,"js-ext/extra/hashmap.js":717,"js-ext/lib/object.js":720,"polyfill":733}],753:[function(require,module,exports){
 module.exports=require(79)
-},{"./attribute-extractor.js":430,"./vdom-ns.js":437,"./vnode.js":438,"js-ext/extra/hashmap.js":400,"js-ext/lib/object.js":403,"polyfill":416}],437:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":717,"js-ext/lib/object.js":720,"polyfill":733}],754:[function(require,module,exports){
 module.exports=require(80)
-},{"js-ext/extra/hashmap.js":400,"js-ext/lib/object.js":403,"polyfill":416}],438:[function(require,module,exports){
+},{"./attribute-extractor.js":747,"./html-parser.js":751,"./vdom-ns.js":753,"js-ext/extra/hashmap.js":717,"js-ext/extra/lightmap.js":718,"js-ext/lib/array.js":719,"js-ext/lib/object.js":720,"js-ext/lib/string.js":722,"polyfill":733,"utils/lib/timers.js":736}],755:[function(require,module,exports){
 module.exports=require(81)
-},{"./attribute-extractor.js":430,"./html-parser.js":435,"./vdom-ns.js":437,"js-ext/extra/hashmap.js":400,"js-ext/extra/lightmap.js":401,"js-ext/lib/array.js":402,"js-ext/lib/object.js":403,"js-ext/lib/string.js":405,"polyfill":416,"utils/lib/timers.js":419}],439:[function(require,module,exports){
-module.exports=require(82)
-},{"./partials/element-plugin.js":432,"./partials/extend-document.js":433,"./partials/extend-element.js":434,"./partials/node-parser.js":436,"js-ext/extra/hashmap.js":400,"js-ext/lib/object.js":403,"utils/lib/timers.js":419}],440:[function(require,module,exports){
+},{"./partials/extend-document.js":749,"./partials/extend-element.js":750,"./partials/node-parser.js":752,"js-ext/extra/hashmap.js":717,"js-ext/lib/object.js":720,"utils/lib/timers.js":736}],756:[function(require,module,exports){
 module.exports=require(35)
-},{"./lib/idgenerator.js":441,"./lib/timers.js":442}],441:[function(require,module,exports){
+},{"./lib/idgenerator.js":757,"./lib/timers.js":758}],757:[function(require,module,exports){
 module.exports=require(36)
-},{"js-ext/extra/hashmap.js":637,"polyfill/polyfill-base.js":445}],442:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1071,"polyfill/polyfill-base.js":761}],758:[function(require,module,exports){
 module.exports=require(37)
-},{"polyfill/polyfill-base.js":445}],443:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":761}],759:[function(require,module,exports){
 module.exports=require(19)
-},{}],444:[function(require,module,exports){
+},{}],760:[function(require,module,exports){
 module.exports=require(20)
-},{}],445:[function(require,module,exports){
+},{}],761:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":443,"./lib/window.console.js":444}],446:[function(require,module,exports){
+},{"./lib/matchesselector.js":759,"./lib/window.console.js":760}],762:[function(require,module,exports){
 module.exports=require(12)
-},{"js-ext/extra/hashmap.js":453,"js-ext/lib/object.js":454,"polyfill/polyfill-base.js":460}],447:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":769,"js-ext/lib/object.js":770,"polyfill/polyfill-base.js":776}],763:[function(require,module,exports){
 module.exports=require(13)
-},{"./event-base.js":446}],448:[function(require,module,exports){
+},{"./event-base.js":762}],764:[function(require,module,exports){
 module.exports=require(14)
-},{"./event-base.js":446,"js-ext/extra/classes.js":452,"js-ext/lib/object.js":454}],449:[function(require,module,exports){
+},{"./event-base.js":762,"js-ext/extra/classes.js":768,"js-ext/lib/object.js":770}],765:[function(require,module,exports){
 "use strict";
 
 /**
@@ -21160,118 +22883,41 @@ module.exports = function (window) {
     module.exports = Event;
 
 };
-},{"../event-base.js":446,"./timer-finalize.js":450,"io":615,"js-ext/lib/object.js":454,"utils":461}],450:[function(require,module,exports){
-(function (global){
-(function (global) {
-
-    "use strict";
-
-    var NAME = '[event-timer-finalize]: ',
-        createHashMap = require('js-ext/extra/hashmap.js').createMap,
-        Event, setTimeoutBKP, setIntervalBKP, setImmediateBKP;
-
-    global._ITSAmodules || Object.protectedProp(global, '_ITSAmodules', createHashMap());
-
-    if (global._ITSAmodules.EventTimerFinalize) {
-        return;
-    }
-
-    Event = require('../event-base.js');
-    // we patch the global timer functions in order to run `refreshItags` afterwards:
-    setTimeoutBKP = global.setTimeout;
-    setIntervalBKP = global.setInterval;
-
-    global.setTimeout = function() {
-        var args = arguments;
-        args[0] = (function(originalFn) {
-            return function() {
-                var eventObject = {
-                        type: '',
-                        emitter: 'global',
-                        target: global
-                    };
-                originalFn();
-                console.log(NAME, 'setTimeOut will run Event.runFinalizers');
-                Event.runFinalizers(eventObject);
-            };
-        })(args[0]);
-        setTimeoutBKP.apply(this, arguments);
-    };
-
-    global.setInterval = function() {
-        var args = arguments;
-        args[0] = (function(originalFn) {
-            return function() {
-                var eventObject = {
-                        type: '',
-                        emitter: 'global',
-                        target: global
-                    };
-                originalFn();
-                console.log(NAME, 'setInterval will run Event.runFinalizers');
-                Event.runFinalizers(eventObject);
-            };
-        })(args[0]);
-        setIntervalBKP.apply(this, arguments);
-    };
-
-    if (typeof global.setImmediate !== 'undefined') {
-        setImmediateBKP = global.setInterval;
-        global.setImmediate = function() {
-            var args = arguments;
-            args[0] = (function(originalFn) {
-                return function() {
-                    var eventObject = {
-                            type: '',
-                            emitter: 'global',
-                            target: global
-                        };
-                    originalFn();
-                    console.log(NAME, 'setImmediate will run Event.runFinalizers');
-                    Event.runFinalizers(eventObject);
-                };
-            })(args[0]);
-            setImmediateBKP.apply(this, arguments);
-        };
-    }
-
-    global._ITSAmodules.EventTimerFinalize = true;
-
-}(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this));
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../event-base.js":446,"js-ext/extra/hashmap.js":453}],451:[function(require,module,exports){
+},{"../event-base.js":762,"./timer-finalize.js":766,"io":1049,"js-ext/lib/object.js":770,"utils":777}],766:[function(require,module,exports){
+module.exports=require(168)
+},{"../event-base.js":762,"js-ext/extra/hashmap.js":769}],767:[function(require,module,exports){
 module.exports=require(15)
-},{"./event-base.js":446,"./event-emitter.js":447,"./event-listener.js":448}],452:[function(require,module,exports){
+},{"./event-base.js":762,"./event-emitter.js":763,"./event-listener.js":764}],768:[function(require,module,exports){
 module.exports=require(16)
-},{"../lib/object.js":454,"js-ext/extra/hashmap.js":453,"polyfill/polyfill-base.js":457}],453:[function(require,module,exports){
+},{"../lib/object.js":770,"js-ext/extra/hashmap.js":769,"polyfill/polyfill-base.js":773}],769:[function(require,module,exports){
 module.exports=require(17)
-},{}],454:[function(require,module,exports){
+},{}],770:[function(require,module,exports){
 module.exports=require(18)
-},{"js-ext/extra/hashmap.js":453,"polyfill/polyfill-base.js":457}],455:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":769,"polyfill/polyfill-base.js":773}],771:[function(require,module,exports){
 module.exports=require(19)
-},{}],456:[function(require,module,exports){
+},{}],772:[function(require,module,exports){
 module.exports=require(20)
-},{}],457:[function(require,module,exports){
+},{}],773:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":455,"./lib/window.console.js":456}],458:[function(require,module,exports){
+},{"./lib/matchesselector.js":771,"./lib/window.console.js":772}],774:[function(require,module,exports){
 module.exports=require(19)
-},{}],459:[function(require,module,exports){
+},{}],775:[function(require,module,exports){
 module.exports=require(20)
-},{}],460:[function(require,module,exports){
+},{}],776:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":458,"./lib/window.console.js":459}],461:[function(require,module,exports){
+},{"./lib/matchesselector.js":774,"./lib/window.console.js":775}],777:[function(require,module,exports){
 module.exports=require(35)
-},{"./lib/idgenerator.js":462,"./lib/timers.js":463}],462:[function(require,module,exports){
+},{"./lib/idgenerator.js":778,"./lib/timers.js":779}],778:[function(require,module,exports){
 module.exports=require(36)
-},{"js-ext/extra/hashmap.js":453,"polyfill/polyfill-base.js":466}],463:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":769,"polyfill/polyfill-base.js":782}],779:[function(require,module,exports){
 module.exports=require(37)
-},{"polyfill/polyfill-base.js":466}],464:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":782}],780:[function(require,module,exports){
 module.exports=require(19)
-},{}],465:[function(require,module,exports){
+},{}],781:[function(require,module,exports){
 module.exports=require(20)
-},{}],466:[function(require,module,exports){
+},{}],782:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":464,"./lib/window.console.js":465}],467:[function(require,module,exports){
+},{"./lib/matchesselector.js":780,"./lib/window.console.js":781}],783:[function(require,module,exports){
 "use strict";
 
 require('js-ext/lib/object.js');
@@ -21292,7 +22938,7 @@ require('polyfill');
 var NAME = '[focusmanager]: ',
     async = require('utils').async,
     createHashMap = require('js-ext/extra/hashmap.js').createMap,
-    DEFAULT_SELECTOR = 'input, button, select, textarea, .focusable, [fm-manage], [itag-formelement="true"]',
+    DEFAULT_SELECTOR = 'input, button, select, textarea, .focusable, [plugin-fm="true"], [itag-formelement="true"]',
     // SPECIAL_KEYS needs to be a native Object --> we need .some()
     SPECIAL_KEYS = {
         shift: 'shiftKey',
@@ -21302,8 +22948,8 @@ var NAME = '[focusmanager]: ',
     },
     DEFAULT_KEYUP = 'shift+9',
     DEFAULT_KEYDOWN = '9',
-    DEFAULT_ENTER = '39',
-    DEFAULT_LEAVE = '27',
+    // DEFAULT_ENTER = '39',
+    // DEFAULT_LEAVE = '27',
     FM_SELECTION = 'fm-selection',
     FM_SELECTION_START = FM_SELECTION+'start',
     FM_SELECTION_END = FM_SELECTION+'end',
@@ -21312,23 +22958,24 @@ var NAME = '[focusmanager]: ',
 module.exports = function (window) {
 
     var DOCUMENT = window.document,
-        nodePlugin, FocusManager, Event, nextFocusNode, searchFocusNode, markAsFocussed,
+        FocusManager, Event, nextFocusNode, searchFocusNode, markAsFocussed,
         resetLastValue, getFocusManagerSelector, setupEvents, defineFocusEvent;
 
     window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
 
-    require('window-ext')(window);
 /*jshint boss:true */
     if (FocusManager=window._ITSAmodules.FocusManager) {
 /*jshint boss:false */
         return FocusManager; // FocusManager was already created
     }
 
-    nodePlugin = require('vdom')(window).Plugins.nodePlugin;
+    require('window-ext')(window);
+    require('node-plugin')(window);
+
     Event = require('event-mobile')(window);
 
     getFocusManagerSelector = function(focusContainerNode) {
-        var selector = focusContainerNode.getAttr('fm-manage');
+        var selector = focusContainerNode.plugin.fm.model.manage;
         (selector.toLowerCase()==='true') && (selector=DEFAULT_SELECTOR);
         return selector;
     };
@@ -21383,8 +23030,7 @@ module.exports = function (window) {
             }
         }
         if (specialKeysMatch) {
-            noloop = focusContainerNode.getAttr('fm-noloop');
-            noloop = noloop && (noloop.toLowerCase()==='true');
+            noloop = focusContainerNode.plugin.fm.model.noloop;
             // in case sourceNode is an innernode of a selector, we need to start from the selector:
             sourceNode.matches(selector) || (sourceNode=sourceNode.inside(selector));
             if (downwards) {
@@ -21398,7 +23044,7 @@ module.exports = function (window) {
                 return initialSourceNode || sourceNode;
             }
             else {
-                foundContainer = nodeHit.inside('[fm-manage]');
+                foundContainer = nodeHit.inside('[plugin-fm="true"]');
                 // only if `nodeHit` is inside the runniong focusContainer, we may return it,
                 // otherwise look further
                 return (foundContainer===focusContainerNode) ? nodeHit : nextFocusNode(e, keyCode, actionkey, focusContainerNode, nodeHit, selector, downwards, sourceNode);
@@ -21435,15 +23081,15 @@ module.exports = function (window) {
 
     searchFocusNode = function(initialNode, deeper) {
         console.log(NAME+'searchFocusNode');
-        var focusContainerNode = initialNode.hasAttr('fm-manage') ? initialNode : initialNode.inside('[fm-manage]'),
-            focusNode, alwaysDefault, fmAlwaysDefault, selector, allFocusableNodes, index, parentContainerNode, parentSelector;
+        var focusContainerNode = initialNode.hasAttr('fm-manage') ? initialNode : initialNode.inside('[plugin-fm="true"]'),
+            focusNode, alwaysDefault, selector, allFocusableNodes, index, parentContainerNode, parentSelector;
 
         if (focusContainerNode) {
             selector = getFocusManagerSelector(focusContainerNode);
             focusNode = initialNode.matches(selector) ? initialNode : initialNode.inside(selector);
             // focusNode can only be equal focusContainerNode when focusContainerNode lies with a focusnode itself with that particular selector:
             if (focusNode===focusContainerNode) {
-                parentContainerNode = focusNode.inside('[fm-manage]');
+                parentContainerNode = focusNode.inside('[plugin-fm="true"]');
                 if (parentContainerNode) {
                     parentSelector = getFocusManagerSelector(parentContainerNode);
                     if (!focusNode.matches(parentSelector) || deeper) {
@@ -21460,7 +23106,7 @@ module.exports = function (window) {
             else {
                 // find the right node that should get focus
 /*jshint boss:true */
-                alwaysDefault = ((fmAlwaysDefault=focusContainerNode.getAttr('fm-alwaysdefault')) && (fmAlwaysDefault.toLowerCase()==='true'));
+                alwaysDefault = focusContainerNode.plugin.fm.model.alwaysdefault;
 /*jshint boss:false */
                 alwaysDefault && (focusNode=focusContainerNode.getElement('[fm-defaultitem="true"]'));
                 if (!focusNode) {
@@ -21501,24 +23147,52 @@ module.exports = function (window) {
                 sourceNode = e.target,
                 selector, keyCode, actionkey, focusNode, keys, len, lastIndex, specialKeysMatch, i, specialKey;
 
-            focusContainerNode = sourceNode.inside('[fm-manage]');
+            focusContainerNode = sourceNode.inside('[plugin-fm="true"]');
             if (focusContainerNode) {
                 // key was pressed inside a focusmanagable container
                 selector = getFocusManagerSelector(focusContainerNode);
                 keyCode = e.keyCode;
 
                 // first check for keydown:
-                actionkey = focusContainerNode.getAttr('fm-keydown') || DEFAULT_KEYDOWN;
+                actionkey = focusContainerNode.plugin.fm.model.keydown;
                 focusNode = nextFocusNode(e, keyCode, actionkey, focusContainerNode, sourceNode, selector, true);
                 if (!focusNode) {
                     // check for keyup:
-                    actionkey = focusContainerNode.getAttr('fm-keyup') || DEFAULT_KEYUP;
+                    actionkey = focusContainerNode.plugin.fm.model.keyup;
                     focusNode = nextFocusNode(e, keyCode, actionkey, focusContainerNode, sourceNode, selector);
                 }
                 if (!focusNode) {
                     // check for keyenter, but only when e.target equals a focusmanager:
-                    if (sourceNode.matches('[fm-manage]')) {
-                        actionkey = focusContainerNode.getAttr('fm-enter') || DEFAULT_ENTER;
+                    if (sourceNode.matches('[plugin-fm="true"]')) {
+                        actionkey = focusContainerNode.plugin.fm.model.keyenter;
+                        if (actionkey) {
+                            keys = actionkey.split('+');
+                            len = keys.length;
+                            lastIndex = len - 1;
+                            // double == --> keyCode is number, keys is a string
+                            if (keyCode==keys[lastIndex]) {
+                                // posible keyup --> check if special characters match:
+                                specialKeysMatch = true;
+                                SPECIAL_KEYS.some(function(value) {
+                                    specialKeysMatch = !e[value];
+                                    return !specialKeysMatch;
+                                });
+                                for (i=lastIndex-1; (i>=0) && !specialKeysMatch; i--) {
+                                    specialKey = keys[i].toLowerCase();
+                                    specialKeysMatch = e[SPECIAL_KEYS[specialKey]];
+                                }
+                            }
+                            if (specialKeysMatch) {
+                                resetLastValue(sourceNode);
+                                focusNode = searchFocusNode(sourceNode, true);
+                            }
+                        }
+                    }
+                }
+                if (!focusNode) {
+                    // check for keyleave:
+                    actionkey = focusContainerNode.plugin.fm.model.keyleave;
+                    if (actionkey) {
                         keys = actionkey.split('+');
                         len = keys.length;
                         lastIndex = len - 1;
@@ -21536,33 +23210,9 @@ module.exports = function (window) {
                             }
                         }
                         if (specialKeysMatch) {
-                            resetLastValue(sourceNode);
-                            focusNode = searchFocusNode(sourceNode, true);
+                            resetLastValue(focusContainerNode);
+                            focusNode = focusContainerNode;
                         }
-                    }
-                }
-                if (!focusNode) {
-                    // check for keyleave:
-                    actionkey = focusContainerNode.getAttr('fm-leave') || DEFAULT_LEAVE;
-                    keys = actionkey.split('+');
-                    len = keys.length;
-                    lastIndex = len - 1;
-                    // double == --> keyCode is number, keys is a string
-                    if (keyCode==keys[lastIndex]) {
-                        // posible keyup --> check if special characters match:
-                        specialKeysMatch = true;
-                        SPECIAL_KEYS.some(function(value) {
-                            specialKeysMatch = !e[value];
-                            return !specialKeysMatch;
-                        });
-                        for (i=lastIndex-1; (i>=0) && !specialKeysMatch; i--) {
-                            specialKey = keys[i].toLowerCase();
-                            specialKeysMatch = e[SPECIAL_KEYS[specialKey]];
-                        }
-                    }
-                    if (specialKeysMatch) {
-                        resetLastValue(focusContainerNode);
-                        focusNode = focusContainerNode;
                     }
                 }
                 if (focusNode) {
@@ -21630,7 +23280,7 @@ module.exports = function (window) {
                 return;
             }
             if (focusNode && focusNode.inside) {
-                focusContainerNode = focusNode.hasAttr('fm-manage') ? focusNode : focusNode.inside('[fm-manage]');
+                focusContainerNode = focusNode.hasAttr('plugin-fm') ? focusNode : focusNode.inside('[plugin-fm="true"]');
             }
             if (focusContainerNode) {
                 if ((focusNode===focusContainerNode) || !focusNode.matches(getFocusManagerSelector(focusContainerNode))) {
@@ -21652,7 +23302,7 @@ module.exports = function (window) {
                 sourceNode = e.target,
                 selector;
 
-            focusContainerNode = sourceNode.inside('[fm-manage]');
+            focusContainerNode = sourceNode.inside('[plugin-fm="true"]');
             if (focusContainerNode) {
                 // key was pressed inside a focusmanagable container
                 selector = getFocusManagerSelector(focusContainerNode);
@@ -21669,7 +23319,7 @@ module.exports = function (window) {
                 sourceNode = e.target,
                 selector, selectionStart, selectionEnd;
 
-            focusContainerNode = sourceNode.inside('[fm-manage]');
+            focusContainerNode = sourceNode.inside('[plugin-fm="true"]');
             if (focusContainerNode) {
                 // key was pressed inside a focusmanagable container
                 selector = getFocusManagerSelector(focusContainerNode);
@@ -21689,7 +23339,26 @@ module.exports = function (window) {
 
     setupEvents();
 
-    window._ITSAmodules.FocusManager = FocusManager = nodePlugin.definePlugin('fm', {manage: 'true'});
+    window._ITSAmodules.FocusManager = FocusManager = DOCUMENT.definePlugin('fm', null, {
+                attrs: {
+                    manage: 'string',
+                    alwaysdefault: 'boolean',
+                    keyup: 'string',
+                    keydown: 'string',
+                    keyenter: 'string',
+                    keyleave: 'string',
+                    noloop: 'boolean'
+                },
+                defaults: {
+                    manage: 'true',
+                    alwaysdefault: false,
+                    keyup: DEFAULT_KEYUP,
+                    keydown: DEFAULT_KEYDOWN,
+                    // keyenter: DEFAULT_ENTER,
+                    // keyleave: DEFAULT_LEAVE,
+                    noloop: 'boolean'
+                }
+            });
 
     defineFocusEvent = function(customevent) {
         Event.defineEvent(customevent)
@@ -21715,11 +23384,30 @@ module.exports = function (window) {
              * which can be prevented.
              * @event manualfocus
             */
-            var focusNode = noRefocus ? this : searchFocusNode(this),
-                emitterName = focusNode._emitterName,
-                customevent = emitterName+':manualfocus';
-            Event._ce[customevent] || defineFocusEvent(customevent);
-            focusNode.emit('manualfocus', noRender ? {_noRender: true} : null);
+            var focusElement = this,
+                doEmit, focusContainerNode;
+            doEmit = function(focusNode) {
+                var emitterName = focusNode._emitterName,
+                    customevent = emitterName+':manualfocus';
+                Event._ce[customevent] || defineFocusEvent(customevent);
+                focusNode.emit('manualfocus', noRender ? {_noRender: true} : null);
+            };
+            if (noRefocus) {
+                doEmit(focusElement);
+            }
+            else {
+                focusContainerNode = (this.getAttr('plugin-fm')==='true') ? focusElement : focusElement.inside('[plugin-fm="true"]');
+                if (focusContainerNode) {
+                    focusContainerNode.pluginReady(FocusManager).then(
+                        function() {
+                            doEmit(searchFocusNode(focusElement));
+                        }
+                    );
+                }
+                else {
+                    doEmit(focusElement);
+                }
+            }
         };
 
     }(window.HTMLElement.prototype));
@@ -21727,293 +23415,529 @@ module.exports = function (window) {
 
     return FocusManager;
 };
-},{"event-mobile":468,"js-ext/extra/hashmap.js":548,"js-ext/lib/object.js":549,"polyfill":555,"utils":556,"vdom":603,"window-ext":604}],468:[function(require,module,exports){
-module.exports=require(366)
-},{"./lib/hammer-2.0.4.js":469,"event-dom":470}],469:[function(require,module,exports){
-module.exports=require(367)
-},{"utils":542}],470:[function(require,module,exports){
+},{"event-mobile":784,"js-ext/extra/hashmap.js":863,"js-ext/lib/object.js":864,"node-plugin":868,"polyfill":1031,"utils":1032,"window-ext":1038}],784:[function(require,module,exports){
+module.exports=require(683)
+},{"./lib/hammer-2.0.4.js":785,"event-dom":786}],785:[function(require,module,exports){
+module.exports=require(684)
+},{"utils":857}],786:[function(require,module,exports){
 module.exports=require(11)
-},{"event":474,"js-ext/extra/hashmap.js":484,"js-ext/lib/array.js":485,"js-ext/lib/object.js":486,"js-ext/lib/string.js":487,"polyfill/polyfill-base.js":493,"utils":494,"vdom":541}],471:[function(require,module,exports){
+},{"event":790,"js-ext/extra/hashmap.js":800,"js-ext/lib/array.js":801,"js-ext/lib/object.js":802,"js-ext/lib/string.js":803,"polyfill/polyfill-base.js":809,"utils":810,"vdom":856}],787:[function(require,module,exports){
 module.exports=require(12)
-},{"js-ext/extra/hashmap.js":476,"js-ext/lib/object.js":477,"polyfill/polyfill-base.js":483}],472:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":792,"js-ext/lib/object.js":793,"polyfill/polyfill-base.js":799}],788:[function(require,module,exports){
 module.exports=require(13)
-},{"./event-base.js":471}],473:[function(require,module,exports){
+},{"./event-base.js":787}],789:[function(require,module,exports){
 module.exports=require(14)
-},{"./event-base.js":471,"js-ext/extra/classes.js":475,"js-ext/lib/object.js":477}],474:[function(require,module,exports){
+},{"./event-base.js":787,"js-ext/extra/classes.js":791,"js-ext/lib/object.js":793}],790:[function(require,module,exports){
 module.exports=require(15)
-},{"./event-base.js":471,"./event-emitter.js":472,"./event-listener.js":473}],475:[function(require,module,exports){
+},{"./event-base.js":787,"./event-emitter.js":788,"./event-listener.js":789}],791:[function(require,module,exports){
 module.exports=require(16)
-},{"../lib/object.js":477,"js-ext/extra/hashmap.js":476,"polyfill/polyfill-base.js":480}],476:[function(require,module,exports){
+},{"../lib/object.js":793,"js-ext/extra/hashmap.js":792,"polyfill/polyfill-base.js":796}],792:[function(require,module,exports){
 module.exports=require(17)
-},{}],477:[function(require,module,exports){
+},{}],793:[function(require,module,exports){
 module.exports=require(18)
-},{"js-ext/extra/hashmap.js":476,"polyfill/polyfill-base.js":480}],478:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":792,"polyfill/polyfill-base.js":796}],794:[function(require,module,exports){
 module.exports=require(19)
-},{}],479:[function(require,module,exports){
+},{}],795:[function(require,module,exports){
 module.exports=require(20)
-},{}],480:[function(require,module,exports){
+},{}],796:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":478,"./lib/window.console.js":479}],481:[function(require,module,exports){
+},{"./lib/matchesselector.js":794,"./lib/window.console.js":795}],797:[function(require,module,exports){
 module.exports=require(19)
-},{}],482:[function(require,module,exports){
+},{}],798:[function(require,module,exports){
 module.exports=require(20)
-},{}],483:[function(require,module,exports){
+},{}],799:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":481,"./lib/window.console.js":482}],484:[function(require,module,exports){
+},{"./lib/matchesselector.js":797,"./lib/window.console.js":798}],800:[function(require,module,exports){
 module.exports=require(17)
-},{}],485:[function(require,module,exports){
+},{}],801:[function(require,module,exports){
 module.exports=require(26)
-},{"polyfill/polyfill-base.js":490}],486:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":806}],802:[function(require,module,exports){
 module.exports=require(18)
-},{"js-ext/extra/hashmap.js":484,"polyfill/polyfill-base.js":490}],487:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":800,"polyfill/polyfill-base.js":806}],803:[function(require,module,exports){
 module.exports=require(28)
-},{}],488:[function(require,module,exports){
+},{}],804:[function(require,module,exports){
 module.exports=require(19)
-},{}],489:[function(require,module,exports){
+},{}],805:[function(require,module,exports){
 module.exports=require(20)
-},{}],490:[function(require,module,exports){
+},{}],806:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":488,"./lib/window.console.js":489}],491:[function(require,module,exports){
+},{"./lib/matchesselector.js":804,"./lib/window.console.js":805}],807:[function(require,module,exports){
 module.exports=require(19)
-},{}],492:[function(require,module,exports){
+},{}],808:[function(require,module,exports){
 module.exports=require(20)
-},{}],493:[function(require,module,exports){
+},{}],809:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":491,"./lib/window.console.js":492}],494:[function(require,module,exports){
+},{"./lib/matchesselector.js":807,"./lib/window.console.js":808}],810:[function(require,module,exports){
 module.exports=require(35)
-},{"./lib/idgenerator.js":495,"./lib/timers.js":496}],495:[function(require,module,exports){
+},{"./lib/idgenerator.js":811,"./lib/timers.js":812}],811:[function(require,module,exports){
 module.exports=require(36)
-},{"js-ext/extra/hashmap.js":484,"polyfill/polyfill-base.js":499}],496:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":800,"polyfill/polyfill-base.js":815}],812:[function(require,module,exports){
 module.exports=require(37)
-},{"polyfill/polyfill-base.js":499}],497:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":815}],813:[function(require,module,exports){
 module.exports=require(19)
-},{}],498:[function(require,module,exports){
+},{}],814:[function(require,module,exports){
 module.exports=require(20)
-},{}],499:[function(require,module,exports){
+},{}],815:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":497,"./lib/window.console.js":498}],500:[function(require,module,exports){
+},{"./lib/matchesselector.js":813,"./lib/window.console.js":814}],816:[function(require,module,exports){
 module.exports=require(41)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],501:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],817:[function(require,module,exports){
 module.exports=require(16)
-},{"../lib/object.js":505,"js-ext/extra/hashmap.js":502,"polyfill/polyfill-base.js":511}],502:[function(require,module,exports){
+},{"../lib/object.js":821,"js-ext/extra/hashmap.js":818,"polyfill/polyfill-base.js":827}],818:[function(require,module,exports){
 module.exports=require(17)
-},{}],503:[function(require,module,exports){
+},{}],819:[function(require,module,exports){
 module.exports=require(44)
-},{"../lib/array.js":504,"../lib/object.js":505,"./classes.js":501,"js-ext/extra/hashmap.js":502,"polyfill/lib/weakmap.js":509}],504:[function(require,module,exports){
+},{"../lib/array.js":820,"../lib/object.js":821,"./classes.js":817,"js-ext/extra/hashmap.js":818,"polyfill/lib/weakmap.js":825}],820:[function(require,module,exports){
 module.exports=require(26)
-},{"polyfill/polyfill-base.js":511}],505:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":827}],821:[function(require,module,exports){
 module.exports=require(18)
-},{"js-ext/extra/hashmap.js":502,"polyfill/polyfill-base.js":511}],506:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":818,"polyfill/polyfill-base.js":827}],822:[function(require,module,exports){
 module.exports=require(47)
-},{"polyfill":511}],507:[function(require,module,exports){
+},{"polyfill":827}],823:[function(require,module,exports){
 module.exports=require(28)
-},{}],508:[function(require,module,exports){
+},{}],824:[function(require,module,exports){
 module.exports=require(19)
-},{}],509:[function(require,module,exports){
+},{}],825:[function(require,module,exports){
 module.exports=require(50)
-},{}],510:[function(require,module,exports){
+},{}],826:[function(require,module,exports){
 module.exports=require(20)
-},{}],511:[function(require,module,exports){
+},{}],827:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":508,"./lib/window.console.js":510}],512:[function(require,module,exports){
+},{"./lib/matchesselector.js":824,"./lib/window.console.js":826}],828:[function(require,module,exports){
 module.exports=require(53)
-},{}],513:[function(require,module,exports){
+},{}],829:[function(require,module,exports){
 module.exports=require(54)
-},{"../bin/local-hashmap.js":512}],514:[function(require,module,exports){
+},{"../bin/local-hashmap.js":828}],830:[function(require,module,exports){
 module.exports=require(55)
-},{"../bin/local-hashmap.js":512}],515:[function(require,module,exports){
+},{"../bin/local-hashmap.js":828}],831:[function(require,module,exports){
 module.exports=require(56)
-},{"../bin/local-hashmap.js":512}],516:[function(require,module,exports){
+},{"../bin/local-hashmap.js":828}],832:[function(require,module,exports){
 module.exports=require(19)
-},{}],517:[function(require,module,exports){
+},{}],833:[function(require,module,exports){
 module.exports=require(20)
-},{}],518:[function(require,module,exports){
+},{}],834:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":516,"./lib/window.console.js":517}],519:[function(require,module,exports){
+},{"./lib/matchesselector.js":832,"./lib/window.console.js":833}],835:[function(require,module,exports){
 module.exports=require(35)
-},{"./lib/idgenerator.js":520,"./lib/timers.js":521}],520:[function(require,module,exports){
+},{"./lib/idgenerator.js":836,"./lib/timers.js":837}],836:[function(require,module,exports){
 module.exports=require(36)
-},{"js-ext/extra/hashmap.js":502,"polyfill/polyfill-base.js":524}],521:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":818,"polyfill/polyfill-base.js":840}],837:[function(require,module,exports){
 module.exports=require(37)
-},{"polyfill/polyfill-base.js":524}],522:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":840}],838:[function(require,module,exports){
 module.exports=require(19)
-},{}],523:[function(require,module,exports){
+},{}],839:[function(require,module,exports){
 module.exports=require(20)
-},{}],524:[function(require,module,exports){
+},{}],840:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":522,"./lib/window.console.js":523}],525:[function(require,module,exports){
+},{"./lib/matchesselector.js":838,"./lib/window.console.js":839}],841:[function(require,module,exports){
 module.exports=require(66)
-},{"./lib/sizes.js":526}],526:[function(require,module,exports){
+},{"./lib/sizes.js":842}],842:[function(require,module,exports){
 module.exports=require(67)
-},{"js-ext/extra/hashmap.js":527,"js-ext/lib/object.js":528}],527:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":843,"js-ext/lib/object.js":844}],843:[function(require,module,exports){
 module.exports=require(17)
-},{}],528:[function(require,module,exports){
+},{}],844:[function(require,module,exports){
 module.exports=require(18)
-},{"js-ext/extra/hashmap.js":527,"polyfill/polyfill-base.js":531}],529:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":843,"polyfill/polyfill-base.js":847}],845:[function(require,module,exports){
 module.exports=require(19)
-},{}],530:[function(require,module,exports){
+},{}],846:[function(require,module,exports){
 module.exports=require(20)
-},{}],531:[function(require,module,exports){
+},{}],847:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":529,"./lib/window.console.js":530}],532:[function(require,module,exports){
+},{"./lib/matchesselector.js":845,"./lib/window.console.js":846}],848:[function(require,module,exports){
 module.exports=require(73)
-},{"js-ext/extra/hashmap.js":502,"js-ext/lib/object.js":505,"js-ext/lib/string.js":507,"polyfill":518,"polyfill/extra/transition.js":513,"polyfill/extra/vendorCSS.js":515}],533:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":818,"js-ext/lib/object.js":821,"js-ext/lib/string.js":823,"polyfill":834,"polyfill/extra/transition.js":829,"polyfill/extra/vendorCSS.js":831}],849:[function(require,module,exports){
 module.exports=require(74)
-},{"js-ext/extra/hashmap.js":502,"js-ext/lib/object.js":505,"polyfill":518}],534:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":818,"js-ext/lib/object.js":821,"polyfill":834}],850:[function(require,module,exports){
 module.exports=require(75)
-},{"js-ext/extra/hashmap.js":502,"js-ext/lib/object.js":505,"js-ext/lib/string.js":507,"polyfill":518}],535:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":818,"js-ext/lib/object.js":821,"js-ext/lib/string.js":823,"polyfill":834}],851:[function(require,module,exports){
 module.exports=require(76)
-},{"js-ext/extra/hashmap.js":502,"js-ext/lib/object.js":505,"js-ext/lib/string.js":507,"polyfill":518}],536:[function(require,module,exports){
+},{"../css/element.css":816,"./attribute-extractor.js":848,"./element-array.js":849,"./html-parser.js":852,"./node-parser.js":853,"./vdom-ns.js":854,"./vnode.js":855,"js-ext/extra/hashmap.js":818,"js-ext/lib/object.js":821,"js-ext/lib/promise.js":822,"js-ext/lib/string.js":823,"polyfill":834,"polyfill/extra/transition.js":829,"polyfill/extra/transitionend.js":830,"polyfill/extra/vendorCSS.js":831,"utils":835,"window-ext":841}],852:[function(require,module,exports){
 module.exports=require(77)
-},{"../css/element.css":500,"./attribute-extractor.js":532,"./element-array.js":533,"./html-parser.js":537,"./node-parser.js":538,"./vdom-ns.js":539,"./vnode.js":540,"js-ext/extra/hashmap.js":502,"js-ext/lib/object.js":505,"js-ext/lib/promise.js":506,"js-ext/lib/string.js":507,"polyfill":518,"polyfill/extra/transition.js":513,"polyfill/extra/transitionend.js":514,"polyfill/extra/vendorCSS.js":515,"utils":519,"window-ext":525}],537:[function(require,module,exports){
+},{"./attribute-extractor.js":848,"./vdom-ns.js":854,"js-ext/extra/hashmap.js":818,"js-ext/lib/object.js":821,"polyfill":834}],853:[function(require,module,exports){
 module.exports=require(78)
-},{"./attribute-extractor.js":532,"./vdom-ns.js":539,"js-ext/extra/hashmap.js":502,"js-ext/lib/object.js":505,"polyfill":518}],538:[function(require,module,exports){
+},{"./attribute-extractor.js":848,"./vdom-ns.js":854,"./vnode.js":855,"js-ext/extra/hashmap.js":818,"js-ext/lib/object.js":821,"polyfill":834}],854:[function(require,module,exports){
 module.exports=require(79)
-},{"./attribute-extractor.js":532,"./vdom-ns.js":539,"./vnode.js":540,"js-ext/extra/hashmap.js":502,"js-ext/lib/object.js":505,"polyfill":518}],539:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":818,"js-ext/lib/object.js":821,"polyfill":834}],855:[function(require,module,exports){
 module.exports=require(80)
-},{"js-ext/extra/hashmap.js":502,"js-ext/lib/object.js":505,"polyfill":518}],540:[function(require,module,exports){
+},{"./attribute-extractor.js":848,"./html-parser.js":852,"./vdom-ns.js":854,"js-ext/extra/hashmap.js":818,"js-ext/extra/lightmap.js":819,"js-ext/lib/array.js":820,"js-ext/lib/object.js":821,"js-ext/lib/string.js":823,"polyfill":834,"utils/lib/timers.js":837}],856:[function(require,module,exports){
 module.exports=require(81)
-},{"./attribute-extractor.js":532,"./html-parser.js":537,"./vdom-ns.js":539,"js-ext/extra/hashmap.js":502,"js-ext/extra/lightmap.js":503,"js-ext/lib/array.js":504,"js-ext/lib/object.js":505,"js-ext/lib/string.js":507,"polyfill":518,"utils/lib/timers.js":521}],541:[function(require,module,exports){
-module.exports=require(82)
-},{"./partials/element-plugin.js":534,"./partials/extend-document.js":535,"./partials/extend-element.js":536,"./partials/node-parser.js":538,"js-ext/extra/hashmap.js":502,"js-ext/lib/object.js":505,"utils/lib/timers.js":521}],542:[function(require,module,exports){
+},{"./partials/extend-document.js":850,"./partials/extend-element.js":851,"./partials/node-parser.js":853,"js-ext/extra/hashmap.js":818,"js-ext/lib/object.js":821,"utils/lib/timers.js":837}],857:[function(require,module,exports){
 module.exports=require(35)
-},{"./lib/idgenerator.js":543,"./lib/timers.js":544}],543:[function(require,module,exports){
+},{"./lib/idgenerator.js":858,"./lib/timers.js":859}],858:[function(require,module,exports){
 module.exports=require(36)
-},{"js-ext/extra/hashmap.js":548,"polyfill/polyfill-base.js":547}],544:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":863,"polyfill/polyfill-base.js":862}],859:[function(require,module,exports){
 module.exports=require(37)
-},{"polyfill/polyfill-base.js":547}],545:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":862}],860:[function(require,module,exports){
 module.exports=require(19)
-},{}],546:[function(require,module,exports){
+},{}],861:[function(require,module,exports){
 module.exports=require(20)
-},{}],547:[function(require,module,exports){
+},{}],862:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":545,"./lib/window.console.js":546}],548:[function(require,module,exports){
+},{"./lib/matchesselector.js":860,"./lib/window.console.js":861}],863:[function(require,module,exports){
 module.exports=require(17)
-},{}],549:[function(require,module,exports){
+},{}],864:[function(require,module,exports){
 module.exports=require(18)
-},{"js-ext/extra/hashmap.js":548,"polyfill/polyfill-base.js":552}],550:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":863,"polyfill/polyfill-base.js":867}],865:[function(require,module,exports){
 module.exports=require(19)
-},{}],551:[function(require,module,exports){
+},{}],866:[function(require,module,exports){
 module.exports=require(20)
-},{}],552:[function(require,module,exports){
+},{}],867:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":550,"./lib/window.console.js":551}],553:[function(require,module,exports){
+},{"./lib/matchesselector.js":865,"./lib/window.console.js":866}],868:[function(require,module,exports){
+module.exports=require(93)
+},{"./lib/constrain.js":869,"./lib/element-plugin.js":870}],869:[function(require,module,exports){
+module.exports=require(94)
+},{"./element-plugin.js":870,"js-ext/extra/hashmap.js":974}],870:[function(require,module,exports){
+module.exports=require(95)
+},{"event-dom":871,"event/extra/timer-finalize.js":943,"io":952,"js-ext/extra/classes.js":973,"js-ext/extra/hashmap.js":974,"js-ext/lib/object.js":975,"js-ext/lib/promise.js":976,"js-ext/lib/string.js":977,"polyfill":983,"utils/lib/timers.js":984,"vdom":1028}],871:[function(require,module,exports){
+module.exports=require(11)
+},{"event":875,"js-ext/extra/hashmap.js":885,"js-ext/lib/array.js":886,"js-ext/lib/object.js":887,"js-ext/lib/string.js":888,"polyfill/polyfill-base.js":894,"utils":895,"vdom":941}],872:[function(require,module,exports){
+module.exports=require(12)
+},{"js-ext/extra/hashmap.js":877,"js-ext/lib/object.js":878,"polyfill/polyfill-base.js":884}],873:[function(require,module,exports){
+module.exports=require(13)
+},{"./event-base.js":872}],874:[function(require,module,exports){
+module.exports=require(14)
+},{"./event-base.js":872,"js-ext/extra/classes.js":876,"js-ext/lib/object.js":878}],875:[function(require,module,exports){
+module.exports=require(15)
+},{"./event-base.js":872,"./event-emitter.js":873,"./event-listener.js":874}],876:[function(require,module,exports){
+module.exports=require(16)
+},{"../lib/object.js":878,"js-ext/extra/hashmap.js":877,"polyfill/polyfill-base.js":881}],877:[function(require,module,exports){
+module.exports=require(17)
+},{}],878:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":877,"polyfill/polyfill-base.js":881}],879:[function(require,module,exports){
 module.exports=require(19)
-},{}],554:[function(require,module,exports){
+},{}],880:[function(require,module,exports){
 module.exports=require(20)
-},{}],555:[function(require,module,exports){
+},{}],881:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":553,"./lib/window.console.js":554}],556:[function(require,module,exports){
+},{"./lib/matchesselector.js":879,"./lib/window.console.js":880}],882:[function(require,module,exports){
+module.exports=require(19)
+},{}],883:[function(require,module,exports){
+module.exports=require(20)
+},{}],884:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":882,"./lib/window.console.js":883}],885:[function(require,module,exports){
+module.exports=require(17)
+},{}],886:[function(require,module,exports){
+module.exports=require(26)
+},{"polyfill/polyfill-base.js":891}],887:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":885,"polyfill/polyfill-base.js":891}],888:[function(require,module,exports){
+module.exports=require(28)
+},{}],889:[function(require,module,exports){
+module.exports=require(19)
+},{}],890:[function(require,module,exports){
+module.exports=require(20)
+},{}],891:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":889,"./lib/window.console.js":890}],892:[function(require,module,exports){
+module.exports=require(19)
+},{}],893:[function(require,module,exports){
+module.exports=require(20)
+},{}],894:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":892,"./lib/window.console.js":893}],895:[function(require,module,exports){
 module.exports=require(35)
-},{"./lib/idgenerator.js":557,"./lib/timers.js":558}],557:[function(require,module,exports){
+},{"./lib/idgenerator.js":896,"./lib/timers.js":897}],896:[function(require,module,exports){
 module.exports=require(36)
-},{"js-ext/extra/hashmap.js":548,"polyfill/polyfill-base.js":561}],558:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":885,"polyfill/polyfill-base.js":900}],897:[function(require,module,exports){
 module.exports=require(37)
-},{"polyfill/polyfill-base.js":561}],559:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":900}],898:[function(require,module,exports){
 module.exports=require(19)
-},{}],560:[function(require,module,exports){
+},{}],899:[function(require,module,exports){
 module.exports=require(20)
-},{}],561:[function(require,module,exports){
+},{}],900:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":559,"./lib/window.console.js":560}],562:[function(require,module,exports){
+},{"./lib/matchesselector.js":898,"./lib/window.console.js":899}],901:[function(require,module,exports){
 module.exports=require(41)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],563:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],902:[function(require,module,exports){
 module.exports=require(16)
-},{"../lib/object.js":567,"js-ext/extra/hashmap.js":564,"polyfill/polyfill-base.js":573}],564:[function(require,module,exports){
+},{"../lib/object.js":906,"js-ext/extra/hashmap.js":903,"polyfill/polyfill-base.js":912}],903:[function(require,module,exports){
 module.exports=require(17)
-},{}],565:[function(require,module,exports){
+},{}],904:[function(require,module,exports){
 module.exports=require(44)
-},{"../lib/array.js":566,"../lib/object.js":567,"./classes.js":563,"js-ext/extra/hashmap.js":564,"polyfill/lib/weakmap.js":571}],566:[function(require,module,exports){
+},{"../lib/array.js":905,"../lib/object.js":906,"./classes.js":902,"js-ext/extra/hashmap.js":903,"polyfill/lib/weakmap.js":910}],905:[function(require,module,exports){
 module.exports=require(26)
-},{"polyfill/polyfill-base.js":573}],567:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":912}],906:[function(require,module,exports){
 module.exports=require(18)
-},{"js-ext/extra/hashmap.js":564,"polyfill/polyfill-base.js":573}],568:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":903,"polyfill/polyfill-base.js":912}],907:[function(require,module,exports){
 module.exports=require(47)
-},{"polyfill":573}],569:[function(require,module,exports){
+},{"polyfill":912}],908:[function(require,module,exports){
 module.exports=require(28)
-},{}],570:[function(require,module,exports){
+},{}],909:[function(require,module,exports){
 module.exports=require(19)
-},{}],571:[function(require,module,exports){
+},{}],910:[function(require,module,exports){
 module.exports=require(50)
-},{}],572:[function(require,module,exports){
+},{}],911:[function(require,module,exports){
 module.exports=require(20)
-},{}],573:[function(require,module,exports){
+},{}],912:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":570,"./lib/window.console.js":572}],574:[function(require,module,exports){
+},{"./lib/matchesselector.js":909,"./lib/window.console.js":911}],913:[function(require,module,exports){
 module.exports=require(53)
-},{}],575:[function(require,module,exports){
+},{}],914:[function(require,module,exports){
 module.exports=require(54)
-},{"../bin/local-hashmap.js":574}],576:[function(require,module,exports){
+},{"../bin/local-hashmap.js":913}],915:[function(require,module,exports){
 module.exports=require(55)
-},{"../bin/local-hashmap.js":574}],577:[function(require,module,exports){
+},{"../bin/local-hashmap.js":913}],916:[function(require,module,exports){
 module.exports=require(56)
-},{"../bin/local-hashmap.js":574}],578:[function(require,module,exports){
+},{"../bin/local-hashmap.js":913}],917:[function(require,module,exports){
 module.exports=require(19)
-},{}],579:[function(require,module,exports){
+},{}],918:[function(require,module,exports){
 module.exports=require(20)
-},{}],580:[function(require,module,exports){
+},{}],919:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":578,"./lib/window.console.js":579}],581:[function(require,module,exports){
+},{"./lib/matchesselector.js":917,"./lib/window.console.js":918}],920:[function(require,module,exports){
 module.exports=require(35)
-},{"./lib/idgenerator.js":582,"./lib/timers.js":583}],582:[function(require,module,exports){
+},{"./lib/idgenerator.js":921,"./lib/timers.js":922}],921:[function(require,module,exports){
 module.exports=require(36)
-},{"js-ext/extra/hashmap.js":564,"polyfill/polyfill-base.js":586}],583:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":903,"polyfill/polyfill-base.js":925}],922:[function(require,module,exports){
 module.exports=require(37)
-},{"polyfill/polyfill-base.js":586}],584:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":925}],923:[function(require,module,exports){
 module.exports=require(19)
-},{}],585:[function(require,module,exports){
+},{}],924:[function(require,module,exports){
 module.exports=require(20)
-},{}],586:[function(require,module,exports){
+},{}],925:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":584,"./lib/window.console.js":585}],587:[function(require,module,exports){
+},{"./lib/matchesselector.js":923,"./lib/window.console.js":924}],926:[function(require,module,exports){
 module.exports=require(66)
-},{"./lib/sizes.js":588}],588:[function(require,module,exports){
+},{"./lib/sizes.js":927}],927:[function(require,module,exports){
 module.exports=require(67)
-},{"js-ext/extra/hashmap.js":589,"js-ext/lib/object.js":590}],589:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":928,"js-ext/lib/object.js":929}],928:[function(require,module,exports){
 module.exports=require(17)
-},{}],590:[function(require,module,exports){
+},{}],929:[function(require,module,exports){
 module.exports=require(18)
-},{"js-ext/extra/hashmap.js":589,"polyfill/polyfill-base.js":593}],591:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":928,"polyfill/polyfill-base.js":932}],930:[function(require,module,exports){
 module.exports=require(19)
-},{}],592:[function(require,module,exports){
+},{}],931:[function(require,module,exports){
 module.exports=require(20)
-},{}],593:[function(require,module,exports){
+},{}],932:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":591,"./lib/window.console.js":592}],594:[function(require,module,exports){
+},{"./lib/matchesselector.js":930,"./lib/window.console.js":931}],933:[function(require,module,exports){
 module.exports=require(73)
-},{"js-ext/extra/hashmap.js":564,"js-ext/lib/object.js":567,"js-ext/lib/string.js":569,"polyfill":580,"polyfill/extra/transition.js":575,"polyfill/extra/vendorCSS.js":577}],595:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":903,"js-ext/lib/object.js":906,"js-ext/lib/string.js":908,"polyfill":919,"polyfill/extra/transition.js":914,"polyfill/extra/vendorCSS.js":916}],934:[function(require,module,exports){
 module.exports=require(74)
-},{"js-ext/extra/hashmap.js":564,"js-ext/lib/object.js":567,"polyfill":580}],596:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":903,"js-ext/lib/object.js":906,"polyfill":919}],935:[function(require,module,exports){
 module.exports=require(75)
-},{"js-ext/extra/hashmap.js":564,"js-ext/lib/object.js":567,"js-ext/lib/string.js":569,"polyfill":580}],597:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":903,"js-ext/lib/object.js":906,"js-ext/lib/string.js":908,"polyfill":919}],936:[function(require,module,exports){
 module.exports=require(76)
-},{"js-ext/extra/hashmap.js":564,"js-ext/lib/object.js":567,"js-ext/lib/string.js":569,"polyfill":580}],598:[function(require,module,exports){
+},{"../css/element.css":901,"./attribute-extractor.js":933,"./element-array.js":934,"./html-parser.js":937,"./node-parser.js":938,"./vdom-ns.js":939,"./vnode.js":940,"js-ext/extra/hashmap.js":903,"js-ext/lib/object.js":906,"js-ext/lib/promise.js":907,"js-ext/lib/string.js":908,"polyfill":919,"polyfill/extra/transition.js":914,"polyfill/extra/transitionend.js":915,"polyfill/extra/vendorCSS.js":916,"utils":920,"window-ext":926}],937:[function(require,module,exports){
 module.exports=require(77)
-},{"../css/element.css":562,"./attribute-extractor.js":594,"./element-array.js":595,"./html-parser.js":599,"./node-parser.js":600,"./vdom-ns.js":601,"./vnode.js":602,"js-ext/extra/hashmap.js":564,"js-ext/lib/object.js":567,"js-ext/lib/promise.js":568,"js-ext/lib/string.js":569,"polyfill":580,"polyfill/extra/transition.js":575,"polyfill/extra/transitionend.js":576,"polyfill/extra/vendorCSS.js":577,"utils":581,"window-ext":587}],599:[function(require,module,exports){
+},{"./attribute-extractor.js":933,"./vdom-ns.js":939,"js-ext/extra/hashmap.js":903,"js-ext/lib/object.js":906,"polyfill":919}],938:[function(require,module,exports){
 module.exports=require(78)
-},{"./attribute-extractor.js":594,"./vdom-ns.js":601,"js-ext/extra/hashmap.js":564,"js-ext/lib/object.js":567,"polyfill":580}],600:[function(require,module,exports){
+},{"./attribute-extractor.js":933,"./vdom-ns.js":939,"./vnode.js":940,"js-ext/extra/hashmap.js":903,"js-ext/lib/object.js":906,"polyfill":919}],939:[function(require,module,exports){
 module.exports=require(79)
-},{"./attribute-extractor.js":594,"./vdom-ns.js":601,"./vnode.js":602,"js-ext/extra/hashmap.js":564,"js-ext/lib/object.js":567,"polyfill":580}],601:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":903,"js-ext/lib/object.js":906,"polyfill":919}],940:[function(require,module,exports){
 module.exports=require(80)
-},{"js-ext/extra/hashmap.js":564,"js-ext/lib/object.js":567,"polyfill":580}],602:[function(require,module,exports){
+},{"./attribute-extractor.js":933,"./html-parser.js":937,"./vdom-ns.js":939,"js-ext/extra/hashmap.js":903,"js-ext/extra/lightmap.js":904,"js-ext/lib/array.js":905,"js-ext/lib/object.js":906,"js-ext/lib/string.js":908,"polyfill":919,"utils/lib/timers.js":922}],941:[function(require,module,exports){
 module.exports=require(81)
-},{"./attribute-extractor.js":594,"./html-parser.js":599,"./vdom-ns.js":601,"js-ext/extra/hashmap.js":564,"js-ext/extra/lightmap.js":565,"js-ext/lib/array.js":566,"js-ext/lib/object.js":567,"js-ext/lib/string.js":569,"polyfill":580,"utils/lib/timers.js":583}],603:[function(require,module,exports){
-module.exports=require(82)
-},{"./partials/element-plugin.js":596,"./partials/extend-document.js":597,"./partials/extend-element.js":598,"./partials/node-parser.js":600,"js-ext/extra/hashmap.js":564,"js-ext/lib/object.js":567,"utils/lib/timers.js":583}],604:[function(require,module,exports){
-module.exports=require(66)
-},{"./lib/sizes.js":605}],605:[function(require,module,exports){
-module.exports=require(67)
-},{"js-ext/extra/hashmap.js":606,"js-ext/lib/object.js":607}],606:[function(require,module,exports){
+},{"./partials/extend-document.js":935,"./partials/extend-element.js":936,"./partials/node-parser.js":938,"js-ext/extra/hashmap.js":903,"js-ext/lib/object.js":906,"utils/lib/timers.js":922}],942:[function(require,module,exports){
+module.exports=require(12)
+},{"js-ext/extra/hashmap.js":944,"js-ext/lib/object.js":945,"polyfill/polyfill-base.js":951}],943:[function(require,module,exports){
+module.exports=require(168)
+},{"../event-base.js":942,"js-ext/extra/hashmap.js":944}],944:[function(require,module,exports){
 module.exports=require(17)
-},{}],607:[function(require,module,exports){
+},{}],945:[function(require,module,exports){
 module.exports=require(18)
-},{"js-ext/extra/hashmap.js":606,"polyfill/polyfill-base.js":610}],608:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":944,"polyfill/polyfill-base.js":948}],946:[function(require,module,exports){
 module.exports=require(19)
-},{}],609:[function(require,module,exports){
+},{}],947:[function(require,module,exports){
 module.exports=require(20)
-},{}],610:[function(require,module,exports){
+},{}],948:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":608,"./lib/window.console.js":609}],611:[function(require,module,exports){
+},{"./lib/matchesselector.js":946,"./lib/window.console.js":947}],949:[function(require,module,exports){
+module.exports=require(19)
+},{}],950:[function(require,module,exports){
+module.exports=require(20)
+},{}],951:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":949,"./lib/window.console.js":950}],952:[function(require,module,exports){
+module.exports=require(177)
+},{"js-ext":954,"js-ext/extra/hashmap.js":953,"polyfill/polyfill-base.js":966,"utils":967}],953:[function(require,module,exports){
+module.exports=require(17)
+},{}],954:[function(require,module,exports){
+module.exports=require(83)
+},{"./lib/array.js":955,"./lib/function.js":956,"./lib/json.js":957,"./lib/object.js":958,"./lib/promise.js":959,"./lib/string.js":960}],955:[function(require,module,exports){
+module.exports=require(26)
+},{"polyfill/polyfill-base.js":963}],956:[function(require,module,exports){
+module.exports=require(85)
+},{"polyfill/polyfill-base.js":963}],957:[function(require,module,exports){
+module.exports=require(86)
+},{"polyfill/polyfill-base.js":963}],958:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":953,"polyfill/polyfill-base.js":963}],959:[function(require,module,exports){
+module.exports=require(47)
+},{"polyfill":963}],960:[function(require,module,exports){
+module.exports=require(28)
+},{}],961:[function(require,module,exports){
+module.exports=require(19)
+},{}],962:[function(require,module,exports){
+module.exports=require(20)
+},{}],963:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":961,"./lib/window.console.js":962}],964:[function(require,module,exports){
+module.exports=require(19)
+},{}],965:[function(require,module,exports){
+module.exports=require(20)
+},{}],966:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":964,"./lib/window.console.js":965}],967:[function(require,module,exports){
+module.exports=require(35)
+},{"./lib/idgenerator.js":968,"./lib/timers.js":969}],968:[function(require,module,exports){
+module.exports=require(36)
+},{"js-ext/extra/hashmap.js":953,"polyfill/polyfill-base.js":972}],969:[function(require,module,exports){
+module.exports=require(37)
+},{"polyfill/polyfill-base.js":972}],970:[function(require,module,exports){
+module.exports=require(19)
+},{}],971:[function(require,module,exports){
+module.exports=require(20)
+},{}],972:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":970,"./lib/window.console.js":971}],973:[function(require,module,exports){
+module.exports=require(16)
+},{"../lib/object.js":975,"js-ext/extra/hashmap.js":974,"polyfill/polyfill-base.js":980}],974:[function(require,module,exports){
+module.exports=require(17)
+},{}],975:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":974,"polyfill/polyfill-base.js":980}],976:[function(require,module,exports){
+module.exports=require(47)
+},{"polyfill":980}],977:[function(require,module,exports){
+module.exports=require(28)
+},{}],978:[function(require,module,exports){
+module.exports=require(19)
+},{}],979:[function(require,module,exports){
+module.exports=require(20)
+},{}],980:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":978,"./lib/window.console.js":979}],981:[function(require,module,exports){
+module.exports=require(19)
+},{}],982:[function(require,module,exports){
+module.exports=require(20)
+},{}],983:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":981,"./lib/window.console.js":982}],984:[function(require,module,exports){
+module.exports=require(37)
+},{"polyfill/polyfill-base.js":987}],985:[function(require,module,exports){
+module.exports=require(19)
+},{}],986:[function(require,module,exports){
+module.exports=require(20)
+},{}],987:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":985,"./lib/window.console.js":986}],988:[function(require,module,exports){
+module.exports=require(41)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],989:[function(require,module,exports){
+module.exports=require(16)
+},{"../lib/object.js":993,"js-ext/extra/hashmap.js":990,"polyfill/polyfill-base.js":999}],990:[function(require,module,exports){
+module.exports=require(17)
+},{}],991:[function(require,module,exports){
+module.exports=require(44)
+},{"../lib/array.js":992,"../lib/object.js":993,"./classes.js":989,"js-ext/extra/hashmap.js":990,"polyfill/lib/weakmap.js":997}],992:[function(require,module,exports){
+module.exports=require(26)
+},{"polyfill/polyfill-base.js":999}],993:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":990,"polyfill/polyfill-base.js":999}],994:[function(require,module,exports){
+module.exports=require(47)
+},{"polyfill":999}],995:[function(require,module,exports){
+module.exports=require(28)
+},{}],996:[function(require,module,exports){
+module.exports=require(19)
+},{}],997:[function(require,module,exports){
+module.exports=require(50)
+},{}],998:[function(require,module,exports){
+module.exports=require(20)
+},{}],999:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":996,"./lib/window.console.js":998}],1000:[function(require,module,exports){
+module.exports=require(53)
+},{}],1001:[function(require,module,exports){
+module.exports=require(54)
+},{"../bin/local-hashmap.js":1000}],1002:[function(require,module,exports){
+module.exports=require(55)
+},{"../bin/local-hashmap.js":1000}],1003:[function(require,module,exports){
+module.exports=require(56)
+},{"../bin/local-hashmap.js":1000}],1004:[function(require,module,exports){
+module.exports=require(19)
+},{}],1005:[function(require,module,exports){
+module.exports=require(20)
+},{}],1006:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":1004,"./lib/window.console.js":1005}],1007:[function(require,module,exports){
+module.exports=require(35)
+},{"./lib/idgenerator.js":1008,"./lib/timers.js":1009}],1008:[function(require,module,exports){
+module.exports=require(36)
+},{"js-ext/extra/hashmap.js":990,"polyfill/polyfill-base.js":1012}],1009:[function(require,module,exports){
+module.exports=require(37)
+},{"polyfill/polyfill-base.js":1012}],1010:[function(require,module,exports){
+module.exports=require(19)
+},{}],1011:[function(require,module,exports){
+module.exports=require(20)
+},{}],1012:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":1010,"./lib/window.console.js":1011}],1013:[function(require,module,exports){
+module.exports=require(66)
+},{"./lib/sizes.js":1014}],1014:[function(require,module,exports){
+module.exports=require(67)
+},{"js-ext/extra/hashmap.js":1015,"js-ext/lib/object.js":1016}],1015:[function(require,module,exports){
+module.exports=require(17)
+},{}],1016:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":1015,"polyfill/polyfill-base.js":1019}],1017:[function(require,module,exports){
+module.exports=require(19)
+},{}],1018:[function(require,module,exports){
+module.exports=require(20)
+},{}],1019:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":1017,"./lib/window.console.js":1018}],1020:[function(require,module,exports){
+module.exports=require(73)
+},{"js-ext/extra/hashmap.js":990,"js-ext/lib/object.js":993,"js-ext/lib/string.js":995,"polyfill":1006,"polyfill/extra/transition.js":1001,"polyfill/extra/vendorCSS.js":1003}],1021:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":990,"js-ext/lib/object.js":993,"polyfill":1006}],1022:[function(require,module,exports){
+module.exports=require(75)
+},{"js-ext/extra/hashmap.js":990,"js-ext/lib/object.js":993,"js-ext/lib/string.js":995,"polyfill":1006}],1023:[function(require,module,exports){
+module.exports=require(76)
+},{"../css/element.css":988,"./attribute-extractor.js":1020,"./element-array.js":1021,"./html-parser.js":1024,"./node-parser.js":1025,"./vdom-ns.js":1026,"./vnode.js":1027,"js-ext/extra/hashmap.js":990,"js-ext/lib/object.js":993,"js-ext/lib/promise.js":994,"js-ext/lib/string.js":995,"polyfill":1006,"polyfill/extra/transition.js":1001,"polyfill/extra/transitionend.js":1002,"polyfill/extra/vendorCSS.js":1003,"utils":1007,"window-ext":1013}],1024:[function(require,module,exports){
+module.exports=require(77)
+},{"./attribute-extractor.js":1020,"./vdom-ns.js":1026,"js-ext/extra/hashmap.js":990,"js-ext/lib/object.js":993,"polyfill":1006}],1025:[function(require,module,exports){
+module.exports=require(78)
+},{"./attribute-extractor.js":1020,"./vdom-ns.js":1026,"./vnode.js":1027,"js-ext/extra/hashmap.js":990,"js-ext/lib/object.js":993,"polyfill":1006}],1026:[function(require,module,exports){
+module.exports=require(79)
+},{"js-ext/extra/hashmap.js":990,"js-ext/lib/object.js":993,"polyfill":1006}],1027:[function(require,module,exports){
+module.exports=require(80)
+},{"./attribute-extractor.js":1020,"./html-parser.js":1024,"./vdom-ns.js":1026,"js-ext/extra/hashmap.js":990,"js-ext/extra/lightmap.js":991,"js-ext/lib/array.js":992,"js-ext/lib/object.js":993,"js-ext/lib/string.js":995,"polyfill":1006,"utils/lib/timers.js":1009}],1028:[function(require,module,exports){
+module.exports=require(81)
+},{"./partials/extend-document.js":1022,"./partials/extend-element.js":1023,"./partials/node-parser.js":1025,"js-ext/extra/hashmap.js":990,"js-ext/lib/object.js":993,"utils/lib/timers.js":1009}],1029:[function(require,module,exports){
+module.exports=require(19)
+},{}],1030:[function(require,module,exports){
+module.exports=require(20)
+},{}],1031:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":1029,"./lib/window.console.js":1030}],1032:[function(require,module,exports){
+module.exports=require(35)
+},{"./lib/idgenerator.js":1033,"./lib/timers.js":1034}],1033:[function(require,module,exports){
+module.exports=require(36)
+},{"js-ext/extra/hashmap.js":863,"polyfill/polyfill-base.js":1037}],1034:[function(require,module,exports){
+module.exports=require(37)
+},{"polyfill/polyfill-base.js":1037}],1035:[function(require,module,exports){
+module.exports=require(19)
+},{}],1036:[function(require,module,exports){
+module.exports=require(20)
+},{}],1037:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":1035,"./lib/window.console.js":1036}],1038:[function(require,module,exports){
+module.exports=require(66)
+},{"./lib/sizes.js":1039}],1039:[function(require,module,exports){
+module.exports=require(67)
+},{"js-ext/extra/hashmap.js":1040,"js-ext/lib/object.js":1041}],1040:[function(require,module,exports){
+module.exports=require(17)
+},{}],1041:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":1040,"polyfill/polyfill-base.js":1044}],1042:[function(require,module,exports){
+module.exports=require(19)
+},{}],1043:[function(require,module,exports){
+module.exports=require(20)
+},{}],1044:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":1042,"./lib/window.console.js":1043}],1045:[function(require,module,exports){
 
 "use strict";
 
@@ -22141,7 +24065,7 @@ module.exports = function (window) {
     return IO;
 };
 
-},{"../io.js":615,"js-ext/extra/hashmap.js":616,"js-ext/lib/object.js":621,"xmldom":738}],612:[function(require,module,exports){
+},{"../io.js":1049,"js-ext/extra/hashmap.js":1050,"js-ext/lib/object.js":1055,"xmldom":1332}],1046:[function(require,module,exports){
 "use strict";
 
 require('js-ext/lib/object.js');
@@ -22268,7 +24192,7 @@ module.exports = function (window) {
 
     return IO;
 };
-},{"../io.js":615,"js-ext/extra/hashmap.js":616,"js-ext/lib/object.js":621}],613:[function(require,module,exports){
+},{"../io.js":1049,"js-ext/extra/hashmap.js":1050,"js-ext/lib/object.js":1055}],1047:[function(require,module,exports){
 "use strict";
 
 /**
@@ -22738,7 +24662,7 @@ module.exports = function (window) {
 
     return IO;
 };
-},{"../io.js":615,"js-ext/extra/hashmap.js":616,"js-ext/lib/object.js":621,"js-ext/lib/string.js":623,"polyfill/polyfill-base.js":629}],614:[function(require,module,exports){
+},{"../io.js":1049,"js-ext/extra/hashmap.js":1050,"js-ext/lib/object.js":1055,"js-ext/lib/string.js":1057,"polyfill/polyfill-base.js":1063}],1048:[function(require,module,exports){
 "use strict";
 
 /**
@@ -22890,415 +24814,55 @@ module.exports = function (window) {
 
     return IO;
 };
-},{"../io.js":615,"js-ext":617,"js-ext/extra/hashmap.js":616}],615:[function(require,module,exports){
-(function (global){
-/**
- * Provides core IO-functionality.
- *
- *
- * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
- * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
- *
- * @module io
- * @class IO
-*/
-
-"use strict";
-
-require('polyfill/polyfill-base.js');
-require('js-ext');
-
-var NAME = '[io]: ',
-    GET = 'GET',
-    createHashMap = require('js-ext/extra/hashmap.js').createMap,
-    asyncSilent = require('utils').asyncSilent,
-    DEF_REQ_TIMEOUT = 300000, // don't create an ever-lasting request: always quit after 5 minutes
-    BODY_METHODS = createHashMap({
-        POST: 1,
-        PUT: 1
-    }),
-    CONTENT_TYPE = 'Content-Type',
-    MIME_JSON = 'application/json',
-    DEF_CONTENT_TYPE_POST = 'application/x-www-form-urlencoded; charset=UTF-8',
-    ERROR_NO_XHR = 'no valid xhr transport-mechanism available',
-    REQUEST_TIMEOUT = 'Request-timeout',
-    UNKNOW_ERROR = 'Unknown response-error',
-    XHR_ERROR = 'XHR Error',
-    ABORTED = 'Request aborted',
-    NO_XHR = 'No valid xhr found on this browser';
-
-module.exports = function (window) {
-
-    // to prevent multiple IO instances
-    // (which might happen: http://nodejs.org/docs/latest/api/modules.html#modules_module_caching_caveats)
-    // we make sure IO is defined only once. Therefore we bind it to `window` and return it if created before
-    // We need a singleton IO, because submodules might merge in. You can't have them merging
-    // into some other IO-instance than which is used.
-    var Glob = (typeof global !== 'undefined' ? global : /* istanbul ignore next */ this);
-
-    Glob._ITSAmodules || Object.protectedProp(Glob, '_ITSAmodules', createHashMap());
-
-    if (Glob._ITSAmodules.IO) {
-        return Glob._ITSAmodules.IO;
-    }
-
-    var ENCODE_URI_COMPONENT = encodeURIComponent,
-        IO;
-
-    IO = {
-        config: {},
-
-        //===============================================================================================
-        // private methods:
-        //===============================================================================================
-
-        _xhrList: [],
-
-        /**
-         * Initializes the xhr-instance, based on the config-params.
-         * This method is the standard way of doing xhr-requests without processing streams.
-         *
-         * @method _initXHR
-         * @param xhr {Object} xhr-instance
-         * @param options {Object}
-         *    @param [options.url] {String} The url to which the request is sent.
-         *    @param [options.method='GET'] {String} The HTTP method to use.
-         *    can be ignored, even if streams are used --> the returned Promise will always hold all data
-         *    @param [options.sync=false] {boolean} By default, all requests are sent asynchronously. To send synchronous requests, set to true.
-         *           This feature only works in the browser: nodejs will always perform asynchronous requests.
-         *    @param [options.data] {Object} Data to be sent to the server, either to be used by `query-params` or `body`.
-         *    @param [options.headers] {Object} HTTP request headers.
-         *    @param [options.responseType] {String} Force the response type.
-         *    @param [options.timeout=3000] {number} to timeout the request, leading into a rejected Promise.
-         *    @param [options.withCredentials=false] {boolean} Whether or not to send credentials on the request.
-         * @param fulfill {Function} reference to xhr-promise's fulfill-function
-         * @param reject {Function} reference to xhr-promise's reject-function
-         * @param promise {Promise} the xhr-promise which will be extended with the `abort()`-method
-         * @private
-        */
-        _initXHR: function (xhr, options, promise) {
-            console.log(NAME, '_initXHR');
-            var instance = this,
-                url = options.url,
-                method = options.method || GET,
-                headers = options.headers || {}, // all request will get some headers
-                async = !options.sync,
-                data = options.data,
-                reject = promise.reject;
-            // xhr will be null in case of a CORS-request when no CORS is possible
-            if (!xhr) {
-                console.error(NAME, '_initXHR fails: '+ERROR_NO_XHR);
-                reject(new Error(ERROR_NO_XHR));
-                return;
-            }
-            console.log(NAME, '_initXHR succesfully created '+(xhr._isXHR2 ? 'XMLHttpRequest2' : (xhr._isXDR ? 'XDomainRequest' : 'XMLHttpRequest1'))+'-instance');
-
-            // method-name should be in uppercase:
-            method = method.toUpperCase();
-
-            // in case of BODY-method: eliminate any data behind querystring:
-            // else: append data-object behind querystring
-            if (BODY_METHODS[method]) {
-                url = url.split('?'); // now url is an array
-                url = url[0]; // now url is a String again
-            }
-            else if (data) {
-                url += ((url.indexOf('?') > 0) ? '&' : '?') + instance._toQueryString(data);
-            }
-
-            xhr.open(method, url, async);
-            // xhr.responseType = options.responseType || 'text';
-            options.withCredentials && (xhr.withCredentials=true);
-
-
-            // more initialisation might be needed by extended modules:
-            instance._xhrInitList.each(
-                function(fn) {
-                    fn(xhr, promise, headers, method);
-                }
-            );
-
-            // send the request:
-            xhr.send((BODY_METHODS[method] && data) ? (((headers[CONTENT_TYPE]===MIME_JSON) || xhr._isXDR) ? JSON.stringify(data) : instance._toQueryString(data)) : null);
-
-            console.log(NAME, 'xhr send to '+url+' with method '+method);
-
-            // now add xhr.abort() to the promise, so we can call from within the returned promise-instance
-            promise.abort = function() {
-                console.log(NAME, 'xhr aborted');
-                reject(new Error(ABORTED));
-                xhr._aborted = true; // must be set: IE9 won't allow to read anything on xhr after being aborted
-                xhr.abort();
-            };
-
-            // in case synchronous transfer: force an xhr.onreadystatechange:
-            async || xhr.onreadystatechange();
-        },
-
-        /**
-         * Adds the `headers`-object to `xhr`-headers.
-         *
-         * @method _setHeaders
-         * @param xhr {Object} containing the xhr-instance
-         * @param headers {Object} containing all headers
-         * @param method {String} the request-method used
-         * @private
-        */
-        _setHeaders: function(xhr, promise, headers, method) {
-            // XDR cannot set requestheaders, only XHR:
-            if (!xhr._isXDR) {
-                console.log(NAME, '_setHeaders');
-                var name;
-                if ((method!=='POST') && (method!=='PUT')) {
-                    // force GET-request to make a request instead of using cache (like IE does):
-                    headers['If-Modified-Since'] = 'Wed, 15 Nov 1995 01:00:00 GMT';
-                    // header 'Content-Type' should only be set with POST or PUT requests:
-                    delete headers[CONTENT_TYPE];
-                }
-                // set all headers
-                for (name in headers) {
-                    xhr.setRequestHeader(name, headers[name]);
-                }
-
-                // in case of POST or PUT method: always make sure 'Content-Type' is specified
-                ((method!=='POST') && (method!=='PUT')) || (headers && (CONTENT_TYPE in headers)) || xhr.setRequestHeader(CONTENT_TYPE, DEF_CONTENT_TYPE_POST);
-            }
-        },
-
-        /**
-         * Adds 2 methods on the xhr-instance which are used by xhr when events occur:
-         *
-         * xhr.onreadystatechange()
-         * xhr.ontimeout()  // only XMLHttpRequest2
-         *
-         * These events are responsible for making the Promise resolve.
-         * @method _setReadyHandle
-         * @param xhr {Object} containing the xhr-instance
-         * @param fulfill {Function} reference to the Promise fulfill-function
-         * @param reject {Function} reference to the Promise reject-function
-         * @private
-        */
-        _setReadyHandle: function(xhr, promise) {
-            console.log(NAME, '_setReadyHandle');
-            // for XDomainRequest, we need 'onload' instead of 'onreadystatechange'
-            xhr.onreadystatechange = function() {
-                // CANNOT console xhr.responseText here! IE9 will throw an error:
-                // you can only acces it after (xhr.readyState===4)
-                // also check xhr._aborted --> IE9 comes here after aborted and will throw an error when reading xhr's native properties
-                if (!xhr._aborted && (xhr.readyState===4)) {
-                    clearTimeout(xhr._timer);
-                    if ((xhr.status>=200) && (xhr.status<300)) {
-                        console.log(NAME, 'xhr.onreadystatechange will fulfill xhr-instance: '+xhr.responseText);
-                        // In case streamback function is set, but when no intermediate stream-data was send
-                        // (or in case of XDR: below 2kb it doesn't call onprogress)
-                        // --> we might need to call onprogress ourselve.
-                        if (xhr._isStream && !xhr._gotstreamed) {
-                            xhr.onprogress(xhr.responseText);
-                        }
-                        promise.fulfill(xhr);
-                    }
-                    else {
-                        console.warn(NAME, 'xhr.onreadystatechange will reject xhr-instance: '+xhr.statusText);
-                        promise.reject(new Error(xhr.statusText || UNKNOW_ERROR+' '+xhr.status));
-                    }
-                }
-            };
-            xhr.onerror = function() {
-                clearTimeout(xhr._timer);
-                promise.reject(new Error(XHR_ERROR));
-            };
-        },
-
-        /**
-         * Stringifies an object into one string with every pair separated by `&`
-         *
-         * @method _toQueryString
-         * @param data {Object} containing key-value pairs
-         * @return {String} stringified presentation of the object, with every pair separated by `&`
-         * @private
-        */
-        _toQueryString: function(data) {
-            var paramArray = [],
-                key, value;
-        // TODO: use `object` module
-            for (key in data) {
-                value = data[key];
-                key = ENCODE_URI_COMPONENT(key);
-                paramArray.push((value === null) ? key : (key + '=' + ENCODE_URI_COMPONENT(value)));
-            }
-            console.log(NAME, '_toQueryString --> '+paramArray.join('&'));
-            return paramArray.join('&');
-        },
-
-        /**
-         * Sends a HTTP request to the server and returns a Promise with an additional .abort() method to cancel the request.
-         * This method is the standard way of doing xhr-requests without processing streams.
-         *
-         * @method request
-         * @param options {Object}
-         *    @param [options.url] {String} The url to which the request is sent.
-         *    @param [options.method='GET'] {String} The HTTP method to use.
-         *    can be ignored, even if streams are used --> the returned Promise will always hold all data
-         *    @param [options.sync=false] {boolean} By default, all requests are sent asynchronously. To send synchronous requests, set to true.
-         *    @param [options.data] {Object} Data to be sent to the server, either to be used by `query-params` or `body`.
-         *    @param [options.headers] {Object} HTTP request headers.
-         *    @param [options.responseType] {String} Force the response type.
-         *    @param [options.timeout=3000] {number} to timeout the request, leading into a rejected Promise.
-         *    @param [options.withCredentials=false] {boolean} Whether or not to send credentials on the request.
-         *    @param [options.streamback] {Function} callbackfunction in case you want to process streams (needs io-stream module).
-         * @return {Promise} Promise holding the request. Has an additional .abort() method to cancel the request.
-         * <ul>
-         *     <li>on success: xhr {XMLHttpRequest1|XMLHttpRequest2} xhr-response</li>
-         *     <li>on failure: reason {Error}</li>
-         * </ul>
-        */
-        request: function(options) {
-            console.log(NAME, 'request');
-            var instance = this,
-                props = {},
-                xhr, promise;
-            options || (options={});
-            promise = Promise.manage(options.streamback);
-
-            xhr = new window.XMLHttpRequest();
-            props._isXHR2 = ('withCredentials' in xhr) || (window.navigator.userAgent==='fake');
-            // it could be other modules like io-cors or io-stream have subscribed
-            // xhr might be changed, also private properties might be extended
-            instance._xhrList.each(
-                function(fn) {
-                    xhr = fn(xhr, props, options, promise);
-                }
-            );
-            if (!xhr) {
-                return Promise.reject(NO_XHR);
-            }
-            xhr.merge(props);
-            console.log(NAME, 'request creating xhr of type: '+ (props._isXHR2 ? 'XMLHttpRequest2' : (props._isXDR ? 'XDomainRequest' : 'XMLHttpRequest1')));
-            console.log(NAME, 'CORS-IE: '+ props._CORS_IE + ', canStream: '+props._canStream);
-
-            // Don't use xhr.timeout --> IE<10 throws an error when set xhr.timeout
-            // We use a timer that aborts the request
-            Object.defineProperty(xhr, '_timer', {
-                configurable: false,
-                enumerable: false,
-                writable: false,
-                value: setTimeout(function() {
-                           promise.reject(new Error(REQUEST_TIMEOUT));
-                           xhr._aborted = true; // must be set: IE9 won't allow to read anything on xhr after being aborted
-                           xhr.abort();
-                       }, options.timeout || instance.config.timeout || DEF_REQ_TIMEOUT)
-            });
-
-            instance._initXHR(xhr, options, promise);
-
-            // to make any routine informed for the end of xhr.
-            // to make sure they get informed after aother routines have handled the response,
-            // we go async
-            promise.then(function() {
-                asyncSilent(function() {
-                    instance._final.forEach(function(finallySubscriber) {
-                        finallySubscriber(xhr);
-                    });
-                });
-            });
-
-            return promise;
-        },
-
-        /**
-         * Adds a subscriber to the finalization-cycle, which happens after the xhr finishes.
-         * Only gets invoked on fulfilled io.
-         *
-         * @method finalize
-         * @param finallySubscriber {Function} callback to be invoked
-         *        Function recieves `xhr` as its only argument
-         * @return {Object} handler with a `detach()`-method which can be used to detach the subscriber
-         * @since 0.0.1
-         */
-        finalize: function (finallySubscriber) {
-            console.log(NAME, 'finalize');
-            var finalHash = this._final;
-            finalHash.push(finallySubscriber);
-            return {
-                detach: function() {
-                    console.log(NAME, 'detach finalizer');
-                    var index = finalHash.indexOf(finallySubscriber);
-                    (index===-1) || finalHash.splice(index, 1);
-                }
-            };
-        }
-
-    };
-
-    /**
-     * Internal list of finalize-subscribers which are invoked at the end of a successful xhr,
-     * Is an array of function-references.
-     *
-     * @property _final
-     * @default []
-     * @type Array
-     * @private
-     * @since 0.0.1
-    */
-    Object.protectedProp(IO, '_final', []);
-
-    IO._xhrInitList = [
-        IO._setReadyHandle,
-        IO._setHeaders
-    ];
-
-    Glob._ITSAmodules.IO = IO;
-
-    return IO;
-};
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"js-ext":617,"js-ext/extra/hashmap.js":616,"polyfill/polyfill-base.js":629,"utils":630}],616:[function(require,module,exports){
+},{"../io.js":1049,"js-ext":1051,"js-ext/extra/hashmap.js":1050}],1049:[function(require,module,exports){
+module.exports=require(177)
+},{"js-ext":1051,"js-ext/extra/hashmap.js":1050,"polyfill/polyfill-base.js":1063,"utils":1064}],1050:[function(require,module,exports){
 module.exports=require(17)
-},{}],617:[function(require,module,exports){
-module.exports=require(84)
-},{"./lib/array.js":618,"./lib/function.js":619,"./lib/json.js":620,"./lib/object.js":621,"./lib/promise.js":622,"./lib/string.js":623}],618:[function(require,module,exports){
+},{}],1051:[function(require,module,exports){
+module.exports=require(83)
+},{"./lib/array.js":1052,"./lib/function.js":1053,"./lib/json.js":1054,"./lib/object.js":1055,"./lib/promise.js":1056,"./lib/string.js":1057}],1052:[function(require,module,exports){
 module.exports=require(26)
-},{"polyfill/polyfill-base.js":626}],619:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1060}],1053:[function(require,module,exports){
+module.exports=require(85)
+},{"polyfill/polyfill-base.js":1060}],1054:[function(require,module,exports){
 module.exports=require(86)
-},{"polyfill/polyfill-base.js":626}],620:[function(require,module,exports){
-module.exports=require(87)
-},{"polyfill/polyfill-base.js":626}],621:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1060}],1055:[function(require,module,exports){
 module.exports=require(18)
-},{"js-ext/extra/hashmap.js":616,"polyfill/polyfill-base.js":626}],622:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1050,"polyfill/polyfill-base.js":1060}],1056:[function(require,module,exports){
 module.exports=require(47)
-},{"polyfill":626}],623:[function(require,module,exports){
+},{"polyfill":1060}],1057:[function(require,module,exports){
 module.exports=require(28)
-},{}],624:[function(require,module,exports){
+},{}],1058:[function(require,module,exports){
 module.exports=require(19)
-},{}],625:[function(require,module,exports){
+},{}],1059:[function(require,module,exports){
 module.exports=require(20)
-},{}],626:[function(require,module,exports){
+},{}],1060:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":624,"./lib/window.console.js":625}],627:[function(require,module,exports){
+},{"./lib/matchesselector.js":1058,"./lib/window.console.js":1059}],1061:[function(require,module,exports){
 module.exports=require(19)
-},{}],628:[function(require,module,exports){
+},{}],1062:[function(require,module,exports){
 module.exports=require(20)
-},{}],629:[function(require,module,exports){
+},{}],1063:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":627,"./lib/window.console.js":628}],630:[function(require,module,exports){
+},{"./lib/matchesselector.js":1061,"./lib/window.console.js":1062}],1064:[function(require,module,exports){
 module.exports=require(35)
-},{"./lib/idgenerator.js":631,"./lib/timers.js":632}],631:[function(require,module,exports){
+},{"./lib/idgenerator.js":1065,"./lib/timers.js":1066}],1065:[function(require,module,exports){
 module.exports=require(36)
-},{"js-ext/extra/hashmap.js":616,"polyfill/polyfill-base.js":635}],632:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1050,"polyfill/polyfill-base.js":1069}],1066:[function(require,module,exports){
 module.exports=require(37)
-},{"polyfill/polyfill-base.js":635}],633:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1069}],1067:[function(require,module,exports){
 module.exports=require(19)
-},{}],634:[function(require,module,exports){
+},{}],1068:[function(require,module,exports){
 module.exports=require(20)
-},{}],635:[function(require,module,exports){
+},{}],1069:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":633,"./lib/window.console.js":634}],636:[function(require,module,exports){
+},{"./lib/matchesselector.js":1067,"./lib/window.console.js":1068}],1070:[function(require,module,exports){
 module.exports=require(16)
-},{"../lib/object.js":644,"js-ext/extra/hashmap.js":637,"polyfill/polyfill-base.js":650}],637:[function(require,module,exports){
+},{"../lib/object.js":1078,"js-ext/extra/hashmap.js":1071,"polyfill/polyfill-base.js":1084}],1071:[function(require,module,exports){
 module.exports=require(17)
-},{}],638:[function(require,module,exports){
+},{}],1072:[function(require,module,exports){
 module.exports=require(44)
-},{"../lib/array.js":641,"../lib/object.js":644,"./classes.js":636,"js-ext/extra/hashmap.js":637,"polyfill/lib/weakmap.js":648}],639:[function(require,module,exports){
+},{"../lib/array.js":1075,"../lib/object.js":1078,"./classes.js":1070,"js-ext/extra/hashmap.js":1071,"polyfill/lib/weakmap.js":1082}],1073:[function(require,module,exports){
 "use strict";
 
 var createHashMap = require('./hashmap.js').createMap;
@@ -23371,7 +24935,7 @@ module.exports = createHashMap({
     'with': true,
     'yield': true
 });
-},{"./hashmap.js":637}],640:[function(require,module,exports){
+},{"./hashmap.js":1071}],1074:[function(require,module,exports){
 "use strict";
 
 require('./lib/function.js');
@@ -23386,27 +24950,349 @@ module.exports = {
     Classes: require('./extra/classes.js'),
     LightMap: require('./extra/lightmap.js')
 };
-},{"./extra/classes.js":636,"./extra/hashmap.js":637,"./extra/lightmap.js":638,"./lib/array.js":641,"./lib/function.js":642,"./lib/json.js":643,"./lib/object.js":644,"./lib/promise.js":645,"./lib/string.js":646}],641:[function(require,module,exports){
+},{"./extra/classes.js":1070,"./extra/hashmap.js":1071,"./extra/lightmap.js":1072,"./lib/array.js":1075,"./lib/function.js":1076,"./lib/json.js":1077,"./lib/object.js":1078,"./lib/promise.js":1079,"./lib/string.js":1080}],1075:[function(require,module,exports){
 module.exports=require(26)
-},{"polyfill/polyfill-base.js":650}],642:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1084}],1076:[function(require,module,exports){
+module.exports=require(85)
+},{"polyfill/polyfill-base.js":1084}],1077:[function(require,module,exports){
 module.exports=require(86)
-},{"polyfill/polyfill-base.js":650}],643:[function(require,module,exports){
-module.exports=require(87)
-},{"polyfill/polyfill-base.js":650}],644:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1084}],1078:[function(require,module,exports){
 module.exports=require(18)
-},{"js-ext/extra/hashmap.js":637,"polyfill/polyfill-base.js":650}],645:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1071,"polyfill/polyfill-base.js":1084}],1079:[function(require,module,exports){
 module.exports=require(47)
-},{"polyfill":650}],646:[function(require,module,exports){
+},{"polyfill":1084}],1080:[function(require,module,exports){
 module.exports=require(28)
-},{}],647:[function(require,module,exports){
+},{}],1081:[function(require,module,exports){
 module.exports=require(19)
-},{}],648:[function(require,module,exports){
+},{}],1082:[function(require,module,exports){
 module.exports=require(50)
-},{}],649:[function(require,module,exports){
+},{}],1083:[function(require,module,exports){
 module.exports=require(20)
-},{}],650:[function(require,module,exports){
+},{}],1084:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":647,"./lib/window.console.js":649}],651:[function(require,module,exports){
+},{"./lib/matchesselector.js":1081,"./lib/window.console.js":1083}],1085:[function(require,module,exports){
+module.exports=require(93)
+},{"./lib/constrain.js":1086,"./lib/element-plugin.js":1087}],1086:[function(require,module,exports){
+module.exports=require(94)
+},{"./element-plugin.js":1087,"js-ext/extra/hashmap.js":1191}],1087:[function(require,module,exports){
+module.exports=require(95)
+},{"event-dom":1088,"event/extra/timer-finalize.js":1160,"io":1169,"js-ext/extra/classes.js":1190,"js-ext/extra/hashmap.js":1191,"js-ext/lib/object.js":1192,"js-ext/lib/promise.js":1193,"js-ext/lib/string.js":1194,"polyfill":1200,"utils/lib/timers.js":1201,"vdom":1245}],1088:[function(require,module,exports){
+module.exports=require(11)
+},{"event":1092,"js-ext/extra/hashmap.js":1102,"js-ext/lib/array.js":1103,"js-ext/lib/object.js":1104,"js-ext/lib/string.js":1105,"polyfill/polyfill-base.js":1111,"utils":1112,"vdom":1158}],1089:[function(require,module,exports){
+module.exports=require(12)
+},{"js-ext/extra/hashmap.js":1094,"js-ext/lib/object.js":1095,"polyfill/polyfill-base.js":1101}],1090:[function(require,module,exports){
+module.exports=require(13)
+},{"./event-base.js":1089}],1091:[function(require,module,exports){
+module.exports=require(14)
+},{"./event-base.js":1089,"js-ext/extra/classes.js":1093,"js-ext/lib/object.js":1095}],1092:[function(require,module,exports){
+module.exports=require(15)
+},{"./event-base.js":1089,"./event-emitter.js":1090,"./event-listener.js":1091}],1093:[function(require,module,exports){
+module.exports=require(16)
+},{"../lib/object.js":1095,"js-ext/extra/hashmap.js":1094,"polyfill/polyfill-base.js":1098}],1094:[function(require,module,exports){
+module.exports=require(17)
+},{}],1095:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":1094,"polyfill/polyfill-base.js":1098}],1096:[function(require,module,exports){
+module.exports=require(19)
+},{}],1097:[function(require,module,exports){
+module.exports=require(20)
+},{}],1098:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":1096,"./lib/window.console.js":1097}],1099:[function(require,module,exports){
+module.exports=require(19)
+},{}],1100:[function(require,module,exports){
+module.exports=require(20)
+},{}],1101:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":1099,"./lib/window.console.js":1100}],1102:[function(require,module,exports){
+module.exports=require(17)
+},{}],1103:[function(require,module,exports){
+module.exports=require(26)
+},{"polyfill/polyfill-base.js":1108}],1104:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":1102,"polyfill/polyfill-base.js":1108}],1105:[function(require,module,exports){
+module.exports=require(28)
+},{}],1106:[function(require,module,exports){
+module.exports=require(19)
+},{}],1107:[function(require,module,exports){
+module.exports=require(20)
+},{}],1108:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":1106,"./lib/window.console.js":1107}],1109:[function(require,module,exports){
+module.exports=require(19)
+},{}],1110:[function(require,module,exports){
+module.exports=require(20)
+},{}],1111:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":1109,"./lib/window.console.js":1110}],1112:[function(require,module,exports){
+module.exports=require(35)
+},{"./lib/idgenerator.js":1113,"./lib/timers.js":1114}],1113:[function(require,module,exports){
+module.exports=require(36)
+},{"js-ext/extra/hashmap.js":1102,"polyfill/polyfill-base.js":1117}],1114:[function(require,module,exports){
+module.exports=require(37)
+},{"polyfill/polyfill-base.js":1117}],1115:[function(require,module,exports){
+module.exports=require(19)
+},{}],1116:[function(require,module,exports){
+module.exports=require(20)
+},{}],1117:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":1115,"./lib/window.console.js":1116}],1118:[function(require,module,exports){
+module.exports=require(41)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1119:[function(require,module,exports){
+module.exports=require(16)
+},{"../lib/object.js":1123,"js-ext/extra/hashmap.js":1120,"polyfill/polyfill-base.js":1129}],1120:[function(require,module,exports){
+module.exports=require(17)
+},{}],1121:[function(require,module,exports){
+module.exports=require(44)
+},{"../lib/array.js":1122,"../lib/object.js":1123,"./classes.js":1119,"js-ext/extra/hashmap.js":1120,"polyfill/lib/weakmap.js":1127}],1122:[function(require,module,exports){
+module.exports=require(26)
+},{"polyfill/polyfill-base.js":1129}],1123:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":1120,"polyfill/polyfill-base.js":1129}],1124:[function(require,module,exports){
+module.exports=require(47)
+},{"polyfill":1129}],1125:[function(require,module,exports){
+module.exports=require(28)
+},{}],1126:[function(require,module,exports){
+module.exports=require(19)
+},{}],1127:[function(require,module,exports){
+module.exports=require(50)
+},{}],1128:[function(require,module,exports){
+module.exports=require(20)
+},{}],1129:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":1126,"./lib/window.console.js":1128}],1130:[function(require,module,exports){
+module.exports=require(53)
+},{}],1131:[function(require,module,exports){
+module.exports=require(54)
+},{"../bin/local-hashmap.js":1130}],1132:[function(require,module,exports){
+module.exports=require(55)
+},{"../bin/local-hashmap.js":1130}],1133:[function(require,module,exports){
+module.exports=require(56)
+},{"../bin/local-hashmap.js":1130}],1134:[function(require,module,exports){
+module.exports=require(19)
+},{}],1135:[function(require,module,exports){
+module.exports=require(20)
+},{}],1136:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":1134,"./lib/window.console.js":1135}],1137:[function(require,module,exports){
+module.exports=require(35)
+},{"./lib/idgenerator.js":1138,"./lib/timers.js":1139}],1138:[function(require,module,exports){
+module.exports=require(36)
+},{"js-ext/extra/hashmap.js":1120,"polyfill/polyfill-base.js":1142}],1139:[function(require,module,exports){
+module.exports=require(37)
+},{"polyfill/polyfill-base.js":1142}],1140:[function(require,module,exports){
+module.exports=require(19)
+},{}],1141:[function(require,module,exports){
+module.exports=require(20)
+},{}],1142:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":1140,"./lib/window.console.js":1141}],1143:[function(require,module,exports){
+module.exports=require(66)
+},{"./lib/sizes.js":1144}],1144:[function(require,module,exports){
+module.exports=require(67)
+},{"js-ext/extra/hashmap.js":1145,"js-ext/lib/object.js":1146}],1145:[function(require,module,exports){
+module.exports=require(17)
+},{}],1146:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":1145,"polyfill/polyfill-base.js":1149}],1147:[function(require,module,exports){
+module.exports=require(19)
+},{}],1148:[function(require,module,exports){
+module.exports=require(20)
+},{}],1149:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":1147,"./lib/window.console.js":1148}],1150:[function(require,module,exports){
+module.exports=require(73)
+},{"js-ext/extra/hashmap.js":1120,"js-ext/lib/object.js":1123,"js-ext/lib/string.js":1125,"polyfill":1136,"polyfill/extra/transition.js":1131,"polyfill/extra/vendorCSS.js":1133}],1151:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":1120,"js-ext/lib/object.js":1123,"polyfill":1136}],1152:[function(require,module,exports){
+module.exports=require(75)
+},{"js-ext/extra/hashmap.js":1120,"js-ext/lib/object.js":1123,"js-ext/lib/string.js":1125,"polyfill":1136}],1153:[function(require,module,exports){
+module.exports=require(76)
+},{"../css/element.css":1118,"./attribute-extractor.js":1150,"./element-array.js":1151,"./html-parser.js":1154,"./node-parser.js":1155,"./vdom-ns.js":1156,"./vnode.js":1157,"js-ext/extra/hashmap.js":1120,"js-ext/lib/object.js":1123,"js-ext/lib/promise.js":1124,"js-ext/lib/string.js":1125,"polyfill":1136,"polyfill/extra/transition.js":1131,"polyfill/extra/transitionend.js":1132,"polyfill/extra/vendorCSS.js":1133,"utils":1137,"window-ext":1143}],1154:[function(require,module,exports){
+module.exports=require(77)
+},{"./attribute-extractor.js":1150,"./vdom-ns.js":1156,"js-ext/extra/hashmap.js":1120,"js-ext/lib/object.js":1123,"polyfill":1136}],1155:[function(require,module,exports){
+module.exports=require(78)
+},{"./attribute-extractor.js":1150,"./vdom-ns.js":1156,"./vnode.js":1157,"js-ext/extra/hashmap.js":1120,"js-ext/lib/object.js":1123,"polyfill":1136}],1156:[function(require,module,exports){
+module.exports=require(79)
+},{"js-ext/extra/hashmap.js":1120,"js-ext/lib/object.js":1123,"polyfill":1136}],1157:[function(require,module,exports){
+module.exports=require(80)
+},{"./attribute-extractor.js":1150,"./html-parser.js":1154,"./vdom-ns.js":1156,"js-ext/extra/hashmap.js":1120,"js-ext/extra/lightmap.js":1121,"js-ext/lib/array.js":1122,"js-ext/lib/object.js":1123,"js-ext/lib/string.js":1125,"polyfill":1136,"utils/lib/timers.js":1139}],1158:[function(require,module,exports){
+module.exports=require(81)
+},{"./partials/extend-document.js":1152,"./partials/extend-element.js":1153,"./partials/node-parser.js":1155,"js-ext/extra/hashmap.js":1120,"js-ext/lib/object.js":1123,"utils/lib/timers.js":1139}],1159:[function(require,module,exports){
+module.exports=require(12)
+},{"js-ext/extra/hashmap.js":1161,"js-ext/lib/object.js":1162,"polyfill/polyfill-base.js":1168}],1160:[function(require,module,exports){
+module.exports=require(168)
+},{"../event-base.js":1159,"js-ext/extra/hashmap.js":1161}],1161:[function(require,module,exports){
+module.exports=require(17)
+},{}],1162:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":1161,"polyfill/polyfill-base.js":1165}],1163:[function(require,module,exports){
+module.exports=require(19)
+},{}],1164:[function(require,module,exports){
+module.exports=require(20)
+},{}],1165:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":1163,"./lib/window.console.js":1164}],1166:[function(require,module,exports){
+module.exports=require(19)
+},{}],1167:[function(require,module,exports){
+module.exports=require(20)
+},{}],1168:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":1166,"./lib/window.console.js":1167}],1169:[function(require,module,exports){
+module.exports=require(177)
+},{"js-ext":1171,"js-ext/extra/hashmap.js":1170,"polyfill/polyfill-base.js":1183,"utils":1184}],1170:[function(require,module,exports){
+module.exports=require(17)
+},{}],1171:[function(require,module,exports){
+module.exports=require(83)
+},{"./lib/array.js":1172,"./lib/function.js":1173,"./lib/json.js":1174,"./lib/object.js":1175,"./lib/promise.js":1176,"./lib/string.js":1177}],1172:[function(require,module,exports){
+module.exports=require(26)
+},{"polyfill/polyfill-base.js":1180}],1173:[function(require,module,exports){
+module.exports=require(85)
+},{"polyfill/polyfill-base.js":1180}],1174:[function(require,module,exports){
+module.exports=require(86)
+},{"polyfill/polyfill-base.js":1180}],1175:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":1170,"polyfill/polyfill-base.js":1180}],1176:[function(require,module,exports){
+module.exports=require(47)
+},{"polyfill":1180}],1177:[function(require,module,exports){
+module.exports=require(28)
+},{}],1178:[function(require,module,exports){
+module.exports=require(19)
+},{}],1179:[function(require,module,exports){
+module.exports=require(20)
+},{}],1180:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":1178,"./lib/window.console.js":1179}],1181:[function(require,module,exports){
+module.exports=require(19)
+},{}],1182:[function(require,module,exports){
+module.exports=require(20)
+},{}],1183:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":1181,"./lib/window.console.js":1182}],1184:[function(require,module,exports){
+module.exports=require(35)
+},{"./lib/idgenerator.js":1185,"./lib/timers.js":1186}],1185:[function(require,module,exports){
+module.exports=require(36)
+},{"js-ext/extra/hashmap.js":1170,"polyfill/polyfill-base.js":1189}],1186:[function(require,module,exports){
+module.exports=require(37)
+},{"polyfill/polyfill-base.js":1189}],1187:[function(require,module,exports){
+module.exports=require(19)
+},{}],1188:[function(require,module,exports){
+module.exports=require(20)
+},{}],1189:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":1187,"./lib/window.console.js":1188}],1190:[function(require,module,exports){
+module.exports=require(16)
+},{"../lib/object.js":1192,"js-ext/extra/hashmap.js":1191,"polyfill/polyfill-base.js":1197}],1191:[function(require,module,exports){
+module.exports=require(17)
+},{}],1192:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":1191,"polyfill/polyfill-base.js":1197}],1193:[function(require,module,exports){
+module.exports=require(47)
+},{"polyfill":1197}],1194:[function(require,module,exports){
+module.exports=require(28)
+},{}],1195:[function(require,module,exports){
+module.exports=require(19)
+},{}],1196:[function(require,module,exports){
+module.exports=require(20)
+},{}],1197:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":1195,"./lib/window.console.js":1196}],1198:[function(require,module,exports){
+module.exports=require(19)
+},{}],1199:[function(require,module,exports){
+module.exports=require(20)
+},{}],1200:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":1198,"./lib/window.console.js":1199}],1201:[function(require,module,exports){
+module.exports=require(37)
+},{"polyfill/polyfill-base.js":1204}],1202:[function(require,module,exports){
+module.exports=require(19)
+},{}],1203:[function(require,module,exports){
+module.exports=require(20)
+},{}],1204:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":1202,"./lib/window.console.js":1203}],1205:[function(require,module,exports){
+module.exports=require(41)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1206:[function(require,module,exports){
+module.exports=require(16)
+},{"../lib/object.js":1210,"js-ext/extra/hashmap.js":1207,"polyfill/polyfill-base.js":1216}],1207:[function(require,module,exports){
+module.exports=require(17)
+},{}],1208:[function(require,module,exports){
+module.exports=require(44)
+},{"../lib/array.js":1209,"../lib/object.js":1210,"./classes.js":1206,"js-ext/extra/hashmap.js":1207,"polyfill/lib/weakmap.js":1214}],1209:[function(require,module,exports){
+module.exports=require(26)
+},{"polyfill/polyfill-base.js":1216}],1210:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":1207,"polyfill/polyfill-base.js":1216}],1211:[function(require,module,exports){
+module.exports=require(47)
+},{"polyfill":1216}],1212:[function(require,module,exports){
+module.exports=require(28)
+},{}],1213:[function(require,module,exports){
+module.exports=require(19)
+},{}],1214:[function(require,module,exports){
+module.exports=require(50)
+},{}],1215:[function(require,module,exports){
+module.exports=require(20)
+},{}],1216:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":1213,"./lib/window.console.js":1215}],1217:[function(require,module,exports){
+module.exports=require(53)
+},{}],1218:[function(require,module,exports){
+module.exports=require(54)
+},{"../bin/local-hashmap.js":1217}],1219:[function(require,module,exports){
+module.exports=require(55)
+},{"../bin/local-hashmap.js":1217}],1220:[function(require,module,exports){
+module.exports=require(56)
+},{"../bin/local-hashmap.js":1217}],1221:[function(require,module,exports){
+module.exports=require(19)
+},{}],1222:[function(require,module,exports){
+module.exports=require(20)
+},{}],1223:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":1221,"./lib/window.console.js":1222}],1224:[function(require,module,exports){
+module.exports=require(35)
+},{"./lib/idgenerator.js":1225,"./lib/timers.js":1226}],1225:[function(require,module,exports){
+module.exports=require(36)
+},{"js-ext/extra/hashmap.js":1207,"polyfill/polyfill-base.js":1229}],1226:[function(require,module,exports){
+module.exports=require(37)
+},{"polyfill/polyfill-base.js":1229}],1227:[function(require,module,exports){
+module.exports=require(19)
+},{}],1228:[function(require,module,exports){
+module.exports=require(20)
+},{}],1229:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":1227,"./lib/window.console.js":1228}],1230:[function(require,module,exports){
+module.exports=require(66)
+},{"./lib/sizes.js":1231}],1231:[function(require,module,exports){
+module.exports=require(67)
+},{"js-ext/extra/hashmap.js":1232,"js-ext/lib/object.js":1233}],1232:[function(require,module,exports){
+module.exports=require(17)
+},{}],1233:[function(require,module,exports){
+module.exports=require(18)
+},{"js-ext/extra/hashmap.js":1232,"polyfill/polyfill-base.js":1236}],1234:[function(require,module,exports){
+module.exports=require(19)
+},{}],1235:[function(require,module,exports){
+module.exports=require(20)
+},{}],1236:[function(require,module,exports){
+module.exports=require(21)
+},{"./lib/matchesselector.js":1234,"./lib/window.console.js":1235}],1237:[function(require,module,exports){
+module.exports=require(73)
+},{"js-ext/extra/hashmap.js":1207,"js-ext/lib/object.js":1210,"js-ext/lib/string.js":1212,"polyfill":1223,"polyfill/extra/transition.js":1218,"polyfill/extra/vendorCSS.js":1220}],1238:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":1207,"js-ext/lib/object.js":1210,"polyfill":1223}],1239:[function(require,module,exports){
+module.exports=require(75)
+},{"js-ext/extra/hashmap.js":1207,"js-ext/lib/object.js":1210,"js-ext/lib/string.js":1212,"polyfill":1223}],1240:[function(require,module,exports){
+module.exports=require(76)
+},{"../css/element.css":1205,"./attribute-extractor.js":1237,"./element-array.js":1238,"./html-parser.js":1241,"./node-parser.js":1242,"./vdom-ns.js":1243,"./vnode.js":1244,"js-ext/extra/hashmap.js":1207,"js-ext/lib/object.js":1210,"js-ext/lib/promise.js":1211,"js-ext/lib/string.js":1212,"polyfill":1223,"polyfill/extra/transition.js":1218,"polyfill/extra/transitionend.js":1219,"polyfill/extra/vendorCSS.js":1220,"utils":1224,"window-ext":1230}],1241:[function(require,module,exports){
+module.exports=require(77)
+},{"./attribute-extractor.js":1237,"./vdom-ns.js":1243,"js-ext/extra/hashmap.js":1207,"js-ext/lib/object.js":1210,"polyfill":1223}],1242:[function(require,module,exports){
+module.exports=require(78)
+},{"./attribute-extractor.js":1237,"./vdom-ns.js":1243,"./vnode.js":1244,"js-ext/extra/hashmap.js":1207,"js-ext/lib/object.js":1210,"polyfill":1223}],1243:[function(require,module,exports){
+module.exports=require(79)
+},{"js-ext/extra/hashmap.js":1207,"js-ext/lib/object.js":1210,"polyfill":1223}],1244:[function(require,module,exports){
+module.exports=require(80)
+},{"./attribute-extractor.js":1237,"./html-parser.js":1241,"./vdom-ns.js":1243,"js-ext/extra/hashmap.js":1207,"js-ext/extra/lightmap.js":1208,"js-ext/lib/array.js":1209,"js-ext/lib/object.js":1210,"js-ext/lib/string.js":1212,"polyfill":1223,"utils/lib/timers.js":1226}],1245:[function(require,module,exports){
+module.exports=require(81)
+},{"./partials/extend-document.js":1239,"./partials/extend-element.js":1240,"./partials/node-parser.js":1242,"js-ext/extra/hashmap.js":1207,"js-ext/lib/object.js":1210,"utils/lib/timers.js":1226}],1246:[function(require,module,exports){
 (function (process,Buffer){
 "use strict";
 
@@ -24021,7 +25907,7 @@ exports.XMLHttpRequest = function() {
 };
 
 }).call(this,require('_process'),require("buffer").Buffer)
-},{"_process":772,"buffer":761,"child_process":760,"fs":760,"http":765,"https":769,"url":790,"xmldom":738}],652:[function(require,module,exports){
+},{"_process":1365,"buffer":1354,"child_process":1353,"fs":1353,"http":1358,"https":1362,"url":1383,"xmldom":1332}],1247:[function(require,module,exports){
 "use strict";
 
 /**
@@ -24043,8 +25929,8 @@ var xmlhttprequest = require('./lib/XMLHttpRequest.js').XMLHttpRequest,
     xmlDOMParser = require('xmldom').DOMParser,
 	Url = require('url'),
     used = createHashMap(),
-    vNodeParser = /(?:(^|#|\.)([^#\.\[\]]+))|(\[.+?\])/g,
-    count, doc, win, getHTML, reset;
+    // vNodeParser = /(?:(^|#|\.)([^#\.\[\]]+))|(\[.+?\])/g,
+    count, doc, win, getHTML, reset, EventTypes;
     EventTypes = createHashMap({
 		MouseEvents: function () {
 			this.initMouseEvent = function (type, bubbles, cancelable, view, detail,
@@ -24183,9 +26069,9 @@ win = {
 		},
 		navigate: function (url) {
 			var u = Url.parse(url, false, true);
-			window.location.search = u.search || '';
-			window.location.pathname = u.pathname || '';
-			window.location.hash = u.hash || '';
+			win.location.search = u.search || '';
+			win.location.pathname = u.pathname || '';
+			win.location.hash = u.hash || '';
 		}
 	},
 
@@ -24234,21 +26120,21 @@ reset = function () {
 reset();
 
 module.exports = win;
-},{"./lib/XMLHttpRequest.js":651,"js-ext/extra/hashmap.js":653,"js-ext/lib/array.js":654,"polyfill/lib/window.console.js":658,"url":790,"xmldom":738}],653:[function(require,module,exports){
+},{"./lib/XMLHttpRequest.js":1246,"js-ext/extra/hashmap.js":1248,"js-ext/lib/array.js":1249,"polyfill/lib/window.console.js":1253,"url":1383,"xmldom":1332}],1248:[function(require,module,exports){
 module.exports=require(17)
-},{}],654:[function(require,module,exports){
+},{}],1249:[function(require,module,exports){
 module.exports=require(26)
-},{"polyfill/polyfill-base.js":657}],655:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1252}],1250:[function(require,module,exports){
 module.exports=require(19)
-},{}],656:[function(require,module,exports){
+},{}],1251:[function(require,module,exports){
 module.exports=require(20)
-},{}],657:[function(require,module,exports){
+},{}],1252:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":655,"./lib/window.console.js":656}],658:[function(require,module,exports){
+},{"./lib/matchesselector.js":1250,"./lib/window.console.js":1251}],1253:[function(require,module,exports){
 module.exports=require(20)
-},{}],659:[function(require,module,exports){
+},{}],1254:[function(require,module,exports){
 module.exports=require(19)
-},{}],660:[function(require,module,exports){
+},{}],1255:[function(require,module,exports){
 (function (global){
 /*
  * Copyright 2012 The Polymer Authors. All rights reserved.
@@ -24834,164 +26720,162 @@ module.exports=require(19)
 
 }(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],661:[function(require,module,exports){
+},{}],1256:[function(require,module,exports){
 require('ypromise');
-},{"ypromise":741}],662:[function(require,module,exports){
+},{"ypromise":1335}],1257:[function(require,module,exports){
 module.exports=require(50)
-},{}],663:[function(require,module,exports){
+},{}],1258:[function(require,module,exports){
 module.exports=require(20)
-},{}],664:[function(require,module,exports){
+},{}],1259:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":659,"./lib/window.console.js":663}],665:[function(require,module,exports){
+},{"./lib/matchesselector.js":1254,"./lib/window.console.js":1258}],1260:[function(require,module,exports){
 require('./polyfill-base.js');
 require('./lib/promise.js');
 require('./lib/weakmap.js');
 require('./lib/mutationobserver.js'); // needs weakmap
-},{"./lib/mutationobserver.js":660,"./lib/promise.js":661,"./lib/weakmap.js":662,"./polyfill-base.js":664}],666:[function(require,module,exports){
+},{"./lib/mutationobserver.js":1255,"./lib/promise.js":1256,"./lib/weakmap.js":1257,"./polyfill-base.js":1259}],1261:[function(require,module,exports){
 module.exports=require(17)
-},{}],667:[function(require,module,exports){
+},{}],1262:[function(require,module,exports){
 module.exports=require(18)
-},{"js-ext/extra/hashmap.js":666,"polyfill/polyfill-base.js":670}],668:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1261,"polyfill/polyfill-base.js":1265}],1263:[function(require,module,exports){
 module.exports=require(19)
-},{}],669:[function(require,module,exports){
+},{}],1264:[function(require,module,exports){
 module.exports=require(20)
-},{}],670:[function(require,module,exports){
+},{}],1265:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":668,"./lib/window.console.js":669}],671:[function(require,module,exports){
+},{"./lib/matchesselector.js":1263,"./lib/window.console.js":1264}],1266:[function(require,module,exports){
 module.exports=require(19)
-},{}],672:[function(require,module,exports){
+},{}],1267:[function(require,module,exports){
 module.exports=require(20)
-},{}],673:[function(require,module,exports){
+},{}],1268:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":671,"./lib/window.console.js":672}],674:[function(require,module,exports){
-module.exports=require(105)
-},{"js-ext/extra/hashmap.js":666,"js-ext/lib/object.js":667,"polyfill":673}],675:[function(require,module,exports){
+},{"./lib/matchesselector.js":1266,"./lib/window.console.js":1267}],1269:[function(require,module,exports){
+module.exports=require(265)
+},{"js-ext/extra/hashmap.js":1261,"js-ext/lib/object.js":1262,"polyfill":1268}],1270:[function(require,module,exports){
 module.exports=require(35)
-},{"./lib/idgenerator.js":676,"./lib/timers.js":677}],676:[function(require,module,exports){
+},{"./lib/idgenerator.js":1271,"./lib/timers.js":1272}],1271:[function(require,module,exports){
 module.exports=require(36)
-},{"js-ext/extra/hashmap.js":637,"polyfill/polyfill-base.js":680}],677:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1071,"polyfill/polyfill-base.js":1275}],1272:[function(require,module,exports){
 module.exports=require(37)
-},{"polyfill/polyfill-base.js":680}],678:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1275}],1273:[function(require,module,exports){
 module.exports=require(19)
-},{}],679:[function(require,module,exports){
+},{}],1274:[function(require,module,exports){
 module.exports=require(20)
-},{}],680:[function(require,module,exports){
+},{}],1275:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":678,"./lib/window.console.js":679}],681:[function(require,module,exports){
+},{"./lib/matchesselector.js":1273,"./lib/window.console.js":1274}],1276:[function(require,module,exports){
 module.exports=require(41)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],682:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1277:[function(require,module,exports){
 module.exports=require(16)
-},{"../lib/object.js":686,"js-ext/extra/hashmap.js":683,"polyfill/polyfill-base.js":692}],683:[function(require,module,exports){
+},{"../lib/object.js":1281,"js-ext/extra/hashmap.js":1278,"polyfill/polyfill-base.js":1287}],1278:[function(require,module,exports){
 module.exports=require(17)
-},{}],684:[function(require,module,exports){
+},{}],1279:[function(require,module,exports){
 module.exports=require(44)
-},{"../lib/array.js":685,"../lib/object.js":686,"./classes.js":682,"js-ext/extra/hashmap.js":683,"polyfill/lib/weakmap.js":690}],685:[function(require,module,exports){
+},{"../lib/array.js":1280,"../lib/object.js":1281,"./classes.js":1277,"js-ext/extra/hashmap.js":1278,"polyfill/lib/weakmap.js":1285}],1280:[function(require,module,exports){
 module.exports=require(26)
-},{"polyfill/polyfill-base.js":692}],686:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1287}],1281:[function(require,module,exports){
 module.exports=require(18)
-},{"js-ext/extra/hashmap.js":683,"polyfill/polyfill-base.js":692}],687:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1278,"polyfill/polyfill-base.js":1287}],1282:[function(require,module,exports){
 module.exports=require(47)
-},{"polyfill":692}],688:[function(require,module,exports){
+},{"polyfill":1287}],1283:[function(require,module,exports){
 module.exports=require(28)
-},{}],689:[function(require,module,exports){
+},{}],1284:[function(require,module,exports){
 module.exports=require(19)
-},{}],690:[function(require,module,exports){
+},{}],1285:[function(require,module,exports){
 module.exports=require(50)
-},{}],691:[function(require,module,exports){
+},{}],1286:[function(require,module,exports){
 module.exports=require(20)
-},{}],692:[function(require,module,exports){
+},{}],1287:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":689,"./lib/window.console.js":691}],693:[function(require,module,exports){
+},{"./lib/matchesselector.js":1284,"./lib/window.console.js":1286}],1288:[function(require,module,exports){
 module.exports=require(53)
-},{}],694:[function(require,module,exports){
+},{}],1289:[function(require,module,exports){
 module.exports=require(54)
-},{"../bin/local-hashmap.js":693}],695:[function(require,module,exports){
+},{"../bin/local-hashmap.js":1288}],1290:[function(require,module,exports){
 module.exports=require(55)
-},{"../bin/local-hashmap.js":693}],696:[function(require,module,exports){
+},{"../bin/local-hashmap.js":1288}],1291:[function(require,module,exports){
 module.exports=require(56)
-},{"../bin/local-hashmap.js":693}],697:[function(require,module,exports){
+},{"../bin/local-hashmap.js":1288}],1292:[function(require,module,exports){
 module.exports=require(19)
-},{}],698:[function(require,module,exports){
+},{}],1293:[function(require,module,exports){
 module.exports=require(20)
-},{}],699:[function(require,module,exports){
+},{}],1294:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":697,"./lib/window.console.js":698}],700:[function(require,module,exports){
+},{"./lib/matchesselector.js":1292,"./lib/window.console.js":1293}],1295:[function(require,module,exports){
 module.exports=require(35)
-},{"./lib/idgenerator.js":701,"./lib/timers.js":702}],701:[function(require,module,exports){
+},{"./lib/idgenerator.js":1296,"./lib/timers.js":1297}],1296:[function(require,module,exports){
 module.exports=require(36)
-},{"js-ext/extra/hashmap.js":683,"polyfill/polyfill-base.js":705}],702:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1278,"polyfill/polyfill-base.js":1300}],1297:[function(require,module,exports){
 module.exports=require(37)
-},{"polyfill/polyfill-base.js":705}],703:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1300}],1298:[function(require,module,exports){
 module.exports=require(19)
-},{}],704:[function(require,module,exports){
+},{}],1299:[function(require,module,exports){
 module.exports=require(20)
-},{}],705:[function(require,module,exports){
+},{}],1300:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":703,"./lib/window.console.js":704}],706:[function(require,module,exports){
+},{"./lib/matchesselector.js":1298,"./lib/window.console.js":1299}],1301:[function(require,module,exports){
 module.exports=require(66)
-},{"./lib/sizes.js":707}],707:[function(require,module,exports){
+},{"./lib/sizes.js":1302}],1302:[function(require,module,exports){
 module.exports=require(67)
-},{"js-ext/extra/hashmap.js":708,"js-ext/lib/object.js":709}],708:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1303,"js-ext/lib/object.js":1304}],1303:[function(require,module,exports){
 module.exports=require(17)
-},{}],709:[function(require,module,exports){
+},{}],1304:[function(require,module,exports){
 module.exports=require(18)
-},{"js-ext/extra/hashmap.js":708,"polyfill/polyfill-base.js":712}],710:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1303,"polyfill/polyfill-base.js":1307}],1305:[function(require,module,exports){
 module.exports=require(19)
-},{}],711:[function(require,module,exports){
+},{}],1306:[function(require,module,exports){
 module.exports=require(20)
-},{}],712:[function(require,module,exports){
+},{}],1307:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":710,"./lib/window.console.js":711}],713:[function(require,module,exports){
+},{"./lib/matchesselector.js":1305,"./lib/window.console.js":1306}],1308:[function(require,module,exports){
 module.exports=require(73)
-},{"js-ext/extra/hashmap.js":683,"js-ext/lib/object.js":686,"js-ext/lib/string.js":688,"polyfill":699,"polyfill/extra/transition.js":694,"polyfill/extra/vendorCSS.js":696}],714:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1278,"js-ext/lib/object.js":1281,"js-ext/lib/string.js":1283,"polyfill":1294,"polyfill/extra/transition.js":1289,"polyfill/extra/vendorCSS.js":1291}],1309:[function(require,module,exports){
 module.exports=require(74)
-},{"js-ext/extra/hashmap.js":683,"js-ext/lib/object.js":686,"polyfill":699}],715:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1278,"js-ext/lib/object.js":1281,"polyfill":1294}],1310:[function(require,module,exports){
 module.exports=require(75)
-},{"js-ext/extra/hashmap.js":683,"js-ext/lib/object.js":686,"js-ext/lib/string.js":688,"polyfill":699}],716:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1278,"js-ext/lib/object.js":1281,"js-ext/lib/string.js":1283,"polyfill":1294}],1311:[function(require,module,exports){
 module.exports=require(76)
-},{"js-ext/extra/hashmap.js":683,"js-ext/lib/object.js":686,"js-ext/lib/string.js":688,"polyfill":699}],717:[function(require,module,exports){
+},{"../css/element.css":1276,"./attribute-extractor.js":1308,"./element-array.js":1309,"./html-parser.js":1312,"./node-parser.js":1313,"./vdom-ns.js":1314,"./vnode.js":1315,"js-ext/extra/hashmap.js":1278,"js-ext/lib/object.js":1281,"js-ext/lib/promise.js":1282,"js-ext/lib/string.js":1283,"polyfill":1294,"polyfill/extra/transition.js":1289,"polyfill/extra/transitionend.js":1290,"polyfill/extra/vendorCSS.js":1291,"utils":1295,"window-ext":1301}],1312:[function(require,module,exports){
 module.exports=require(77)
-},{"../css/element.css":681,"./attribute-extractor.js":713,"./element-array.js":714,"./html-parser.js":718,"./node-parser.js":719,"./vdom-ns.js":720,"./vnode.js":721,"js-ext/extra/hashmap.js":683,"js-ext/lib/object.js":686,"js-ext/lib/promise.js":687,"js-ext/lib/string.js":688,"polyfill":699,"polyfill/extra/transition.js":694,"polyfill/extra/transitionend.js":695,"polyfill/extra/vendorCSS.js":696,"utils":700,"window-ext":706}],718:[function(require,module,exports){
+},{"./attribute-extractor.js":1308,"./vdom-ns.js":1314,"js-ext/extra/hashmap.js":1278,"js-ext/lib/object.js":1281,"polyfill":1294}],1313:[function(require,module,exports){
 module.exports=require(78)
-},{"./attribute-extractor.js":713,"./vdom-ns.js":720,"js-ext/extra/hashmap.js":683,"js-ext/lib/object.js":686,"polyfill":699}],719:[function(require,module,exports){
+},{"./attribute-extractor.js":1308,"./vdom-ns.js":1314,"./vnode.js":1315,"js-ext/extra/hashmap.js":1278,"js-ext/lib/object.js":1281,"polyfill":1294}],1314:[function(require,module,exports){
 module.exports=require(79)
-},{"./attribute-extractor.js":713,"./vdom-ns.js":720,"./vnode.js":721,"js-ext/extra/hashmap.js":683,"js-ext/lib/object.js":686,"polyfill":699}],720:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1278,"js-ext/lib/object.js":1281,"polyfill":1294}],1315:[function(require,module,exports){
 module.exports=require(80)
-},{"js-ext/extra/hashmap.js":683,"js-ext/lib/object.js":686,"polyfill":699}],721:[function(require,module,exports){
+},{"./attribute-extractor.js":1308,"./html-parser.js":1312,"./vdom-ns.js":1314,"js-ext/extra/hashmap.js":1278,"js-ext/extra/lightmap.js":1279,"js-ext/lib/array.js":1280,"js-ext/lib/object.js":1281,"js-ext/lib/string.js":1283,"polyfill":1294,"utils/lib/timers.js":1297}],1316:[function(require,module,exports){
 module.exports=require(81)
-},{"./attribute-extractor.js":713,"./html-parser.js":718,"./vdom-ns.js":720,"js-ext/extra/hashmap.js":683,"js-ext/extra/lightmap.js":684,"js-ext/lib/array.js":685,"js-ext/lib/object.js":686,"js-ext/lib/string.js":688,"polyfill":699,"utils/lib/timers.js":702}],722:[function(require,module,exports){
-module.exports=require(82)
-},{"./partials/element-plugin.js":715,"./partials/extend-document.js":716,"./partials/extend-element.js":717,"./partials/node-parser.js":719,"js-ext/extra/hashmap.js":683,"js-ext/lib/object.js":686,"utils/lib/timers.js":702}],723:[function(require,module,exports){
+},{"./partials/extend-document.js":1310,"./partials/extend-element.js":1311,"./partials/node-parser.js":1313,"js-ext/extra/hashmap.js":1278,"js-ext/lib/object.js":1281,"utils/lib/timers.js":1297}],1317:[function(require,module,exports){
 module.exports=require(66)
-},{"./lib/sizes.js":724}],724:[function(require,module,exports){
+},{"./lib/sizes.js":1318}],1318:[function(require,module,exports){
 module.exports=require(67)
-},{"js-ext/extra/hashmap.js":725,"js-ext/lib/object.js":726}],725:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1319,"js-ext/lib/object.js":1320}],1319:[function(require,module,exports){
 module.exports=require(17)
-},{}],726:[function(require,module,exports){
+},{}],1320:[function(require,module,exports){
 module.exports=require(18)
-},{"js-ext/extra/hashmap.js":725,"polyfill/polyfill-base.js":729}],727:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1319,"polyfill/polyfill-base.js":1323}],1321:[function(require,module,exports){
 module.exports=require(19)
-},{}],728:[function(require,module,exports){
+},{}],1322:[function(require,module,exports){
 module.exports=require(20)
-},{}],729:[function(require,module,exports){
+},{}],1323:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":727,"./lib/window.console.js":728}],730:[function(require,module,exports){
-module.exports=require(651)
-},{"_process":772,"buffer":761,"child_process":760,"fs":760,"http":765,"https":769,"url":790,"xmldom":738}],731:[function(require,module,exports){
-module.exports=require(652)
-},{"./lib/XMLHttpRequest.js":730,"js-ext/extra/hashmap.js":732,"js-ext/lib/array.js":733,"polyfill/lib/window.console.js":737,"url":790,"xmldom":738}],732:[function(require,module,exports){
+},{"./lib/matchesselector.js":1321,"./lib/window.console.js":1322}],1324:[function(require,module,exports){
+module.exports=require(1246)
+},{"_process":1365,"buffer":1354,"child_process":1353,"fs":1353,"http":1358,"https":1362,"url":1383,"xmldom":1332}],1325:[function(require,module,exports){
+module.exports=require(1247)
+},{"./lib/XMLHttpRequest.js":1324,"js-ext/extra/hashmap.js":1326,"js-ext/lib/array.js":1327,"polyfill/lib/window.console.js":1331,"url":1383,"xmldom":1332}],1326:[function(require,module,exports){
 module.exports=require(17)
-},{}],733:[function(require,module,exports){
+},{}],1327:[function(require,module,exports){
 module.exports=require(26)
-},{"polyfill/polyfill-base.js":736}],734:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1330}],1328:[function(require,module,exports){
 module.exports=require(19)
-},{}],735:[function(require,module,exports){
+},{}],1329:[function(require,module,exports){
 module.exports=require(20)
-},{}],736:[function(require,module,exports){
+},{}],1330:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":734,"./lib/window.console.js":735}],737:[function(require,module,exports){
+},{"./lib/matchesselector.js":1328,"./lib/window.console.js":1329}],1331:[function(require,module,exports){
 module.exports=require(20)
-},{}],738:[function(require,module,exports){
+},{}],1332:[function(require,module,exports){
 function DOMParser(options){
 	this.options = options ||{locator:{}};
 	
@@ -25248,7 +27132,7 @@ if(typeof require == 'function'){
 	exports.DOMParser = DOMParser;
 }
 
-},{"./dom":739,"./sax":740}],739:[function(require,module,exports){
+},{"./dom":1333,"./sax":1334}],1333:[function(require,module,exports){
 /*
  * DOM Level 2
  * Object DOMException
@@ -26388,7 +28272,7 @@ if(typeof require == 'function'){
 	exports.XMLSerializer = XMLSerializer;
 }
 
-},{}],740:[function(require,module,exports){
+},{}],1334:[function(require,module,exports){
 //[4]   	NameStartChar	   ::=   	":" | [A-Z] | "_" | [a-z] | [#xC0-#xD6] | [#xD8-#xF6] | [#xF8-#x2FF] | [#x370-#x37D] | [#x37F-#x1FFF] | [#x200C-#x200D] | [#x2070-#x218F] | [#x2C00-#x2FEF] | [#x3001-#xD7FF] | [#xF900-#xFDCF] | [#xFDF0-#xFFFD] | [#x10000-#xEFFFF]
 //[4a]   	NameChar	   ::=   	NameStartChar | "-" | "." | [0-9] | #xB7 | [#x0300-#x036F] | [#x203F-#x2040]
 //[5]   	Name	   ::=   	NameStartChar (NameChar)*
@@ -26974,7 +28858,7 @@ if(typeof require == 'function'){
 }
 
 
-},{}],741:[function(require,module,exports){
+},{}],1335:[function(require,module,exports){
 (function (process,global){
 /*
 Copyright 2013 Yahoo! Inc. All rights reserved.
@@ -27590,9 +29474,9 @@ http://yuilibrary.com/license/
 
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":772}],742:[function(require,module,exports){
+},{"_process":1365}],1336:[function(require,module,exports){
 var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-button;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-button:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-button:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\ni-button {\n    margin: 0;\n    display: inline-block;\n    *display: inline; /*IE 6/7*/\n    zoom: 1;\n    position: relative;\n    vertical-align: middle;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-button.i-primary >button,\ni-button.i-focussed >button {\n    background-color: rgb(0, 120, 231);\n    color: #fff;\n}\n\n/*csslint outline-none:false*/\n\ni-button >button {\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    -khtml-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    position: relative;\n    padding: 0.5em 1em;\n    color: inherit; /* 1 */\n    font: inherit; /* 2 */\n    margin: 0; /* 3 */\n    overflow: visible;\n    text-transform: none;\n    -webkit-appearance: button; /* 2 */\n    line-height: normal;\n    white-space: nowrap;\n    vertical-align: baseline;\n    text-align: center;\n    cursor: pointer;\n    -webkit-user-drag: none;\n    -webkit-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    font-family: inherit;\n    font-size: 100%;\n    color: #444; /* rgba not supported (IE 8) */\n    color: rgba(0, 0, 0, 0.80); /* rgba supported */\n    border: 1px solid #999;  /*IE 6/7/8*/\n    border: none rgba(0, 0, 0, 0);  /*IE9 + everything else*/\n    background-color: #E6E6E6;\n    text-decoration: none;\n    border-radius: 2px;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n}\n\n\ni-button.i-hover >button,\ni-button >button:hover,\ni-button >button:focus {\n    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#00000000', endColorstr='#1a000000',GradientType=0);\n    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(transparent), color-stop(40%, rgba(0,0,0, 0.05)), to(rgba(0,0,0, 0.10)));\n    background-image: -webkit-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: -moz-linear-gradient(top, rgba(0,0,0, 0.05) 0%, rgba(0,0,0, 0.10));\n    background-image: -o-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n}\n\ni-button >button:focus {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.5) inset;\n}\n\ni-button.i-hover >button,\ni-button >button:hover,\ni-button.i-hover >button:focus,\ni-button >button:hover:focus {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.7) inset;\n}\n\ni-button >button:focus {\n    outline: 0;\n}\ni-button.i-active >button,\ni-button >button.pure-button-active, /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-button >button:active {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.4) inset, 0 0 6px rgba(0,0,0, 0.2) inset;\n}\n\ni-button.i-disabled >button,\ni-button[disabled=\"true\"] >button,\ni-button.i-disabled >button:active,\ni-button[disabled=\"true\"] >button:active,\ni-button.i-disabled >button.pure-button-active, /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-button[disabled=\"true\"] >button.pure-button-active,\ni-button.i-disabled.i-active >button,\ni-button.i-active[disabled=\"true\"] >button,\ni-button.i-disabled >button:focus,\ni-button[disabled=\"true\"] >button:focus,\ni-button.i-disabled.focussed >button,\ni-button.focussed[disabled=\"true\"] >button,\ni-button.i-disabled >button:hover,\ni-button[disabled=\"true\"] >button:hover {\n    border: none;\n    background-image: none;\n    filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);\n    filter: alpha(opacity=60);\n    -khtml-opacity: 0.60;\n    -moz-opacity: 0.60;\n    opacity: 0.60;\n    cursor: not-allowed;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n    cursor: default;\n}\n\ni-button.i-rounded >button {\n    border-radius: 0.3em;\n}\n\ni-button.i-heavyrounded >button {\n    border-radius: 0.5em;\n}\n\ni-button.i-oval >button {\n    border-radius: 50%;\n}\n\ni-button.i-halfoval >button {\n    border-radius: 25%;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],743:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1337:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 
@@ -27661,8 +29545,10 @@ module.exports = function (window) {
                 // might have been defined when modeldata was boundend. Therefore, use `defineWhenUndefined`
 
                 element.defineWhenUndefined('text', (buttonText==='') ? '&nbsp;' : buttonText); // sets element.model.someprop = somevalue; when not defined yet
-                // set the content:
-                element.setHTML('<button></button>');
+            },
+
+            render: function() {
+                this.setHTML('<button></button>');
             },
 
             sync: function() {
@@ -27681,9 +29567,9 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 };
 
-},{"./css/i-button.css":742,"i-formelement":748,"itags.core":758}],744:[function(require,module,exports){
+},{"./css/i-button.css":1336,"i-formelement":1342,"itags.core":1352}],1338:[function(require,module,exports){
 var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-checkbox;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-checkbox:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-checkbox:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\ni-checkbox {\n    font-size: 0.9em;\n    margin: 0;\n    padding: 0;\n    display: inline-block;\n    position: relative;\n    vertical-align: middle;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    width: 4.5em;\n    height: 1.9em;\n}\n\ni-checkbox div {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\n/* the first div is the focussable div */\ni-checkbox >div {\n    z-index: 1;\n    overflow: hidden;\n    border: 1px solid #CCC;\n    width: 100%;\n    height: 100%;\n}\n\ni-checkbox >div:focus .i-on,\ni-checkbox >div:focus .i-off {\n    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#00000000', endColorstr='#1a000000',GradientType=0);\n    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(transparent), color-stop(40%, rgba(0,0,0, 0.05)), to(rgba(0,0,0, 0.10)));\n    background-image: -webkit-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: -moz-linear-gradient(top, rgba(0,0,0, 0.05) 0%, rgba(0,0,0, 0.10));\n    background-image: -o-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.3) inset;\n}\n\ni-checkbox >div:focus .i-btn {\n    border: solid 1px #888;\n    box-shadow: inset 0 0.17em 0.5em rgba(0, 0, 0, 0.06);\n}\n\ni-checkbox .i-constrain {\n    height: 100%;\n    padding: 0;\n    margin: 0;\n    position: relative;\n    top: 0; /* left will be calculated by i-checkbox */\n}\n\ni-checkbox .i-container {\n    position: relative;\n    cursor: pointer;\n    padding: 0;\n    margin: 0;\n    height: 100%;\n    left: 0;\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    -khtml-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    -webkit-transition: left 0.25s;\n    -moz-transition: left 0.25s;\n    -ms-transition: left 0.25s;\n    -o-transition: left 0.25s;\n    transition: left 0.25s;\n}\n\ni-checkbox .i-on {\n    height: 100%;\n    background-color: #0078E7;\n    color: #FFF;\n    position: static;\n    text-align: center;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    padding-top: 2px;\n    float: left;\n    box-shadow: inset 0 0.3em 0.5em rgba(0, 0, 0, 0.18);\n}\n\ni-checkbox .i-off {\n    height: 100%;\n    background-color: #FFF;\n    color: #444;\n    position: static;\n    text-align: center;\n    padding-top: 2px;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    white-space: nowrap;\n    float: left;\n    box-shadow: inset 0 0.3em 0.5em rgba(0, 0, 0, 0.18);\n}\n\ni-checkbox .i-btn {\n    position: relative;\n    z-index: 1;\n    border-radius: 100%;\n    float: left;\n    box-shadow: inset 0 0.17em 0.5em rgba(0, 0, 0, 0.18);\n    background-color: #fff;\n    border: solid 1px #AAA;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],745:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1339:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 
@@ -27805,13 +29691,18 @@ module.exports = function (window) {
                 var element = this,
                     value = element.model.checked,
                     designNode = element.getDesignNode(),
-                    options = designNode.getAll('>option'),
-                    content, innerDiv, borderLeftWidth;
+                    options = designNode.getAll('>option');
 
                 // set the reset-value to the inital-value in case `reset-value` was not present
                 element.defineWhenUndefined('reset-value', value)
-                       .defineWhenUndefined('onText', options[0] ? options[0].getHTML() : DEFAULT_ON_TEXT)
-                       .defineWhenUndefined('offText', options[1] ? options[1].getHTML() : DEFAULT_OFF_TEXT);
+                       .defineWhenUndefined('on-text', options[0] ? options[0].getHTML() : DEFAULT_ON_TEXT)
+                       .defineWhenUndefined('off-text', options[1] ? options[1].getHTML() : DEFAULT_OFF_TEXT);
+                registeredElements.push(element);
+            },
+
+            render: function() {
+                var element = this,
+                    content, innerDiv, borderLeftWidth;
 
                 content = '<div tabindex="0">'+
                               '<div class="i-constrain">'+
@@ -27828,7 +29719,6 @@ module.exports = function (window) {
                 element.setData('_leftBorder', borderLeftWidth);
                 element.setData('_vertBorders', parseInt(innerDiv.getStyle('border-top-width'), 10) + parseInt(innerDiv.getStyle('border-bottom-width'), 10));
                 element.setData('_horBorders', borderLeftWidth + parseInt(innerDiv.getStyle('border-right-width'), 10));
-                registeredElements.push(element);
             },
 
             _fitCheckbox: function() {
@@ -27889,11 +29779,12 @@ module.exports = function (window) {
                     model = element.model;
                 element._fitCheckbox();
                 element._setUIState(model.checked);
-                itemContainers[0].setHTML(model.onText);
-                itemContainers[1].setHTML(model.offText);
+                itemContainers[0].setHTML(model['on-text']);
+                itemContainers[1].setHTML(model['off-text']);
             },
 
             currentToReset: function() {
+                var model = this.model;
                 model['reset-value'] = model.checked;
             },
 
@@ -27915,9 +29806,9 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 };
 
-},{"./css/i-checkbox.css":744,"i-formelement":748,"itags.core":758}],746:[function(require,module,exports){
-var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-select;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* =================================== */\n/* set invisiblity when not rendered   */\n/* =================================== */\ni-form.hide-children,\ni-form:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n/* ================================= */\n\n/*!\n * Most styles are from Pure v0.5.0\n * Licensed under the BSD License.\n*/\n\ni-form {\n    margin: 0;\n    padding: 0.25em 0.5em;\n}\n\ni-form[active-labels=\"true\"] i-label {\n    cursor: default;\n}\n\ni-form fieldset {\n    margin: 0 0 0.8em;\n    padding: 0.75em 0;\n    border: 1px solid #C0C0C0;\n    border-radius: 2px;\n    background-color: rgba(0, 0, 0, 0.03);\n    width: 100%;\n    display: block;\n}\n\ni-form fieldset i-button {\n    margin-top: 0.75em;\n    margin-right: 0.25em;\n}\n\ni-form legend {\n    display: block;\n    width: 100%;\n    padding: 0.3em 0;\n    margin-bottom: 1em;\n    color: #333;\n    border-bottom: 1px solid #e5e5e5;\n}\n\ni-form div.i-formrow {\n    margin: 0;\n    padding: 0;\n    display: inline-block;\n}\n\n/* ======================================================== */\n/* Grouped Inputs */\ni-form.i-group:not(.i-aligned) i-label,\ni-form:not(.i-aligned) .i-group i-label {\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\ni-form.i-group [itag-formelement=\"true\"]:not(i-button),\ni-form .i-group [itag-formelement=\"true\"]:not(i-button) {\n    display: block;\n}\ni-form.i-group i-input input,\ni-form .i-group i-input input {\n    border-radius: 0;\n    position: relative;\n    top: -1px;\n}\ni-form.i-group div.i-formrow:first-child i-input input,\ni-form .i-group div.i-formrow:first-child i-input input {\n    top: 1px;\n    border-radius: 4px 4px 0 0;\n}\ni-form.i-group div.i-formrow:last-child i-input input,\ni-form .i-group div.i-formrow:last-child i-input input {\n    top: -2px;\n    border-radius: 0 0 4px 4px;\n}\ni-form.i-group div.i-formrow:first-child i-label,\ni-form .i-group div.i-formrow:first-child i-label {\n    margin-top: 1px;\n}\ni-form.i-group div.i-formrow:last-child i-label,\ni-form .i-group div.i-formrow:last-child i-label {\n    margin-top: -1px; /* not -2px: that would disturb appearance too much */;\n}\ni-form.i-group i-input input:focus,\ni-form .i-group i-input input:focus {\n    z-index: 2;\n}\ni-form.i-group i-button,\ni-form.i-group i-select,\ni-form .i-group i-button,\ni-form .i-group i-select {\n    margin: 0.35em 0;\n}\n/* ======================================================== */\n\n\n\n/* ======================================================== */\n/* Stacked */\ni-form.i-stacked div.i-formrow {\n    display: block;\n}\ni-form.i-stacked div.i-formrow.itag-noblock i-label {\n    display: inline-block;\n    margin-right: 1em;\n}\ni-form.i-stacked [itag-formelement=\"true\"]:not(i-button) {\n    display: block;\n    margin: 0.25em 0;\n}\ni-form.i-stacked div.i-formrow.itag-noblock [itag-formelement=\"true\"]:not(i-button) {\n    display: inline-block;\n    margin: 0;\n}\ni-form.i-stacked i-label {\n    display: block;\n    margin: 1em 0 0.4em 0.15em;\n}\ni-form.i-stacked fieldset div.i-formrow:first-child i-label {\n    margin-top: 0;\n}\ni-form.i-stacked .i-group i-input,\ni-form.i-aligned .i-group i-input,\ni-form .i-stacked .i-group i-input,\ni-form .i-aligned .i-group i-input {\n    margin: 0;\n}\n/* ======================================================== */\n\n\n\n/* ======================================================== */\n/* Aligned */\ni-form.i-aligned div.i-formrow {\n    display: block;\n}\ni-form.i-aligned i-label,\ni-form.i-aligned i-button,\ni-form.i-aligned [itag-formelement=\"true\"]:not(i-button) {\n    display: inline-block;\n    *display: inline;\n    *zoom: 1;\n    vertical-align: middle;\n}\ni-form.i-aligned div.i-formrow {\n    margin-bottom: 1em;\n}\ni-form.i-aligned .i-group div.i-formrow,\ni-form .i-aligned .i-group div.i-formrow {\n    margin-bottom: 0;\n}\ni-form.i-aligned div.i-formrow:last-child {\n    margin-bottom: 0;\n}\ni-form.i-aligned i-label {\n    text-align: right;\n    display: inline-block;\n    vertical-align: middle;\n    width: 10em;\n    margin: 0 1em 0 0;\n}\ni-form.i-aligned i-textarea {\n    vertical-align: top;\n}\ni-form.i-aligned.i-group,\ni-form.i-aligned .i-group {\n    margin-bottom: 0.8em;\n}\ni-form.i-aligned.i-group i-label label,\ni-form.i-aligned .i-group i-label label {\n    text-align: right;\n}\ni-form.i-aligned fieldset i-button:first-child {\n    margin-left: 11em;\n}\n/* ======================================================== */\n\n\n\n/* ======================================================== */\n/* Inline help for forms */\ni-form .message-inline {\n    display: inline-block;\n    padding-left: 0.3em;\n    color: #666;\n    vertical-align: middle;\n    font-size: 0.875em;\n}\n\n/* Block help for forms */\ni-form .message {\n    display: block;\n    color: #666;\n    font-size: 0.875em;\n}\n/* ======================================================== */\n\n\n\n@media only screen and (max-width : 480px) {\n    i-form {\n        display: block;\n        width: 100%;\n    }\n\n    i-form i-label,\n    i-form.i-aligned i-label {\n        display: block;\n        text-align: left;\n        margin: 1em 0 0.4em 3px; /* 3px as lect-padding --> needs to fit .itag-noblock labels  */\n    }\n\n    i-form fieldset div.i-formrow:first-child i-label,\n    i-form.i-aligned fieldset div.i-formrow:first-child i-label {\n        margin-top: 0;\n    }\n\n    i-form.i-aligned div.i-formrow.itag-noblock i-label {\n        display: inline-block;\n        width: 100%;\n        padding-left: 85px;  /* 82 + 3 extra pixels  */\n        margin-left: -82px;\n        margin-bottom: 0;\n    }\n\n    i-form.i-aligned div.i-formrow.itag-noblock i-checkbox {\n        margin-right: 12px;\n        width: 70px !important;\n    }\n\n    i-form.i-aligned div.i-formrow.itag-noblock {\n        text-align: right;\n    }\n\n    i-form.i-group i-label,\n    i-form .i-group i-label {\n        opacity: 0 !important;\n        position: absolute !important;\n        left: -9999px !important;\n        top: -9999px !important;\n        z-index: -1;\n    }\n\n    i-form i-input {\n        display: block;\n        text-align: left;\n        margin-bottom: 0.3em;\n    }\n\n    i-form.i-group i-input,\n    i-form .i-group i-input {\n        margin-bottom: 0em;\n    }\n\n    i-form.i-aligned .control {\n        margin: 1.5em 0 0 0;\n    }\n\n    i-form i-button,\n    i-form i-select {\n        display: block;\n        width: 100%;\n    }\n\n    i-form fieldset i-button {\n        margin-right: 0;\n        margin-top: 0;\n    }\n\n    i-form.i-aligned fieldset i-button:first-child {\n        margin-left: 0;\n    }\n\n    i-form i-button button,\n    i-form i-select >button,\n    i-form i-select >div >div {\n        width: 100%;\n    }\n\n    i-form i-select >button {\n        max-width: inherit;\n    }\n\n    i-form i-select > button div.btntext {\n        margin: 0;\n        max-width: inherit;\n        width: 100%;\n        text-align: center;\n    }\n\n    i-form i-select li {\n        text-align: center;\n    }\n\n    i-form i-button:last-child {\n        margin: 1em 0 0;\n    }\n\n    i-form .message-inline,\n    i-form .message {\n        display: block;\n        font-size: 0.75em;\n        /* Increased bottom padding to make it group with its related input element. */\n        padding: 0.2em 0 0.8em;\n    }\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],747:[function(require,module,exports){
+},{"./css/i-checkbox.css":1338,"i-formelement":1342,"itags.core":1352}],1340:[function(require,module,exports){
+var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-select;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* =================================== */\n/* set invisiblity when not rendered   */\n/* =================================== */\ni-form.hide-children,\ni-form:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n/* ================================= */\n\n/*!\n * Most styles are from Pure v0.5.0\n * Licensed under the BSD License.\n*/\n\ni-form {\n    margin: 0;\n    padding: 0.25em 0.5em;\n    display: block;\n}\n\ni-form[active-labels=\"true\"] i-label {\n    cursor: default;\n}\n\ni-form fieldset {\n    margin: 0 0 0.8em;\n    padding: 0.75em 0;\n    border: 1px solid #C0C0C0;\n    border-radius: 2px;\n    background-color: rgba(0, 0, 0, 0.03);\n    width: 100%;\n    display: block;\n}\n\ni-form fieldset i-button {\n    margin-top: 0.75em;\n    margin-right: 0.25em;\n}\n\ni-form legend {\n    display: block;\n    width: 100%;\n    padding: 0.3em 0;\n    margin-bottom: 1em;\n    color: #333;\n    border-bottom: 1px solid #e5e5e5;\n}\n\ni-form div.i-formrow {\n    margin: 0;\n    padding: 0;\n    display: inline-block;\n}\n\n/* ======================================================== */\n/* Grouped Inputs */\ni-form.i-group:not(.i-aligned) i-label,\ni-form:not(.i-aligned) .i-group i-label {\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\ni-form.i-group [itag-formelement=\"true\"]:not(i-button),\ni-form .i-group [itag-formelement=\"true\"]:not(i-button) {\n    display: block;\n}\ni-form.i-group i-input input,\ni-form .i-group i-input input {\n    border-radius: 0;\n    position: relative;\n    top: -1px;\n}\ni-form.i-group div.i-formrow:first-child i-input input,\ni-form .i-group div.i-formrow:first-child i-input input {\n    top: 1px;\n    border-radius: 4px 4px 0 0;\n}\ni-form.i-group div.i-formrow:last-child i-input input,\ni-form .i-group div.i-formrow:last-child i-input input {\n    top: -2px;\n    border-radius: 0 0 4px 4px;\n}\ni-form.i-group div.i-formrow:first-child i-label,\ni-form .i-group div.i-formrow:first-child i-label {\n    margin-top: 1px;\n}\ni-form.i-group div.i-formrow:last-child i-label,\ni-form .i-group div.i-formrow:last-child i-label {\n    margin-top: -1px; /* not -2px: that would disturb appearance too much */;\n}\ni-form.i-group i-input input:focus,\ni-form .i-group i-input input:focus {\n    z-index: 2;\n}\ni-form.i-group i-button,\ni-form.i-group i-select,\ni-form .i-group i-button,\ni-form .i-group i-select {\n    margin: 0.35em 0;\n}\n/* ======================================================== */\n\n\n\n/* ======================================================== */\n/* Stacked */\ni-form.i-stacked div.i-formrow {\n    display: block;\n}\ni-form.i-stacked div.i-formrow.itag-noblock i-label {\n    display: inline-block;\n    margin-right: 1em;\n}\ni-form.i-stacked [itag-formelement=\"true\"]:not(i-button) {\n    display: block;\n    margin: 0.25em 0;\n}\ni-form.i-stacked div.i-formrow.itag-noblock [itag-formelement=\"true\"]:not(i-button) {\n    display: inline-block;\n    margin: 0;\n}\ni-form.i-stacked i-label {\n    display: block;\n    margin: 1em 0 0.4em 0.15em;\n}\ni-form.i-stacked fieldset div.i-formrow:first-child i-label {\n    margin-top: 0;\n}\ni-form.i-stacked .i-group i-input,\ni-form.i-aligned .i-group i-input,\ni-form .i-stacked .i-group i-input,\ni-form .i-aligned .i-group i-input {\n    margin: 0;\n}\n/* ======================================================== */\n\n\n\n/* ======================================================== */\n/* Aligned */\ni-form.i-aligned div.i-formrow {\n    display: block;\n}\ni-form.i-aligned i-label,\ni-form.i-aligned i-button,\ni-form.i-aligned [itag-formelement=\"true\"]:not(i-button) {\n    display: inline-block;\n    *display: inline;\n    *zoom: 1;\n    vertical-align: middle;\n}\ni-form.i-aligned div.i-formrow {\n    margin-bottom: 1em;\n}\ni-form.i-aligned .i-group div.i-formrow,\ni-form .i-aligned .i-group div.i-formrow {\n    margin-bottom: 0;\n}\ni-form.i-aligned div.i-formrow:last-child {\n    margin-bottom: 0;\n}\ni-form.i-aligned i-label {\n    text-align: right;\n    display: inline-block;\n    vertical-align: middle;\n    width: 10em;\n    margin: 0 1em 0 0;\n}\ni-form.i-aligned i-textarea {\n    vertical-align: top;\n}\ni-form.i-aligned.i-group,\ni-form.i-aligned .i-group {\n    margin-bottom: 0.8em;\n}\ni-form.i-aligned.i-group i-label label,\ni-form.i-aligned .i-group i-label label {\n    text-align: right;\n}\ni-form.i-aligned fieldset i-button:first-child {\n    margin-left: 11em;\n}\n/* ======================================================== */\n\n\n\n/* ======================================================== */\n/* Inline help for forms */\ni-form .message-inline {\n    display: inline-block;\n    padding-left: 0.3em;\n    color: #666;\n    vertical-align: middle;\n    font-size: 0.875em;\n}\n\n/* Block help for forms */\ni-form .message {\n    display: block;\n    color: #666;\n    font-size: 0.875em;\n}\n/* ======================================================== */\n\n\n\n@media only screen and (max-width : 480px) {\n    i-form {\n        display: block;\n        width: 100%;\n    }\n\n    i-form i-label,\n    i-form.i-aligned i-label {\n        display: block;\n        text-align: left;\n        margin: 1em 0 0.4em 3px; /* 3px as lect-padding --> needs to fit .itag-noblock labels  */\n    }\n\n    i-form fieldset div.i-formrow:first-child i-label,\n    i-form.i-aligned fieldset div.i-formrow:first-child i-label {\n        margin-top: 0;\n    }\n\n    i-form.i-aligned div.i-formrow.itag-noblock i-label {\n        display: inline-block;\n        width: 100%;\n        padding-left: 85px;  /* 82 + 3 extra pixels  */\n        margin-left: -82px;\n        margin-bottom: 0;\n    }\n\n    i-form.i-aligned div.i-formrow.itag-noblock i-checkbox {\n        margin-right: 12px;\n        width: 70px !important;\n    }\n\n    i-form.i-aligned div.i-formrow.itag-noblock {\n        text-align: right;\n    }\n\n    i-form.i-group i-label,\n    i-form .i-group i-label {\n        opacity: 0 !important;\n        position: absolute !important;\n        left: -9999px !important;\n        top: -9999px !important;\n        z-index: -1;\n    }\n\n    i-form i-input {\n        display: block;\n        text-align: left;\n        margin-bottom: 0.3em;\n    }\n\n    i-form.i-group i-input,\n    i-form .i-group i-input {\n        margin-bottom: 0em;\n    }\n\n    i-form.i-aligned .control {\n        margin: 1.5em 0 0 0;\n    }\n\n    i-form i-button,\n    i-form i-select {\n        display: block;\n        width: 100%;\n    }\n\n    i-form fieldset i-button {\n        margin-right: 0;\n        margin-top: 0;\n    }\n\n    i-form.i-aligned fieldset i-button:first-child {\n        margin-left: 0;\n    }\n\n    i-form i-button button,\n    i-form i-select >button,\n    i-form i-select >div >div {\n        width: 100%;\n    }\n\n    i-form i-select >button {\n        max-width: inherit;\n    }\n\n    i-form i-select > button div.btntext {\n        margin: 0;\n        max-width: inherit;\n        width: 100%;\n        text-align: center;\n    }\n\n    i-form i-select li {\n        text-align: center;\n    }\n\n    i-form i-button:last-child {\n        margin: 1em 0 0;\n    }\n\n    i-form .message-inline,\n    i-form .message {\n        display: block;\n        font-size: 0.75em;\n        /* Increased bottom padding to make it group with its related input element. */\n        padding: 0.2em 0 0.8em;\n    }\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1341:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 
@@ -27997,9 +29888,7 @@ module.exports = function (window) {
             },
 
             init: function() {
-                var element = this,
-                    designNode = element.getDesignNode(),
-                    allFormElements, children;
+                var element = this;
 
                 // now activate the focusmanager:
                 if (!element.isPlugged(FocusManagerPlugin)) {
@@ -28008,18 +29897,26 @@ module.exports = function (window) {
                         {
                             'keyup': String(element.defFmKeyup()),
                             'keydown': String(element.defFmKeydown()),
-                            'noloop': String(!element.defFmLoop())
+                            'noloop': String(!element.defFmLoop()),
+                            'manage': String(element.getFocusManagerSelector())
                         }
                     );
                 }
                 element.databinders = [];
+            },
+
+            render: function() {
+                var element = this,
+                    designNode = element.getDesignNode(),
+                    allFormElements, children;
+
                 // we must add a classname to the i-form and remove it when all
                 // i-form-elements are ready. This we need to prevent the i-form-elements
                 // to show some initial value before they are bounded
                 // now we add all i-form-elements that need to wait for bounded data to a hash
 
                 // fully set the designNode's content into the i-form:
-                element.setHTML(designNode.getHTML());
+                element.setHTML(designNode.getHTML(null, true));
                 allFormElements = element.getAll('[i-prop], i-label');
                 if (allFormElements.length>0) {
                     element.setClass('hide-children');
@@ -28038,12 +29935,13 @@ module.exports = function (window) {
                         }
                     );
                 }
+                ITSA.async(function() {
+                    element.bind();
+                });
             },
 
             getFocusManagerSelector: function() {
-                var selector = this.getAttr('fm-manage');
-                (selector.toLowerCase()==='true') && (selector=DEFAULT_SELECTOR);
-                return selector;
+                return DEFAULT_SELECTOR;
             },
 
             defFmSelector: function() {
@@ -28076,20 +29974,23 @@ module.exports = function (window) {
                 this.emit('action', payload);
             },
 
-            sync: function() {
+            _afterBindModel: function() {
+                this.unbind();
+                this.bind();
+            },
+
+            bind: function() {
                 var element = this,
                     databinders = element.databinders,
                     model = element.model,
                     allFormElements, propertyModel;
-                element.setAttr('fm-manage', element.defFmSelector(), true);
-                element.unbind();
                 allFormElements = element.getAll('[i-prop]');
                 allFormElements.forEach(function(formElement) {
                     var property = formElement.getAttr('i-prop');
                     if (property) {
                         propertyModel = model[property];
                         if (propertyModel) {
-                            databinders[databinders.length] = formElement.bindModel(propertyModel);
+                            databinders[databinders.length] = formElement.bindModel(propertyModel, true);
                         }
                         else {
                             // fulfill the promise from the hash, to make the hash completely fulfilled and the i-form to show:
@@ -28135,7 +30036,7 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 };
 
-},{"./css/i-form.css":746,"itags.core":758}],748:[function(require,module,exports){
+},{"./css/i-form.css":1340,"itags.core":1352}],1342:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 
@@ -28159,9 +30060,9 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 };
 
-},{"itags.core":758}],749:[function(require,module,exports){
+},{"itags.core":1352}],1343:[function(require,module,exports){
 var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-input;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-input:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-input:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\ni-input {\n    margin: 0;\n    display: inline-block;\n    width: 12em;\n    position: relative;\n    vertical-align: middle;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-input > input {\n    color: inherit;\n    font: inherit;\n    margin: 0;\n    padding: 0.5em 0.6em;\n    display: inline-block;\n    border: 1px solid #ccc;\n    box-shadow: inset 0 1px 3px #ddd;\n    border-radius: 4px;\n    line-height: normal;\n    width: 100%; /* within the i-input always 100% */\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\nhtml i-input[disabled] > input {\n    cursor: not-allowed;\n    background-color: #eaeded;\n    color: #cad2d3;\n}\n\ni-input > input::-moz-focus-inner {\n  border: 0;\n  padding: 0;\n}\n\n\ni-input > input:focus,\ni-input.focussed > input {\n    outline: 0;\n    outline: thin dotted \\9; /* IE6-9 */\n    border-color: #129FEA;\n}\n\ni-input[readonly=\"true\"] > input {\n    background: #eee; /* menu hover bg color */\n    color: #777; /* menu text color */\n    border-color: #ccc;\n}\n\ni-input > input:focus:invalid {\n    color: #b94a48;\n    border-color: #ee5f5b;\n}\n\ni-input > input:focus:invalid:focus {\n    border-color: #e9322d;\n}\n\ni-input.i-rounded > input {\n    border-radius: 2em;\n    padding: 0.5em 1em;\n}\n\ni-input.i-input-1 {\n    width: 100%;\n}\ni-input.i-input-2-3 {\n    width: 66%;\n}\ni-input.i-input-1-2 {\n    width: 50%;\n}\ni-input.i-input-1-3 {\n    width: 33%;\n}\ni-input.i-input-1-4 {\n    width: 25%;\n}\n\n@media only screen and (max-width : 480px) {\n    i-input {\n        margin-bottom: 0.3em;\n        display: block;\n    }\n}\n\n"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],750:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1344:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 
@@ -28230,18 +30131,15 @@ module.exports = function (window) {
             init: function() {
                 var element = this,
                     designNode = element.getDesignNode(),
-                    value = designNode.getText(),
-                    content;
+                    value = designNode.getText();
 
                 element.defineWhenUndefined('value', value)
                        // set the reset-value to the inital-value in case `reset-value` was not present
                        .defineWhenUndefined('reset-value', value);
+            },
 
-                // building the template of the itag:
-                content = '<input value="'+value+'" />';
-
-                // set the content:
-                element.setHTML(content);
+            render: function() {
+                this.setHTML('<input value="'+this.model.value+'" />');
             },
 
             sync: function() {
@@ -28275,7 +30173,7 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 };
 
-},{"./css/i-input.css":749,"i-formelement":748,"itags.core":758}],751:[function(require,module,exports){
+},{"./css/i-input.css":1343,"i-formelement":1342,"itags.core":1352}],1345:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 
@@ -28309,7 +30207,6 @@ module.exports = function (window) {
                 var element = this,
                     designNode = element.getDesignNode(),
                     content = designNode.getHTML();
-
                 // when initializing: make sure NOT to overrule model-properties that already
                 // might have been defined when modeldata was boundend. Therefore, use `defineWhenUndefined`
                 // element.defineWhenUndefined('someprop', somevalue); // sets element.model.someprop = somevalue; when not defined yet
@@ -28389,7 +30286,7 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 };
 
-},{"itags.core":758}],752:[function(require,module,exports){
+},{"itags.core":1352}],1346:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 
@@ -28427,9 +30324,9 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 };
 
-},{"i-button":743,"itags.core":758}],753:[function(require,module,exports){
+},{"i-button":1337,"itags.core":1352}],1347:[function(require,module,exports){
 var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-select;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-select:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-select:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\ni-select {\n    margin: 0;\n    display: inline-block;\n    *display: inline; /*IE 6/7*/\n    zoom: 1;\n    position: relative;\n    vertical-align: middle;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-select >div {\n    position: relative;\n    z-index: 2;\n    -webkit-transition: opacity 0.1s;\n    -moz-transition: opacity 0.1s;\n    -ms-transition: opacity 0.1s;\n    -o-transition: opacity 0.1s;\n    transition: opacity 0.1s;\n    opacity: 0;\n}\n\ni-select >div.i-select-show {\n    -webkit-transition: opacity 0.2s;\n    -moz-transition: opacity 0.2s;\n    -ms-transition: opacity 0.2s;\n    -o-transition: opacity 0.2s;\n    transition: opacity 0.2s;\n    opacity: 1;\n}\n\n\n\ni-select.i-primary >button,\ni-select.i-focussed >button {\n    background-color: rgb(0, 120, 231);\n    color: #fff;\n}\n\n/*csslint outline-none:false*/\n\ni-select >button {\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    -khtml-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    position: relative;\n    padding: 0.5em 0;\n    max-width: 8em;\n    color: inherit; /* 1 */\n    font: inherit; /* 2 */\n    margin: 0; /* 3 */\n    overflow: visible;\n    text-transform: none;\n    -webkit-appearance: button; /* 2 */\n    line-height: normal;\n    white-space: nowrap;\n    vertical-align: baseline;\n    text-align: center;\n    cursor: pointer;\n    -webkit-user-drag: none;\n    -webkit-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    font-family: inherit;\n    font-size: 100%;\n    color: #444; /* rgba not supported (IE 8) */\n    color: rgba(0, 0, 0, 0.80); /* rgba supported */\n    border: 1px solid #999;  /*IE 6/7/8*/\n    border: none rgba(0, 0, 0, 0);  /*IE9 + everything else*/\n    background-color: #E6E6E6;\n    text-decoration: none;\n    border-radius: 2px;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n}\n\n/* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select.i-hover >button,\ni-select >button:hover,\ni-select >button:focus {\n    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#00000000', endColorstr='#1a000000',GradientType=0);\n    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(transparent), color-stop(40%, rgba(0,0,0, 0.05)), to(rgba(0,0,0, 0.10)));\n    background-image: -webkit-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: -moz-linear-gradient(top, rgba(0,0,0, 0.05) 0%, rgba(0,0,0, 0.10));\n    background-image: -o-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.6) inset;\n}\ni-select >button:focus {\n    outline: 0;\n}\ni-select.i-active >button,\ni-select >button.pure-button-active, /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select >button:active {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.4) inset, 0 0 6px rgba(0,0,0, 0.2) inset;\n}\n\ni-select.i-disabled >button,\ni-select[disabled=\"true\"] >button,\ni-select.i-disabled >button:active,\ni-select[disabled=\"true\"] >button:active,\ni-select.i-disabled >button.pure-button-active, /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select[disabled=\"true\"] >button.pure-button-active,\ni-select.i-disabled.i-active >button,\ni-select.i-active[disabled=\"true\"] >button,\ni-select.i-disabled >button:focus,\ni-select[disabled=\"true\"] >button:focus,\ni-select.i-disabled.focussed >button,\ni-select.focussed[disabled=\"true\"] >button,\ni-select.i-disabled >button:hover,\ni-select[disabled=\"true\"] >button:hover {\n    border: none;\n    background-image: none;\n    filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);\n    filter: alpha(opacity=60);\n    -khtml-opacity: 0.60;\n    -moz-opacity: 0.60;\n    opacity: 0.60;\n    cursor: not-allowed;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n    cursor: default;\n}\n\ni-select.i-rounded >button {\n    border-radius: 0.3em;\n}\n\ni-select.i-heavyrounded >button {\n    border-radius: 0.5em;\n}\n\ni-select.i-oval >button {\n    border-radius: 50%;\n}\n\ni-select.i-halfoval >button {\n    border-radius: 25%;\n}\n\ni-select.i-hidden {\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -9;\n}\n\ni-select >button::-moz-focus-inner {\n  border: 0;\n  padding: 0;\n}\n\ni-select >button div.btntext {\n    margin: 0 1.25em 0 1em;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 8em;\n    display: block;\n}\n\ni-select >button div.pointer {\n    border-left: 0.4em solid rgba(0, 0, 0, 0);\n    border-right: 0.4em solid rgba(0, 0, 0, 0);\n    border-top: 0.5em solid #000;\n    right: 0.25em;\n    position: absolute;\n    bottom: 0.2em;\n}\n\ni-select >button.i-nonexpandable div.btntext {\n    margin: 0 1em;\n}\n\ni-select >button.i-nonexpandable div.pointer {\n    visibility: hidden;\n}\n\ni-select >div >div {\n    position: absolute;\n    left: 0;\n    top: 0;\n    cursor: pointer;\n    border-style: solid;\n    border-width: 0.1em;\n    -webkit-border-radius: 0 0 0.3em 0.3em;\n    -moz-border-radius: 0 0 0.3em 0.3em;\n    border-radius: 0 0 0.3em 0.3em;\n    -webkit-box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n    -moz-box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n    box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n}\n\ni-select ul {\n    font-size: 1.2em;\n    padding: 0 0 0.3em;\n    list-style: none;\n    margin: 0;\n}\n\ni-select li {\n    padding: 0.25em 0.7em;\n    white-space: nowrap;\n}\n\ni-select li.focussed {\n    background-color: #B3D4FF;\n}\n\ni-select li.selected:before {\n    content: '*';\n    margin-left: -0.7em;\n    padding-right: 0.25em;\n}\n\ni-select li:before,\ni-select li:after {\n    content: '';\n    padding: 0;\n    margin: 0;\n}\n\n/* color specification:; */\n\ni-select >div >div {\n    background-color: #FFF;\n    border-color: #000;\n}\n\ni-select li:hover {\n    background-color: #B3D4FF;\n}\n\ni-select.i-focused > button div.pointer,\ni-select.i-primary > button div.pointer {\n    border-top: 0.5em solid #FEFEFE;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],754:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1348:[function(require,module,exports){
 /**
  * Provides several methods that override native Element-methods to work with the vdom.
  *
@@ -28515,17 +30412,17 @@ module.exports = function (window) {
                 else {
                     inactive = element.hasData('_suppressClose');
                     if (inactive) {
-                        console.warn('not reacting to '+e_type+'-event: button is in pauzed state');
+                        console.info('not reacting to '+e_type+'-event: button is in pauzed state');
                         return;
                     }
                     model.expanded = !model.expanded;
                     if (!model.expanded) {
-                        liNode = element.getElement('ul[fm-manage] >li[fm-defaultitem]');
+                        liNode = element.getElement('ul[plugin-fm="true"] >li[fm-defaultitem]');
                         liNode && liNode.focus(true);
                     }
                 }
                 if (model.expanded) {
-                    ulNode = element.getElement('ul[fm-manage]');
+                    ulNode = element.getElement('ul[plugin-fm="true"]');
                     ulNode && ulNode.focus(true);
                 }
                 if (model.expanded || (e_type==='tap')) {
@@ -28548,7 +30445,7 @@ module.exports = function (window) {
                 if (model.expanded) {
                     inactive = element.hasData('_suppressClose');
                     if (inactive) {
-                        console.warn('not reacting to '+e_type+'-event: button is in pauzed state');
+                        console.info('not reacting to '+e_type+'-event: button is in pauzed state');
                         return;
                     }
                     model = element.model;
@@ -28561,7 +30458,7 @@ module.exports = function (window) {
                         laterSilent(function() {
                             element.removeData('_suppressClose');
                         }, SUPPRESS_DELAY);
-                        ulNode = element.getElement('ul[fm-manage]');
+                        ulNode = element.getElement('ul[plugin-fm="true"]');
                         ulNode && ulNode.focus(true);
                     }
                     // prevent that the focus will be reset to the focusmanager
@@ -28572,7 +30469,7 @@ module.exports = function (window) {
                     });
                 }
             }
-        }, 'i-select ul[fm-manage] > li');
+        }, 'i-select ul[plugin-fm="true"] > li');
 
         Event.defineEvent(itagName+':valuechange')
              .unPreventable()
@@ -28630,9 +30527,7 @@ module.exports = function (window) {
             *
             * Syncs the new vnode's childNodes with the dom.
             *
-            * @method _setChildNodes
-            * @param newVChildNodes {Array} array with vnodes which represent the new childNodes
-            * @private
+            * @method init
             * @chainable
             * @since 0.0.1
             */
@@ -28642,8 +30537,7 @@ module.exports = function (window) {
                     itemNodes = designNode.getAll('>option'),
                     items = [],
                     buttonTexts = [],
-                    value = element.model.value,
-                    content;
+                    value = element.model.value;
                 itemNodes.forEach(function(node, i) {
                     var header = node.getElement('span[is="button"]');
                     if (header) {
@@ -28660,6 +30554,23 @@ module.exports = function (window) {
                 // store its current value, so that valueChange-event can fire:
                 element.setData('i-select-value', value);
 
+                element.cleanupEvents();
+                element.setupEvents();
+            },
+
+           /**
+            * Redefines the childNodes of both the vnode as well as its related dom-node. The new
+            * definition replaces any previous nodes. (without touching unmodified nodes).
+            *
+            * Syncs the new vnode's childNodes with the dom.
+            *
+            * @method render
+            * @chainable
+            * @since 0.0.1
+            */
+            render: function() {
+                var element = this,
+                    content;
                 // building the template of the itag:
                 content = '<button><div class="pointer"></div><div class="btntext"></div></button>';
                 // first: outerdiv which will be relative positioned
@@ -28667,12 +30578,9 @@ module.exports = function (window) {
                 // also: hide the container by default --> updateUI could make it shown
                 content += '<div class="itsa-hidden">' +
                              '<div>'+
-                               '<ul fm-manage="li" fm-keyup="38" fm-keydown="40" fm-noloop="true"></ul>';
+                               '<ul plugin-fm="true" fm-manage="li" fm-keyup="38" fm-keydown="40" fm-noloop="true"></ul>';
                              '</div>'+
                            '</div>';
-
-                element.cleanupEvents();
-                element.setupEvents();
                 // set the content:
                 element.setHTML(content);
             },
@@ -28777,7 +30685,7 @@ module.exports = function (window) {
                     container.setData('_hiddenTimer', hiddenTimer);
                 }
 
-                itemsContainer = element.getElement('ul[fm-manage]');
+                itemsContainer = element.getElement('ul[plugin-fm="true"]');
                 content = '';
                 for (i=0; i<len; i++) {
                     item = items[i];
@@ -28800,9 +30708,9 @@ module.exports = function (window) {
 
     return window.ITAGS[itagName];
 };
-},{"./css/i-select.css":753,"i-formelement":748,"itags.core":758}],755:[function(require,module,exports){
+},{"./css/i-select.css":1347,"i-formelement":1342,"itags.core":1352}],1349:[function(require,module,exports){
 var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-tabpane;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-tabpane:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-tabpane:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\ni-tabpane {\n    /* make it accept width and height by swith from :inline\" to \"inline-block\"*/\n    display: inline-block;\n    *display: block;\n    *zoom: 1;\n}\n\ni-tabpane >ul {\n    margin:0;\n    padding:0;\n    list-style:none;\n    height: 1.9em;\n    overflow: hidden;\n}\n\ni-tabpane >ul li div {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    opacity: 0.6;\n    margin: 0;\n    padding: 0;\n    border: none;\n}\n\ni-tabpane >ul li:hover div {\n    opacity: 0.8;\n}\n\ni-tabpane >ul li.pure-button-active div,\ni-tabpane >ul li:active div {\n    opacity: 1;\n}\n\ni-tabpane >ul li {\n    display: inline-block;\n    *display: inline; /* IE */\n    *zoom: 1; /* IE */\n    margin-right: 0.25em;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n}\n\ni-tabpane >ul li.pure-button {\n    display: inline-block;\n    *display: inline; /* IE */\n    *zoom: 1; /* IE */\n    margin-right: 0.2em;\n    border-radius: 2px 2px 0 0;\n    border-bottom: none;\n}\n\ni-tabpane >div {\n    height: 100%;\n    margin-top: -2.18em;\n    padding-top: 2.18em;\n}\n\ni-tabpane >div >div.container {\n    border: 1px solid #2647a0;\n    border-top: 5px solid #2647a0;\n    padding: 0.25em 0.5em;\n    height: 100%;\n    width: 100%;\n    overflow: scroll;\n}\n"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],756:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1350:[function(require,module,exports){
 /*
 * attributes:
 * value, expanded, primary-button
@@ -28819,6 +30727,7 @@ module.exports = function (window) {
         DOCUMENT = window.document,
         ITSA = window.ITSA,
         Event = ITSA.Event,
+        SUPPRESS_DELAY = 150, // to prevent flickr due to focusmanager when clicked on li-elements
         Itag;
 
     if (!window.ITAGS[itagName]) {
@@ -28844,15 +30753,25 @@ module.exports = function (window) {
                 ul = node.getParent(),
                 element = ul.getParent(),
                 model = element.model,
-                liNodes;
+                liNodes, newPane;
             liNodes = ul.getAll('li');
-            model.pane = liNodes.indexOf(node) + 1;
-        }, 'i-tabpane > ul li');
-
-        Event.before(['tap', 'press'], function(e) {
-            // don't double render (especially not BEFORE the tab changes)
-            // rendering will be done because of the focus-event
-            e.preventRender();
+            newPane = liNodes.indexOf(node) + 1;
+            if (!element.hasData('_suppressTabSwitch')) {
+                model.pane = newPane;
+                element.setData('_suppressTabSwitch', true);
+                ITSA.later(function() {
+                    element.removeData('_suppressTabSwitch');
+/*jshint boss:true */
+                    if (newPane=element.getData('_newPane')) {
+/*jshint boss:false */
+                        model.pane = newPane;
+                        element.removeData('_newPane');
+                    }
+                }, SUPPRESS_DELAY);
+            }
+            else {
+                element.setData('_newPane', newPane);
+            }
         }, 'i-tabpane > ul li');
 
         Itag = DOCUMENT.createItag(itagName, {
@@ -28877,9 +30796,7 @@ module.exports = function (window) {
             *
             * Syncs the new vnode's childNodes with the dom.
             *
-            * @method _setChildNodes
-            * @param newVChildNodes {Array} array with vnodes which represent the new childNodes
-            * @private
+            * @method init
             * @chainable
             * @since 0.0.1
             */
@@ -28890,8 +30807,7 @@ module.exports = function (window) {
                     model = element.model,
                     pane = model.pane,
                     panes = [],
-                    tabs = [],
-                    content;
+                    tabs = [];
                 itemNodes.forEach(function(node, i) {
                     var header = node.getElement('span[is="tab"]');
                     if (header) {
@@ -28900,7 +30816,7 @@ module.exports = function (window) {
                     else {
                         tabs[i] = '&nbsp;';
                     }
-                    panes[panes.length] = node.getHTML(header);
+                    panes[panes.length] = node.getHTML(header, true);
                 });
 
                 element.defineWhenUndefined('panes', panes)
@@ -28910,9 +30826,22 @@ module.exports = function (window) {
 
                 // store its current value, so that valueChange-event can fire:
                 element.setData('i-select-pane', pane);
+            },
 
-                // note: the container wil excist of a div inside a div --> to make the css work (100% height within i-tabpane)
-                content = '<ul fm-manage="li" fm-keyup="37" fm-keydown="39" fm-noloop="true"></ul><div><div class="container"></div></div>';
+           /**
+            * Redefines the childNodes of both the vnode as well as its related dom-node. The new
+            * definition replaces any previous nodes. (without touching unmodified nodes).
+            *
+            * Syncs the new vnode's childNodes with the dom.
+            *
+            * @method render
+            * @chainable
+            * @since 0.0.1
+            */
+            render: function() {
+                var element = this,
+                    // note: the container wil excist of a div inside a div --> to make the css work (100% height within i-tabpane)
+                    content = '<ul plugin-fm="true" fm-manage="li" fm-keyup="37" fm-keydown="39" fm-noloop="true"></ul><div><div class="container"></div></div>';
                 // set the content:
                 element.setHTML(content);
             },
@@ -28989,9 +30918,9 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 
 };
-},{"./css/i-tabpane.css":755,"itags.core":758}],757:[function(require,module,exports){
+},{"./css/i-tabpane.css":1349,"itags.core":1352}],1351:[function(require,module,exports){
 var css = "span.itag-data {\n    display: none !important;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],758:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1352:[function(require,module,exports){
 (function (global){
 /*jshint proto:true */
 
@@ -29014,7 +30943,7 @@ var css = "span.itag-data {\n    display: none !important;\n}"; (require("/Volum
 require('./css/itags.core.css');
 
 var NAME = '[itags.core]: ',
-    ITSA = require('itsa'),
+    ITSA = require('itsa'), // has `Event/extra/objectobserve.js` and `Event/extra/timer-finalize.js`
     createHashMap = ITSA.createHashMap,
     asyncSilent = ITSA.asyncSilent,
     laterSilent = ITSA.laterSilent,
@@ -29048,6 +30977,7 @@ var NAME = '[itags.core]: ',
     */
     ITAG_METHODS = createHashMap({
         init: '_initUI',
+        render: '_renderUI',
         sync: '_syncUI',
         destroy: '_destroyUI',
         attrs: '_attrs'
@@ -29055,6 +30985,7 @@ var NAME = '[itags.core]: ',
     // ITAG_METHOD_VALUES must match previous ITAG_METHODS's values!
     ITAG_METHOD_VALUES = createHashMap({
         _initUI: true,
+        _renderUI: true,
         _syncUI: true,
         _destroyUI: true,
         _attrs: true
@@ -29065,7 +30996,6 @@ var NAME = '[itags.core]: ',
 module.exports = function (window) {
     // make ITSA available as global, so we can use it in all other itag-modules:
     window.ITSA = ITSA;
-    require('./lib/timer-finalize.js')(window);
 
     var DOCUMENT = window.document,
         PROTOTYPE_CHAIN_CAN_BE_SET = arguments[1], // hidden feature, used by unit-test
@@ -29126,6 +31056,7 @@ module.exports = function (window) {
                 if (!reInitialize && NATIVE_OBJECT_OBSERVE) {
                     observer = instance.getData('_observer');
                     observer && Object.unobserve(instance.model, observer);
+                    instance.removeData('_observer');
                 }
                 superDestroy = function(constructor) {
                     var classCarierBKP = instance.__classCarier__;
@@ -29138,6 +31069,7 @@ module.exports = function (window) {
                     classCarierBKP = instance.__classCarier__;
                 };
                 superDestroy(constructor || instance.constructor);
+                itagCore.destroyPlugins(instance);
                 instance.detachAll();
                 // DO NOT set model to null --> it might be refered to asynchronously
                 // We don't need to bother: the node gets out of the dom and will really be destroyed after
@@ -29153,7 +31085,7 @@ module.exports = function (window) {
         *
         * @method initUI
         * @param constructor {Class} the Class which belongs with the itag
-        * @param [reInitialize=false] {Boolean} whether the destruction comes from a `re-initialize`-call. For internal usage.
+        * @param [reInitialize=false] {Boolean} whether the initialization comes from a `re-initialize`-call. For internal usage.
         * @chainable
         * @since 0.0.1
         */
@@ -29191,6 +31123,24 @@ module.exports = function (window) {
                     }
                 }
                 superInit(constructor || instance.constructor);
+            }
+            return instance;
+        },
+
+       /**
+        * Does the one-time initial rendering: is succeeded with syncUI
+        *
+        * @method renderUI
+        * @param [reInitialize=false] {Boolean} whether the renderUI comes from a `re-initialize`-call. For internal usage.
+        * @chainable
+        * @since 0.0.1
+        */
+        renderUI: function(reInitialize) {
+            var instance = this,
+                vnode = instance.vnode;
+            if ((reInitialize || !vnode.ce_initialized) && !vnode.removedFromDOM && !vnode.ce_destroyed) {
+                instance._renderUI();
+                itagCore.initPlugins(instance);
                 Object.protectedProp(vnode, 'ce_initialized', true);
             }
             return instance;
@@ -29257,6 +31207,7 @@ module.exports = function (window) {
             if (vnode.ce_initialized && !vnode.removedFromDOM && !vnode.ce_destroyed) {
                 instance.destroyUI(constructor, true)
                         .initUI(constructor, true)
+                        .renderUI(true)
                         .syncUI();
             }
             return instance;
@@ -29322,6 +31273,17 @@ module.exports = function (window) {
 
         contentHidden: true,
 
+       /**
+        * Invoked after a model is bound. Can be used for further action.
+        * Not always need to: after this method, `sync` will get invoked.
+        *
+        * @method _afterBindModel
+        * @private
+        * @chainable
+        * @since 0.0.1
+        */
+        _afterBindModel: NOOP,
+
         /**
          * Internal hash containing the `attrs`-definition which can be set by the itag-declaration.
          * This hash is used to determine which properties of `model` need to sync as an attribute.
@@ -29351,11 +31313,23 @@ module.exports = function (window) {
         *
         * Syncs the new vnode's childNodes with the dom.
         *
-        * @method NOOP
+        * @method _initUI
         * @private
         * @since 0.0.1
         */
         _initUI: NOOP,
+
+       /**
+        * Transformed from `render` --> when the instance gets created, the instance will invoke `_renderUI` through the whole chain.
+        * Defaults to `NOOP`, so that it can be always be invoked.
+        *
+        * Syncs the new vnode's childNodes with the dom.
+        *
+        * @method _renderUI
+        * @private
+        * @since 0.0.1
+        */
+        _renderUI: NOOP,
 
        /**
         * Transformed from `sync` --> when `sync` gets invoked, the instance will invoke `_syncUI`.
@@ -29411,7 +31385,7 @@ module.exports = function (window) {
     */
     PROTECTED_MEMBERS = createHashMap();
     EXTRA_BASE_MEMBERS.each(function(value, key) {
-        ITAG_METHOD_VALUES[key] || (PROTECTED_MEMBERS[key] = true);
+        ITAG_METHOD_VALUES[key] || (key==='_afterBindModel') || (PROTECTED_MEMBERS[key] = true);
     });
 
     /**
@@ -29537,6 +31511,58 @@ module.exports = function (window) {
     };
 
     itagCore = {
+
+        initPlugins: function(domElement) {
+            var processVChildNodes = function(vnode) {
+                var vChildren = vnode.vChildren,
+                    len = vChildren.length,
+                    i, vChild, attrs, Plugin, ns, j, len2, keys, attribute;
+                for (i=0; i<len; i++) {
+                    vChild = vChildren[i];
+/*jshint boss:true */
+                    if (attrs=vChild.attrs) {
+/*jshint boss:false */
+                        keys = attrs.keys();
+                        len2 = keys.length;
+                        for (j=0; j<len2; j++) {
+                            attribute = keys[j];
+                            if ((attribute.substr(0, 7)==='plugin-') && (attrs[attribute]==='true')) {
+                                ns = attribute.substr(7);
+                                Plugin = window._ITSAPlugins[ns];
+                                Plugin && vChild.domNode.plug(Plugin);
+                            }
+                        }
+                    }
+                    processVChildNodes(vChild);
+                }
+            };
+            processVChildNodes(domElement.vnode);
+        },
+
+        destroyPlugins: function(domElement) {
+            var processVChildNodes = function(vnode) {
+                var vChildren = vnode.vChildren,
+                    len = vChildren.length,
+                    i, vChild, j, len2, ns, keys, plugin, Plugin;
+                for (i=0; i<len; i++) {
+                    vChild = vChildren[i];
+/*jshint boss:true */
+                    if (plugin=vChild.domNode.plugin) {
+/*jshint boss:false */
+                        keys = plugin.keys();
+                        len2 = keys.length;
+                        for (j=0; j<len2; j++) {
+                            ns = keys[j];
+                            Plugin = window._ITSAPlugins[ns];
+                            Plugin && vChild.domNode.unplug(Plugin);
+                        }
+                    }
+                    processVChildNodes(vChild);
+                }
+            };
+            processVChildNodes(domElement.vnode);
+        },
+
        /**
         * Copies the attibute-values into element.model.
         * Only processes the attributes that are defined through the Itag-class its `attrs`-property.
@@ -29594,8 +31620,8 @@ module.exports = function (window) {
         * @method bindModel
         * @param element {HTMLElement} element, which should be an Itag
         * @param model {Object} the model to bind to the itag-element
-        * @param [mergeCurrent=false] {Boolean} when set true, current properties on the iTag that aren't defined
-        *                                       in the new model, get merged into the new model.
+        * @param [mergeCurrent=false] {Boolean} when set true, current properties on the iTag's model that aren't defined
+        *        in the new model, get merged into the new model.
         * @since 0.0.1
         */
         bindModel: function(element, model, mergeCurrent) {
@@ -29621,8 +31647,10 @@ module.exports = function (window) {
                 }
                 if (!element.vnode.ce_initialized) {
                     instance.attrsToModel(element);
-                    element.initUI(PROTO_SUPPORTED ? null : element.__proto__.constructor);
+                    element.initUI(PROTO_SUPPORTED ? null : element.__proto__.constructor)
+                           .renderUI();
                 }
+                element._afterBindModel();
                 element.syncUI();
                 element.itagRendered || instance.setRendered(element);
             }
@@ -29728,7 +31756,7 @@ module.exports = function (window) {
                 model = domElement.model,
                 newAttrs = [];
             attrs.each(function(value, key) {
-                newAttrs[newAttrs.length] = {name: key, value: model[key]};
+                model[key] && (newAttrs[newAttrs.length] = {name: key, value: model[key]});
             });
             (newAttrs.length>0) && domElement.setAttrs(newAttrs, true);
         },
@@ -30061,8 +32089,9 @@ module.exports = function (window) {
                 });
                 if (!needsToBind) {
                     instance.attrsToModel(domElement);
-                    domElement.initUI(PROTO_SUPPORTED ? null : domElementConstructor);
-                    domElement.syncUI();
+                    domElement.initUI(PROTO_SUPPORTED ? null : domElementConstructor)
+                              .renderUI()
+                              .syncUI();
                     instance.setRendered(domElement);
                 }
                 if (NATIVE_OBJECT_OBSERVE) {
@@ -30763,90 +32792,9 @@ module.exports = function (window) {
     return itagCore;
 };
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./css/itags.core.css":757,"./lib/timer-finalize.js":759,"itsa":2}],759:[function(require,module,exports){
-(function (global){
-module.exports = function (window) {
+},{"./css/itags.core.css":1351,"itsa":2}],1353:[function(require,module,exports){
 
-    "use strict";
-
-    var NAME = '[event-timer-finalize]: ',
-        NATIVE_OBJECT_OBSERVE = !!Object.observe,
-        ITSA = window.ITSA, // should be available at this point
-        createHashMap = ITSA.createHashMap,
-        Event = ITSA.Event,
-        setTimeoutBKP, setIntervalBKP, setImmediateBKP;
-
-    window._ITSAmodules || Object.protectedProp(global, '_ITSAmodules', createHashMap());
-
-    if (NATIVE_OBJECT_OBSERVE || window._ITSAmodules.EventTimerFinalize) {
-        return;
-    }
-
-    // we patch the global timer functions in order to run `refreshItags` afterwards:
-    setTimeoutBKP = window.setTimeout;
-    setIntervalBKP = window.setInterval;
-
-    window.setTimeout = function() {
-        var args = arguments;
-        args[0] = (function(originalFn) {
-            return function() {
-                var eventObject = {
-                        type: '',
-                        emitter: 'global',
-                        target: global
-                    };
-                originalFn();
-                console.log(NAME, 'setTimeOut will run Event.runFinalizers');
-                Event.runFinalizers(eventObject);
-            };
-        })(args[0]);
-        setTimeoutBKP.apply(this, arguments);
-    };
-
-    window.setInterval = function() {
-        var args = arguments;
-        args[0] = (function(originalFn) {
-            return function() {
-                var eventObject = {
-                        type: '',
-                        emitter: 'global',
-                        target: global
-                    };
-                originalFn();
-                console.log(NAME, 'setInterval will run Event.runFinalizers');
-                Event.runFinalizers(eventObject);
-            };
-        })(args[0]);
-        setIntervalBKP.apply(this, arguments);
-    };
-
-    if (typeof window.setImmediate !== 'undefined') {
-        setImmediateBKP = window.setInterval;
-        window.setImmediate = function() {
-            var args = arguments;
-            args[0] = (function(originalFn) {
-                return function() {
-                    var eventObject = {
-                            type: '',
-                            emitter: 'global',
-                            target: global
-                        };
-                    originalFn();
-                    console.log(NAME, 'setImmediate will run Event.runFinalizers');
-                    Event.runFinalizers(eventObject);
-                };
-            })(args[0]);
-            setImmediateBKP.apply(this, arguments);
-        };
-    }
-
-    window._ITSAmodules.EventTimerFinalize = true;
-
-};
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],760:[function(require,module,exports){
-
-},{}],761:[function(require,module,exports){
+},{}],1354:[function(require,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -32017,7 +33965,7 @@ function assert (test, message) {
   if (!test) throw new Error(message || 'Failed assertion')
 }
 
-},{"base64-js":762,"ieee754":763}],762:[function(require,module,exports){
+},{"base64-js":1355,"ieee754":1356}],1355:[function(require,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
@@ -32139,7 +34087,7 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	exports.fromByteArray = uint8ToBase64
 }(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
 
-},{}],763:[function(require,module,exports){
+},{}],1356:[function(require,module,exports){
 exports.read = function(buffer, offset, isLE, mLen, nBytes) {
   var e, m,
       eLen = nBytes * 8 - mLen - 1,
@@ -32225,7 +34173,7 @@ exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128;
 };
 
-},{}],764:[function(require,module,exports){
+},{}],1357:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -32530,7 +34478,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],765:[function(require,module,exports){
+},{}],1358:[function(require,module,exports){
 var http = module.exports;
 var EventEmitter = require('events').EventEmitter;
 var Request = require('./lib/request');
@@ -32669,7 +34617,7 @@ http.STATUS_CODES = {
     510 : 'Not Extended',               // RFC 2774
     511 : 'Network Authentication Required' // RFC 6585
 };
-},{"./lib/request":766,"events":764,"url":790}],766:[function(require,module,exports){
+},{"./lib/request":1359,"events":1357,"url":1383}],1359:[function(require,module,exports){
 var Stream = require('stream');
 var Response = require('./response');
 var Base64 = require('Base64');
@@ -32863,7 +34811,7 @@ var indexOf = function (xs, x) {
     return -1;
 };
 
-},{"./response":767,"Base64":768,"inherits":770,"stream":789}],767:[function(require,module,exports){
+},{"./response":1360,"Base64":1361,"inherits":1363,"stream":1382}],1360:[function(require,module,exports){
 var Stream = require('stream');
 var util = require('util');
 
@@ -32985,7 +34933,7 @@ var isArray = Array.isArray || function (xs) {
     return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{"stream":789,"util":792}],768:[function(require,module,exports){
+},{"stream":1382,"util":1385}],1361:[function(require,module,exports){
 ;(function () {
 
   var object = typeof exports != 'undefined' ? exports : this; // #8: web workers
@@ -33047,7 +34995,7 @@ var isArray = Array.isArray || function (xs) {
 
 }());
 
-},{}],769:[function(require,module,exports){
+},{}],1362:[function(require,module,exports){
 var http = require('http');
 
 var https = module.exports;
@@ -33062,7 +35010,7 @@ https.request = function (params, cb) {
     return http.request.call(this, params, cb);
 }
 
-},{"http":765}],770:[function(require,module,exports){
+},{"http":1358}],1363:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -33087,12 +35035,12 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],771:[function(require,module,exports){
+},{}],1364:[function(require,module,exports){
 module.exports = Array.isArray || function (arr) {
   return Object.prototype.toString.call(arr) == '[object Array]';
 };
 
-},{}],772:[function(require,module,exports){
+},{}],1365:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -33157,7 +35105,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],773:[function(require,module,exports){
+},{}],1366:[function(require,module,exports){
 (function (global){
 /*! http://mths.be/punycode v1.2.4 by @mathias */
 ;(function(root) {
@@ -33668,7 +35616,7 @@ process.chdir = function (dir) {
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],774:[function(require,module,exports){
+},{}],1367:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -33754,7 +35702,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],775:[function(require,module,exports){
+},{}],1368:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -33841,16 +35789,16 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],776:[function(require,module,exports){
+},{}],1369:[function(require,module,exports){
 'use strict';
 
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
-},{"./decode":774,"./encode":775}],777:[function(require,module,exports){
+},{"./decode":1367,"./encode":1368}],1370:[function(require,module,exports){
 module.exports = require("./lib/_stream_duplex.js")
 
-},{"./lib/_stream_duplex.js":778}],778:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":1371}],1371:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -33943,7 +35891,7 @@ function forEach (xs, f) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_readable":780,"./_stream_writable":782,"_process":772,"core-util-is":783,"inherits":770}],779:[function(require,module,exports){
+},{"./_stream_readable":1373,"./_stream_writable":1375,"_process":1365,"core-util-is":1376,"inherits":1363}],1372:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -33991,7 +35939,7 @@ PassThrough.prototype._transform = function(chunk, encoding, cb) {
   cb(null, chunk);
 };
 
-},{"./_stream_transform":781,"core-util-is":783,"inherits":770}],780:[function(require,module,exports){
+},{"./_stream_transform":1374,"core-util-is":1376,"inherits":1363}],1373:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -34954,7 +36902,7 @@ function indexOf (xs, x) {
 }
 
 }).call(this,require('_process'))
-},{"_process":772,"buffer":761,"core-util-is":783,"events":764,"inherits":770,"isarray":771,"stream":789,"string_decoder/":784}],781:[function(require,module,exports){
+},{"_process":1365,"buffer":1354,"core-util-is":1376,"events":1357,"inherits":1363,"isarray":1364,"stream":1382,"string_decoder/":1377}],1374:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -35166,7 +37114,7 @@ function done(stream, er) {
   return stream.push(null);
 }
 
-},{"./_stream_duplex":778,"core-util-is":783,"inherits":770}],782:[function(require,module,exports){
+},{"./_stream_duplex":1371,"core-util-is":1376,"inherits":1363}],1375:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -35557,7 +37505,7 @@ function endWritable(stream, state, cb) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_duplex":778,"_process":772,"buffer":761,"core-util-is":783,"inherits":770,"stream":789}],783:[function(require,module,exports){
+},{"./_stream_duplex":1371,"_process":1365,"buffer":1354,"core-util-is":1376,"inherits":1363,"stream":1382}],1376:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -35667,7 +37615,7 @@ function objectToString(o) {
   return Object.prototype.toString.call(o);
 }
 }).call(this,require("buffer").Buffer)
-},{"buffer":761}],784:[function(require,module,exports){
+},{"buffer":1354}],1377:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -35869,10 +37817,10 @@ function base64DetectIncompleteChar(buffer) {
   return incomplete;
 }
 
-},{"buffer":761}],785:[function(require,module,exports){
+},{"buffer":1354}],1378:[function(require,module,exports){
 module.exports = require("./lib/_stream_passthrough.js")
 
-},{"./lib/_stream_passthrough.js":779}],786:[function(require,module,exports){
+},{"./lib/_stream_passthrough.js":1372}],1379:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Readable = exports;
 exports.Writable = require('./lib/_stream_writable.js');
@@ -35880,13 +37828,13 @@ exports.Duplex = require('./lib/_stream_duplex.js');
 exports.Transform = require('./lib/_stream_transform.js');
 exports.PassThrough = require('./lib/_stream_passthrough.js');
 
-},{"./lib/_stream_duplex.js":778,"./lib/_stream_passthrough.js":779,"./lib/_stream_readable.js":780,"./lib/_stream_transform.js":781,"./lib/_stream_writable.js":782}],787:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":1371,"./lib/_stream_passthrough.js":1372,"./lib/_stream_readable.js":1373,"./lib/_stream_transform.js":1374,"./lib/_stream_writable.js":1375}],1380:[function(require,module,exports){
 module.exports = require("./lib/_stream_transform.js")
 
-},{"./lib/_stream_transform.js":781}],788:[function(require,module,exports){
+},{"./lib/_stream_transform.js":1374}],1381:[function(require,module,exports){
 module.exports = require("./lib/_stream_writable.js")
 
-},{"./lib/_stream_writable.js":782}],789:[function(require,module,exports){
+},{"./lib/_stream_writable.js":1375}],1382:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -36015,7 +37963,7 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"events":764,"inherits":770,"readable-stream/duplex.js":777,"readable-stream/passthrough.js":785,"readable-stream/readable.js":786,"readable-stream/transform.js":787,"readable-stream/writable.js":788}],790:[function(require,module,exports){
+},{"events":1357,"inherits":1363,"readable-stream/duplex.js":1370,"readable-stream/passthrough.js":1378,"readable-stream/readable.js":1379,"readable-stream/transform.js":1380,"readable-stream/writable.js":1381}],1383:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -36724,14 +38672,14 @@ function isNullOrUndefined(arg) {
   return  arg == null;
 }
 
-},{"punycode":773,"querystring":776}],791:[function(require,module,exports){
+},{"punycode":1366,"querystring":1369}],1384:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],792:[function(require,module,exports){
+},{}],1385:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -37321,7 +39269,7 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":791,"_process":772,"inherits":770}],"itags":[function(require,module,exports){
+},{"./support/isBuffer":1384,"_process":1365,"inherits":1363}],"itags":[function(require,module,exports){
 (function (global){
 /**
  * The ITSA module is an aggregator for all the individual modules that the library uses.
@@ -37353,4 +39301,4 @@ function hasOwnProperty(obj, prop) {
 
 })(global.window || require('node-win'));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"i-button":743,"i-checkbox":745,"i-form":747,"i-input":750,"i-label":751,"i-reset":752,"i-select":754,"i-tabpane":756,"node-win":731}]},{},[]);
+},{"i-button":1337,"i-checkbox":1339,"i-form":1341,"i-input":1344,"i-label":1345,"i-reset":1346,"i-select":1348,"i-tabpane":1350,"node-win":1325}]},{},[]);

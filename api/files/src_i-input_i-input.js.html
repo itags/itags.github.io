@@ -284,18 +284,15 @@ module.exports = function (window) {
             init: function() {
                 var element = this,
                     designNode = element.getDesignNode(),
-                    value = designNode.getText(),
-                    content;
+                    value = designNode.getText();
 
                 element.defineWhenUndefined(&#x27;value&#x27;, value)
                        // set the reset-value to the inital-value in case &#x60;reset-value&#x60; was not present
                        .defineWhenUndefined(&#x27;reset-value&#x27;, value);
+            },
 
-                // building the template of the itag:
-                content = &#x27;&lt;input value=&quot;&#x27;+value+&#x27;&quot; /&gt;&#x27;;
-
-                // set the content:
-                element.setHTML(content);
+            render: function() {
+                this.setHTML(&#x27;&lt;input value=&quot;&#x27;+this.model.value+&#x27;&quot; /&gt;&#x27;);
             },
 
             sync: function() {

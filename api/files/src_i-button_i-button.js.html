@@ -284,8 +284,10 @@ module.exports = function (window) {
                 // might have been defined when modeldata was boundend. Therefore, use &#x60;defineWhenUndefined&#x60;
 
                 element.defineWhenUndefined(&#x27;text&#x27;, (buttonText===&#x27;&#x27;) ? &#x27;&amp;nbsp;&#x27; : buttonText); // sets element.model.someprop = somevalue; when not defined yet
-                // set the content:
-                element.setHTML(&#x27;&lt;button&gt;&lt;/button&gt;&#x27;);
+            },
+
+            render: function() {
+                this.setHTML(&#x27;&lt;button&gt;&lt;/button&gt;&#x27;);
             },
 
             sync: function() {
