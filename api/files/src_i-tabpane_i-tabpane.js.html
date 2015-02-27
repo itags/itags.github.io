@@ -307,7 +307,7 @@ module.exports = function (window) {
             */
             init: function() {
                 var element = this,
-                    designNode = element.getDesignNode(),
+                    designNode = element.getItagContainer(),
                     itemNodes = designNode.getAll(&#x27;&gt;section&#x27;),
                     model = element.model,
                     pane = model.pane,

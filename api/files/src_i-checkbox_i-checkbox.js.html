@@ -248,7 +248,7 @@ module.exports = function (window) {
             e.preventDefault();
             element.itagReady().then(
                 function() {
-                    var focusNode = element.getElement(&#x27;&gt;div&#x27;);
+                    var focusNode = element.getElement(&#x27;&gt;span&#x27;);
                     focusNode &amp;&amp; focusNode.focus(true, true);
                 }
             );
@@ -260,7 +260,7 @@ module.exports = function (window) {
                 focusNode;
             if (!element.hasData(&#x27;_suppressTap&#x27;)) {
                 model.checked = !model.checked;
-                focusNode = element.getElement(&#x27;&gt;div&#x27;);
+                focusNode = element.getElement(&#x27;&gt;span&#x27;);
                 focusNode.hasFocus() || focusNode.focus();
             }
         }, &#x27;i-checkbox&#x27;);
@@ -336,7 +336,7 @@ module.exports = function (window) {
             init: function() {
                 var element = this,
                     value = element.model.checked,
-                    designNode = element.getDesignNode(),
+                    designNode = element.getItagContainer(),
                     options = designNode.getAll(&#x27;&gt;option&#x27;);
 
                 // set the reset-value to the inital-value in case &#x60;reset-value&#x60; was not present
@@ -350,17 +350,17 @@ module.exports = function (window) {
                 var element = this,
                     content, innerDiv, borderLeftWidth;
 
-                content = &#x27;&lt;div tabindex=&quot;0&quot;&gt;&#x27;+
-                              &#x27;&lt;div class=&quot;i-constrain&quot;&gt;&#x27;+
-                                  &#x27;&lt;div class=&quot;i-container&quot; dd-draggable=&quot;true&quot; dd-handle=&quot;.i-btn&quot; constrain-selector=&quot;.i-constrain&quot;&gt;&#x27;+
-                                      &#x27;&lt;div class=&quot;i-on&quot;&gt;I&lt;/div&gt;&#x27;+
-                                      &#x27;&lt;div class=&quot;i-off&quot;&gt;O&lt;/div&gt;&#x27;+
-                                      &#x27;&lt;div class=&quot;i-btn&quot;&gt;&lt;/div&gt;&#x27;+
-                                  &#x27;&lt;/div&gt;&#x27;+
-                              &#x27;&lt;/div&gt;&#x27;+
-                          &#x27;&lt;/div&gt;&#x27;;
+                content = &#x27;&lt;span tabindex=&quot;0&quot;&gt;&#x27;+
+                              &#x27;&lt;span class=&quot;i-constrain&quot;&gt;&#x27;+
+                                  &#x27;&lt;span class=&quot;i-container&quot; dd-draggable=&quot;true&quot; dd-handle=&quot;.i-btn&quot; constrain-selector=&quot;.i-constrain&quot;&gt;&#x27;+
+                                      &#x27;&lt;span class=&quot;i-on&quot;&gt;I&lt;/span&gt;&#x27;+
+                                      &#x27;&lt;span class=&quot;i-off&quot;&gt;O&lt;/span&gt;&#x27;+
+                                      &#x27;&lt;span class=&quot;i-btn&quot;&gt;&lt;/span&gt;&#x27;+
+                                  &#x27;&lt;/span&gt;&#x27;+
+                              &#x27;&lt;/span&gt;&#x27;+
+                          &#x27;&lt;/span&gt;&#x27;;
                 element.setHTML(content);
-                innerDiv = element.getElement(&#x27;&gt;div&#x27;);
+                innerDiv = element.getElement(&#x27;&gt;span&#x27;);
                 borderLeftWidth = parseInt(innerDiv.getStyle(&#x27;border-left-width&#x27;), 10);
                 element.setData(&#x27;_leftBorder&#x27;, borderLeftWidth);
                 element.setData(&#x27;_vertBorders&#x27;, parseInt(innerDiv.getStyle(&#x27;border-top-width&#x27;), 10) + parseInt(innerDiv.getStyle(&#x27;border-bottom-width&#x27;), 10));
@@ -378,9 +378,9 @@ module.exports = function (window) {
                     // the height that should be used by the innernodes, schould be decreased by the border-width
                     height -= element.getData(&#x27;_vertBorders&#x27;);
                     width -= element.getData(&#x27;_horBorders&#x27;);
-                    innerDiv = element.getElement(&#x27;&gt;div&#x27;);
-                    constrainNode = innerDiv.getElement(&#x27;&gt;div&#x27;);
-                    innerNodes = constrainNode.getAll(&#x27;&gt;div &gt;div&#x27;);
+                    innerDiv = element.getElement(&#x27;&gt;span&#x27;);
+                    constrainNode = innerDiv.getElement(&#x27;&gt;span&#x27;);
+                    innerNodes = constrainNode.getAll(&#x27;&gt;span &gt;span&#x27;);
                     halfHeight = Math.round(height/2);
                     shift = 3*Math.round(height/4);
                     innerDiv.setInlineStyle(&#x27;border-radius&#x27;, height+&#x27;px&#x27;);
@@ -413,15 +413,15 @@ module.exports = function (window) {
 
             _setUIState: function() {
                 var element = this,
-                    container = element.getElement(&#x27;&gt;div &gt;div &gt;div&#x27;),
+                    container = element.getElement(&#x27;&gt;span &gt;span &gt;span&#x27;),
                     newValue = element.model.checked ? (element.getData(&#x27;_width&#x27;)-element.getData(&#x27;_height&#x27;))+&#x27;px&#x27; : &#x27;0&#x27;;
                 (container.getInlineStyle(&#x27;left&#x27;)===newValue) || container.setInlineStyle(&#x27;left&#x27;, newValue);
             },
 
             sync: function() {
                 var element = this,
-                    container = element.getElement(&#x27;&gt;div &gt;div &gt;div&#x27;),
-                    itemContainers = container.getAll(&#x27;&gt;div&#x27;),
+                    container = element.getElement(&#x27;&gt;span &gt;span &gt;span&#x27;),
+                    itemContainers = container.getAll(&#x27;&gt;span&#x27;),
                     model = element.model;
                 element._fitCheckbox();
                 element._setUIState(model.checked);

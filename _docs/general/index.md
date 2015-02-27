@@ -315,7 +315,7 @@ var MyIFormClass = document.createItag('i-myform', {
 });
 ```
 
-* **init** {Function} the initialisation method: this method gets invoked once on creation of the itag. This is the place to setup. You might create an itag that reads (and destroys) innerHTML and put it into element.model.someproperty. The `innercontent` of the `HTML` -which is setup as a comment-node- is available with **this.getDesignNode()** --> this is a container-node with inner-content as true HTML-elements which can be queried. Needs no returnvalue.
+* **init** {Function} the initialisation method: this method gets invoked once on creation of the itag. This is the place to setup. You might create an itag that reads (and destroys) innerHTML and put it into element.model.someproperty. The `innercontent` of the `HTML` -which is setup as a comment-node- is available with **this.getItagContainer()** --> this is a container-node with inner-content as true HTML-elements which can be queried. Needs no returnvalue.
 
 * **sync** {Function} This is the method that gets invoked on every element.model change. You should process element.model data and update parts of the element.innerHTML here. Needs no returnvalue.
 Note: within the sync-method, you can set any attribute on the itag-element <u>except</u> those defined by `attrs` --> the attributes are bound to element.model and are life-updated by themselves.
@@ -628,6 +628,41 @@ ITSA.Event.before('i-myform:manualfocus', function(e) {
 ```
 
 
+#Notes#
+
+Be careful when an itag generates any of these elements inside:
+
+* address
+* article
+* aside
+* blockquote
+* dir
+* div
+* dl
+* fieldset
+* footer
+* form
+* h1
+* h2
+* h3
+* h4
+* h5
+* h6
+* header
+* hr
+* menu
+* nav
+* ol
+* p
+* pre
+* section
+* table
+* ul
+
+If it does, **then the `itag` cannot be server-side rendered if it is a descendent op the `p`-element**. Browsers would pull these elements [out of the `p`-element](http://www.w3.org/TR/html-markup/p.html) even if it is a descendant and no child-node (custom elements behave differently it seems). Yet the Itag itself still works inside `p`-elements, because this problem doesn't occur when the vdom renderes it client-side. [More information here](https://github.com/Polymer/polymer/issues/1180#issuecomment-75794009)
+
+
+
 #Best practices#
 
 The best way to create modules, is to start with the skeleton as mentioned above. You can erase the prototype-members you don't need (mostly <i>destroy</i>). Because itag-elements probably are interactive, you would need to setup events at the UI. These events need to update `element.model` **not** any attribute. To prevent the need of define new events for every instance, it is <u>not advised to setup event inside **init()**</u>. Instead, define these Events general using delegation: they will stay arround forever (even with no itag on the page), but you only need one to handle all itags.
@@ -855,7 +890,7 @@ module.exports = function (window) {
             */
             init: function() {
                 var element = this,
-                    designNode = element.getDesignNode(),
+                    designNode = element.getItagContainer(),
                     itemNodes = designNode.getAll('>span'),
                     items = [],
                     buttonTexts = [],

@@ -29475,7 +29475,7 @@ http://yuilibrary.com/license/
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{"_process":1365}],1336:[function(require,module,exports){
-var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-button;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-button:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-button:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\ni-button {\n    margin: 0;\n    display: inline-block;\n    *display: inline; /*IE 6/7*/\n    zoom: 1;\n    position: relative;\n    vertical-align: middle;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-button.i-primary >button,\ni-button.i-focussed >button {\n    background-color: rgb(0, 120, 231);\n    color: #fff;\n}\n\n/*csslint outline-none:false*/\n\ni-button >button {\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    -khtml-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    position: relative;\n    padding: 0.5em 1em;\n    color: inherit; /* 1 */\n    font: inherit; /* 2 */\n    margin: 0; /* 3 */\n    overflow: visible;\n    text-transform: none;\n    -webkit-appearance: button; /* 2 */\n    line-height: normal;\n    white-space: nowrap;\n    vertical-align: baseline;\n    text-align: center;\n    cursor: pointer;\n    -webkit-user-drag: none;\n    -webkit-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    font-family: inherit;\n    font-size: 100%;\n    color: #444; /* rgba not supported (IE 8) */\n    color: rgba(0, 0, 0, 0.80); /* rgba supported */\n    border: 1px solid #999;  /*IE 6/7/8*/\n    border: none rgba(0, 0, 0, 0);  /*IE9 + everything else*/\n    background-color: #E6E6E6;\n    text-decoration: none;\n    border-radius: 2px;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n}\n\n\ni-button.i-hover >button,\ni-button >button:hover,\ni-button >button:focus {\n    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#00000000', endColorstr='#1a000000',GradientType=0);\n    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(transparent), color-stop(40%, rgba(0,0,0, 0.05)), to(rgba(0,0,0, 0.10)));\n    background-image: -webkit-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: -moz-linear-gradient(top, rgba(0,0,0, 0.05) 0%, rgba(0,0,0, 0.10));\n    background-image: -o-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n}\n\ni-button >button:focus {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.5) inset;\n}\n\ni-button.i-hover >button,\ni-button >button:hover,\ni-button.i-hover >button:focus,\ni-button >button:hover:focus {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.7) inset;\n}\n\ni-button >button:focus {\n    outline: 0;\n}\ni-button.i-active >button,\ni-button >button.pure-button-active, /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-button >button:active {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.4) inset, 0 0 6px rgba(0,0,0, 0.2) inset;\n}\n\ni-button.i-disabled >button,\ni-button[disabled=\"true\"] >button,\ni-button.i-disabled >button:active,\ni-button[disabled=\"true\"] >button:active,\ni-button.i-disabled >button.pure-button-active, /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-button[disabled=\"true\"] >button.pure-button-active,\ni-button.i-disabled.i-active >button,\ni-button.i-active[disabled=\"true\"] >button,\ni-button.i-disabled >button:focus,\ni-button[disabled=\"true\"] >button:focus,\ni-button.i-disabled.focussed >button,\ni-button.focussed[disabled=\"true\"] >button,\ni-button.i-disabled >button:hover,\ni-button[disabled=\"true\"] >button:hover {\n    border: none;\n    background-image: none;\n    filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);\n    filter: alpha(opacity=60);\n    -khtml-opacity: 0.60;\n    -moz-opacity: 0.60;\n    opacity: 0.60;\n    cursor: not-allowed;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n    cursor: default;\n}\n\ni-button.i-rounded >button {\n    border-radius: 0.3em;\n}\n\ni-button.i-heavyrounded >button {\n    border-radius: 0.5em;\n}\n\ni-button.i-oval >button {\n    border-radius: 50%;\n}\n\ni-button.i-halfoval >button {\n    border-radius: 25%;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-button;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-button:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-button:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\ni-button {\n    margin: 0;\n    display: inline-block;\n    *display: inline; /*IE 6/7*/\n    zoom: 1;\n    position: relative;\n    vertical-align: middle;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-button.i-primary >button,\ni-button.i-focussed >button {\n    background-color: rgb(0, 120, 231);\n    color: #fff;\n}\n\n/*csslint outline-none:false*/\n\ni-button >button {\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    -khtml-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    position: relative;\n    padding: 0.5em 1em;\n    color: inherit; /* 1 */\n    font: inherit; /* 2 */\n    margin: 0; /* 3 */\n    overflow: visible;\n    text-transform: none;\n    -webkit-appearance: button; /* 2 */\n    line-height: normal;\n    white-space: nowrap;\n    vertical-align: baseline;\n    text-align: center;\n    cursor: pointer;\n    -webkit-user-drag: none;\n    -webkit-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    font-family: inherit;\n    font-size: 100%;\n    color: #444; /* rgba not supported (IE 8) */\n    color: rgba(0, 0, 0, 0.80); /* rgba supported */\n    border: 1px solid #999;  /*IE 6/7/8*/\n    border: none rgba(0, 0, 0, 0);  /*IE9 + everything else*/\n    background-color: #E6E6E6;\n    text-decoration: none;\n    border-radius: 2px;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n}\n\n\ni-button.i-hover >button,\ni-button >button:hover,\ni-button >button:focus {\n    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#00000000', endColorstr='#1a000000',GradientType=0);\n    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(transparent), color-stop(40%, rgba(0,0,0, 0.05)), to(rgba(0,0,0, 0.10)));\n    background-image: -webkit-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: -moz-linear-gradient(top, rgba(0,0,0, 0.05) 0%, rgba(0,0,0, 0.10));\n    background-image: -o-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n}\n\ni-button >button:focus {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.6) inset;\n}\n\ni-button.i-hover >button,\ni-button >button:hover,\ni-button.i-hover >button:focus,\ni-button >button:hover:focus {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.7) inset;\n}\n\ni-button >button:focus {\n    outline: 0;\n}\n\ni-button.i-active.i-hover >button,\ni-button.i-active >button:hover,\ni-button.i-active.i-hover >button:focus,\ni-button.i-active >button:hover:focus,\ni-button.i-hover >button.pure-button-active,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-button >button.pure-button-active:hover,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-button.i-hover >button.pure-button-active:focus,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-button >button.pure-button-active:hover:focus,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-button >button.pure-button-active,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-button >button.pure-button-active:focus,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-button.i-hover >button:active,\ni-button >button:hover:active,\ni-button.i-hover >button:focus:active,\ni-button >button:hover:focus:active {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.8) inset, 0 0 6px rgba(0,0,0, 0.4) inset;\n}\n\ni-button.i-disabled >button,\ni-button[disabled=\"true\"] >button,\ni-button.i-disabled >button:active,\ni-button[disabled=\"true\"] >button:active,\ni-button.i-disabled >button.pure-button-active, /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-button[disabled=\"true\"] >button.pure-button-active,\ni-button.i-disabled.i-active >button,\ni-button.i-active[disabled=\"true\"] >button,\ni-button.i-disabled >button:focus,\ni-button[disabled=\"true\"] >button:focus,\ni-button.i-disabled.focussed >button,\ni-button.focussed[disabled=\"true\"] >button,\ni-button.i-disabled >button:hover,\ni-button[disabled=\"true\"] >button:hover {\n    border: none;\n    background-image: none;\n    filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);\n    filter: alpha(opacity=60);\n    -khtml-opacity: 0.60;\n    -moz-opacity: 0.60;\n    opacity: 0.60;\n    cursor: not-allowed;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n    cursor: default;\n}\n\ni-button.i-rounded >button {\n    border-radius: 0.3em;\n}\n\ni-button.i-heavyrounded >button {\n    border-radius: 0.5em;\n}\n\ni-button.i-oval >button {\n    border-radius: 50%;\n}\n\ni-button.i-halfoval >button {\n    border-radius: 25%;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
 },{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1337:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
@@ -29538,7 +29538,7 @@ module.exports = function (window) {
             },
             init: function() {
                 var element = this,
-                    designNode = element.getDesignNode(),
+                    designNode = element.getItagContainer(),
                     buttonText = designNode.getHTML();
 
                 // when initializing: make sure NOT to overrule model-properties that already
@@ -29568,7 +29568,7 @@ module.exports = function (window) {
 };
 
 },{"./css/i-button.css":1336,"i-formelement":1342,"itags.core":1352}],1338:[function(require,module,exports){
-var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-checkbox;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-checkbox:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-checkbox:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\ni-checkbox {\n    font-size: 0.9em;\n    margin: 0;\n    padding: 0;\n    display: inline-block;\n    position: relative;\n    vertical-align: middle;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    width: 4.5em;\n    height: 1.9em;\n}\n\ni-checkbox div {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\n/* the first div is the focussable div */\ni-checkbox >div {\n    z-index: 1;\n    overflow: hidden;\n    border: 1px solid #CCC;\n    width: 100%;\n    height: 100%;\n}\n\ni-checkbox >div:focus .i-on,\ni-checkbox >div:focus .i-off {\n    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#00000000', endColorstr='#1a000000',GradientType=0);\n    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(transparent), color-stop(40%, rgba(0,0,0, 0.05)), to(rgba(0,0,0, 0.10)));\n    background-image: -webkit-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: -moz-linear-gradient(top, rgba(0,0,0, 0.05) 0%, rgba(0,0,0, 0.10));\n    background-image: -o-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.3) inset;\n}\n\ni-checkbox >div:focus .i-btn {\n    border: solid 1px #888;\n    box-shadow: inset 0 0.17em 0.5em rgba(0, 0, 0, 0.06);\n}\n\ni-checkbox .i-constrain {\n    height: 100%;\n    padding: 0;\n    margin: 0;\n    position: relative;\n    top: 0; /* left will be calculated by i-checkbox */\n}\n\ni-checkbox .i-container {\n    position: relative;\n    cursor: pointer;\n    padding: 0;\n    margin: 0;\n    height: 100%;\n    left: 0;\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    -khtml-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    -webkit-transition: left 0.25s;\n    -moz-transition: left 0.25s;\n    -ms-transition: left 0.25s;\n    -o-transition: left 0.25s;\n    transition: left 0.25s;\n}\n\ni-checkbox .i-on {\n    height: 100%;\n    background-color: #0078E7;\n    color: #FFF;\n    position: static;\n    text-align: center;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    padding-top: 2px;\n    float: left;\n    box-shadow: inset 0 0.3em 0.5em rgba(0, 0, 0, 0.18);\n}\n\ni-checkbox .i-off {\n    height: 100%;\n    background-color: #FFF;\n    color: #444;\n    position: static;\n    text-align: center;\n    padding-top: 2px;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    white-space: nowrap;\n    float: left;\n    box-shadow: inset 0 0.3em 0.5em rgba(0, 0, 0, 0.18);\n}\n\ni-checkbox .i-btn {\n    position: relative;\n    z-index: 1;\n    border-radius: 100%;\n    float: left;\n    box-shadow: inset 0 0.17em 0.5em rgba(0, 0, 0, 0.18);\n    background-color: #fff;\n    border: solid 1px #AAA;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-checkbox;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-checkbox:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-checkbox:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\ni-checkbox {\n    font-size: 0.9em;\n    margin: 0;\n    padding: 0;\n    display: inline-block;\n    position: relative;\n    vertical-align: middle;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    width: 4.5em;\n    height: 1.9em;\n}\n\ni-checkbox span {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-checkbox >span,\ni-checkbox >span >span,\ni-checkbox >span >span >span,\ni-checkbox >span >span >span >span {\n    display: block;\n}\n\n/* the first span is the focussable span */\ni-checkbox >span {\n    z-index: 1;\n    overflow: hidden;\n    border: 1px solid #CCC;\n    width: 100%;\n    height: 100%;\n}\n\ni-checkbox >span:focus .i-on,\ni-checkbox >span:focus .i-off {\n    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#00000000', endColorstr='#1a000000',GradientType=0);\n    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(transparent), color-stop(40%, rgba(0,0,0, 0.05)), to(rgba(0,0,0, 0.10)));\n    background-image: -webkit-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: -moz-linear-gradient(top, rgba(0,0,0, 0.05) 0%, rgba(0,0,0, 0.10));\n    background-image: -o-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.3) inset;\n}\n\ni-checkbox >span:focus .i-btn {\n    border: solid 1px #888;\n    box-shadow: inset 0 0.17em 0.5em rgba(0, 0, 0, 0.06);\n}\n\ni-checkbox .i-constrain {\n    height: 100%;\n    padding: 0;\n    margin: 0;\n    position: relative;\n    top: 0; /* left will be calculated by i-checkbox */\n}\n\ni-checkbox .i-container {\n    position: relative;\n    cursor: pointer;\n    padding: 0;\n    margin: 0;\n    height: 100%;\n    left: 0;\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    -khtml-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    -webkit-transition: left 0.25s;\n    -moz-transition: left 0.25s;\n    -ms-transition: left 0.25s;\n    -o-transition: left 0.25s;\n    transition: left 0.25s;\n}\n\ni-checkbox .i-on {\n    height: 100%;\n    background-color: #0078E7;\n    color: #FFF;\n    position: static;\n    text-align: center;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    padding-top: 2px;\n    float: left;\n    box-shadow: inset 0 0.3em 0.5em rgba(0, 0, 0, 0.18);\n}\n\ni-checkbox .i-off {\n    height: 100%;\n    background-color: #FFF;\n    color: #444;\n    position: static;\n    text-align: center;\n    padding-top: 2px;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    white-space: nowrap;\n    float: left;\n    box-shadow: inset 0 0.3em 0.5em rgba(0, 0, 0, 0.18);\n}\n\ni-checkbox .i-btn {\n    position: relative;\n    z-index: 1;\n    border-radius: 100%;\n    float: left;\n    box-shadow: inset 0 0.17em 0.5em rgba(0, 0, 0, 0.18);\n    background-color: #fff;\n    border: solid 1px #AAA;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
 },{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1339:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
@@ -29602,7 +29602,7 @@ module.exports = function (window) {
             e.preventDefault();
             element.itagReady().then(
                 function() {
-                    var focusNode = element.getElement('>div');
+                    var focusNode = element.getElement('>span');
                     focusNode && focusNode.focus(true, true);
                 }
             );
@@ -29614,7 +29614,7 @@ module.exports = function (window) {
                 focusNode;
             if (!element.hasData('_suppressTap')) {
                 model.checked = !model.checked;
-                focusNode = element.getElement('>div');
+                focusNode = element.getElement('>span');
                 focusNode.hasFocus() || focusNode.focus();
             }
         }, 'i-checkbox');
@@ -29690,7 +29690,7 @@ module.exports = function (window) {
             init: function() {
                 var element = this,
                     value = element.model.checked,
-                    designNode = element.getDesignNode(),
+                    designNode = element.getItagContainer(),
                     options = designNode.getAll('>option');
 
                 // set the reset-value to the inital-value in case `reset-value` was not present
@@ -29704,17 +29704,17 @@ module.exports = function (window) {
                 var element = this,
                     content, innerDiv, borderLeftWidth;
 
-                content = '<div tabindex="0">'+
-                              '<div class="i-constrain">'+
-                                  '<div class="i-container" dd-draggable="true" dd-handle=".i-btn" constrain-selector=".i-constrain">'+
-                                      '<div class="i-on">I</div>'+
-                                      '<div class="i-off">O</div>'+
-                                      '<div class="i-btn"></div>'+
-                                  '</div>'+
-                              '</div>'+
-                          '</div>';
+                content = '<span tabindex="0">'+
+                              '<span class="i-constrain">'+
+                                  '<span class="i-container" dd-draggable="true" dd-handle=".i-btn" constrain-selector=".i-constrain">'+
+                                      '<span class="i-on">I</span>'+
+                                      '<span class="i-off">O</span>'+
+                                      '<span class="i-btn"></span>'+
+                                  '</span>'+
+                              '</span>'+
+                          '</span>';
                 element.setHTML(content);
-                innerDiv = element.getElement('>div');
+                innerDiv = element.getElement('>span');
                 borderLeftWidth = parseInt(innerDiv.getStyle('border-left-width'), 10);
                 element.setData('_leftBorder', borderLeftWidth);
                 element.setData('_vertBorders', parseInt(innerDiv.getStyle('border-top-width'), 10) + parseInt(innerDiv.getStyle('border-bottom-width'), 10));
@@ -29732,9 +29732,9 @@ module.exports = function (window) {
                     // the height that should be used by the innernodes, schould be decreased by the border-width
                     height -= element.getData('_vertBorders');
                     width -= element.getData('_horBorders');
-                    innerDiv = element.getElement('>div');
-                    constrainNode = innerDiv.getElement('>div');
-                    innerNodes = constrainNode.getAll('>div >div');
+                    innerDiv = element.getElement('>span');
+                    constrainNode = innerDiv.getElement('>span');
+                    innerNodes = constrainNode.getAll('>span >span');
                     halfHeight = Math.round(height/2);
                     shift = 3*Math.round(height/4);
                     innerDiv.setInlineStyle('border-radius', height+'px');
@@ -29767,15 +29767,15 @@ module.exports = function (window) {
 
             _setUIState: function() {
                 var element = this,
-                    container = element.getElement('>div >div >div'),
+                    container = element.getElement('>span >span >span'),
                     newValue = element.model.checked ? (element.getData('_width')-element.getData('_height'))+'px' : '0';
                 (container.getInlineStyle('left')===newValue) || container.setInlineStyle('left', newValue);
             },
 
             sync: function() {
                 var element = this,
-                    container = element.getElement('>div >div >div'),
-                    itemContainers = container.getAll('>div'),
+                    container = element.getElement('>span >span >span'),
+                    itemContainers = container.getAll('>span'),
                     model = element.model;
                 element._fitCheckbox();
                 element._setUIState(model.checked);
@@ -29907,7 +29907,7 @@ module.exports = function (window) {
 
             render: function() {
                 var element = this,
-                    designNode = element.getDesignNode(),
+                    designNode = element.getItagContainer(),
                     allFormElements, children;
 
                 // we must add a classname to the i-form and remove it when all
@@ -30130,7 +30130,7 @@ module.exports = function (window) {
 
             init: function() {
                 var element = this,
-                    designNode = element.getDesignNode(),
+                    designNode = element.getItagContainer(),
                     value = designNode.getText();
 
                 element.defineWhenUndefined('value', value)
@@ -30205,7 +30205,7 @@ module.exports = function (window) {
 
             init: function() {
                 var element = this,
-                    designNode = element.getDesignNode(),
+                    designNode = element.getItagContainer(),
                     content = designNode.getHTML();
                 // when initializing: make sure NOT to overrule model-properties that already
                 // might have been defined when modeldata was boundend. Therefore, use `defineWhenUndefined`
@@ -30325,7 +30325,7 @@ module.exports = function (window) {
 };
 
 },{"i-button":1337,"itags.core":1352}],1347:[function(require,module,exports){
-var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-select;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-select:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-select:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\ni-select {\n    margin: 0;\n    display: inline-block;\n    *display: inline; /*IE 6/7*/\n    zoom: 1;\n    position: relative;\n    vertical-align: middle;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-select >div {\n    position: relative;\n    z-index: 2;\n    -webkit-transition: opacity 0.1s;\n    -moz-transition: opacity 0.1s;\n    -ms-transition: opacity 0.1s;\n    -o-transition: opacity 0.1s;\n    transition: opacity 0.1s;\n    opacity: 0;\n}\n\ni-select >div.i-select-show {\n    -webkit-transition: opacity 0.2s;\n    -moz-transition: opacity 0.2s;\n    -ms-transition: opacity 0.2s;\n    -o-transition: opacity 0.2s;\n    transition: opacity 0.2s;\n    opacity: 1;\n}\n\n\n\ni-select.i-primary >button,\ni-select.i-focussed >button {\n    background-color: rgb(0, 120, 231);\n    color: #fff;\n}\n\n/*csslint outline-none:false*/\n\ni-select >button {\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    -khtml-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    position: relative;\n    padding: 0.5em 0;\n    max-width: 8em;\n    color: inherit; /* 1 */\n    font: inherit; /* 2 */\n    margin: 0; /* 3 */\n    overflow: visible;\n    text-transform: none;\n    -webkit-appearance: button; /* 2 */\n    line-height: normal;\n    white-space: nowrap;\n    vertical-align: baseline;\n    text-align: center;\n    cursor: pointer;\n    -webkit-user-drag: none;\n    -webkit-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    font-family: inherit;\n    font-size: 100%;\n    color: #444; /* rgba not supported (IE 8) */\n    color: rgba(0, 0, 0, 0.80); /* rgba supported */\n    border: 1px solid #999;  /*IE 6/7/8*/\n    border: none rgba(0, 0, 0, 0);  /*IE9 + everything else*/\n    background-color: #E6E6E6;\n    text-decoration: none;\n    border-radius: 2px;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n}\n\n/* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select.i-hover >button,\ni-select >button:hover,\ni-select >button:focus {\n    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#00000000', endColorstr='#1a000000',GradientType=0);\n    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(transparent), color-stop(40%, rgba(0,0,0, 0.05)), to(rgba(0,0,0, 0.10)));\n    background-image: -webkit-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: -moz-linear-gradient(top, rgba(0,0,0, 0.05) 0%, rgba(0,0,0, 0.10));\n    background-image: -o-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.6) inset;\n}\ni-select >button:focus {\n    outline: 0;\n}\ni-select.i-active >button,\ni-select >button.pure-button-active, /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select >button:active {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.4) inset, 0 0 6px rgba(0,0,0, 0.2) inset;\n}\n\ni-select.i-disabled >button,\ni-select[disabled=\"true\"] >button,\ni-select.i-disabled >button:active,\ni-select[disabled=\"true\"] >button:active,\ni-select.i-disabled >button.pure-button-active, /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select[disabled=\"true\"] >button.pure-button-active,\ni-select.i-disabled.i-active >button,\ni-select.i-active[disabled=\"true\"] >button,\ni-select.i-disabled >button:focus,\ni-select[disabled=\"true\"] >button:focus,\ni-select.i-disabled.focussed >button,\ni-select.focussed[disabled=\"true\"] >button,\ni-select.i-disabled >button:hover,\ni-select[disabled=\"true\"] >button:hover {\n    border: none;\n    background-image: none;\n    filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);\n    filter: alpha(opacity=60);\n    -khtml-opacity: 0.60;\n    -moz-opacity: 0.60;\n    opacity: 0.60;\n    cursor: not-allowed;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n    cursor: default;\n}\n\ni-select.i-rounded >button {\n    border-radius: 0.3em;\n}\n\ni-select.i-heavyrounded >button {\n    border-radius: 0.5em;\n}\n\ni-select.i-oval >button {\n    border-radius: 50%;\n}\n\ni-select.i-halfoval >button {\n    border-radius: 25%;\n}\n\ni-select.i-hidden {\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -9;\n}\n\ni-select >button::-moz-focus-inner {\n  border: 0;\n  padding: 0;\n}\n\ni-select >button div.btntext {\n    margin: 0 1.25em 0 1em;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 8em;\n    display: block;\n}\n\ni-select >button div.pointer {\n    border-left: 0.4em solid rgba(0, 0, 0, 0);\n    border-right: 0.4em solid rgba(0, 0, 0, 0);\n    border-top: 0.5em solid #000;\n    right: 0.25em;\n    position: absolute;\n    bottom: 0.2em;\n}\n\ni-select >button.i-nonexpandable div.btntext {\n    margin: 0 1em;\n}\n\ni-select >button.i-nonexpandable div.pointer {\n    visibility: hidden;\n}\n\ni-select >div >div {\n    position: absolute;\n    left: 0;\n    top: 0;\n    cursor: pointer;\n    border-style: solid;\n    border-width: 0.1em;\n    -webkit-border-radius: 0 0 0.3em 0.3em;\n    -moz-border-radius: 0 0 0.3em 0.3em;\n    border-radius: 0 0 0.3em 0.3em;\n    -webkit-box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n    -moz-box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n    box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n}\n\ni-select ul {\n    font-size: 1.2em;\n    padding: 0 0 0.3em;\n    list-style: none;\n    margin: 0;\n}\n\ni-select li {\n    padding: 0.25em 0.7em;\n    white-space: nowrap;\n}\n\ni-select li.focussed {\n    background-color: #B3D4FF;\n}\n\ni-select li.selected:before {\n    content: '*';\n    margin-left: -0.7em;\n    padding-right: 0.25em;\n}\n\ni-select li:before,\ni-select li:after {\n    content: '';\n    padding: 0;\n    margin: 0;\n}\n\n/* color specification:; */\n\ni-select >div >div {\n    background-color: #FFF;\n    border-color: #000;\n}\n\ni-select li:hover {\n    background-color: #B3D4FF;\n}\n\ni-select.i-focused > button div.pointer,\ni-select.i-primary > button div.pointer {\n    border-top: 0.5em solid #FEFEFE;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-select;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-select:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-select:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\ni-select {\n    margin: 0;\n    display: inline-block;\n    *display: inline; /*IE 6/7*/\n    zoom: 1;\n    position: relative;\n    vertical-align: middle;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-select >span {\n    position: relative;\n    z-index: 2;\n    -webkit-transition: opacity 0.1s;\n    -moz-transition: opacity 0.1s;\n    -ms-transition: opacity 0.1s;\n    -o-transition: opacity 0.1s;\n    transition: opacity 0.1s;\n    opacity: 0;\n}\n\ni-select >span.i-select-show {\n    -webkit-transition: opacity 0.2s;\n    -moz-transition: opacity 0.2s;\n    -ms-transition: opacity 0.2s;\n    -o-transition: opacity 0.2s;\n    transition: opacity 0.2s;\n    opacity: 1;\n}\n\ni-select >button >span,\ni-select >span,\ni-select >span >span,\ni-select >span >span >span {\n    display: block;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-select.i-primary >button,\ni-select.i-focussed >button {\n    background-color: rgb(0, 120, 231);\n    color: #fff;\n}\n\n/*csslint outline-none:false*/\n\ni-select >button {\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    -khtml-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    position: relative;\n    padding: 0.5em 0;\n    max-width: 8em;\n    color: inherit; /* 1 */\n    font: inherit; /* 2 */\n    margin: 0; /* 3 */\n    overflow: visible;\n    text-transform: none;\n    -webkit-appearance: button; /* 2 */\n    line-height: normal;\n    white-space: nowrap;\n    vertical-align: baseline;\n    text-align: center;\n    cursor: pointer;\n    -webkit-user-drag: none;\n    -webkit-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    font-family: inherit;\n    font-size: 100%;\n    color: #444; /* rgba not supported (IE 8) */\n    color: rgba(0, 0, 0, 0.80); /* rgba supported */\n    border: 1px solid #999;  /*IE 6/7/8*/\n    border: none rgba(0, 0, 0, 0);  /*IE9 + everything else*/\n    background-color: #E6E6E6;\n    text-decoration: none;\n    border-radius: 2px;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n}\n\n/* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select.i-hover >button,\ni-select >button:hover,\ni-select >button:focus {\n    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#00000000', endColorstr='#1a000000',GradientType=0);\n    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(transparent), color-stop(40%, rgba(0,0,0, 0.05)), to(rgba(0,0,0, 0.10)));\n    background-image: -webkit-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: -moz-linear-gradient(top, rgba(0,0,0, 0.05) 0%, rgba(0,0,0, 0.10));\n    background-image: -o-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n}\ni-select >button:focus {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.6) inset;\n    outline: 0;\n}\ni-select.i-active.i-hover >button,\ni-select.i-active >button:hover,\ni-select.i-active.i-hover >button:focus,\ni-select.i-active >button:hover:focus,\ni-select.i-hover >button.pure-button-active,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select >button.pure-button-active:hover,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select.i-hover >button.pure-button-active:focus,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select >button.pure-button-active:hover:focus,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select >button.pure-button-active,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select >button.pure-button-active:focus,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select.i-hover >button:active,\ni-select >button:hover:active,\ni-select.i-hover >button:focus:active,\ni-select >button:hover:focus:active {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.8) inset, 0 0 6px rgba(0,0,0, 0.4) inset;\n}\n\ni-select.i-disabled >button,\ni-select[disabled=\"true\"] >button,\ni-select.i-disabled >button:active,\ni-select[disabled=\"true\"] >button:active,\ni-select.i-disabled >button.pure-button-active, /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select[disabled=\"true\"] >button.pure-button-active,\ni-select.i-disabled.i-active >button,\ni-select.i-active[disabled=\"true\"] >button,\ni-select.i-disabled >button:focus,\ni-select[disabled=\"true\"] >button:focus,\ni-select.i-disabled.focussed >button,\ni-select.focussed[disabled=\"true\"] >button,\ni-select.i-disabled >button:hover,\ni-select[disabled=\"true\"] >button:hover {\n    border: none;\n    background-image: none;\n    filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);\n    filter: alpha(opacity=60);\n    -khtml-opacity: 0.60;\n    -moz-opacity: 0.60;\n    opacity: 0.60;\n    cursor: not-allowed;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n    cursor: default;\n}\n\ni-select.i-rounded >button {\n    border-radius: 0.3em;\n}\n\ni-select.i-heavyrounded >button {\n    border-radius: 0.5em;\n}\n\ni-select.i-oval >button {\n    border-radius: 50%;\n}\n\ni-select.i-halfoval >button {\n    border-radius: 25%;\n}\n\ni-select.i-hidden {\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -9;\n}\n\ni-select >button::-moz-focus-inner {\n  border: 0;\n  padding: 0;\n}\n\ni-select >button >span.btntext {\n    margin: 0 1.25em 0 1em;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 8em;\n    display: block;\n}\n\ni-select >button >span.pointer {\n    border-left: 0.4em solid rgba(0, 0, 0, 0);\n    border-right: 0.4em solid rgba(0, 0, 0, 0);\n    border-top: 0.5em solid #000;\n    right: 0.25em;\n    position: absolute;\n    bottom: 0.2em;\n}\n\ni-select >button.i-nonexpandable span.btntext {\n    margin: 0 1em;\n}\n\ni-select >button.i-nonexpandable span.pointer {\n    visibility: hidden;\n}\n\ni-select >span >span {\n    position: absolute;\n    left: 0;\n    top: 0;\n    cursor: pointer;\n    border-style: solid;\n    border-width: 0.1em;\n    -webkit-border-radius: 0 0 0.3em 0.3em;\n    -moz-border-radius: 0 0 0.3em 0.3em;\n    border-radius: 0 0 0.3em 0.3em;\n    -webkit-box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n    -moz-box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n    box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n}\n\ni-select >span >span >span {\n    font-size: 1.2em;\n    padding: 0 0 0.3em;\n    list-style: none;\n    margin: 0;\n}\n\ni-select option {\n    padding: 0.25em 0.7em;\n    white-space: nowrap;\n}\n\ni-select option.focussed {\n    background-color: #B3D4FF;\n}\n\ni-select option.selected:before {\n    content: '*';\n    margin-left: -0.7em;\n    padding-right: 0.25em;\n}\n\ni-select option:before,\ni-select option:after {\n    content: '';\n    padding: 0;\n    margin: 0;\n}\n\n/* color specification:; */\n\ni-select >span >span {\n    background-color: #FFF;\n    border-color: #000;\n}\n\ni-select option:hover {\n    background-color: #B3D4FF;\n}\n\ni-select.i-focused > button span.pointer,\ni-select.i-primary > button span.pointer {\n    border-top: 0.5em solid #FEFEFE;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
 },{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1348:[function(require,module,exports){
 /**
  * Provides several methods that override native Element-methods to work with the vdom.
@@ -30417,12 +30417,12 @@ module.exports = function (window) {
                     }
                     model.expanded = !model.expanded;
                     if (!model.expanded) {
-                        liNode = element.getElement('ul[plugin-fm="true"] >li[fm-defaultitem]');
+                        liNode = element.getElement('span[plugin-fm="true"] >option[fm-defaultitem]');
                         liNode && liNode.focus(true);
                     }
                 }
                 if (model.expanded) {
-                    ulNode = element.getElement('ul[plugin-fm="true"]');
+                    ulNode = element.getElement('span[plugin-fm="true"]');
                     ulNode && ulNode.focus(true);
                 }
                 if (model.expanded || (e_type==='tap')) {
@@ -30450,7 +30450,7 @@ module.exports = function (window) {
                     }
                     model = element.model;
                     ulNode = liNode.getParent();
-                    index = ulNode.getAll('li').indexOf(liNode);
+                    index = ulNode.getAll('option').indexOf(liNode);
                     model.expanded = false;
                     model.value = index+1;
                     if (e_type==='tap') {
@@ -30458,7 +30458,7 @@ module.exports = function (window) {
                         laterSilent(function() {
                             element.removeData('_suppressClose');
                         }, SUPPRESS_DELAY);
-                        ulNode = element.getElement('ul[plugin-fm="true"]');
+                        ulNode = element.getElement('span[plugin-fm="true"]');
                         ulNode && ulNode.focus(true);
                     }
                     // prevent that the focus will be reset to the focusmanager
@@ -30469,7 +30469,7 @@ module.exports = function (window) {
                     });
                 }
             }
-        }, 'i-select ul[plugin-fm="true"] > li');
+        }, 'i-select span[plugin-fm="true"] > option');
 
         Event.defineEvent(itagName+':valuechange')
              .unPreventable()
@@ -30533,7 +30533,7 @@ module.exports = function (window) {
             */
             init: function() {
                 var element = this,
-                    designNode = element.getDesignNode(),
+                    designNode = element.getItagContainer(),
                     itemNodes = designNode.getAll('>option'),
                     items = [],
                     buttonTexts = [],
@@ -30572,15 +30572,15 @@ module.exports = function (window) {
                 var element = this,
                     content;
                 // building the template of the itag:
-                content = '<button><div class="pointer"></div><div class="btntext"></div></button>';
+                content = '<button><span class="pointer"></span><span class="btntext"></span></button>';
                 // first: outerdiv which will be relative positioned
                 // next: innerdiv which will be absolute positioned
                 // also: hide the container by default --> updateUI could make it shown
-                content += '<div class="itsa-hidden">' +
-                             '<div>'+
-                               '<ul plugin-fm="true" fm-manage="li" fm-keyup="38" fm-keydown="40" fm-noloop="true"></ul>';
-                             '</div>'+
-                           '</div>';
+                content += '<span class="itsa-hidden">' +
+                             '<span>'+
+                               '<span plugin-fm="true" fm-manage="option" fm-keyup="38" fm-keydown="40" fm-noloop="true"></span>';
+                             '</span>'+
+                           '</span>';
                 // set the content:
                 element.setHTML(content);
             },
@@ -30666,9 +30666,9 @@ module.exports = function (window) {
                 // rebuild the button:
                 button = element.getElement('button');
                 button.toggleClass('i-nonexpandable', (len<2));
-                button.getElement('div.btntext').setHTML(buttonText);
+                button.getElement('span.btntext').setHTML(buttonText);
 
-                container = element.getElement('>div');
+                container = element.getElement('>span');
 
                 if (model.expanded && !model.disabled && !element.hasClass('i-disabled') && (len>1)) {
                     hiddenTimer = container.getData('_hiddenTimer');
@@ -30685,11 +30685,11 @@ module.exports = function (window) {
                     container.setData('_hiddenTimer', hiddenTimer);
                 }
 
-                itemsContainer = element.getElement('ul[plugin-fm="true"]');
+                itemsContainer = element.getElement('span[plugin-fm="true"]');
                 content = '';
                 for (i=0; i<len; i++) {
                     item = items[i];
-                    content += '<li'+((i===markValue) ? ' class="selected" fm-defaultitem="true"' : '')+'>'+item+'</li>';
+                    content += '<option'+((i===markValue) ? ' class="selected" fm-defaultitem="true"' : '')+'>'+item+'</option>';
                 }
 
                 // set the items:
@@ -30802,7 +30802,7 @@ module.exports = function (window) {
             */
             init: function() {
                 var element = this,
-                    designNode = element.getDesignNode(),
+                    designNode = element.getItagContainer(),
                     itemNodes = designNode.getAll('>section'),
                     model = element.model,
                     pane = model.pane,
@@ -31146,7 +31146,7 @@ module.exports = function (window) {
             return instance;
         },
 
-        getDesignNode: function() {
+        getItagContainer: function() {
             return this.vnode.ce_designNode;
         },
 
