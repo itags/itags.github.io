@@ -131,10 +131,6 @@ module.exports.byUrl = function(url) {
         base: '/components'
     };
 
-    ITSA.Plugins = {
-
-    };
-
     /**
      * Reference to `Classes` in [js-ext/extra/classes.js](../modules/js-ext.html)
      *
@@ -182,7 +178,8 @@ module.exports.byUrl = function(url) {
      * @type function
      * @static
     */
-    ITSA.Plugins.merge(require('node-plugin')(window));
+    require('node-plugin')(window);
+    require('constrain')(window);
 
     ITSA.merge(require('utils'));
     ITSA.RESERVED_WORDS = require('js-ext/extra/reserved-words.js');
@@ -194,10 +191,12 @@ module.exports.byUrl = function(url) {
         require('event-dom/extra/focusnode.js')(window);
         // setup dragdrop:
         dragdrop = require('drag-drop')(window);
-        ITSA.DD = dragdrop.DD;
-        ITSA.Plugins.merge(dragdrop.Plugins);
-        ITSA.Plugins.focusManager = require('focusmanager')(window);
+        ITSA.DD = dragdrop;
+        ITSA.DD.init();
+        require('focusmanager')(window);
     }
+
+    require('scrollable')(window);
 
     /**
      * Reference to the [IO](io.html) object
@@ -232,1782 +231,765 @@ module.exports.byUrl = function(url) {
 })(global.window || require('node-win'));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"css":6,"drag-drop":8,"event":767,"event-dom/extra/blurnode.js":609,"event-dom/extra/focusnode.js":610,"event-dom/extra/hover.js":611,"event-dom/extra/valuechange.js":612,"event-mobile":683,"event/extra/objectobserve.js":765,"focusmanager":783,"io/extra/io-cors-ie9.js":1045,"io/extra/io-stream.js":1046,"io/extra/io-transfer.js":1047,"io/extra/io-xml.js":1048,"js-ext/extra/reserved-words.js":1073,"js-ext/js-ext.js":1074,"node-plugin":1085,"node-win":1247,"polyfill/polyfill.js":1260,"useragent":1269,"utils":1270,"vdom":1316,"window-ext":1317}],3:[function(require,module,exports){
-var css = "*:focus {\n    outline: 0;\n}\n\na[target=\"_blank\"]:focus {\n    outline: 1px solid #129fea;\n}\n\n/* because we think the padding and margin should always be part of the size,\n   we define \"box-sizing: border-box\" for all elements */\n\n* {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],4:[function(require,module,exports){
-var css = ".pure-menu.pure-menu-open {\n    z-index: 3; /* prevent graph from crossing the menuarea */\n}\n\n.pure-button.pure-button-bordered,\n.pure-button.pure-button-bordered[disabled] {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n}\n\n.pure-button-active,\n.pure-button:active,\n.pure-button.pure-button-bordered.pure-button-active,\n.pure-button.pure-button-bordered.pure-button-active[disabled],\n.pure-button.pure-button-bordered:active,\n.pure-button.pure-button-bordered[disabled]:active {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.4) inset, 0 0 6px rgba(0,0,0, 0.2) inset;\n}\n\n.pure-button.pure-button-bordered:focus,\n.pure-button.pure-button-bordered[disabled]:focus,\n.pure-button.pure-button-bordered:focus,\n.pure-button.pure-button-bordered[disabled]:focus,\n.pure-button.pure-button-bordered.focussed,\n.pure-button.pure-button-bordered[disabled].focussed,\n.pure-button.pure-button-bordered.focussed,\n.pure-button.pure-button-bordered[disabled].focussed {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.6) inset;\n}\n\n/* restore pure-button:active */\n.pure-button.pure-button-bordered:active,\n.pure-button.pure-button-bordered.pure-button-active,\n.pure-button:active:focus,\n.pure-button.pure-button-active:focus {\n    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6) inset, 0 0 10px rgba(0, 0, 0, 0.2) inset;\n}\n\n.pure-button.pure-button-rounded {\n    border-radius: 0.3em;\n}\n\n.pure-button.pure-button-heavyrounded {\n    border-radius: 0.5em;\n}\n\n.pure-button.pure-button-oval {\n    border-radius: 50%;\n}\n\n.pure-button.pure-button-halfoval {\n    border-radius: 25%;\n}\n"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],5:[function(require,module,exports){
-var css = "/*!\nPure v0.5.0\nCopyright 2014 Yahoo! Inc. All rights reserved.\nLicensed under the BSD License.\nhttps://github.com/yahoo/pure/blob/master/LICENSE.md\n*/\n/*!\nnormalize.css v^3.0 | MIT License | git.io/normalize\nCopyright (c) Nicolas Gallagher and Jonathan Neal\n*/\n/*! normalize.css v3.0.2 | MIT License | git.io/normalize */\n\n/**\n * 1. Set default font family to sans-serif.\n * 2. Prevent iOS text size adjust after orientation change, without disabling\n *    user zoom.\n */\n\nhtml {\n  font-family: sans-serif; /* 1 */\n  -ms-text-size-adjust: 100%; /* 2 */\n  -webkit-text-size-adjust: 100%; /* 2 */\n}\n\n/**\n * Remove default margin.\n */\n\nbody {\n  margin: 0;\n}\n\n/* HTML5 display definitions\n   ========================================================================== */\n\n/**\n * Correct `block` display not defined for any HTML5 element in IE 8/9.\n * Correct `block` display not defined for `details` or `summary` in IE 10/11\n * and Firefox.\n * Correct `block` display not defined for `main` in IE 11.\n */\n\narticle,\naside,\ndetails,\nfigcaption,\nfigure,\nfooter,\nheader,\nhgroup,\nmain,\nmenu,\nnav,\nsection,\nsummary {\n  display: block;\n}\n\n/**\n * 1. Correct `inline-block` display not defined in IE 8/9.\n * 2. Normalize vertical alignment of `progress` in Chrome, Firefox, and Opera.\n */\n\naudio,\ncanvas,\nprogress,\nvideo {\n  display: inline-block; /* 1 */\n  vertical-align: baseline; /* 2 */\n}\n\n/**\n * Prevent modern browsers from displaying `audio` without controls.\n * Remove excess height in iOS 5 devices.\n */\n\naudio:not([controls]) {\n  display: none;\n  height: 0;\n}\n\n/**\n * Address `[hidden]` styling not present in IE 8/9/10.\n * Hide the `template` element in IE 8/9/11, Safari, and Firefox < 22.\n */\n\n[hidden],\ntemplate {\n  display: none;\n}\n\n/* Links\n   ========================================================================== */\n\n/**\n * Remove the gray background color from active links in IE 10.\n */\n\na {\n  background-color: transparent;\n}\n\n/**\n * Improve readability when focused and also mouse hovered in all browsers.\n */\n\na:active,\na:hover {\n  outline: 0;\n}\n\n/* Text-level semantics\n   ========================================================================== */\n\n/**\n * Address styling not present in IE 8/9/10/11, Safari, and Chrome.\n */\n\nabbr[title] {\n  border-bottom: 1px dotted;\n}\n\n/**\n * Address style set to `bolder` in Firefox 4+, Safari, and Chrome.\n */\n\nb,\nstrong {\n  font-weight: bold;\n}\n\n/**\n * Address styling not present in Safari and Chrome.\n */\n\ndfn {\n  font-style: italic;\n}\n\n/**\n * Address variable `h1` font-size and margin within `section` and `article`\n * contexts in Firefox 4+, Safari, and Chrome.\n */\n\nh1 {\n  font-size: 2em;\n  margin: 0.67em 0;\n}\n\n/**\n * Address styling not present in IE 8/9.\n */\n\nmark {\n  background: #ff0;\n  color: #000;\n}\n\n/**\n * Address inconsistent and variable font size in all browsers.\n */\n\nsmall {\n  font-size: 80%;\n}\n\n/**\n * Prevent `sub` and `sup` affecting `line-height` in all browsers.\n */\n\nsub,\nsup {\n  font-size: 75%;\n  line-height: 0;\n  position: relative;\n  vertical-align: baseline;\n}\n\nsup {\n  top: -0.5em;\n}\n\nsub {\n  bottom: -0.25em;\n}\n\n/* Embedded content\n   ========================================================================== */\n\n/**\n * Remove border when inside `a` element in IE 8/9/10.\n */\n\nimg {\n  border: 0;\n}\n\n/**\n * Correct overflow not hidden in IE 9/10/11.\n */\n\nsvg:not(:root) {\n  overflow: hidden;\n}\n\n/* Grouping content\n   ========================================================================== */\n\n/**\n * Address margin not present in IE 8/9 and Safari.\n */\n\nfigure {\n  margin: 1em 40px;\n}\n\n/**\n * Address differences between Firefox and other browsers.\n */\n\nhr {\n  -moz-box-sizing: content-box;\n  box-sizing: content-box;\n  height: 0;\n}\n\n/**\n * Contain overflow in all browsers.\n */\n\npre {\n  overflow: auto;\n}\n\n/**\n * Address odd `em`-unit font size rendering in all browsers.\n */\n\ncode,\nkbd,\npre,\nsamp {\n  font-family: monospace, monospace;\n  font-size: 1em;\n}\n\n/* Forms\n   ========================================================================== */\n\n/**\n * Known limitation: by default, Chrome and Safari on OS X allow very limited\n * styling of `select`, unless a `border` property is set.\n */\n\n/**\n * 1. Correct color not being inherited.\n *    Known issue: affects color of disabled elements.\n * 2. Correct font properties not being inherited.\n * 3. Address margins set differently in Firefox 4+, Safari, and Chrome.\n */\n\nbutton,\ninput,\noptgroup,\nselect,\ntextarea {\n  color: inherit; /* 1 */\n  font: inherit; /* 2 */\n  margin: 0; /* 3 */\n}\n\n/**\n * Address `overflow` set to `hidden` in IE 8/9/10/11.\n */\n\nbutton {\n  overflow: visible;\n}\n\n/**\n * Address inconsistent `text-transform` inheritance for `button` and `select`.\n * All other form control elements do not inherit `text-transform` values.\n * Correct `button` style inheritance in Firefox, IE 8/9/10/11, and Opera.\n * Correct `select` style inheritance in Firefox.\n */\n\nbutton,\nselect {\n  text-transform: none;\n}\n\n/**\n * 1. Avoid the WebKit bug in Android 4.0.* where (2) destroys native `audio`\n *    and `video` controls.\n * 2. Correct inability to style clickable `input` types in iOS.\n * 3. Improve usability and consistency of cursor style between image-type\n *    `input` and others.\n */\n\nbutton,\nhtml input[type=\"button\"], /* 1 */\ninput[type=\"reset\"],\ninput[type=\"submit\"] {\n  -webkit-appearance: button; /* 2 */\n  cursor: pointer; /* 3 */\n}\n\n/**\n * Re-set default cursor for disabled elements.\n */\n\nbutton[disabled],\nhtml input[disabled] {\n  cursor: default;\n}\n\n/**\n * Remove inner padding and border in Firefox 4+.\n */\n\nbutton::-moz-focus-inner,\ninput::-moz-focus-inner {\n  border: 0;\n  padding: 0;\n}\n\n/**\n * Address Firefox 4+ setting `line-height` on `input` using `!important` in\n * the UA stylesheet.\n */\n\ninput {\n  line-height: normal;\n}\n\n/**\n * It's recommended that you don't attempt to style these elements.\n * Firefox's implementation doesn't respect box-sizing, padding, or width.\n *\n * 1. Address box sizing set to `content-box` in IE 8/9/10.\n * 2. Remove excess padding in IE 8/9/10.\n */\n\ninput[type=\"checkbox\"],\ninput[type=\"radio\"] {\n  box-sizing: border-box; /* 1 */\n  padding: 0; /* 2 */\n}\n\n/**\n * Fix the cursor style for Chrome's increment/decrement buttons. For certain\n * `font-size` values of the `input`, it causes the cursor style of the\n * decrement button to change from `default` to `text`.\n */\n\ninput[type=\"number\"]::-webkit-inner-spin-button,\ninput[type=\"number\"]::-webkit-outer-spin-button {\n  height: auto;\n}\n\n/**\n * 1. Address `appearance` set to `searchfield` in Safari and Chrome.\n * 2. Address `box-sizing` set to `border-box` in Safari and Chrome\n *    (include `-moz` to future-proof).\n */\n\ninput[type=\"search\"] {\n  -webkit-appearance: textfield; /* 1 */\n  -moz-box-sizing: content-box;\n  -webkit-box-sizing: content-box; /* 2 */\n  box-sizing: content-box;\n}\n\n/**\n * Remove inner padding and search cancel button in Safari and Chrome on OS X.\n * Safari (but not Chrome) clips the cancel button when the search input has\n * padding (and `textfield` appearance).\n */\n\ninput[type=\"search\"]::-webkit-search-cancel-button,\ninput[type=\"search\"]::-webkit-search-decoration {\n  -webkit-appearance: none;\n}\n\n/**\n * Define consistent border, margin, and padding.\n */\n\nfieldset {\n  border: 1px solid #c0c0c0;\n  margin: 0 2px;\n  padding: 0.35em 0.625em 0.75em;\n}\n\n/**\n * 1. Correct `color` not being inherited in IE 8/9/10/11.\n * 2. Remove padding so people aren't caught out if they zero out fieldsets.\n */\n\nlegend {\n  border: 0; /* 1 */\n  padding: 0; /* 2 */\n}\n\n/**\n * Remove default vertical scrollbar in IE 8/9/10/11.\n */\n\ntextarea {\n  overflow: auto;\n}\n\n/**\n * Don't inherit the `font-weight` (applied by a rule above).\n * NOTE: the default cannot safely be changed in Chrome and Safari on OS X.\n */\n\noptgroup {\n  font-weight: bold;\n}\n\n/* Tables\n   ========================================================================== */\n\n/**\n * Remove most spacing between table cells.\n */\n\ntable {\n  border-collapse: collapse;\n  border-spacing: 0;\n}\n\ntd,\nth {\n  padding: 0;\n}\n\n/*csslint important:false*/\n\n/* ==========================================================================\n   Pure Base Extras\n   ========================================================================== */\n\n/**\n * Extra rules that Pure adds on top of Normalize.css\n */\n\n/**\n * Always hide an element when it has the `hidden` HTML attribute.\n */\n\n[hidden] {\n    display: none !important;\n}\n\n/**\n * Add this class to an image to make it fit within it's fluid parent wrapper while maintaining\n * aspect ratio.\n */\n.pure-img {\n    max-width: 100%;\n    height: auto;\n    display: block;\n}\n\n/*csslint regex-selectors:false, known-properties:false, duplicate-properties:false*/\n\n.pure-g {\n    letter-spacing: -0.31em; /* Webkit: collapse white-space between units */\n    *letter-spacing: normal; /* reset IE < 8 */\n    *word-spacing: -0.43em; /* IE < 8: collapse white-space between units */\n    text-rendering: optimizespeed; /* Webkit: fixes text-rendering: optimizeLegibility */\n\n    /*\n    Sets the font stack to fonts known to work properly with the above letter\n    and word spacings. See: https://github.com/yahoo/pure/issues/41/\n\n    The following font stack makes Pure Grids work on all known environments.\n\n    * FreeSans: Ships with many Linux distros, including Ubuntu\n\n    * Arimo: Ships with Chrome OS. Arimo has to be defined before Helvetica and\n      Arial to get picked up by the browser, even though neither is available\n      in Chrome OS.\n\n    * Droid Sans: Ships with all versions of Android.\n\n    * Helvetica, Arial, sans-serif: Common font stack on OS X and Windows.\n    */\n    font-family: FreeSans, Arimo, \"Droid Sans\", Helvetica, Arial, sans-serif;\n\n    /*\n    Use flexbox when possible to avoid `letter-spacing` side-effects.\n\n    NOTE: Firefox (as of 25) does not currently support flex-wrap, so the\n    `-moz-` prefix version is omitted.\n    */\n\n    display: -webkit-flex;\n    -webkit-flex-flow: row wrap;\n\n    /* IE10 uses display: flexbox */\n    display: -ms-flexbox;\n    -ms-flex-flow: row wrap;\n}\n\n/* Opera as of 12 on Windows needs word-spacing.\n   The \".opera-only\" selector is used to prevent actual prefocus styling\n   and is not required in markup.\n*/\n.opera-only :-o-prefocus,\n.pure-g {\n    word-spacing: -0.43em;\n}\n\n.pure-u {\n    display: inline-block;\n    *display: inline; /* IE < 8: fake inline-block */\n    zoom: 1;\n    letter-spacing: normal;\n    word-spacing: normal;\n    vertical-align: top;\n    text-rendering: auto;\n}\n\n/*\nResets the font family back to the OS/browser's default sans-serif font,\nthis the same font stack that Normalize.css sets for the `body`.\n*/\n.pure-g [class *= \"pure-u\"] {\n    font-family: sans-serif;\n}\n\n.pure-u-1,\n.pure-u-1-1,\n.pure-u-1-2,\n.pure-u-1-3,\n.pure-u-2-3,\n.pure-u-1-4,\n.pure-u-3-4,\n.pure-u-1-5,\n.pure-u-2-5,\n.pure-u-3-5,\n.pure-u-4-5,\n.pure-u-5-5,\n.pure-u-1-6,\n.pure-u-5-6,\n.pure-u-1-8,\n.pure-u-3-8,\n.pure-u-5-8,\n.pure-u-7-8,\n.pure-u-1-12,\n.pure-u-5-12,\n.pure-u-7-12,\n.pure-u-11-12,\n.pure-u-1-24,\n.pure-u-2-24,\n.pure-u-3-24,\n.pure-u-4-24,\n.pure-u-5-24,\n.pure-u-6-24,\n.pure-u-7-24,\n.pure-u-8-24,\n.pure-u-9-24,\n.pure-u-10-24,\n.pure-u-11-24,\n.pure-u-12-24,\n.pure-u-13-24,\n.pure-u-14-24,\n.pure-u-15-24,\n.pure-u-16-24,\n.pure-u-17-24,\n.pure-u-18-24,\n.pure-u-19-24,\n.pure-u-20-24,\n.pure-u-21-24,\n.pure-u-22-24,\n.pure-u-23-24,\n.pure-u-24-24 {\n    display: inline-block;\n    *display: inline;\n    zoom: 1;\n    letter-spacing: normal;\n    word-spacing: normal;\n    vertical-align: top;\n    text-rendering: auto;\n}\n\n.pure-u-1-24 {\n    width: 4.1667%;\n    *width: 4.1357%;\n}\n\n.pure-u-1-12,\n.pure-u-2-24 {\n    width: 8.3333%;\n    *width: 8.3023%;\n}\n\n.pure-u-1-8,\n.pure-u-3-24 {\n    width: 12.5000%;\n    *width: 12.4690%;\n}\n\n.pure-u-1-6,\n.pure-u-4-24 {\n    width: 16.6667%;\n    *width: 16.6357%;\n}\n\n.pure-u-1-5 {\n    width: 20%;\n    *width: 19.9690%;\n}\n\n.pure-u-5-24 {\n    width: 20.8333%;\n    *width: 20.8023%;\n}\n\n.pure-u-1-4,\n.pure-u-6-24 {\n    width: 25%;\n    *width: 24.9690%;\n}\n\n.pure-u-7-24 {\n    width: 29.1667%;\n    *width: 29.1357%;\n}\n\n.pure-u-1-3,\n.pure-u-8-24 {\n    width: 33.3333%;\n    *width: 33.3023%;\n}\n\n.pure-u-3-8,\n.pure-u-9-24 {\n    width: 37.5000%;\n    *width: 37.4690%;\n}\n\n.pure-u-2-5 {\n    width: 40%;\n    *width: 39.9690%;\n}\n\n.pure-u-5-12,\n.pure-u-10-24 {\n    width: 41.6667%;\n    *width: 41.6357%;\n}\n\n.pure-u-11-24 {\n    width: 45.8333%;\n    *width: 45.8023%;\n}\n\n.pure-u-1-2,\n.pure-u-12-24 {\n    width: 50%;\n    *width: 49.9690%;\n}\n\n.pure-u-13-24 {\n    width: 54.1667%;\n    *width: 54.1357%;\n}\n\n.pure-u-7-12,\n.pure-u-14-24 {\n    width: 58.3333%;\n    *width: 58.3023%;\n}\n\n.pure-u-3-5 {\n    width: 60%;\n    *width: 59.9690%;\n}\n\n.pure-u-5-8,\n.pure-u-15-24 {\n    width: 62.5000%;\n    *width: 62.4690%;\n}\n\n.pure-u-2-3,\n.pure-u-16-24 {\n    width: 66.6667%;\n    *width: 66.6357%;\n}\n\n.pure-u-17-24 {\n    width: 70.8333%;\n    *width: 70.8023%;\n}\n\n.pure-u-3-4,\n.pure-u-18-24 {\n    width: 75%;\n    *width: 74.9690%;\n}\n\n.pure-u-19-24 {\n    width: 79.1667%;\n    *width: 79.1357%;\n}\n\n.pure-u-4-5 {\n    width: 80%;\n    *width: 79.9690%;\n}\n\n.pure-u-5-6,\n.pure-u-20-24 {\n    width: 83.3333%;\n    *width: 83.3023%;\n}\n\n.pure-u-7-8,\n.pure-u-21-24 {\n    width: 87.5000%;\n    *width: 87.4690%;\n}\n\n.pure-u-11-12,\n.pure-u-22-24 {\n    width: 91.6667%;\n    *width: 91.6357%;\n}\n\n.pure-u-23-24 {\n    width: 95.8333%;\n    *width: 95.8023%;\n}\n\n.pure-u-1,\n.pure-u-1-1,\n.pure-u-5-5,\n.pure-u-24-24 {\n    width: 100%;\n}\n.pure-button {\n    /* Structure */\n    display: inline-block;\n    *display: inline; /*IE 6/7*/\n    zoom: 1;\n    line-height: normal;\n    white-space: nowrap;\n    vertical-align: baseline;\n    text-align: center;\n    cursor: pointer;\n    -webkit-user-drag: none;\n    -webkit-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n}\n\n/* Firefox: Get rid of the inner focus border */\n.pure-button::-moz-focus-inner {\n    padding: 0;\n    border: 0;\n}\n\n/*csslint outline-none:false*/\n\n.pure-button {\n    font-family: inherit;\n    font-size: 100%;\n    *font-size: 90%; /*IE 6/7 - To reduce IE's oversized button text*/\n    *overflow: visible; /*IE 6/7 - Because of IE's overly large left/right padding on buttons */\n    padding: 0.5em 1em;\n    color: #444; /* rgba not supported (IE 8) */\n    color: rgba(0, 0, 0, 0.80); /* rgba supported */\n    *color: #444; /* IE 6 & 7 */\n    border: 1px solid #999;  /*IE 6/7/8*/\n    border: none rgba(0, 0, 0, 0);  /*IE9 + everything else*/\n    background-color: #E6E6E6;\n    text-decoration: none;\n    border-radius: 2px;\n}\n\n.pure-button-hover,\n.pure-button:hover,\n.pure-button:focus {\n    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#00000000', endColorstr='#1a000000',GradientType=0);\n    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(transparent), color-stop(40%, rgba(0,0,0, 0.05)), to(rgba(0,0,0, 0.10)));\n    background-image: -webkit-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: -moz-linear-gradient(top, rgba(0,0,0, 0.05) 0%, rgba(0,0,0, 0.10));\n    background-image: -o-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n}\n.pure-button:focus {\n    outline: 0;\n}\n.pure-button-active,\n.pure-button:active {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset, 0 0 6px rgba(0,0,0, 0.20) inset;\n}\n\n.pure-button[disabled],\n.pure-button-disabled,\n.pure-button-disabled:hover,\n.pure-button-disabled:focus,\n.pure-button-disabled:active {\n    border: none;\n    background-image: none;\n    filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);\n    filter: alpha(opacity=40);\n    -khtml-opacity: 0.40;\n    -moz-opacity: 0.40;\n    opacity: 0.40;\n    cursor: not-allowed;\n    box-shadow: none;\n}\n\n.pure-button-hidden {\n    display: none;\n}\n\n/* Firefox: Get rid of the inner focus border */\n.pure-button::-moz-focus-inner{\n    padding: 0;\n    border: 0;\n}\n\n.pure-button-primary,\n.pure-button-selected,\na.pure-button-primary,\na.pure-button-selected {\n    background-color: rgb(0, 120, 231);\n    color: #fff;\n}\n\n.pure-form input[type=\"text\"],\n.pure-form input[type=\"password\"],\n.pure-form input[type=\"email\"],\n.pure-form input[type=\"url\"],\n.pure-form input[type=\"date\"],\n.pure-form input[type=\"month\"],\n.pure-form input[type=\"time\"],\n.pure-form input[type=\"datetime\"],\n.pure-form input[type=\"datetime-local\"],\n.pure-form input[type=\"week\"],\n.pure-form input[type=\"number\"],\n.pure-form input[type=\"search\"],\n.pure-form input[type=\"tel\"],\n.pure-form input[type=\"color\"],\n.pure-form select,\n.pure-form textarea {\n    padding: 0.5em 0.6em;\n    display: inline-block;\n    border: 1px solid #ccc;\n    box-shadow: inset 0 1px 3px #ddd;\n    border-radius: 4px;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\n/*\nNeed to separate out the :not() selector from the rest of the CSS 2.1 selectors\nsince IE8 won't execute CSS that contains a CSS3 selector.\n*/\n.pure-form input:not([type]) {\n    padding: 0.5em 0.6em;\n    display: inline-block;\n    border: 1px solid #ccc;\n    box-shadow: inset 0 1px 3px #ddd;\n    border-radius: 4px;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\n\n/* Chrome (as of v.32/34 on OS X) needs additional room for color to display. */\n/* May be able to remove this tweak as color inputs become more standardized across browsers. */\n.pure-form input[type=\"color\"] {\n    padding: 0.2em 0.5em;\n}\n\n\n.pure-form input[type=\"text\"]:focus,\n.pure-form input[type=\"password\"]:focus,\n.pure-form input[type=\"email\"]:focus,\n.pure-form input[type=\"url\"]:focus,\n.pure-form input[type=\"date\"]:focus,\n.pure-form input[type=\"month\"]:focus,\n.pure-form input[type=\"time\"]:focus,\n.pure-form input[type=\"datetime\"]:focus,\n.pure-form input[type=\"datetime-local\"]:focus,\n.pure-form input[type=\"week\"]:focus,\n.pure-form input[type=\"number\"]:focus,\n.pure-form input[type=\"search\"]:focus,\n.pure-form input[type=\"tel\"]:focus,\n.pure-form input[type=\"color\"]:focus,\n.pure-form select:focus,\n.pure-form textarea:focus {\n    outline: 0;\n    outline: thin dotted \\9; /* IE6-9 */\n    border-color: #129FEA;\n}\n\n/*\nNeed to separate out the :not() selector from the rest of the CSS 2.1 selectors\nsince IE8 won't execute CSS that contains a CSS3 selector.\n*/\n.pure-form input:not([type]):focus {\n    outline: 0;\n    outline: thin dotted \\9; /* IE6-9 */\n    border-color: #129FEA;\n}\n\n.pure-form input[type=\"file\"]:focus,\n.pure-form input[type=\"radio\"]:focus,\n.pure-form input[type=\"checkbox\"]:focus {\n    outline: thin dotted #333;\n    outline: 1px auto #129FEA;\n}\n.pure-form .pure-checkbox,\n.pure-form .pure-radio {\n    margin: 0.5em 0;\n    display: block;\n}\n\n.pure-form input[type=\"text\"][disabled],\n.pure-form input[type=\"password\"][disabled],\n.pure-form input[type=\"email\"][disabled],\n.pure-form input[type=\"url\"][disabled],\n.pure-form input[type=\"date\"][disabled],\n.pure-form input[type=\"month\"][disabled],\n.pure-form input[type=\"time\"][disabled],\n.pure-form input[type=\"datetime\"][disabled],\n.pure-form input[type=\"datetime-local\"][disabled],\n.pure-form input[type=\"week\"][disabled],\n.pure-form input[type=\"number\"][disabled],\n.pure-form input[type=\"search\"][disabled],\n.pure-form input[type=\"tel\"][disabled],\n.pure-form input[type=\"color\"][disabled],\n.pure-form select[disabled],\n.pure-form textarea[disabled] {\n    cursor: not-allowed;\n    background-color: #eaeded;\n    color: #cad2d3;\n}\n\n/*\nNeed to separate out the :not() selector from the rest of the CSS 2.1 selectors\nsince IE8 won't execute CSS that contains a CSS3 selector.\n*/\n.pure-form input:not([type])[disabled] {\n    cursor: not-allowed;\n    background-color: #eaeded;\n    color: #cad2d3;\n}\n.pure-form input[readonly],\n.pure-form select[readonly],\n.pure-form textarea[readonly] {\n    background: #eee; /* menu hover bg color */\n    color: #777; /* menu text color */\n    border-color: #ccc;\n}\n\n.pure-form input:focus:invalid,\n.pure-form textarea:focus:invalid,\n.pure-form select:focus:invalid {\n    color: #b94a48;\n    border-color: #ee5f5b;\n}\n.pure-form input:focus:invalid:focus,\n.pure-form textarea:focus:invalid:focus,\n.pure-form select:focus:invalid:focus {\n    border-color: #e9322d;\n}\n.pure-form input[type=\"file\"]:focus:invalid:focus,\n.pure-form input[type=\"radio\"]:focus:invalid:focus,\n.pure-form input[type=\"checkbox\"]:focus:invalid:focus {\n    outline-color: #e9322d;\n}\n.pure-form select {\n    border: 1px solid #ccc;\n    background-color: white;\n}\n.pure-form select[multiple] {\n    height: auto;\n}\n.pure-form label {\n    margin: 0.5em 0 0.2em;\n}\n.pure-form fieldset {\n    margin: 0;\n    padding: 0.35em 0 0.75em;\n    border: 0;\n}\n.pure-form legend {\n    display: block;\n    width: 100%;\n    padding: 0.3em 0;\n    margin-bottom: 0.3em;\n    color: #333;\n    border-bottom: 1px solid #e5e5e5;\n}\n\n.pure-form-stacked input[type=\"text\"],\n.pure-form-stacked input[type=\"password\"],\n.pure-form-stacked input[type=\"email\"],\n.pure-form-stacked input[type=\"url\"],\n.pure-form-stacked input[type=\"date\"],\n.pure-form-stacked input[type=\"month\"],\n.pure-form-stacked input[type=\"time\"],\n.pure-form-stacked input[type=\"datetime\"],\n.pure-form-stacked input[type=\"datetime-local\"],\n.pure-form-stacked input[type=\"week\"],\n.pure-form-stacked input[type=\"number\"],\n.pure-form-stacked input[type=\"search\"],\n.pure-form-stacked input[type=\"tel\"],\n.pure-form-stacked input[type=\"color\"],\n.pure-form-stacked select,\n.pure-form-stacked label,\n.pure-form-stacked textarea {\n    display: block;\n    margin: 0.25em 0;\n}\n\n/*\nNeed to separate out the :not() selector from the rest of the CSS 2.1 selectors\nsince IE8 won't execute CSS that contains a CSS3 selector.\n*/\n.pure-form-stacked input:not([type]) {\n    display: block;\n    margin: 0.25em 0;\n}\n.pure-form-aligned input,\n.pure-form-aligned textarea,\n.pure-form-aligned select,\n/* NOTE: pure-help-inline is deprecated. Use .pure-form-message-inline instead. */\n.pure-form-aligned .pure-help-inline,\n.pure-form-message-inline {\n    display: inline-block;\n    *display: inline;\n    *zoom: 1;\n    vertical-align: middle;\n}\n.pure-form-aligned textarea {\n    vertical-align: top;\n}\n\n/* Aligned Forms */\n.pure-form-aligned .pure-control-group {\n    margin-bottom: 0.5em;\n}\n.pure-form-aligned .pure-control-group label {\n    text-align: right;\n    display: inline-block;\n    vertical-align: middle;\n    width: 10em;\n    margin: 0 1em 0 0;\n}\n.pure-form-aligned .pure-controls {\n    margin: 1.5em 0 0 10em;\n}\n\n/* Rounded Inputs */\n.pure-form input.pure-input-rounded,\n.pure-form .pure-input-rounded {\n    border-radius: 2em;\n    padding: 0.5em 1em;\n}\n\n/* Grouped Inputs */\n.pure-form .pure-group fieldset {\n    margin-bottom: 10px;\n}\n.pure-form .pure-group input {\n    display: block;\n    padding: 10px;\n    margin: 0;\n    border-radius: 0;\n    position: relative;\n    top: -1px;\n}\n.pure-form .pure-group input:focus {\n    z-index: 2;\n}\n.pure-form .pure-group input:first-child {\n    top: 1px;\n    border-radius: 4px 4px 0 0;\n}\n.pure-form .pure-group input:last-child {\n    top: -2px;\n    border-radius: 0 0 4px 4px;\n}\n.pure-form .pure-group button {\n    margin: 0.35em 0;\n}\n\n.pure-form .pure-input-1 {\n    width: 100%;\n}\n.pure-form .pure-input-2-3 {\n    width: 66%;\n}\n.pure-form .pure-input-1-2 {\n    width: 50%;\n}\n.pure-form .pure-input-1-3 {\n    width: 33%;\n}\n.pure-form .pure-input-1-4 {\n    width: 25%;\n}\n\n/* Inline help for forms */\n/* NOTE: pure-help-inline is deprecated. Use .pure-form-message-inline instead. */\n.pure-form .pure-help-inline,\n.pure-form-message-inline {\n    display: inline-block;\n    padding-left: 0.3em;\n    color: #666;\n    vertical-align: middle;\n    font-size: 0.875em;\n}\n\n/* Block help for forms */\n.pure-form-message {\n    display: block;\n    color: #666;\n    font-size: 0.875em;\n}\n\n@media only screen and (max-width : 480px) {\n    .pure-form button[type=\"submit\"] {\n        margin: 0.7em 0 0;\n    }\n\n    .pure-form input:not([type]),\n    .pure-form input[type=\"text\"],\n    .pure-form input[type=\"password\"],\n    .pure-form input[type=\"email\"],\n    .pure-form input[type=\"url\"],\n    .pure-form input[type=\"date\"],\n    .pure-form input[type=\"month\"],\n    .pure-form input[type=\"time\"],\n    .pure-form input[type=\"datetime\"],\n    .pure-form input[type=\"datetime-local\"],\n    .pure-form input[type=\"week\"],\n    .pure-form input[type=\"number\"],\n    .pure-form input[type=\"search\"],\n    .pure-form input[type=\"tel\"],\n    .pure-form input[type=\"color\"],\n    .pure-form label {\n        margin-bottom: 0.3em;\n        display: block;\n    }\n\n    .pure-group input:not([type]),\n    .pure-group input[type=\"text\"],\n    .pure-group input[type=\"password\"],\n    .pure-group input[type=\"email\"],\n    .pure-group input[type=\"url\"],\n    .pure-group input[type=\"date\"],\n    .pure-group input[type=\"month\"],\n    .pure-group input[type=\"time\"],\n    .pure-group input[type=\"datetime\"],\n    .pure-group input[type=\"datetime-local\"],\n    .pure-group input[type=\"week\"],\n    .pure-group input[type=\"number\"],\n    .pure-group input[type=\"search\"],\n    .pure-group input[type=\"tel\"],\n    .pure-group input[type=\"color\"] {\n        margin-bottom: 0;\n    }\n\n    .pure-form-aligned .pure-control-group label {\n        margin-bottom: 0.3em;\n        text-align: left;\n        display: block;\n        width: 100%;\n    }\n\n    .pure-form-aligned .pure-controls {\n        margin: 1.5em 0 0 0;\n    }\n\n    /* NOTE: pure-help-inline is deprecated. Use .pure-form-message-inline instead. */\n    .pure-form .pure-help-inline,\n    .pure-form-message-inline,\n    .pure-form-message {\n        display: block;\n        font-size: 0.75em;\n        /* Increased bottom padding to make it group with its related input element. */\n        padding: 0.2em 0 0.8em;\n    }\n}\n\n/*csslint adjoining-classes:false, outline-none:false*/\n/*TODO: Remove this lint rule override after a refactor of this code.*/\n\n.pure-menu ul {\n    position: absolute;\n    visibility: hidden;\n}\n\n.pure-menu.pure-menu-open {\n    visibility: visible;\n    z-index: 2;\n    width: 100%;\n}\n\n.pure-menu ul {\n    left: -10000px;\n    list-style: none;\n    margin: 0;\n    padding: 0;\n    top: -10000px;\n    z-index: 1;\n}\n\n.pure-menu > ul { position: relative; }\n\n.pure-menu-open > ul {\n    left: 0;\n    top: 0;\n    visibility: visible;\n}\n\n.pure-menu-open > ul:focus {\n    outline: 0;\n}\n\n.pure-menu li { position: relative; }\n\n.pure-menu a,\n.pure-menu .pure-menu-heading {\n    display: block;\n    color: inherit;\n    line-height: 1.5em;\n    padding: 5px 20px;\n    text-decoration: none;\n    white-space: nowrap;\n}\n\n.pure-menu.pure-menu-horizontal > .pure-menu-heading {\n    display: inline-block;\n    *display: inline;\n    zoom: 1;\n    margin: 0;\n    vertical-align: middle;\n}\n.pure-menu.pure-menu-horizontal > ul {\n    display: inline-block;\n    *display: inline;\n    zoom: 1;\n    vertical-align: middle;\n}\n\n.pure-menu li a { padding: 5px 20px; }\n\n.pure-menu-can-have-children > .pure-menu-label:after {\n    content: '\\25B8';\n    float: right;\n    /* These specific fonts have the Unicode char we need. */\n    font-family: 'Lucida Grande', 'Lucida Sans Unicode', 'DejaVu Sans', sans-serif;\n    margin-right: -20px;\n    margin-top: -1px;\n}\n\n.pure-menu-can-have-children > .pure-menu-label {\n    padding-right: 30px;\n}\n\n.pure-menu-separator {\n    background-color: #dfdfdf;\n    display: block;\n    height: 1px;\n    font-size: 0;\n    margin: 7px 2px;\n    overflow: hidden;\n}\n\n.pure-menu-hidden {\n    display: none;\n}\n\n/* FIXED MENU */\n.pure-menu-fixed {\n    position: fixed;\n    top: 0;\n    left: 0;\n    width: 100%;\n}\n\n\n/* HORIZONTAL MENU CODE */\n\n/* Initial menus should be inline-block so that they are horizontal */\n.pure-menu-horizontal li {\n    display: inline-block;\n    *display: inline;\n    zoom: 1;\n    vertical-align: middle;\n}\n\n/* Submenus should still be display: block; */\n.pure-menu-horizontal li li {\n    display: block;\n}\n\n/* Content after should be down arrow */\n.pure-menu-horizontal > .pure-menu-children > .pure-menu-can-have-children > .pure-menu-label:after {\n    content: \"\\25BE\";\n}\n/*Add extra padding to elements that have the arrow so that the hover looks nice */\n.pure-menu-horizontal > .pure-menu-children > .pure-menu-can-have-children > .pure-menu-label {\n    padding-right: 30px;\n}\n\n/* Adjusting separator for vertical menus */\n.pure-menu-horizontal li.pure-menu-separator {\n    height: 50%;\n    width: 1px;\n    margin: 0 7px;\n}\n\n/* Submenus should be horizontal separator again */\n.pure-menu-horizontal li li.pure-menu-separator {\n    height: 1px;\n    width: auto;\n    margin: 7px 2px;\n}\n\n\n/*csslint adjoining-classes:false*/\n/*TODO: Remove this lint rule override after a refactor of this code.*/\n\n/* MAIN MENU STYLING */\n\n.pure-menu.pure-menu-open,\n.pure-menu.pure-menu-horizontal li .pure-menu-children {\n    background: #fff; /* Old browsers */\n    border: 1px solid #b7b7b7;\n}\n\n/* remove borders for horizontal menus */\n.pure-menu.pure-menu-horizontal,\n.pure-menu.pure-menu-horizontal .pure-menu-heading {\n    border: none;\n}\n\n\n/* LINK STYLES */\n\n.pure-menu a {\n    border: 1px solid transparent;\n    border-left: none;\n    border-right: none;\n\n}\n\n.pure-menu a,\n.pure-menu .pure-menu-can-have-children > li:after {\n    color: #777;\n}\n\n.pure-menu .pure-menu-can-have-children > li:hover:after {\n    color: #fff;\n}\n\n/* Focus style for a dropdown menu-item when the parent has been opened */\n.pure-menu .pure-menu-open {\n    background: #dedede;\n}\n\n\n.pure-menu li a:hover,\n.pure-menu li a:focus {\n    background: #eee;\n}\n\n/* DISABLED STATES */\n.pure-menu li.pure-menu-disabled a:hover,\n.pure-menu li.pure-menu-disabled a:focus {\n    background: #fff;\n    color: #bfbfbf;\n}\n\n.pure-menu .pure-menu-disabled > a {\n    background-image: none;\n    border-color: transparent;\n    cursor: default;\n}\n\n.pure-menu .pure-menu-disabled > a,\n.pure-menu .pure-menu-can-have-children.pure-menu-disabled > a:after {\n    color: #bfbfbf;\n}\n\n/* HEADINGS */\n.pure-menu .pure-menu-heading {\n    color: #565d64;\n    text-transform: uppercase;\n    font-size: 90%;\n    margin-top: 0.5em;\n    border-bottom-width: 1px;\n    border-bottom-style: solid;\n    border-bottom-color: #dfdfdf;\n}\n\n/* ACTIVE MENU ITEM */\n.pure-menu .pure-menu-selected a {\n    color: #000;\n}\n\n/* FIXED MENU */\n.pure-menu.pure-menu-open.pure-menu-fixed {\n    border: none;\n    border-bottom: 1px solid #b7b7b7;\n}\n\n/*csslint box-model:false*/\n/*TODO: Remove this lint rule override after a refactor of this code.*/\n\n\n.pure-paginator {\n\n    /* `pure-g` Grid styles */\n    letter-spacing: -0.31em; /* Webkit: collapse white-space between units */\n    *letter-spacing: normal; /* reset IE < 8 */\n    *word-spacing: -0.43em; /* IE < 8: collapse white-space between units */\n    text-rendering: optimizespeed; /* Webkit: fixes text-rendering: optimizeLegibility */\n\n    /* `pure-paginator` Specific styles */\n    list-style: none;\n    margin: 0;\n    padding: 0;\n}\n.opera-only :-o-prefocus,\n.pure-paginator {\n    word-spacing: -0.43em;\n}\n\n/* `pure-u` Grid styles */\n.pure-paginator li {\n    display: inline-block;\n    *display: inline; /* IE < 8: fake inline-block */\n    zoom: 1;\n    letter-spacing: normal;\n    word-spacing: normal;\n    vertical-align: top;\n    text-rendering: auto;\n}\n\n\n.pure-paginator .pure-button {\n    border-radius: 0;\n    padding: 0.8em 1.4em;\n    vertical-align: top;\n    height: 1.1em;\n}\n.pure-paginator .pure-button:focus,\n.pure-paginator .pure-button:active {\n    outline-style: none;\n}\n.pure-paginator .prev,\n.pure-paginator .next {\n    color: #C0C1C3;\n    text-shadow: 0 -1px 0 rgba(0,0,0, 0.45);\n}\n.pure-paginator .prev {\n    border-radius: 2px 0 0 2px;\n}\n.pure-paginator .next {\n    border-radius: 0 2px 2px 0;\n}\n\n@media (max-width: 480px) {\n    .pure-menu-horizontal {\n        width: 100%;\n    }\n\n    .pure-menu-children li {\n        display: block;\n        border-bottom: 1px solid black;\n    }\n}\n\n.pure-table {\n    /* Remove spacing between table cells (from Normalize.css) */\n    border-collapse: collapse;\n    border-spacing: 0;\n    empty-cells: show;\n    border: 1px solid #cbcbcb;\n}\n\n.pure-table caption {\n    color: #000;\n    font: italic 85%/1 arial, sans-serif;\n    padding: 1em 0;\n    text-align: center;\n}\n\n.pure-table td,\n.pure-table th {\n    border-left: 1px solid #cbcbcb;/*  inner column border */\n    border-width: 0 0 0 1px;\n    font-size: inherit;\n    margin: 0;\n    overflow: visible; /*to make ths where the title is really long work*/\n    padding: 0.5em 1em; /* cell padding */\n}\n.pure-table td:first-child,\n.pure-table th:first-child {\n    border-left-width: 0;\n}\n\n.pure-table thead {\n    background: #e0e0e0;\n    color: #000;\n    text-align: left;\n    vertical-align: bottom;\n}\n\n/*\nstriping:\n   even - #fff (white)\n   odd  - #f2f2f2 (light gray)\n*/\n.pure-table td {\n    background-color: transparent;\n}\n.pure-table-odd td {\n    background-color: #f2f2f2;\n}\n\n/* nth-child selector for modern browsers */\n.pure-table-striped tr:nth-child(2n-1) td {\n    background-color: #f2f2f2;\n}\n\n/* BORDERED TABLES */\n.pure-table-bordered td {\n    border-bottom: 1px solid #cbcbcb;\n}\n.pure-table-bordered tbody > tr:last-child > td {\n    border-bottom-width: 0;\n}\n\n\n/* HORIZONTAL BORDERED TABLES */\n\n.pure-table-horizontal td,\n.pure-table-horizontal th {\n    border-width: 0 0 1px 0;\n    border-bottom: 1px solid #cbcbcb;\n}\n.pure-table-horizontal tbody > tr:last-child > td {\n    border-bottom-width: 0;\n}\n"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],6:[function(require,module,exports){
-require('./css/default.css');
-require('./css/purecss-0.5.0.css');
-require('./css/pure-finetuned.css');
-},{"./css/default.css":3,"./css/pure-finetuned.css":4,"./css/purecss-0.5.0.css":5}],7:[function(require,module,exports){
-var css = "[dd-draggable] {\n    -moz-user-select: none;\n    -khtml-user-select: none;\n    -webkit-user-select: none;\n    user-select: none;\n    float: left;\n    position: relative;\n}\n.dd-hidden-source {\n    visibility: hidden !important;\n}\n.dd-dragging {\n    cursor: move;\n}\n.dd-transition {\n    -webkit-transition: top 0.25s ease-out, left 0.25s ease-out;\n    -moz-transition: top 0.25s ease-out, left 0.25s ease-out;\n    -ms-transition: top 0.25s ease-out, left 0.25s ease-out;\n    -o-transition: top 0.25s ease-out, left 0.25s ease-out;\n    transition: top 0.25s ease-out, left 0.25s ease-out;\n}\n.dd-high-z {\n    z-index: 999 !important;\n}\n.dd-opacity {\n    opacity: 0.6;\n    filter: alpha(opacity=60); /* For IE8 and earlier */\n}\n[dropzone] {\n    position: relative; /* otherwise we cannot place absolute positioned items */\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],8:[function(require,module,exports){
+},{"constrain":3,"css":148,"drag-drop":150,"event":868,"event-dom/extra/blurnode.js":709,"event-dom/extra/focusnode.js":710,"event-dom/extra/hover.js":711,"event-dom/extra/valuechange.js":712,"event-mobile":783,"event/extra/objectobserve.js":865,"focusmanager":885,"io/extra/io-cors-ie9.js":1126,"io/extra/io-stream.js":1127,"io/extra/io-transfer.js":1128,"io/extra/io-xml.js":1129,"js-ext/extra/reserved-words.js":1154,"js-ext/js-ext.js":1155,"node-plugin":1166,"node-win":1307,"polyfill/polyfill.js":1320,"scrollable":1839,"useragent":1848,"utils":1849,"vdom":1895,"window-ext":1896}],3:[function(require,module,exports){
+"use strict";
+module.exports = function (window) {
+    require('node-plugin')(window);
+
+    var createHashMap = require('js-ext/extra/hashmap.js').createMap,
+        PluginConstrain;
+
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
+
+/*jshint boss:true */
+    if (PluginConstrain=window._ITSAmodules.PluginConstrain) {
+/*jshint boss:false */
+        return PluginConstrain;
+    }
+
+    window._ITSAmodules.PluginConstrain = PluginConstrain = window.document.definePlugin('constrain', null, {
+            attrs: {
+                selector: 'string'
+            },
+            defaults: {
+                selector: 'window'
+            }
+        }
+    );
+
+    return PluginConstrain;
+};
+},{"js-ext/extra/hashmap.js":4,"node-plugin":5}],4:[function(require,module,exports){
+"use strict";
+
+var merge = function (source, target) {
+        var keys = Object.keys(source),
+            l = keys.length,
+            i = -1,
+            key;
+        while (++i < l) {
+            key = keys[i];
+            target[key] = source[key];
+        }
+    },
+    hashMap = function(members) {
+        // important to set the prototype to `null` --> this will exclude any Object.prototype members
+        var obj = Object.create(null);
+        members && merge(members, obj);
+        return obj;
+    };
+
+module.exports = {
+    createMap: hashMap
+};
+},{}],5:[function(require,module,exports){
 "use strict";
 
 /**
- * Provides `drag and drop` functionality with dropzones
+ * Integrates DOM-events to event. more about DOM-events:
+ * http://www.smashingmagazine.com/2013/11/12/an-introduction-to-dom-events/
  *
  *
  * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
  * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
  *
- * @example
- * DD = require('drag-drop')(window);
- * DD.init();
  *
- * @module drag-drop
- * @class DD
- * @since 0.0.4
-*/
-
-
-// Redefine the API for the events `dd`, `dd-drag` and `dd-drop`, for they have more properties:
-
-/**
-* Emitted during the drag-cycle of a draggable Element (while it is dragged).
-*
-* @event *:dd-drag (extended by drag-drop)
-* @param e {Object} eventobject including:
-* @param e.target {HtmlElement} the HtmlElement that is being dragged
-* @param e.dragNode {HtmlElement} The HtmlElement that is being dragged (equals e.target)
-* @param [e.sourceNode] {HtmlElement} The original Element. Only when a `copy` is made --> e.dragNode is being moved while
-*        e.sourceNode stand at its place.
-* @param e.currentTarget {HtmlElement} the HtmlElement that is delegating
-* @param e.sourceTarget {HtmlElement} the deepest HtmlElement where the mouse lies upon
-* @param [e.dropTarget] {HtmlElement} The dropzone HtmlElement that will be available whenever the draggable gets over a dropzone.
-* @param e.dd {Promise} Promise that gets fulfilled when dragging is ended. The fullfilled-callback has no arguments.
-* @param [e.dropzone] {Promise} a Promise that will be available whenever the draggable gets over a dropzone.
-*        The Promise that gets fulfilled as soon as the draggable is dropped, or outside the dropzone
-*        Will fulfill with one argument: `onDropzone` {Boolean} when `true`, the draggable is dropped inside the dropzone, otherwise
-*        the draggable got outside the dropzone without beging dropped.
-* @param e.ctrlKey {Boolean} Whether the Ctrl/cmd key is pressed
-* @param e.isCopied {Boolean} Whether the drag is a copy-drag
-* @param e.xMouse {Number} the current x-position in the window-view
-* @param e.yMouse {Number} the current y-position in the window-view
-* @param e.clientX {Number} the current x-position in the window-view
-* @param e.clientY {Number} the current y-position in the window-view
-* @param e.xMouseOrigin {Number} the original x-position in the document when drag started (incl. scrollOffset)
-* @param e.yMouseOrigin {Number} the original y-position in the document when drag started (incl. scrollOffset)
-* @param [e.relatives] {NodeList} an optional list that the user could set in a `before`-subscriber of the `dd`-event
-*        to inform which nodes are related to the draggable node and should be dragged as well.
-* @param [e.relativeDragNodes] {NodeList} an optional list that holds the HtmlElements that corresponds with
-*        the `e.relative` list, but is a list with draggable Elements.
-
-* @since 0.0.1
-*/
-
-/**
-* Emitted when drag-cycle of a draggable Element is ended.
-*
-* @event *:dd-drop (extended by drag-drop)
-* @param e {Object} eventobject including:
-* @param e.target {HtmlElement} the HtmlElement that is being dragged
-* @param e.dragNode {HtmlElement} The HtmlElement that is being dragged (equals e.target)
-* @param [e.sourceNode] {HtmlElement} The original Element. Only when a `copy` is made --> e.dragNode is being moved while
-*        e.sourceNode stand at its place.
-* @param e.currentTarget {HtmlElement} the HtmlElement that is delegating
-* @param e.sourceTarget {HtmlElement} the deepest HtmlElement where the mouse lies upon
-* @param [e.dropTarget] {HtmlElement} The dropzone HtmlElement that will be available whenever the draggable gets over a dropzone.
-* @param e.dd {Promise} Promise that gets fulfilled when dragging is ended. The fullfilled-callback has no arguments.
-* @param [e.dropzone] {Promise} a Promise that will be available whenever the draggable gets over a dropzone.
-*        The Promise that gets fulfilled as soon as the draggable is dropped, or outside the dropzone
-*        Will fulfill with one argument: `onDropzone` {Boolean} when `true`, the draggable is dropped inside the dropzone, otherwise
-*        the draggable got outside the dropzone without beging dropped.
-* @param e.ctrlKey {Boolean} Whether the Ctrl/cmd key is pressed
-* @param e.isCopied {Boolean} Whether the drag is a copy-drag
-* @param e.xMouse {Number} the current x-position in the window-view
-* @param e.yMouse {Number} the current y-position in the window-view
-* @param e.clientX {Number} the current x-position in the window-view
-* @param e.clientY {Number} the current y-position in the window-view
-* @param e.xMouseOrigin {Number} the original x-position in the document when drag started (incl. scrollOffset)
-* @param e.yMouseOrigin {Number} the original y-position in the document when drag started (incl. scrollOffset)
-* @param [e.relatives] {NodeList} an optional list that the user could set in a `before`-subscriber of the `dd`-event
-*        to inform which nodes are related to the draggable node and should be dragged as well.
-* @param [e.relativeDragNodes] {NodeList} an optional list that holds the HtmlElements that corresponds with
-*        the `e.relative` list, but is a list with draggable Elements.
-
-* @since 0.0.1
-*/
-
-/**
-* Emitted when a draggable Element's drag-cycle starts. You can use a `before`-subscriber to specify
-* e.relatives, which should be a nodelist with HtmlElements, that should be dragged togehter with the master
-* draggable Element.
-*
-* @event dd (extended by drag-drop)
-* @param e {Object} eventobject including:
-* @param e.target {HtmlElement} the HtmlElement that is being dragged
-* @param e.dragNode {HtmlElement} The HtmlElement that is being dragged (equals e.target)
-* @param [e.sourceNode] {HtmlElement} The original Element. Only when a `copy` is made --> e.dragNode is being moved while
-*        e.sourceNode stand at its place.
-* @param e.currentTarget {HtmlElement} the HtmlElement that is delegating
-* @param e.sourceTarget {HtmlElement} the deepest HtmlElement where the mouse lies upon
-* @param e.dd {Promise} Promise that gets fulfilled when dragging is ended. The fullfilled-callback has no arguments.
-* @param e.ctrlKey {Boolean} Whether the Ctrl/cmd key is pressed
-* @param e.isCopied {Boolean} Whether the drag is a copy-drag
-* @param e.xMouse {Number} the current x-position in the window-view
-* @param e.yMouse {Number} the current y-position in the window-view
-* @param e.clientX {Number} the current x-position in the window-view
-* @param e.clientY {Number} the current y-position in the window-view
-* @param e.xMouseOrigin {Number} the original x-position in the document when drag started (incl. scrollOffset)
-* @param e.yMouseOrigin {Number} the original y-position in the document when drag started (incl. scrollOffset)
-* @param [e.relatives] {NodeList} an optional list that the user could set in a `before`-subscriber of the `dd`-event
-*        to inform which nodes are related to the draggable node and should be dragged as well.
-* @param [e.relativeDragNodes] {NodeList} an optional list that holds the HtmlElements that corresponds with
-*        the `e.relative` list, but is a list with draggable Elements.
-
-* @since 0.0.1
-*/
-
-/**
- * Objecthash containing all specific information about the particular drag-cycle.
- * It has a structure like this:
- *
- * ddProps = {
- *     sourceNode {HtmlElement} original node (defined by drag-drop)
- *     dragNode {HtmlElement} Element that is dragged
- *     x {Number} absolute x-position of the draggable inside `document` when the drag starts
- *     y {Number} absolute y-position of the draggable inside `document` when the drag starts
- *     inlineLeft {String} inline css of the property `left` when drag starts
- *     inlineTop {String} inline css of the property `top` when drag starts
- *     winConstrained {Boolean} whether the draggable should be constrained to `window`
- *     xMouseLast {Number} absolute x-position of the mouse inside `document` when the drag starts
- *     yMouseLast {Number} absolute y-position of the draggable inside `document` when the drag starts
- *     winScrollLeft {Number} the left-scroll of window when drag starts
- *     winScrollTop {Number} the top-scroll of window when drag starts
- *     constrain = { // constrain-properties when constrained to a HtmlElement
- *         xOrig {Number} x-position in the document, included with left-border-width
- *         yOrig {Number} y-position in the document, included with top-border-width
- *         x {Number} xOrig corrected with scroll-left of the constrained node
- *         y {Number} yOrig corrected with scroll-top of the constrained node
- *         w {Number} scrollWidth
- *         h {Number} scrollHeight
- *     };
- *     dropzoneSpecified {Boolean} whether the draggable has a dropzone specified (either by `dd-dropzone` or by `dd-emitter`) (defined by drag-drop)
- *     dragOverEv {Object} Eventhandler that watches for `mousemove` to detect dropzone-over events (defined by drag-drop)
- *     relatives[{ // Array with objects that represent all draggables that come along with the master-draggable (in case of multiple items), excluded the master draggable itself
- *         sourceNode {HtmlElement} original node (defined by drag-drop)
- *         dragNode {HtmlElement} draggable node
- *         shiftX {Number} the amount of left-pixels that this HtmlElement differs from the dragged element
- *         shiftY {Number} the amount of top-pixels that this HtmlElement differs from the dragged element
- *         inlineLeft {String} inline css of the property `left` when drag starts
- *         inlineTop {String} inline css of the property `top` when drag starts
- *     }]
- *     relativeDragNodes [HtmlElements] Array with all `copyied` Nodes corresponding to `ddProps.relatives`. Only in case of copying multiple items (defined by drag-drop)
- * }
- *
- * @property ddProps (extended by drag-drop)
- * @default {}
- * @type Object
+ * @module vdom
+ * @submodule element-plugin
+ * @class Plugins
  * @since 0.0.1
 */
 
-var DRAG = 'drag',
-    DROP = 'drop',
-    NAME = '['+DRAG+'-'+DROP+']: ',
-    createHashMap = require('js-ext/extra/hashmap.js').createMap,
-    COPY = 'copy',
-    DROPZONE = DROP+'zone',
-    SOURCE = 'source',
-    DRAGGABLE = DRAG+'gable',
-    DEL_DRAGGABLE = 'del-'+DRAGGABLE,
-    DD_MINUS = 'dd-',
-    DZ_MINUS = 'dz-',
-    PLUGIN_DD = 'plugin-dd',
-    DZ_DROPZONE = DZ_MINUS+DROPZONE,
-    DD_DRAGGING_CLASS = DD_MINUS+DRAG+'ging',
-    DD_MASTER_CLASS = DD_MINUS+'master',
-    DD_HANDLE = DD_MINUS+'handle',
-    DD_SOURCE_ISCOPIED_CLASS = DD_MINUS+COPY+SOURCE,
-    DD_COPIED_CLASS = DD_MINUS+COPY,
-    DROPZONE_MOVABLE = DROPZONE+'-movable',
-    DD_DROPZONE_MOVABLE = DD_MINUS+DROPZONE_MOVABLE,
-    CONSTRAIN_ATTR = 'constrain-selector',
-    MOUSE = 'mouse',
-    DROPZONE_OVER = DROPZONE+'-over',
-    DROPZONE_DROP = DROPZONE+'-'+DROP,
-    DD_DROPZONE = DD_MINUS+DROPZONE,
-    NO_TRANS_CLASS = 'el-notrans', // delivered by `vdom`
-    DD_HIDDEN_SOURCE_CLASS = DD_MINUS+'hidden-'+SOURCE,
-    INVISIBLE_CLASS = 'el-invisible', // delivered by `vdom`
-    DD_TRANSITION_CLASS = DD_MINUS+'transition',
-    DD_OPACITY_CLASS = DD_MINUS+'opacity',
-    HIGH_Z_CLASS = DD_MINUS+'high-z',
-    DD_DROPACTIVE_CLASS = DROPZONE+'-awake',
-    DD_ABOVE_DROPZONE_CLASS = DD_MINUS+'above'+DROPZONE,
-    REGEXP_MOVE = /\bmove\b/i,
-    REGEXP_COPY = /\bcopy\b/i,
-    REGEXP_ALL = /\b(all|true)\b/i,
-    EMITTER = 'emitter',
-    REGEXP_EMITTER = /\bemitter=((\w|,)+)\b/,
-    DD_EMITTER = DD_MINUS+EMITTER,
-    MOVE = 'move',
-    DROPZONE_OUT = DROPZONE+'-out',
-    DD_DROP = DD_MINUS+DROP,
-    DD_FAKE = DD_MINUS+'fake-',
-    DOWN = 'down',
-    UP = 'up',
-    KEY = 'key',
-    MOUSEMOVE = MOUSE+MOVE,
-    PANMOVE = 'pan'+MOVE,
-    DD_FAKE_MOUSEMOVE = DD_FAKE+MOUSEMOVE,
-    UI = 'UI',
-    DROPZONE_BRACKETS = '[' + DZ_DROPZONE + ']',
-    EFFECT_ALLOWED = 'effect-allowed',
-    DD_EFFECT_ALLOWED = DD_MINUS+EFFECT_ALLOWED,
-    BORDER = 'border',
-    WIDTH = 'width',
-    BORDER_LEFT_WIDTH = BORDER+'-left-'+WIDTH,
-    BORDER_RIGHT_WIDTH = BORDER+'-right-'+WIDTH,
-    BORDER_TOP_WIDTH = BORDER+'-top-'+WIDTH,
-    BORDER_BOTTOM_WIDTH = BORDER+'-bottom-'+WIDTH,
-    LEFT = 'left',
-    TOP = 'top',
-    POSITION = 'position',
-    ABSOLUTE = 'absolute',
-    TRUE = 'true',
-    DD_MINUSDRAGGABLE = DD_MINUS+DRAGGABLE,
-    PLUGIN_ATTRS = [PLUGIN_DD, DD_DROPZONE, CONSTRAIN_ATTR, DD_EMITTER, DD_HANDLE, DD_EFFECT_ALLOWED, DD_DROPZONE_MOVABLE];
-
-require('polyfill/polyfill-base.js');
-require('js-ext');
-require('./css/drag-drop.css');
-
-module.exports = function (window) {
-
-    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
-
-    if (window._ITSAmodules.DragDrop) {
-        return window._ITSAmodules.DragDrop; // DragDrop was already created
-    }
-
-    var Event = require('event-dom')(window),
-        DragModule = require('drag')(window),
-        $superInit = DragModule.DD.init,
-        ctrlPressed = false,
-        dropEffect = MOVE,
-        DOCUMENT = window.document,
-        isMobile = require('useragent')(window).isMobile,
-        supportHammer = !!Event.Hammer,
-        mobileEvents = supportHammer && isMobile,
-        DD, DD_Object;
-
-    require('vdom')(window);
-    require('node-plugin')(window);
-    require('window-ext')(window);
-
-    DD = {
-      /**
-        * Returns the allowed effects on the dragable-HtmlElement. Is determined by the attribute `dd-effect-allowed`
-        * Will be set to "move" when undefined.
-        *
-        * @method _allowedEffects
-        * @param dragableElement {HtmlElement} HtmlElement that is checked for its allowed effects
-        * @return {String} allowed effects: "move", "copy" or "all"
-        * @private
-        * @since 0.0.1
-        */
-        _allowedEffects: function(dragableElement) {
-            console.log(NAME, '_allowedEffects');
-            var allowedEffects = dragableElement.getAttr(DD_EFFECT_ALLOWED);
-            return allowedEffects || MOVE;
-        },
-
-        /**
-         * Default function for the `*:dd-drop`-event. Overrides the definition of the `drag`-module.
-         *
-         * @method _defFnDrop (extended by drag-drop)
-         * @param e {Object} eventobject
-         * @param sourceNode {HtmlElement} the original HtmlElement
-         * @param dragNode {HtmlElement} the dragged HtmlElement (either original or clone)
-         * @param dropzoneSpecified {Boolean} whether the sourceNode had a dropzone specified
-         * @param relatives {Array} hash with all draggables that are being move togerther with the master draggable
-         * @private
-         * @since 0.0.1
-         */
-        _defFnDrop: function(e, ddProps) {
-            console.log(NAME, '_defFnDrop: default function dd-drop. dropzoneSpecified: '+ddProps.dropzoneSpecified);
-            var instance = this,
-                sourceNode = ddProps.sourceNode,
-                dragNode = ddProps.dragNode,
-                dropzoneSpecified = ddProps.dropzoneSpecified,
-                relatives = ddProps.relatives,
-                willBeCopied,
-                removeClasses = function (node) {
-                    node.removeClass([NO_TRANS_CLASS, HIGH_Z_CLASS, DD_DRAGGING_CLASS, DEL_DRAGGABLE, DD_MASTER_CLASS, DD_SOURCE_ISCOPIED_CLASS]);
-                };
-
-            willBeCopied =  (e.dropTarget && ((ctrlPressed && instance.allowCopy(dragNode)) || instance.onlyCopy(dragNode)));
-            willBeCopied || (e.relativeDragNodes=null);
-            e.isCopied = willBeCopied;
-
-            // handle drop
-            if (dropzoneSpecified) {
-                instance._handleDrop(e, sourceNode, dragNode, relatives);
-            }
-            else {
-                PLUGIN_ATTRS.forEach(function(attribute) {
-                    var data = '_del_'+attribute;
-                    if (dragNode.getData(data)) {
-                        delete dragNode.plugin.dd.model[attribute];
-                        dragNode.removeData(data);
-                    }
-                });
-                removeClasses(dragNode);
-                ddProps.relatives && ddProps.relatives.forEach(
-                    function(item) {
-                        removeClasses(item.dragNode);
-                    }
-                );
-            }
-            instance.restoreDraggables = function() {/* NOOP */ return this;};
-        },
-
-       /**
-         * Default function for the `*:dropzone`-event
-         *
-         * @method _defFnOver
-         * @param e {Object} eventobject
-         * @private
-         * @since 0.0.1
-         */
-        _defFnOver: function(e) {
-            console.log(NAME, '_defFnOver: default function dropzone');
-            var dropzone = e.target;
-            dropzone.setClass(DD_DROPACTIVE_CLASS);
-            e.sourceNode.setClass(DD_ABOVE_DROPZONE_CLASS);
-            e.dragNode.setClass(DD_ABOVE_DROPZONE_CLASS);
-            e.dropzone.then(
-                function(insideDropTarget) {
-                    dropzone.removeClass(DD_DROPACTIVE_CLASS);
-                    e.sourceNode.removeClass(DD_ABOVE_DROPZONE_CLASS);
-                    e.dragNode.removeClass(DD_ABOVE_DROPZONE_CLASS);
-                    /**
-                    * Emitted when the draggable gets out of the dropzone.
-                    *
-                    * @event *:dropzone-out
-                    * @param e {Object} eventobject including:
-                    * @param e.target {HtmlElement} the dropzone
-                    * @param e.dragNode {HtmlElement} The HtmlElement that is being dragged
-                    * @param e.dropzone {Promise} The Promise that gets fulfilled as soon as the draggable is dropped, or outside the dropzone
-                    *        Will fulfill with one argument: `onDropzone` {Boolean} when `true`, the draggable is dropped inside the dropzone, otherwise
-                    *        the draggable got outside the dropzone without beging dropped.
-                    * @param e.dropTarget {HtmlElement} The dropzone HtmlElement. Equals e.target
-                    * @param e.ctrlKey {Boolean} Whether the Ctrl/cmd key is pressed
-                    * @param e.isCopied {Boolean} Whether the drag is a copy-drag
-                    * @param [e.sourceNode] {HtmlElement} The original Element. Only when a `copy` is made --> e.dragNode is being moved while
-                    *        e.sourceNode stand at its place.
-                    * @param e.currentTarget {HtmlElement} the HtmlElement that is delegating the draggable
-                    * @param e.sourceTarget {HtmlElement} the deepest HtmlElement of the draggable where the mouse lies upon
-                    * @param e.dd {Promise} Promise that gets fulfilled when dragging is ended. The fullfilled-callback has no arguments.
-                    * @param e.xMouse {Number} the current x-position in the window-view
-                    * @param e.yMouse {Number} the current y-position in the window-view
-                    * @param e.clientX {Number} the current x-position in the window-view
-                    * @param e.clientY {Number} the current y-position in the window-view
-                    * @param e.xMouseOrigin {Number} the original x-position in the document when drag started (incl. scrollOffset)
-                    * @param e.yMouseOrigin {Number} the original y-position in the document when drag started (incl. scrollOffset)
-                    * @param [e.relatives] {NodeList} an optional list that the user could set in a `before`-subscriber of the `dd`-event
-                    *        to inform which nodes are related to the draggable node and should be dragged as well.
-                    * @param [e.relativeDragNodes] {NodeList} an optional list that holds the HtmlElements that corresponds with
-                    *        the `e.relative` list, but is a list with draggable Elements.
-                    * @since 0.1
-                    */
-                    insideDropTarget || e._noDDoutEvt || Event.emit(dropzone, e.emitter+':'+DROPZONE_OUT, e);
-                }
-            );
-        },
-
-        /**
-         * Defines the definition of the `dd-drop` event: the last phase of the drag-eventcycle (dd-start, *:dd-drag, *:dd-drop)
-         *
-         * @method _defineDropEv
-         * @param e {Object} eventobject
-         * @param sourceNode {HtmlElement} the original HtmlElement
-         * @param dragNode {HtmlElement} the dragged HtmlElement (either original or clone)
-         * @param dropzoneSpecified {Boolean} whether the sourceNode had a dropzone specified
-         * @param x {Number} x-position in coordinaties relative to `document` (like getX())
-         * @param y {Number} y-position in coordinaties relative to `document` (like getX())
-         * @param inlineLeft {String} inline css `left` for the original sourceNode
-         * @param inlineTop {String} inline css `top` for the original sourceNode
-         * @param relatives {Array} hash with all draggables that are being move togerther with the master draggable
-         * @private
-         * @since 0.0.1
-         */
-        _defineDropEv: function(e, ddProps) {
-            console.log(NAME, '_defineDropEv '+ddProps.dragNode);
-            var instance = this;
-            instance.restoreDraggables = instance._restoreDraggables.bind(instance, e, ddProps);
-            Event.defineEvent(e.emitter+':'+DD_DROP)
-                .defaultFn(instance._defFnDrop.rbind(instance, ddProps))
-                .forceAssign(); // need to reassign, because all arguments need to be bound again and we need to override the definition of the `drag`-module
-        },
-
-        /**
-         * Defines the definition of the `dropzone` event.
-         * Also sets up listeners to tricker dd-over when the mouse is above an dropzone.
-         *
-         * @method _defineOverEv
-         * @param e {Object} eventobject
-         * @param dropzones {NodeList} list with dropzonenodes
-         * @private
-         * @since 0.0.1
-         */
-        _defineOverEv: function(e, dropzones) {
-            console.log(NAME, '_defineOverEv');
-            var instance = this,
-                emitterName = e.emitter,
-                ddProps = instance.ddProps;
-            Event.defineEvent(emitterName+':'+DROPZONE_OVER)
-                 .defaultFn(instance._defFnOver.bind(instance)); // no need to reassign
-            return Event.after([mobileEvents ? PANMOVE : MOUSEMOVE, DD_FAKE_MOUSEMOVE], function(e2) {
-                var overDropzone = false,
-                    dragNode = ddProps.dragNode;
-                if (typeof e2.center==='object') {
-                    e2.clientX = e2.center.x;
-                    e2.clientY = e2.center.y;
-                }
-                ddProps.mouseOverNode = e.target;
-                if (e2.clientX) {
-                    ddProps.xMouseLast = e2.clientX + window.getScrollLeft();
-                    ddProps.yMouseLast = e2.clientY + window.getScrollTop();
-                }
-                dropzones.forEach(
-                    function(dropzone) {
-                        // don't do double:
-                        if (dropzone === e.dropTarget) {
-                            overDropzone = true;
-                            return;
-                        }
-                        var dropzoneAccept = dropzone.getAttr(DZ_DROPZONE) || '',
-                            dropzoneMove = REGEXP_MOVE.test(dropzoneAccept),
-                            dropzoneCopy = REGEXP_COPY.test(dropzoneAccept),
-                            dropzoneDefDraggable = dragNode.getAttr(DD_DROPZONE),
-                            dragOverPromise, dragOutEvent, effectAllowed, emitterAllowed, dropzoneEmitter, xMouseLast, yMouseLast, dropzoneAllowed;
-                        // check if the mouse is inside the dropzone
-                        // also check if the mouse is inside the dragged node: the dragged node might have been constrained
-                        // and check if the dragged node is effectAllowed to go into the dropzone
-                        xMouseLast = ddProps.xMouseLast;
-                        yMouseLast = ddProps.yMouseLast;
-
-                        if (dropzone.insidePos(xMouseLast, yMouseLast) && dragNode.insidePos(xMouseLast, yMouseLast)) {
-                            effectAllowed = (!dropzoneMove && !dropzoneCopy) || (dropzoneCopy && (dropEffect===COPY)) || (dropzoneMove && (dropEffect===MOVE));
-                            dropzoneEmitter = instance.getDropzoneEmitter(dropzoneAccept);
-                            emitterAllowed = !dropzoneEmitter || (dropzoneEmitter.contains(emitterName));
-                            dropzoneAllowed = !dropzoneDefDraggable || ((dropzoneDefDraggable===TRUE) || dropzone.matchesSelector(dropzoneDefDraggable));
-                            if (dropzoneAllowed && effectAllowed && emitterAllowed) {
-                                overDropzone = true;
-                                e.dropTarget = dropzone;
-                                // mouse is in area of dropzone
-                                dragOverPromise = Promise.manage();
-                                e.dropzone = dragOverPromise;
-                                dragOutEvent = Event.after(
-                                    [mobileEvents ? PANMOVE : MOUSEMOVE, DD_FAKE_MOUSEMOVE],
-                                    function() {
-                                        dragOverPromise.fulfill(false);
-                                    },
-                                    function(e3) {
-                                        var effectAllowed, dropzoneAccept, dropzoneMove, dropzoneCopy;
-                                        if (e3.type===DD_FAKE_MOUSEMOVE) {
-                                            dropzoneAccept = dropzone.getAttr(DZ_DROPZONE) || '';
-                                            dropzoneMove = REGEXP_MOVE.test(dropzoneAccept);
-                                            dropzoneCopy = REGEXP_COPY.test(dropzoneAccept);
-                                            effectAllowed = (!dropzoneMove && !dropzoneCopy) || (dropzoneCopy && (dropEffect===COPY)) || (dropzoneMove && (dropEffect===MOVE));
-                                            return !effectAllowed;
-                                        }
-                                        return !dropzone.insidePos((e3.clientX || e3.center.x)+window.getScrollLeft(), (e3.clientY || e3.center.y)+window.getScrollTop());
-                                    }
-                                );
-                                dragOverPromise.finally(
-                                    function(insideDropzone) {
-                                        dragOutEvent.detach();
-                                        insideDropzone || (e.dropTarget=null);
-                                    }
-                                );
-                                ddProps.dragOverList.push(dragOverPromise);
-                                /**
-                                * Emitted when the draggable gets inside a dropzone.
-                                *
-                                * @event *:dropzone-over
-                                * @param e {Object} eventobject including:
-                                * @param e.target {HtmlElement} the dropzone
-                                * @param e.dragNode {HtmlElement} The HtmlElement that is being dragged
-                                * @param e.dropzone {Promise} The Promise that gets fulfilled as soon as the draggable is dropped, or outside the dropzone
-                                *        Will fulfill with one argument: `onDropzone` {Boolean} when `true`, the draggable is dropped inside the dropzone, otherwise
-                                *        the draggable got outside the dropzone without beging dropped.
-                                * @param e.dropTarget {HtmlElement} The dropzone HtmlElement. Equals e.target
-                                * @param e.ctrlKey {Boolean} Whether the Ctrl/cmd key is pressed
-                                * @param e.isCopied {Boolean} Whether the drag is a copy-drag
-                                * @param [e.sourceNode] {HtmlElement} The original Element. Only when a `copy` is made --> e.dragNode is being moved while
-                                *        e.sourceNode stand at its place.
-                                * @param e.currentTarget {HtmlElement} the HtmlElement that is delegating the draggable
-                                * @param e.sourceTarget {HtmlElement} the deepest HtmlElement of the draggable where the mouse lies upon
-                                * @param e.dd {Promise} Promise that gets fulfilled when dragging is ended. The fullfilled-callback has no arguments.
-                                * @param e.xMouse {Number} the current x-position in the window-view
-                                * @param e.yMouse {Number} the current y-position in the window-view
-                                * @param e.clientX {Number} the current x-position in the window-view
-                                * @param e.clientY {Number} the current y-position in the window-view
-                                * @param e.xMouseOrigin {Number} the original x-position in the document when drag started (incl. scrollOffset)
-                                * @param e.yMouseOrigin {Number} the original y-position in the document when drag started (incl. scrollOffset)
-                                * @param [e.relatives] {NodeList} an optional list that the user could set in a `before`-subscriber of the `dd`-event
-                                *        to inform which nodes are related to the draggable node and should be dragged as well.
-                                * @param [e.relativeDragNodes] {NodeList} an optional list that holds the HtmlElements that corresponds with
-                                *        the `e.relative` list, but is a list with draggable Elements.
-                                * @since 0.1
-                                */
-                                Event.emit(dropzone, emitterName+':'+DROPZONE_OVER, e);
-                            }
-                        }
-                    }
-                );
-                overDropzone || (e.dropTarget=null);
-            });
-        },
-
-       /**
-         * Emits a dropzone-drop event.
-         *
-         * @method _emitDropzoneDrop
-         * @param e {Object} eventobject to pass arround
-         * @private
-         * @since 0.0.1
-         */
-        _emitDropzoneDrop: function(e) {
-            /**
-            * Emitted when a draggable gets dropped inside a dropzone.
-            *
-            * @event *:dropzone-drop
-            * @param e {Object} eventobject including:
-            * @param e.target {HtmlElement} the dropzone
-            * @param e.dragNode {HtmlElement} The HtmlElement that is being dragged
-            * @param e.dropzone {Promise} The Promise that gets fulfilled as soon as the draggable is dropped, or outside the dropzone
-            *        Will fulfill with one argument: `onDropzone` {Boolean} when `true`, the draggable is dropped inside the dropzone, otherwise
-            *        the draggable got outside the dropzone without beging dropped.
-            * @param e.dropTarget {HtmlElement} The dropzone HtmlElement. Equals e.target
-            * @param e.ctrlKey {Boolean} Whether the Ctrl/cmd key is pressed
-            * @param e.isCopied {Boolean} Whether the drag is a copy-drag
-            * @param [e.sourceNode] {HtmlElement} The original Element. Only when a `copy` is made --> e.dragNode is being moved while
-            *        e.sourceNode stand at its place.
-            * @param e.currentTarget {HtmlElement} the HtmlElement that is delegating the draggable
-            * @param e.sourceTarget {HtmlElement} the deepest HtmlElement of the draggable where the mouse lies upon
-            * @param e.dd {Promise} Promise that gets fulfilled when dragging is ended. The fullfilled-callback has no arguments.
-            * @param e.xMouse {Number} the current x-position in the window-view
-            * @param e.yMouse {Number} the current y-position in the window-view
-            * @param e.clientX {Number} the current x-position in the window-view
-            * @param e.clientY {Number} the current y-position in the window-view
-            * @param e.xMouseOrigin {Number} the original x-position in the document when drag started (incl. scrollOffset)
-            * @param e.yMouseOrigin {Number} the original y-position in the document when drag started (incl. scrollOffset)
-            * @param [e.relatives] {NodeList} an optional list that the user could set in a `before`-subscriber of the `dd`-event
-            *        to inform which nodes are related to the draggable node and should be dragged as well.
-            * @param [e.relativeDragNodes] {NodeList} an optional list that holds the HtmlElements that corresponds with
-            *        the `e.relative` list, but is a list with draggable Elements.
-            * @since 0.1
-            */
-            Event.emit(e.dropTarget, e.emitter+':'+DROPZONE_DROP, e);
-        },
-
-      /**
-        * Sets the draggable node back to its original position
-        *
-        * @method _handleDrop
-        * @param e {Object} eventobject
-        * @param sourceNode {HtmlElement} the original HtmlElement
-        * @param dragNode {HtmlElement} the dragged HtmlElement (either original or clone)
-        * @param relatives {Array} hash with all draggables that are being move togerther with the master draggable
-        * @private
-        * @since 0.0.1
-        */
-        _handleDrop: function(e, sourceNode, dragNode, relatives) {
-            console.log(NAME, '_handleDrop '+dragNode);
-            var instance = this,
-                dropzoneNode = e.dropTarget,
-                delegatedDragging = sourceNode.hasClass(DEL_DRAGGABLE),
-                constrainRectangle, borderLeft, borderTop, dragNodeX, dragNodeY, copyToDropzone, moveToDropzone,
-                moveInsideDropzone, isCopied, dropzoneDelegatedDraggable, dropzoneIsDelegated;
-            if (dropzoneNode) {
-                dropzoneDelegatedDraggable = dropzoneNode.getAttr(DD_MINUSDRAGGABLE);
-                dropzoneIsDelegated = dropzoneDelegatedDraggable && (dropzoneNode.getAttr(DD_MINUSDRAGGABLE)!=='true');
-                copyToDropzone = function(nodeSource, nodeDrag, shiftX, shiftY) {
-                    if (delegatedDragging) {
-                        dropzoneIsDelegated || (nodeDrag.plugin.dd.model[DRAGGABLE]=TRUE);
-                        nodeDrag.removeClass(DEL_DRAGGABLE);
-                    }
-                    PLUGIN_ATTRS.forEach(function(attribute) {
-                        var data = '_del_'+attribute,
-                            attr = sourceNode.getData(data);
-                        if (attr) {
-                            if (dropzoneIsDelegated) {
-                                delete nodeDrag.plugin.dd.model[attribute];
-                            }
-                            else {
-                                nodeDrag.plugin.dd.model[attribute] = attr;
-                            }
-                            delete nodeSource.plugin.dd.model[attribute];
-                            nodeSource.removeData(data);
-                            nodeDrag.removeData(data);
-                        }
-                    });
-                    dropzoneNode.append(nodeDrag);
-                    nodeDrag.removeClass([DD_OPACITY_CLASS, DD_TRANSITION_CLASS, HIGH_Z_CLASS, DD_DRAGGING_CLASS, NO_TRANS_CLASS, DD_MASTER_CLASS, DD_COPIED_CLASS]);
-                    nodeSource.removeClass(DD_SOURCE_ISCOPIED_CLASS);
-                    nodeDrag.setXY(dragNodeX+shiftX, dragNodeY+shiftY, constrainRectangle, true);
-                    // make the new HtmlElement non-copyable: it only can be replaced inside its dropzone
-                    if (!dropzoneIsDelegated) {
-                        nodeDrag.plugin.dd.model[EFFECT_ALLOWED] = MOVE;
-                        nodeDrag.plugin.dd.model[DROPZONE_MOVABLE] = TRUE;
-                    }
-                };
-                moveToDropzone = function(nodeSource, nodeDrag, shiftX, shiftY) {
-                    nodeSource.setInlineStyle(POSITION, ABSOLUTE);
-                    if (delegatedDragging) {
-                        dropzoneIsDelegated || (nodeSource.plugin.dd.model[DRAGGABLE]=TRUE);
-                        nodeSource.removeClass(DEL_DRAGGABLE);
-                    }
-                    PLUGIN_ATTRS.forEach(function(attribute) {
-                        var data = '_del_'+attribute,
-                            attr = sourceNode.getData(data);
-                        if (attr) {
-                            if (dropzoneIsDelegated) {
-                                delete nodeSource.plugin.dd.model[attribute];
-                            }
-                            else {
-                                nodeSource.plugin.dd.model[attribute] = attr;
-                            }
-                            nodeSource.removeData(data);
-                        }
-                    });
-                    dropzoneNode.append(nodeSource);
-                    nodeSource.setXY(dragNodeX+shiftX, dragNodeY+shiftY, constrainRectangle, true);
-                    // make the new HtmlElement non-copyable: it only can be replaced inside its dropzone
-                    if (!dropzoneIsDelegated) {
-                        nodeSource.plugin.dd.model[EFFECT_ALLOWED] = MOVE;
-                        nodeSource.plugin.dd.model[DROPZONE_MOVABLE] = TRUE;
-                    }
-                    nodeSource.removeClass(DD_HIDDEN_SOURCE_CLASS);
-                    nodeDrag.remove();
-                };
-                // reset its position, only now constrain it to the dropzondenode
-                // we need to specify exactly the droparea: because we don't want to compare to any
-                // scrollWidth/scrollHeight, but exaclty to the visible part of the dropzone
-                borderLeft = parseInt(dropzoneNode.getStyle(BORDER_LEFT_WIDTH), 10);
-                borderTop = parseInt(dropzoneNode.getStyle(BORDER_TOP_WIDTH), 10);
-                constrainRectangle = {
-                    x: dropzoneNode.left + borderLeft,
-                    y: dropzoneNode.top + borderTop,
-                    w: dropzoneNode.offsetWidth - borderLeft - parseInt(dropzoneNode.getStyle(BORDER_RIGHT_WIDTH), 10),
-                    h: dropzoneNode.offsetHeight - borderTop - parseInt(dropzoneNode.getStyle(BORDER_BOTTOM_WIDTH), 10)
-                };
-                isCopied = (ctrlPressed && instance.allowCopy(dragNode)) || instance.onlyCopy(dragNode);
-                if (isCopied) {
-                    // backup x,y before move it into dropzone (which leads to new x,y)
-                    dragNodeX = dragNode.left;
-                    dragNodeY = dragNode.top;
-                    // now move the dragNode into dropzone
-                    relatives && relatives.forEach(
-                        function(item) {
-                            (dragNode!==item.dragNode) && copyToDropzone(item.sourceNode, item.dragNode, item.shiftX, item.shiftY);
-                        }
-                    );
-                    copyToDropzone(sourceNode, dragNode, 0 ,0);
-                }
-                else {
-                    dragNodeX = dragNode.left;
-                    dragNodeY = dragNode.top;
-                    relatives && relatives.forEach(
-                        function(item) {
-                           (dragNode!==item.dragNode) && moveToDropzone(item.sourceNode, item.dragNode, item.shiftX, item.shiftY);
-                        }
-                    );
-                    moveToDropzone(sourceNode, dragNode, 0, 0);
-                }
-
-                sourceNode.removeClass(DEL_DRAGGABLE);
-                instance._emitDropzoneDrop(e);
-            }
-            else {
-                (dragNode.hasAttr(DD_DROPZONE_MOVABLE)) && (dropzoneNode=dragNode.inside(DROPZONE_BRACKETS));
-                if (dropzoneNode && dragNode.rectangleInside(dropzoneNode)) {
-                    moveInsideDropzone = function(hasMatch, nodeSource, nodeDrag, shiftX, shiftY) {
-                        hasMatch && nodeSource.setXY(nodeSource+shiftX, nodeSource+shiftY, constrainRectangle, true);
-                        if (delegatedDragging) {
-                            nodeSource.removeClass(DEL_DRAGGABLE);
-                        }
-                        PLUGIN_ATTRS.forEach(function(attribute) {
-                            var data = '_del_'+attribute,
-                                attr = dragNode.getData(data);
-                            if (attr) {
-                                if (dropzoneIsDelegated) {
-                                    delete nodeSource.plugin.dd.model[attribute];
-                                }
-                                else {
-                                    nodeSource.plugin.dd.model[attribute] = attr;
-                                }
-                                nodeSource.removeData(data);
-                            }
-                        });
-                        nodeSource.removeClass(DD_HIDDEN_SOURCE_CLASS);
-                        nodeDrag.remove();
-                    };
-                    // reset its position, only now constrain it to the dropzondenode
-                    // we need to specify exactly the droparea: because we don't want to compare to any
-                    // scrollWidth/scrollHeight, but exaclty to the visible part of the dropzone
-                    dropzoneDelegatedDraggable = dropzoneNode.getAttr(DD_MINUSDRAGGABLE);
-                    dropzoneIsDelegated = dropzoneDelegatedDraggable && (dropzoneNode.getAttr(DD_MINUSDRAGGABLE)!=='true');
-                    borderLeft = parseInt(dropzoneNode.getStyle(BORDER_LEFT_WIDTH), 10);
-                    borderTop = parseInt(dropzoneNode.getStyle(BORDER_TOP_WIDTH), 10);
-                    constrainRectangle = {
-                        x: dropzoneNode.left + borderLeft,
-                        y: dropzoneNode.top + borderTop,
-                        w: dropzoneNode.offsetWidth - borderLeft - parseInt(dropzoneNode.getStyle(BORDER_RIGHT_WIDTH), 10),
-                        h: dropzoneNode.offsetHeight - borderTop - parseInt(dropzoneNode.getStyle(BORDER_BOTTOM_WIDTH), 10)
-                    };
-                    dragNodeX = dragNode.left;
-                    dragNodeY = dragNode.top;
-                    relatives && relatives.forEach(
-                        function(item) {
-                            (sourceNode!==item.sourceNode) && moveInsideDropzone(dropzoneNode, item.sourceNode, item.dragNode, item.shiftX, item.shiftY);
-                        }
-                    );
-                    moveInsideDropzone(dropzoneNode, sourceNode, dragNode, 0, 0);
-                }
-                else {
-                    instance.restoreDraggables();
-                }
-            }
-            sourceNode.removeClass(DD_MASTER_CLASS);
-            dragNode.removeClass(DD_MASTER_CLASS);
-        },
-
-       /**
-         * Sets the draggable items back to their original place. Should only be used when you prevent the default-function of `dd-drop`,
-         * so you can choose to do set the draggables back conditionally.
-         *
-         * @method _restoreDraggables
-         * @param e {Object} eventobject
-         * @param sourceNode {HtmlElement} the original HtmlElement
-         * @param dragNode {HtmlElement} the dragged HtmlElement (either original or clone)
-         * @param dropzoneSpecified {Boolean} whether the sourceNode had a dropzone specified
-         * @param x {Number} x-position in coordinaties relative to `document` (like getX())
-         * @param y {Number} y-position in coordinaties relative to `document` (like getX())
-         * @param inlineLeft {String} inline css `left` for the original sourceNode
-         * @param inlineTop {String} inline css `top` for the original sourceNode
-         * @param relatives {Array} hash with all draggables that are being move togerther with the master draggable
-         * @private
-         * @since 0.0.1
-         */
-        _restoreDraggables: function(e, ddProps) {
-            console.log(NAME, '_restoreDraggables');
-            var instance = this,
-                sourceNode = ddProps.sourceNode,
-                dragNode = ddProps.dragNode,
-                dropzoneSpecified = ddProps.dropzoneSpecified,
-                x = ddProps.x,
-                y = ddProps.y,
-                inlineLeft = ddProps.inlineLeft,
-                inlineTop = ddProps.inlineTop,
-                relatives = ddProps.relatives;
-            instance.restoreDraggables = function() {/* NOOP */ return this;};
-            instance._setBack(e, sourceNode, dragNode, dropzoneSpecified, x, y, inlineLeft, inlineTop, e.dropzone);
-            relatives && relatives.forEach(
-                function(item) {
-                    (dragNode!==item.dragNode) && instance._setBack(e, item.sourceNode, item.dragNode, dropzoneSpecified, x+item.shiftX, y+item.shiftY, item.inlineLeft, item.inlineTop);
-                }
-            );
-            return instance;
-        },
-
-      /**
-        * Sets the draggable node back to its original position
-        *
-        * @method _setBack
-        * @param sourceNode {HtmlElement} the original HtmlElement
-        * @param dragNode {HtmlElement} the dragged HtmlElement (either original or clone)
-        * @param dropzoneSpecified {Boolean} whether the sourceNode had a dropzone specified
-        * @param x {Number} x-position in coordinaties relative to `document` (like getX())
-        * @param y {Number} y-position in coordinaties relative to `document` (like getX())
-        * @param inlineLeft {String} inline css `left` for the original sourceNode
-        * @param inlineTop {String} inline css `top` for the original sourceNode
-        * @param [emitDropzoneEvent] {Boolean} whether dropzone-event should be emitted
-        * @private
-        * @since 0.0.1
-        */
-        _setBack: function(e, sourceNode, dragNode, dropzoneSpecified, x, y, inlineLeft, inlineTop, emitDropzoneEvent) {
-            console.log(NAME, '_setBack to '+x+', '+y);
-            var tearedDown,
-                winScrollTop,
-                winScrollLeft,
-                dropzones,
-                tearDown = function() {
-                    // dragNode might be gone when this method is called for the second time
-                    // therefor check its existance:
-                    if (!tearedDown) {
-                        tearedDown = true;
-// notransRemoval || (dragNode.removeEventListener && dragNode.removeEventListener(TRANS_END, tearDown, true));
-                        if (dropzoneSpecified) {
-                            sourceNode.removeClass([DD_HIDDEN_SOURCE_CLASS, DEL_DRAGGABLE, DD_MASTER_CLASS, DD_SOURCE_ISCOPIED_CLASS]);
-                            dragNode.remove();
-                        }
-                        else {
-                            dragNode.removeClass([DD_TRANSITION_CLASS, HIGH_Z_CLASS, DD_DRAGGING_CLASS, DEL_DRAGGABLE, DD_MASTER_CLASS, DD_SOURCE_ISCOPIED_CLASS]);
-                            dragNode.setInlineStyle(LEFT, inlineLeft)
-                                    .setInlineStyle(TOP, inlineTop);
-                        }
-                        PLUGIN_ATTRS.forEach(function(attribute) {
-                            var data = '_del_'+attribute;
-                            if (sourceNode.getData(data)) {
-                                sourceNode.removeData(data);
-                                delete sourceNode.plugin.dd.model[attribute];
-                            }
-                        });
-                    }
-                };
-            dragNode.removeClass([NO_TRANS_CLASS, DD_DRAGGING_CLASS]);
-            dragNode.setClass(DD_TRANSITION_CLASS);
-            // transitions only work with IE10+, and that browser has addEventListener
-            // when it doesn't have, it doesn;t harm to leave the transitionclass on: it would work anyway
-            // nevertheless we will remove it with a timeout
-// if (dragNode.addEventListener) {
-    // dragNode.addEventListener(TRANS_END, tearDown, true);
-// }
-// ALWAYS tearDowm after delay --> when there was no repositioning, there never will be a transition-event
-// LATER(tearDown, 260);
-            dragNode.setXY(x, y).finally(tearDown);
-            // now we might need to fire a last `dropzone` event when the dragged element returns to a dropzone when it wasn't before set it back
-            if (emitDropzoneEvent) {
-                dropzones = DOCUMENT.getAll(DROPZONE_BRACKETS);
-                if (dropzones) {
-                    winScrollTop = window.getScrollTop();
-                    winScrollLeft = window.getScrollLeft();
-                    dropzones.forEach(
-                        function(dropzone) {
-                            if (dropzone.insidePos(x, y) && !dropzone.insidePos(e.xMouse+winScrollLeft, e.yMouse+winScrollTop)) {
-                                e.dropTarget = dropzone;
-                                e._noDDoutEvt = true;
-                                Event.emit(dropzone, e.emitter+':'+DROPZONE_OVER, e);
-                            }
-                        }
-                    );
-                }
-            }
-        },
-
-      /**
-        * Sets up a `keydown` and `keyup` listener, to monitor whether a `ctrlKey` (windows) or `metaKey` (Mac)
-        * is pressed to support the copying of draggable items
-        *
-        * @method _setupKeyEv
-        * @private
-        * @since 0.0.1
-        */
-        _setupKeyEv: function() {
-            console.log(NAME, '_setupKeyEv');
-            var instance = this,
-                changeClasses = function(sourceNode, dragNode) {
-                    sourceNode.toggleClass(DD_HIDDEN_SOURCE_CLASS, !ctrlPressed);
-                    sourceNode.toggleClass(DD_SOURCE_ISCOPIED_CLASS, ctrlPressed);
-                    dragNode.toggleClass([DD_OPACITY_CLASS, DD_COPIED_CLASS], ctrlPressed);
-                };
-            Event.after([KEY+DOWN, KEY+UP], function(e) {
-                console.log(NAME, 'event '+e.type);
-                var ddProps = instance.ddProps,
-                    sourceNode = ddProps.sourceNode,
-                    dragNode, mouseOverNode;
-                ctrlPressed = e.ctrlKey || e.metaKey;
-                if (sourceNode && instance.allowSwitch(sourceNode)) {
-                    dragNode = ddProps.dragNode;
-                    mouseOverNode = ddProps.mouseOverNode;
-                    dropEffect = ctrlPressed ? COPY : MOVE;
-                    changeClasses(sourceNode, dragNode);
-                    ddProps.relatives && ddProps.relatives.forEach(
-                        function(item) {
-                            changeClasses(item.sourceNode, item.dragNode);
-                        }
-                    );
-                    // now, it could be that any droptarget should change its appearance (DD_DROPACTIVE_CLASS).
-                    // we need to recalculate it for all targets
-                    // we do this by emitting a DD_FAKE_MOUSEMOVE event
-                    /**
-                    * Fired when the mouse comes back into the browser-window while dd-drag was busy yet no buttons are pressed.
-                    * This is a correction to the fact that the mouseup-event wasn't noticed because the mouse was outside the browser.
-                    *
-                    * @event dd-fake-mousemove
-                    * @private
-                    * @since 0.1
-                    */
-                    mouseOverNode && Event.emit(mouseOverNode, UI+':'+DD_FAKE_MOUSEMOVE);
-                }
-            });
-        },
-
-      /**
-        * Cleansup the dragover subscriber and fulfills any dropzone-promise.
-        *
-        * @method _teardownOverEvent
-        * @param e {Object} eventobject
-        * @private
-        * @since 0.0.1
-        */
-        _teardownOverEvent: function(e, ddProps) {
-            console.log('_teardownOverEvent');
-            var dragOverEvent = ddProps.dragOverEv,
-                mouseX = e.xMouse,
-                mouseY = e.yMouse,
-                winScrollTop, winScrollLeft;
-            if (dragOverEvent) {
-                dragOverEvent.detach();
-                winScrollTop = window.getScrollTop();
-                winScrollLeft = window.getScrollLeft();
-                ddProps.dragOverList.forEach(function(promise) {
-                    promise.fulfill(e.dropTarget && e.dropTarget.insidePos(mouseX+winScrollLeft, mouseY+winScrollTop));
-                });
-            }
-        },
-
-       /**
-         * Returns true if the dropzone-HtmlElement accepts copy-dragables.
-         * Is determined by the attribute `dd-effect-allowed="copy"` or `dd-effect-allowed="all"`
-         *
-         * @method allowCopy
-         * @param dropzone {HtmlElement} HtmlElement that is checked for its allowed effects
-         * @return {Boolean} if copy-dragables are allowed
-         * @since 0.0.1
-         */
-        allowCopy: function(dropzone) {
-            var allowedEffects = this._allowedEffects(dropzone);
-            console.log('allowCopy --> '+REGEXP_ALL.test(allowedEffects) || REGEXP_COPY.test(allowedEffects));
-            return REGEXP_ALL.test(allowedEffects) || REGEXP_COPY.test(allowedEffects);
-        },
-
-       /**
-         * Returns true if the dragable-HtmlElement allowes to switch between `copy` and `move`.
-         *
-         * @method allowSwitch
-         * @param dragableElement {HtmlElement} HtmlElement that is checked for its allowed effects
-         * @return {Boolean} if copy-dragables are allowed
-         * @since 0.0.1
-         */
-        allowSwitch: function(dragableElement) {
-            console.log('allowSwitch --> '+REGEXP_ALL.test(this._allowedEffects(dragableElement)));
-            return REGEXP_ALL.test(this._allowedEffects(dragableElement));
-        },
-
-       /**
-         * Returns the emitterName that the dropzone accepts.
-         *
-         * @method getDropzoneEmitter
-         * @param dropzone {String} dropzone attribute of the dropzone HtmlElement
-         * @return {String|null} the emitterName that is accepted
-         * @since 0.0.1
-         */
-        getDropzoneEmitter: function(dropzone) {
-            var extract = dropzone.match(REGEXP_EMITTER);
-            console.log('getDropzoneEmitter --> '+(extract && extract[1]));
-            return extract && (','+extract[1]+',');
-        },
-
-       /**
-         * Initializes dragdrop. Needs to be invoked, otherwise DD won't run.
-         *
-         * @method init (extended by drag-drop)
-         * @param dragableElement {HtmlElement} HtmlElement that is checked for its allowed effects
-         * @return {Boolean} if copy-dragables are allowed
-         * @since 0.0.1
-         */
-        init: function() {
-            console.log(NAME, 'init');
-            var instance = this;
-            if (!instance._ddInited) {
-                // we will initialize `Drag` --> don;t worry if it was initialised before,
-                // Drag.init() will only run once
-                $superInit.call(instance);
-                instance._setupKeyEv();
-
-                instance.notify(function(e, ddProps) {
-                    var dropzones, sourceNode,
-                        dragNode = ddProps.dragNode,
-                        dropzoneSpecified = ddProps.dropzoneSpecified = dragNode.hasAttr(DD_DROPZONE) || dragNode.hasAttr(DD_EMITTER) || (e.emitter!==UI),
-                        setupDragnode = function(nodeSource, nodeDrag, shiftX, shiftY) {
-                            if (dropEffect===COPY) {
-                                nodeDrag.setClass([DD_OPACITY_CLASS, DD_COPIED_CLASS]);
-                                nodeSource.setClass(DD_SOURCE_ISCOPIED_CLASS);
-                            }
-                            else {
-                                nodeSource.setClass(DD_HIDDEN_SOURCE_CLASS);
-                            }
-                            nodeDrag.setClass(INVISIBLE_CLASS);
-                            nodeDrag.setInlineStyle(POSITION, ABSOLUTE);
-                            nodeSource.parentNode.append(nodeDrag, false, nodeSource);
-                            nodeDrag.setXY(ddProps.xMouseLast+shiftX, ddProps.yMouseLast+shiftY, ddProps.constrain, true);
-                            nodeDrag.removeClass(INVISIBLE_CLASS);
-                        };
-                    if (dropzoneSpecified) {
-                        sourceNode = e.sourceNode = ddProps.sourceNode = ddProps.dragNode;
-                        e.dragNode = ddProps.dragNode = ddProps.sourceNode.cloneNode(true);
-                        // correct sourceNode class: reset CSS set by `drag`:
-                        sourceNode.removeClass([NO_TRANS_CLASS, HIGH_Z_CLASS, DD_DRAGGING_CLASS]);
-                        // also correct inline CSS style for `left` and `top` of the sourceNode:
-                        sourceNode.setInlineStyle(LEFT, ddProps.inlineLeft);
-                        sourceNode.setInlineStyle(TOP, ddProps.inlineTop);
-
-                        dropEffect = (instance.onlyCopy(dragNode) || (ctrlPressed && instance.allowCopy(dragNode))) ? COPY : MOVE;
-                        setupDragnode(ddProps.sourceNode, ddProps.dragNode, 0, 0);
-                        if (ddProps.relatives) {
-                            e.relativeDragNodes = [];
-                            ddProps.relatives.forEach(
-                                function(item) {
-                                    item.sourceNode = item.dragNode;
-                                    item.dragNode = item.dragNode.cloneNode(true);
-                                    setupDragnode(item.sourceNode, item.dragNode, item.shiftX, item.shiftY);
-                                    e.relativeDragNodes.push(item.dragNode);
-                                }
-                            );
-                        }
-                        dropzones = DOCUMENT.getAll(DROPZONE_BRACKETS);
-                        if (dropzones.length>0) {
-                            // create a custom over-event that fires exactly when the mouse is over any dropzone
-                            // we cannot use `hover`, because that event fails when there is an absolute floated element outsize `dropzone`
-                            // lying on top of the dropzone. -> we need to check by coördinates
-                            ddProps.dragOverEv = instance._defineOverEv(e, dropzones);
-
-                        }
-                    }
-                    else {
-                        e.dragNode = ddProps.dragNode;
-                    }
-                    ddProps.dragDropEv = instance._defineDropEv(e, ddProps);
-                }, instance, true);
-
-                instance.notify(instance._teardownOverEvent, instance);
-
-            }
-            instance._ddInited = true;
-        },
-
-       /**
-         * Returns true if the dragable-HtmlElement accepts only copy-dragables (no moveable)
-         * Is determined by the attribute `dd-effect-allowed="copy"`
-         *
-         * @method onlyCopy
-         * @param dragableElement {HtmlElement} HtmlElement that is checked for its allowed effects
-         * @return {Boolean} if only copy-dragables are allowed
-         * @since 0.0.1
-         */
-        onlyCopy: function(dragableElement) {
-            console.log('onlyCopy --> '+REGEXP_COPY.test(this._allowedEffects(dragableElement)));
-            return REGEXP_COPY.test(this._allowedEffects(dragableElement));
-        },
-
-       /**
-         * Sets the draggable items back to their original place. Should only be used when you prevent the default-function of `dd-drop`,
-         * so you can choose to do set the draggables back conditionally.
-         *
-         * @method restoreDraggables
-         * @private
-         * @chainable
-         * @since 0.0.1
-         */
-        restoreDraggables: function() {/* NOOP */ return this;}
-
-    };
-
-    DragModule.DD.merge(DD, {force: true});
-    DragModule.Plugins.DD.mergePrototypes({
-        attrs: {
-            draggable: 'string',
-            constrain: 'string',
-            handle: 'string',
-            emitter: 'string',
-            'effect-allowed': 'string',
-            'dropzone-movable': 'string',
-            dropzone: 'string'
-        }
-    }, true);
-
-    DD_Object = window._ITSAmodules.DragDrop = {
-        DD: DragModule.DD,
-        Plugins: {
-            DD: DragModule.Plugins.DD,
-            Dropzone: DOCUMENT.definePlugin('dz', null, {
-                attrs: {
-                    dropzone: 'string'
-                },
-                defaults: {
-                    dropzone: 'true'
-                }
-            })
-        }
-    };
-
-    return DD_Object;
-
-};
-},{"./css/drag-drop.css":7,"drag":10,"event-dom":314,"js-ext":386,"js-ext/extra/hashmap.js":385,"node-plugin":396,"polyfill/polyfill-base.js":559,"useragent":1269,"vdom":600,"window-ext":601}],9:[function(require,module,exports){
-module.exports=require(7)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],10:[function(require,module,exports){
-"use strict";
-
-/**
- * Provides `drag and drop` functionality, without dropzones.
- * For `dropzone`-support, you should use the module: `drag-drop`.
- *
- *
- * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
- * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
- *
- * @example
- * DD = require('drag')(window);
- * DD.init();
- *
- * @module drag
- * @class DD
- * @since 0.0.4
-*/
-
-var NAME = '[drag]: ',
-    createHashMap = require('js-ext/extra/hashmap.js').createMap,
-    DRAG = 'drag',
-    DROP = 'drop',
-    DRAGGABLE = DRAG+'gable',
-    DEL_DRAGGABLE = 'del-'+DRAGGABLE,
-    DD_MINUS = 'dd-',
-    DD_DRAGGING_CLASS = DD_MINUS+DRAG+'ging',
-    DD_MASTER_CLASS = DD_MINUS+'master',
-    DD_HANDLE = DD_MINUS+'handle',
-    DD_DROPZONE_MOVABLE = DD_MINUS+'dropzone-movable',
-    CONSTRAIN_ATTR = 'constrain-selector',
-    MOUSE = 'mouse',
-    DROPZONE = 'dropzone',
-    NO_TRANS_CLASS = 'el-notrans', // delivered by `vdom`
-    HIGH_Z_CLASS = DD_MINUS+'high-z',
-    REGEXP_NODE_ID = /^#\S+$/,
-    EMITTER = 'emitter',
-    DD_EMITTER = DD_MINUS+EMITTER,
-    DD_DRAG = DD_MINUS+DRAG,
-    DD_DROP = DD_MINUS+DROP,
-    DD_FAKE = DD_MINUS+'fake-',
-    DOWN = 'down',
-    UP = 'up',
-    MOVE = 'move',
-    MOUSEUP = MOUSE+UP,
-    MOUSEDOWN = MOUSE+DOWN,
-    MOUSEMOVE = MOUSE+MOVE,
-    PAN = 'pan',
-    PANSTART = PAN+'start',
-    PANMOVE = PAN+MOVE,
-    PANEND = PAN+'end',
-    DD_FAKE_MOUSEUP = DD_FAKE+MOUSEUP,
-    UI = 'UI',
-    DD_EFFECT_ALLOWED = DD_MINUS+'effect-allowed',
-    BORDER = 'border',
-    WIDTH = 'width',
-    BORDER_LEFT_WIDTH = BORDER+'-left-'+WIDTH,
-    BORDER_TOP_WIDTH = BORDER+'-top-'+WIDTH,
-    LEFT = 'left',
-    TOP = 'top',
-    WINDOW = 'window',
-    TRUE = 'true',
-    NO_OVERFLOW = 'itsa-no-overflow',
-    DD_MINUSDRAGGABLE = DD_MINUS+DRAGGABLE,
-    PLUGIN_ATTRS = [DD_MINUS+DROPZONE, CONSTRAIN_ATTR, DD_EMITTER, DD_HANDLE, DD_EFFECT_ALLOWED, DD_DROPZONE_MOVABLE];
-
+require('js-ext/lib/object.js');
+require('js-ext/lib/string.js');
+require('js-ext/lib/promise.js');
 require('polyfill');
-require('js-ext');
-require('./css/drag.css');
+require('event/extra/timer-finalize.js');
+require('event/extra/promise-finalize.js');
+
+var createHashMap = require('js-ext/extra/hashmap.js').createMap,
+    fromCamelCase = function(input) {
+        return input.replace(/[a-z]([A-Z])/g, function(match, group) {
+            return match[0]+'-'+group.toLowerCase();
+        });
+    };
 
 module.exports = function (window) {
 
     window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
 
-    if (window._ITSAmodules.Drag) {
-        return window._ITSAmodules.Drag; // Drag was already created
+    if (window._ITSAmodules.ElementPlugin) {
+        return; // ElementPlugin was already created
     }
 
-    var Event = require('event-dom')(window),
-        isMobile = require('useragent')(window).isMobile,
-        DOCUMENT = window.document,
-        bodyNode = DOCUMENT.body,
-        supportHammer = !!Event.Hammer,
-        mobileEvents = supportHammer && isMobile,
-        DD, DD_Object;
-
     require('vdom')(window);
-    require('node-plugin')(window);
-    require('window-ext')(window);
+    var NAME = '[ElementPlugin]: ',
+        Classes = require('js-ext/extra/classes.js'),
+        timers = require('utils/lib/timers.js'),
+        Event = require('event-dom')(window),
+        asyncSilent = timers.asyncSilent,
+        laterSilent = timers.laterSilent,
+        DELAY_DESTRUCTION = 5000, // must be kept below vnode.js its DESTROY_DELAY (which is currently 60000)
+        DELAYED_EVT_TIME = 500,
+        NATIVE_OBJECT_OBSERVE = !!Object.observe,
+        DOCUMENT = window.document,
+        types = [],
+        NODE = 'node',
+        REMOVE = 'remove',
+        INSERT = 'insert',
+        CHANGE = 'change',
+        ATTRIBUTE = 'attribute',
+        NODE_REMOVE = NODE+REMOVE,
+        NODE_INSERT = NODE+INSERT,
+        NODE_CONTENT_CHANGE = NODE+'content'+CHANGE,
+        ATTRIBUTE_REMOVE = ATTRIBUTE+REMOVE,
+        ATTRIBUTE_CHANGE = ATTRIBUTE+CHANGE,
+        ATTRIBUTE_INSERT = ATTRIBUTE+INSERT,
+        MUTATION_EVENTS = [NODE_REMOVE, NODE_INSERT, NODE_CONTENT_CHANGE, ATTRIBUTE_REMOVE, ATTRIBUTE_CHANGE, ATTRIBUTE_INSERT],
+        Base, pluginDOM, modelToAttrs, attrsToModel, syncPlugin, autoRefreshPlugin, pluginDOMresync, DEFAULT_DELAYED_FINALIZE_EVENTS;
 
-    DD = {
-        /**
-         * Objecthash containing all specific information about the particular drag-cycle.
-         * It has a structure like this:
-         *
-         * ddProps = {
-         *     dragNode {HtmlElement} Element that is dragged
-         *     x {Number} absolute x-position of the draggable inside `document` when the drag starts
-         *     y {Number} absolute y-position of the draggable inside `document` when the drag starts
-         *     inlineLeft {String} inline css of the property `left` when drag starts
-         *     inlineTop {String} inline css of the property `top` when drag starts
-         *     winConstrained {Boolean} whether the draggable should be constrained to `window`
-         *     xMouseLast {Number} absolute x-position of the mouse inside `document` when the drag starts
-         *     yMouseLast {Number} absolute y-position of the draggable inside `document` when the drag starts
-         *     winScrollLeft {Number} the left-scroll of window when drag starts
-         *     winScrollTop {Number} the top-scroll of window when drag starts
-         *     constrain = { // constrain-properties when constrained to a HtmlElement
-         *         xOrig {Number} x-position in the document, included with left-border-width
-         *         yOrig {Number} y-position in the document, included with top-border-width
-         *         x {Number} xOrig corrected with scroll-left of the constrained node
-         *         y {Number} yOrig corrected with scroll-top of the constrained node
-         *         w {Number} scrollWidth
-         *         h {Number} scrollHeight
-         *     };
-         *     relatives[{ // Array with objects that represent all draggables that come along with the master-draggable (in case of multiple items), excluded the master draggable itself
-         *         sourceNode {HtmlElement} original node (defined by drag-drop)
-         *         dragNode {HtmlElement} draggable node
-         *         shiftX {Number} the amount of left-pixels that this HtmlElement differs from the dragged element
-         *         shiftY {Number} the amount of top-pixels that this HtmlElement differs from the dragged element
-         *         inlineLeft {String} inline css of the property `left` when drag starts
-         *         inlineTop {String} inline css of the property `top` when drag starts
-         *     }]
-         * }
-         *
-         * @property ddProps
-         * @default {}
-         * @type Object
-         * @since 0.0.1
-        */
-       ddProps: {},
+    Object.protectedProp(window, '_ITSAPlugins', createHashMap());
 
-        /**
-         * Internal hash with notifiers to response after each `Drag` event is set up, or teared down.
-         * You can use this to hook in into the drag-eventcycle: the `drop`-module uses it this way.
-         * Is filled by using `notify()`.
-         *
-         * @property _notifiers
-         * @default []
-         * @type Array
-         * @private
-         * @since 0.0.1
-         */
-        _notifiers: [],
+    /**
+     * Default internal hash containing all DOM-events that will not directly call `event-finalize`
+     * but after a delay of 1 second
+     *
+     * @property DEFAULT_DELAYED_FINALIZE_EVENTS
+     * @default {
+     *    mousedown: true,
+     *    mouseup: true,
+     *    mousemove: true,
+     *    panmove: true,
+     *    panstart: true,
+     *    panleft: true,
+     *    panright: true,
+     *    panup: true,
+     *    pandown: true,
+     *    pinchmove: true,
+     *    rotatemove: true,
+     *    focus: true,
+     *    manualfocus: true,
+     *    keydown: true,
+     *    keyup: true,
+     *    keypress: true,
+     *    blur: true,
+     *    resize: true,
+     *    scroll: true
+     * }
+     * @type Object
+     * @private
+     * @since 0.0.1
+    */
+    DEFAULT_DELAYED_FINALIZE_EVENTS = {
+        mousedown: true,
+        mouseup: true,
+        mousemove: true,
+        panmove: true,
+        panstart: true,
+        panleft: true,
+        panright: true,
+        panup: true,
+        pandown: true,
+        pinchmove: true,
+        rotatemove: true,
+        focus: true,
+        manualfocus: true,
+        keydown: true,
+        keyup: true,
+        keypress: true,
+        blur: true,
+        resize: true,
+        scroll: true
+    };
 
-        /**
-        * Default function for the `*:dd-drag`-event
-        *
-        * @method _defFnDrag
-        * @param e {Object} eventobject
-        * @private
-        * @since 0.0.1
-        */
-        _defFnDrag: function(e) {
-            console.log(NAME, '_defFnDrag: default function dd-drag');
-            var ddProps = this.ddProps,
-                dragNode = ddProps.dragNode,
-                constrainNode = ddProps.constrainNode,
-                winConstrained = ddProps.winConstrained,
-                x, y;
-            // is the drag is finished, there will be no ddProps.defined
-            // return then, to prevent any events that stayed behind
-            if (!ddProps.defined) {
-                return;
+    pluginDOM = function(NewClass) {
+        // asynchroniously we check all current elements and render when needed:
+        var ns = NewClass.prototype.$ns;
+        asyncSilent(function() {
+            var elements = DOCUMENT.getAll('[plugin-'+ns+'="true"]', true),
+                len = elements.length,
+                element, i;
+            for (i=0; i<len; i++) {
+                element = elements[i];
+                element.plug(ns);
             }
+        });
+    };
 
-            // caution: the user might have put the mouse out of the screen and released the mousebutton!
-            // If that is the case, the a mouseup-event should be initiated instead of draggin the element
-            if (e.buttons===0) {
-                // no more button pressed
-                /**
-                * Fired when the mouse comes back into the browser-window while dd-drag was busy yet no buttons are pressed.
-                * This is a correction to the fact that the mouseup-event wasn't noticed because the mouse was outside the browser.
-                *
-                * @event dd-fake-mouseup
-                * @private
-                * @since 0.1
-                */
-                Event.emit(dragNode, DD_FAKE_MOUSEUP);
+    pluginDOMresync = function(NewClass) {
+        // asynchroniously we check all current elements and render when needed:
+        var ns = NewClass.prototype.$ns;
+        asyncSilent(function() {
+            var elements = DOCUMENT.getAll('[plugin-'+ns+'="true"]', true),
+                len = elements.length,
+                element, i;
+            for (i=0; i<len; i++) {
+                element = elements[i];
+                syncPlugin(element[ns]);
+            }
+        });
+    };
+
+    attrsToModel = function(plugin, config) {
+        var host = plugin.host,
+            attrs = plugin.attrs,
+            defaults = plugin.defaults,
+            ns = plugin.$ns + '-',
+            attrValue, validValue;
+        config || (config={});
+        // read the current ns-attributes on the node, overrule them with config and set the new attributes
+        attrs.each(function(value, key) {
+            attrValue = config[key] || host.getAttr(ns+key) || defaults[key];
+            attrValue = String(attrValue);
+            if (attrValue) {
+                switch (value.toLowerCase()) {
+                    case 'boolean':
+                        validValue = attrValue.validateBoolean();
+                        attrValue = (attrValue==='true');
+                        break;
+                    case 'number':
+                        validValue = attrValue.validateFloat();
+                        attrValue = parseFloat(attrValue);
+                        break;
+                    case 'date':
+                        validValue = attrValue.validateDate();
+                        attrValue = attrValue.toDate();
+                        break;
+                    case 'string':
+                        validValue = true;
+                        break;
+                    default:
+                        validValue = false;
+                }
+            }
+            else if (value.toLowerCase()==='boolean') {
+                // undefined `boolean` attributes need to be stored as `false`
+                validValue = true;
+                attrValue = false;
             }
             else {
-                console.log(NAME, '_defFnDrag: dragging:');
-                if (constrainNode) {
-                    ddProps.constrain.x = ddProps.constrain.xOrig - constrainNode.scrollLeft;
-                    ddProps.constrain.y = ddProps.constrain.yOrig - constrainNode.scrollTop;
-                }
-
-                x = ddProps.x+e.xMouse+(winConstrained ? ddProps.winScrollLeft : window.getScrollLeft())-e.xMouseOrigin;
-                y = ddProps.y+e.yMouse+(winConstrained ? ddProps.winScrollTop : window.getScrollTop())-e.yMouseOrigin;
-
-                dragNode.setXY(x, y, ddProps.constrain, true);
-
-                ddProps.relatives && ddProps.relatives.forEach(
-                    function(item) {
-                        item.dragNode.setXY(x+item.shiftX, y+item.shiftY, null, true);
-                    }
-                );
-                ddProps.winConstrained || dragNode.forceIntoView(true);
-                constrainNode && dragNode.forceIntoNodeView(constrainNode);
+                validValue = false;
             }
-        },
+            if (validValue && !plugin.model[key]) {
+                plugin.model[key] = attrValue;
+            }
+        });
+    };
 
-        /**
-         * Default function for the `*:dd-drop`-event
-         *
-         * @method _defFnDrop
-         * @param e {Object} eventobject
-         * @private
-         * @since 0.0.1
-         */
-        _defFnDrop: function(e) {
-            console.log(NAME, '_defFnDrop');
-            var dragNode = e.target,
-                removeClasses = function (node) {
-                    node.removeClass([NO_TRANS_CLASS, HIGH_Z_CLASS, DD_DRAGGING_CLASS, DEL_DRAGGABLE, DD_MASTER_CLASS]);
-                };
+    modelToAttrs = function(plugin) {
+        console.log(NAME+'modelToAttrs');
+        var attrs = plugin.attrs,
+            model = plugin.model,
+            domElement = plugin.host,
+            ns = plugin.$ns,
+            newAttrs = [];
+        attrs.each(function(value, key) {
+            model[key] && (model[key]!=='undefined') && (newAttrs[newAttrs.length] = {name: ns+'-'+fromCamelCase(key), value: model[key]});
+        });
+        if (newAttrs.length>0) {
+            domElement.setAttrs(newAttrs, true);
+        }
+    };
 
-            PLUGIN_ATTRS.forEach(function(attribute) {
-                var data = '_del_'+attribute;
-                if (dragNode.getData(data)) {
-                    delete dragNode.plugin.dd.model[attribute];
-                    dragNode.removeData(data);
-                }
-            });
-            removeClasses(dragNode);
-            e.relatives && e.relatives.forEach(
-                function(node) {
-                    removeClasses(node);
-                }
-            );
-        },
-
-        /**
-         * Default function for the `*:dd`-event
-         *
-         * @method _defFnStart
-         * @param e {Object} eventobject
-         * @private
-         * @since 0.0.1
-         */
-        _defFnStart: function(e) {
-            var instance = this,
-                customEvent;
-            customEvent = e.emitter + ':'+DD_DRAG;
-            console.log(NAME, '_defFnStart: default function UI:dd-start. Defining customEvent '+customEvent);
-            Event.defineEvent(customEvent).defaultFn(instance._defFnDrag.bind(instance));
-            DOCUMENT.getAll('.'+DD_MASTER_CLASS).removeClass(DD_MASTER_CLASS);
-            instance._initializeDrag(e);
-        },
-
-      /**
-        * Defines the definition of the `dd` event: the first phase of the drag-eventcycle (dd, *:dd-drag, *:dd-drop)
-        *
-        * @method _defineDDStart
-        * @param emitterName {String} the emitterName, which leads into the definition of event `emitterName:dd`
-        * @private
-        * @since 0.0.1
-        */
-        _defineDDStart: function(emitterName) {
-            console.log(NAME, '_defineDDStart');
-            var instance = this;
-            // by using dd before dd-drag, the user can create a `before`-subscriber to dd
-            // and define e.emitter and/or e.relatives before going into `dd-drag`
-            Event.defineEvent(emitterName+':dd')
-                .defaultFn(instance._defFnStart.bind(instance))
-                .preventedFn(instance._prevFnStart.bind(instance));
-        },
-
-       /**
-         * Default function for the `*:dd-drag`-event
-         *
-         * @method _initializeDrag
-         * @param e {Object} eventobject
-         * @private
-         * @since 0.0.1
-         */
-        _initializeDrag: function(e) {
-            console.log(NAME, '_initializeDrag '+e.xMouseOrigin);
-            var instance = this,
-                dragNode = e.target,
-                constrain = dragNode.getAttr(CONSTRAIN_ATTR),
-                ddProps = instance.ddProps,
-                emitterName = e.emitter,
-                moveEv, x, y, byExactId, match, constrainNode, winConstrained, winScrollLeft, winScrollTop,
-                xOrig, yOrig;
-
-            // define ddProps --> internal object with data about the draggable instance
-            ddProps.dragNode = dragNode;
-            ddProps.x = x = dragNode.left;
-            ddProps.y = y = dragNode.top;
-            ddProps.inlineLeft = dragNode.getInlineStyle(LEFT);
-            ddProps.inlineTop = dragNode.getInlineStyle(TOP);
-            ddProps.winConstrained = winConstrained = (constrain===WINDOW);
-            ddProps.xMouseLast = x;
-            ddProps.yMouseLast = y;
-
-            if (constrain) {
-                if (winConstrained) {
-                    ddProps.winScrollLeft = winScrollLeft = window.getScrollLeft();
-                    ddProps.winScrollTop = winScrollTop = window.getScrollTop();
-                    ddProps.constrain = {
-                        x: winScrollLeft,
-                        y: winScrollTop,
-                        w: window.getWidth(),
-                        h: window.getHeight()
-                    };
-                    // if constrained to window:
-                    // set a class that makes overflow hidden --> this will prevent
-                    // some browsers from scrolling the window when a pressed mouse
-                    // gets out of the window
-                    bodyNode.setClass(NO_OVERFLOW);
+    syncPlugin = function(plugin, compareWithPrevData) {
+        var stringifiedModel;
+        if (compareWithPrevData) {
+            try {
+                stringifiedModel = JSON.stringify(plugin.model);
+                if (stringifiedModel!==plugin._bkpModel) {
+                    plugin._bkpModel = stringifiedModel;
                 }
                 else {
-                    byExactId = REGEXP_NODE_ID.test(constrain);
-                    constrainNode = dragNode.parentNode;
-                    while (constrainNode.matchesSelector && !match) {
-                        match = byExactId ? (constrainNode.id===constrain.substr(1)) : constrainNode.matchesSelector(constrain);
-                        // if there is a match, then make sure x and y fall within the region
-                        if (match) {
-                            ddProps.constrainNode = constrainNode;
-                            xOrig = constrainNode.left + parseInt(constrainNode.getStyle(BORDER_LEFT_WIDTH), 10);
-                            yOrig = constrainNode.top + parseInt(constrainNode.getStyle(BORDER_TOP_WIDTH), 10);
-                            ddProps.constrain = {
-                                xOrig: xOrig,
-                                yOrig: yOrig,
-                                x: xOrig - constrainNode.scrollLeft,
-                                y: yOrig - constrainNode.scrollTop,
-                                w: constrainNode.scrollWidth,
-                                h: constrainNode.scrollHeight
-                            };
-                        }
-                        else {
-                            constrainNode = constrainNode.parentNode;
-                        }
-                    }
-                }
-            }
-
-            // create listener for `mousemove` and transform it into the `*:dd:drag`-event
-            moveEv = Event.after(mobileEvents ? PANMOVE : MOUSEMOVE, function(e2) {
-                if (typeof e2.center==='object') {
-                    e2.clientX = e2.center.x;
-                    e2.clientY = e2.center.y;
-                }
-                if (!e2.clientX) {
                     return;
                 }
-                // move the object
-                e.xMouse = e2.clientX;
-                e.yMouse = e2.clientY;
-                /**
-                * Emitted during the drag-cycle of a draggable Element (while it is dragged).
-                *
-                * @event *:dd-drag
-                * @param e {Object} eventobject including:
-                * @param e.target {HtmlElement} the HtmlElement that is being dragged
-                * @param e.currentTarget {HtmlElement} the HtmlElement that is delegating
-                * @param e.sourceTarget {HtmlElement} the deepest HtmlElement where the mouse lies upon
-                * @param e.dd {Promise} Promise that gets fulfilled when dragging is ended. The fullfilled-callback has no arguments.
-                * @param e.xMouse {Number} the current x-position in the window-view
-                * @param e.yMouse {Number} the current y-position in the window-view
-                * @param e.clientX {Number} the current x-position in the window-view
-                * @param e.clientY {Number} the current y-position in the window-view
-                * @param e.xMouseOrigin {Number} the original x-position in the document when drag started (incl. scrollOffset)
-                * @param e.yMouseOrigin {Number} the original y-position in the document when drag started (incl. scrollOffset)
-                * @param [e.relatives] {NodeList} an optional list that the user could set in a `before`-subscriber of the `dd`-event
-                *        to inform which nodes are related to the draggable node and should be dragged as well.
-                * @since 0.1
-                */
-                Event.emit(dragNode, emitterName+':'+DD_DRAG, e);
-                e.dd.callback();
-            });
+            }
+            catch (err) {
+                console.warn(err);
+                console.warn('Invalid model-structure for plugin '+plugin.$ns+': possibly it is cycle referenced --> will NEVER refresh the plugin:');
+                console.warn(plugin.host);
+                console.warn('related model:');
+                console.warn(plugin.model);
+                return;
+            }
+        }
+        modelToAttrs(plugin);
+        plugin.sync();
+    };
 
-            // prepare dragNode class for the right CSS:
-            dragNode.setClass([NO_TRANS_CLASS, HIGH_Z_CLASS, DD_DRAGGING_CLASS]);
-
-            Event.onceAfter([mobileEvents ? PANEND : MOUSEUP, DD_FAKE_MOUSEUP], function(e3) {
-                moveEv.detach();
-                // set mousepos for the last time:
-                if (typeof e3.center==='object') {
-                    e3.clientX = e3.center.x;
-                    e3.clientY = e3.center.y;
-                }
-                e.xMouse = e3.clientX;
-                e.yMouse = e3.clientY;
-                // invoke all teardown notifiers:
-                instance._notifiers.forEach(
-                    function(notifier) {
-                        notifier.s || notifier.cb.call(notifier.o, e, ddProps);
-                    }
-                );
-
-                if (constrain && ddProps.winConstrained) {
-                    // if constrained to window:
-                    // remove overflow=hidden from the bodynode
-                    bodyNode.removeClass(NO_OVERFLOW);
-                }
-
-                instance.ddProps = {};
-                /**
-                * Emitted when drag-cycle of a draggable Element is ended.
-                *
-                * @event *:dd-drop
-                * @param e {Object} eventobject including:
-                * @param e.target {HtmlElement} the HtmlElement that is being dragged
-                * @param e.currentTarget {HtmlElement} the HtmlElement that is delegating
-                * @param e.sourceTarget {HtmlElement} the deepest HtmlElement where the mouse lies upon
-                * @param e.dd {Promise} Promise that gets fulfilled when dragging is ended. The fullfilled-callback has no arguments.
-                * @param e.xMouse {Number} the current x-position in the window-view
-                * @param e.yMouse {Number} the current y-position in the window-view
-                * @param e.clientX {Number} the current x-position in the window-view
-                * @param e.clientY {Number} the current y-position in the window-view
-                * @param e.xMouseOrigin {Number} the original x-position in the document when drag started (incl. scrollOffset)
-                * @param e.yMouseOrigin {Number} the original y-position in the document when drag started (incl. scrollOffset)
-                * @param [e.relatives] {NodeList} an optional list that the user could set in a `before`-subscriber of the `dd`-event
-                *        to inform which nodes are related to the draggable node and should be dragged as well.
-                * @since 0.1
-                */
-                Event.emit(dragNode, emitterName+':'+DD_DROP, e);
-                e.dd.fulfill();
-            });
-
-            dragNode.setXY(ddProps.xMouseLast, ddProps.yMouseLast, ddProps.constrain, true);
-
-            if (e.relatives) {
-                // relatives are extra HtmlElements that should be moved aside with the main dragged element
-                // e.relatives is a selector, e.relativeNodes will be an array with nodes
-                e.relativeNodes = [];
-                dragNode.setClass(DD_MASTER_CLASS);
-                dragNode.setClass(DD_MASTER_CLASS);
-                ddProps.relatives = [];
-                e.relatives.forEach(
-                    function(node) {
-                        var item;
-                        if (node !== dragNode) {
-                            item = {
-                                dragNode: node,
-                                shiftX: node.left - x,
-                                shiftY: node.top - y,
-                                inlineLeft: node.getInlineStyle(LEFT),
-                                inlineTop: node.getInlineStyle(TOP)
-                            };
-                            item.dragNode.setClass([NO_TRANS_CLASS, HIGH_Z_CLASS, DD_DRAGGING_CLASS]);
-                            ddProps.relatives.push(item);
-                            e.relativeNodes.push(item.dragNode);
+    autoRefreshPlugin = function(plugin) {
+        if (!NATIVE_OBJECT_OBSERVE) {
+            plugin._EventFinalizer = Event.finalize(function(e) {
+                var type = e.type;
+                if (!e._noRender && (!e.status || !e.status.renderPrevented)) {
+                    if (!MUTATION_EVENTS[type] && !type.endsWith('outside')) {
+                        if (plugin._DELAYED_FINALIZE_EVENTS[type]) {
+                            types.push(type);
+                            plugin.constructor.$registerDelay || (plugin.constructor.$registerDelay = laterSilent(function() {
+                                console.info('Event-finalizer will delayed-refresh itags because of events: '+JSON.stringify(types));
+                                syncPlugin(plugin, true);
+                                types.length = 0;
+                                plugin.constructor.$registerDelay = null;
+                            }, DELAYED_EVT_TIME));
+                        }
+                        else {
+                            console.info('Event-finalizer will refresh itags because of event: '+type);
+                            syncPlugin(plugin, true);
                         }
                     }
-                );
-            }
-            // invoke all setup notifiers:
-            instance._notifiers.forEach(
-                function(notifier) {
-                    notifier.s && notifier.cb.call(notifier.o, e, ddProps);
                 }
-            );
-        },
+            });
+        }
+    };
 
-        /**
-         * Prevented function for the `*:dd-start`-event
-         *
-         * @method _prevFnStart
-         * @param e {Object} eventobject
-         * @private
-         * @since 0.0.1
-         */
-        _prevFnStart: function(e) {
-            console.log(NAME, '_prevFnStart');
-            e.dd.reject();
-        },
-
-      /**
-        * Engine behind the drag-drop-cycle.
-        * Sets up a `mousedown` listener to initiate a drag-drop eventcycle. The eventcycle start whenever
-        * one of these events happens on a HtmlElement with the attribute `dd-draggable="true"`.
-        * The drag-drop eventcycle consists of the events: `dd-start`, `emitterName:dd-drag` and `emitterName:dd-drop`
+    // extend window.Element:
+    window.Element && (function(HTMLElementPrototype) {
+       /**
+        * Checks whether the plugin is plugged in at the HtmlElement. Checks whether all its attributes are set.
         *
-        *
-        * @method _setupMouseEv
-        * @private
+        * @method isPlugged
+        * @param plugin {String} The name of the plugin that should be plugged. Needs to be the Class, not an instance!
+        * @return {Boolean} whether the plugin is plugged in
         * @since 0.0.1
         */
-        _setupMouseEv: function() {
-            console.log(NAME, '_setupMouseEv: setting up mousedown event');
-            var instance = this,
-                nodeTargetFn,
-                delegatedTargetFn;
-
-            nodeTargetFn = function(e) {
-                var node = e.target,
-                    handle, availableHandles, insideHandle, emitterName;
-
-                // first check if there is a handle to determine if the drag started here:
-                handle = node.getAttr(DD_HANDLE);
-                if (handle) {
-                    availableHandles = node.getAll(handle);
-                    insideHandle = false;
-                    availableHandles.some(function(handleNode) {
-                        insideHandle = handleNode.contains(e.sourceTarget);
-                        return insideHandle;
-                    });
-                    if (!insideHandle) {
-                        return;
-                    }
-                }
-
-                // initialize ddProps: have to do here, because the event might not start because it wasn't inside the handle when it should be
-                instance.ddProps = {
-                    defined: true,
-                    dragOverList: []
-                };
-
-                // prevent the emitter from resetting e.target to e.sourceTarget:
-                e._noResetSourceTarget = true;
-                // add `dd`-Promise to the eventobject --> this Promise will be resolved once the pointer has released.
-                e.dd = Promise.manage();
-                // define e.setOnDrag --> users
-                e.setOnDrag = function(callbackFn) {
-                    e.dd.setCallback(callbackFn);
-                };
-                // store the orriginal mouseposition:
-                e.xMouseOrigin = e.clientX + window.getScrollLeft();
-                e.yMouseOrigin = e.clientY + window.getScrollTop();
-
-                //set the emitterName:
-                emitterName = e.target.getAttr(DD_EMITTER) || UI;
-                // now we can start the eventcycle by emitting emitterName:dd:
-                /**
-                * Emitted when a draggable Element's drag-cycle starts. You can use a `before`-subscriber to specify
-                * e.relatives, which should be a nodelist with HtmlElements, that should be dragged togehter with the master
-                * draggable Element.
-                *
-                * @event *:dd
-                * @param e {Object} eventobject including:
-                * @param e.target {HtmlElement} the HtmlElement that is being dragged
-                * @param e.currentTarget {HtmlElement} the HtmlElement that is delegating
-                * @param e.sourceTarget {HtmlElement} the deepest HtmlElement where the mouse lies upon
-                * @param e.dd {Promise} Promise that gets fulfilled when dragging is ended. The fullfilled-callback has no arguments.
-                * @param e.xMouse {Number} the current x-position in the window-view
-                * @param e.yMouse {Number} the current y-position in the window-view
-                * @param e.clientX {Number} the current x-position in the window-view
-                * @param e.clientY {Number} the current y-position in the window-view
-                * @param e.xMouseOrigin {Number} the original x-position in the document when drag started (incl. scrollOffset)
-                * @param e.yMouseOrigin {Number} the original y-position in the document when drag started (incl. scrollOffset)
-                * @param [e.relatives] {NodeList} an optional list that the user could set in a `before`-subscriber of the `dd`-event
-                *        to inform which nodes are related to the draggable node and should be dragged as well.
-                * @since 0.1
-                */
-                instance._defineDDStart(emitterName);
-                Event.emit(e.target, emitterName+':dd', e);
-            };
-
-            delegatedTargetFn = function(e, cssSelector) {
-                var container = e.target,
-                    nodelist = container.getAll(cssSelector),
-                    foundNode;
-                nodelist.some(
-                    function(node) {
-                        (node.contains(e.sourceTarget)) && (foundNode=node);
-                        return foundNode;
-                    }
-                );
-                if (foundNode) {
-                    // e.currentTarget = container;
-                    e.target = foundNode;
-                    // Mark the delegated node, so it has the same style as [draggable]:
-                    foundNode.setClass(DEL_DRAGGABLE);
-                    // We must transport the other relevant dd-attributes (and constrain-selector)
-                    // which we will remove when finished dragging:
-                    PLUGIN_ATTRS.forEach(function(attribute) {
-                        var attr = container.getAttr(attribute);
-                        if (attr && !foundNode.hasAttr(attribute)) {
-                            foundNode.setData('_del_'+attribute, attr);
-                            foundNode.plugin.dd.model[attribute] = attr;
-                        }
-                    });
-                    nodeTargetFn(e);
-                }
-            };
-            Event.after(mobileEvents ? PANSTART : MOUSEDOWN, function(e) {
-                var draggableAttr = e.target.getAttr(DD_MINUSDRAGGABLE);
-                if (typeof e.center==='object') {
-                    e.clientX = e.center.x;
-                    e.clientY = e.center.y;
-                }
-                (draggableAttr===TRUE) ? nodeTargetFn(e) : delegatedTargetFn(e, draggableAttr);
-            }, '['+DD_MINUSDRAGGABLE+']');
-
-        },
+        HTMLElementPrototype.isPlugged = function(plugin) {
+            // to prevent the need os waiting for initialisation, we will check the attribute
+            return (this.getAttr('plugin-'+plugin)==='true');
+        };
 
        /**
-         * Initializes dragdrop. Needs to be invoked, otherwise DD won't run.
-         *
-         * @method init
-         * @param dragableElement {HtmlElement} HtmlElement that is checked for its allowed effects
-         * @return {Boolean} if copy-dragables are allowed
-         * @since 0.0.1
-         */
-        init: function() {
-            console.log(NAME, 'init');
+        * Checks whether the plugin is ready to be used.
+        *
+        * @method pluginReady
+        * @param plugin {String} The name of the plugin that should be ready.
+        * @return {Promise} whether the plugin is plugged in
+        * @since 0.0.1
+        */
+        HTMLElementPrototype.pluginReady = function(plugin) {
             var instance = this;
-            if (!instance._inited) {
-                instance._setupMouseEv(); // engine behind the dragdrop-eventcycle
-                if (mobileEvents) {
-                    Event.before(['touchstart', 'touchmove'], function(ev) {
-                        (instance.ddProps.size()>0) && ev.preventDefault();
+            instance._pluginReadyInfo || (instance._pluginReadyInfo={});
+            instance._pluginReadyInfo[plugin] || (instance._pluginReadyInfo[plugin]=window.Promise.manage());
+            return instance._pluginReadyInfo[plugin];
+        };
+
+       /**
+        * Plugs in the plugin on the HtmlElement, and gives is special behaviour by setting the appropriate attributes.
+        *
+        * @method plug
+        * @param plugin {String} The name of the plugin that should be plugged.
+        * @param [config] {Object} any config that should be passed through when the class is instantiated.
+        * @param [model] {Object} model to used as `ns.model`
+        * @chainable
+        * @since 0.0.1
+        */
+        HTMLElementPrototype.plug = function(plugin, config, model) {
+            var instance = this,
+                Plugin;
+            if (typeof plugin==='string') {
+                Plugin = window._ITSAPlugins[plugin];
+                if (Plugin) {
+                    if (!instance.isPlugged(Plugin)) {
+                        instance._plugin || Object.protectedProp(instance, '_plugin', {});
+                        instance._plugin[plugin] = new Plugin(instance, config, model);
+                    }
+                    else {
+                        console.info('ElementPlugin '+plugin+' already plugged in');
+                        model && instance._plugin[plugin].bindModel(model);
+                    }
+                }
+                else {
+                    console.warn('Plugin '+plugin+' is not registered');
+                }
+            }
+            return instance;
+        };
+
+       /**
+        * Gets the plugin-instance of the specified plugin-name. Will fulfill as soon as the plugin is ready.
+        *
+        * @method getPlugin
+        * @param plugin {String} The name of the plugin that should be plugged.
+        * @return {Promise} the plugin-instance of the specified plugin-name
+        * @since 0.0.1
+        */
+        HTMLElementPrototype.getPlugin = function(plugin) {
+            var instance = this;
+            return instance.pluginReady(plugin).then(
+                function() {
+                    return instance._plugin[plugin];
+                }
+            );
+        };
+
+       /**
+        * Unplugs a NodePlugin from the HtmlElement.
+        *
+        * @method unplug
+        * @param PluginClass {NodePlugin} The plugin that should be unplugged. Needs to be the Class, not an instance!
+        * @chainable
+        * @since 0.0.1
+        */
+        HTMLElementPrototype.unplug = function(plugin) {
+            var instance = this;
+            if (instance.isPlugged(plugin)) {
+                instance._plugin[plugin].destroy();
+            }
+            return instance;
+        };
+    }(window.HTMLElement.prototype));
+
+    Base = Classes.createClass(
+        function (hostElement, config, model) {
+            var instance = this;
+            instance.host = hostElement;
+            instance.model = {};
+            attrsToModel(instance, config);
+            hostElement.setAttr('plugin-'+instance.$ns, 'true', true);
+            model && instance.bindModel(model, true);
+            modelToAttrs(instance);
+        },
+        {
+            _DELAYED_FINALIZE_EVENTS: DEFAULT_DELAYED_FINALIZE_EVENTS.shallowClone(),
+            attrs: {},
+            defaults: {},
+           /**
+            * Binds a model to the plugin, making plugin.model equals the bound model.
+            * Immediately syncs the plugin with the new model-data.
+            *
+            * Syncs the new vnode's childNodes with the dom.
+            *
+            * @method bindModel
+            * @param model {Object} the model to bind to the itag-element
+            * @param [mergeCurrent=false] {Boolean} when set true, current properties on the plugin's model that aren't defined
+            *        in the new model, get merged into the new model.
+            * @since 0.0.1
+            */
+            bindModel: function(model, mergeCurrent) {
+                console.log(NAME+'bindModel');
+                var instance = this,
+                    observer;
+                if (Object.isObject(model) && (instance.model!==model)) {
+                    instance.host.removeAttr('bound-model');
+                    if (NATIVE_OBJECT_OBSERVE) {
+                        observer = instance._observer;
+                        observer && Object.unobserve(instance.model, observer);
+                    }
+                    mergeCurrent && (model.merge(instance.model, {full: true}));
+                    instance.model = model;
+                    if (NATIVE_OBJECT_OBSERVE) {
+                        observer = function() {
+                            syncPlugin(instance);
+                        };
+                        Object.observe(instance.model, observer);
+                        instance._observer = observer;
+                    }
+                    syncPlugin(instance);
+                }
+            },
+            afterInit: function() {
+                var instance = this,
+                    ns = instance.$ns,
+                    host = instance.host;
+                if (host.getAttr(ns+'-ready')!=='true') {
+                    instance.render();
+                    host.setAttr(ns+'-ready', 'true', true);
+                }
+                syncPlugin(instance);
+                autoRefreshPlugin(instance);
+                host._pluginReadyInfo || (host._pluginReadyInfo={});
+                host._pluginReadyInfo[ns] || (host._pluginReadyInfo[ns]=window.Promise.manage());
+                host._pluginReadyInfo[ns].fulfill();
+            },
+           /**
+            * Defines which domevents should lead to a direct sync by the Event-finalizer.
+            * Only needed for events that are in the list set by DEFAULT_DELAYED_FINALIZE_EVENTS:
+            *
+            * <ul>
+            *     <li>mousedown</li>
+            *     <li>mouseup</li>
+            *     <li>mousemove</li>
+            *     <li>panmove</li>
+            *     <li>panstart</li>
+            *     <li>panleft</li>
+            *     <li>panright</li>
+            *     <li>panup</li>
+            *     <li>pandown</li>
+            *     <li>pinchmove</li>
+            *     <li>rotatemove</li>
+            *     <li>focus</li>
+            *     <li>manualfocus</li>
+            *     <li>keydown</li>
+            *     <li>keyup</li>
+            *     <li>keypress</li>
+            *     <li>blur</li>
+            *     <li>resize</li>
+            *     <li>scroll</li>
+            * </ul>
+            *
+            * Events that are not in this list don't need to be set: they always go through the finalizer immediatly.
+            *
+            * You need to set this if the itag-definition its `sync`-method should be updated after one of the events in the list.
+            *
+            * @method setItagDirectEventResponse
+            * @param ItagClass {Class} The ItagClass that wants to register
+            * @param domEvents {Array|String} the domevents that should directly make the itag sync
+            * @since 0.0.1
+            */
+            setDirectEventResponse :function(domEvents) {
+                console.log(NAME+'setDirectEventResponse');
+                var instance = this;
+                if (!NATIVE_OBJECT_OBSERVE) {
+                    Array.isArray(domEvents) || (domEvents=[domEvents]);
+                    domEvents.forEach(function(domEvent) {
+                        domEvent.endsWith('outside') && (domEvent=domEvent.substr(0, domEvent.length-7));
+                        domEvent = domEvent.toLowerCase();
+                        if (domEvent==='blur') {
+                            console.warn('the event "blur" cannot be delayed, for it would lead to extremely many syncing before anything changes which you don\'t need');
+                        }
+                        else {
+                            if (DEFAULT_DELAYED_FINALIZE_EVENTS[domEvent]) {
+                                ('DELAYED_FINALIZE_EVENTS' in instance.constructor.prototypes) || instance.mergePrototypes({'DELAYED_FINALIZE_EVENTS': DEFAULT_DELAYED_FINALIZE_EVENTS.shallowClone()});
+                                delete instance.DELAYED_FINALIZE_EVENTS[domEvent];
+                            }
+                        }
                     });
                 }
-                Event.defineEvent('UI:'+DD_DROP)
-                     .defaultFn(instance._defFnDrop.rbind(instance));
+            },
+            render: function() {
+                // defaults to NOOP
+            },
+            sync: function() {
+                // defaults to NOOP
+            },
+            destroy: function () {
+                var instance = this,
+                    host = instance.host,
+                    attrs = instance.attrs,
+                    ns = instance.$ns,
+                    observer;
+                if (NATIVE_OBJECT_OBSERVE) {
+                    observer = instance._observer;
+                    if (observer) {
+                        Object.unobserve(instance.model, observer);
+                        delete instance._observer;
+                    }
+                }
+                else {
+                    instance._EventFinalizer.detach();
+                }
+                attrs.each(
+                    function(value, key) {
+                        host.removeAttr(ns+'-'+fromCamelCase(key), true);
+                    }
+                );
+                host.removeAttr('plugin-'+ns, true);
+                host.removeAttr(ns+'-ready', true);
+                delete host._plugin[ns];
+            },
+            $ns: 'undefined-namespace'
+        }
+    );
+
+    // Whenever elements are added: check for plugins and initialize them
+    Event.after(['UI:'+ATTRIBUTE_CHANGE, 'UI:'+ATTRIBUTE_INSERT], function(e) {
+        var element = e.target,
+            ns, Plugin;
+        // to prevent less userexperience, we plug asynchroniously
+        asyncSilent(function() {
+            e.changed.forEach(function(item) {
+                if (item.attribute.substr(0, 7)==='plugin-') {
+                    ns = item.attribute.substr(7);
+                    Plugin = window._ITSAPlugins[ns];
+                    if (Plugin) {
+                        if (item.newValue==='true') {
+                            element.plug(ns);
+                            console.log(NAME, 'plug: '+ns+' due to attribute change');
+                        }
+                        else {
+                            element.unplug(ns);
+                            console.log(NAME, 'unplug: '+ns+' due to attribute change');
+                        }
+                    }
+                }
+            });
+        });
+    });
+
+    // Whenever elements are added: check for plugins and initialize them
+    Event.after('UI:'+ATTRIBUTE_REMOVE, function(e) {
+        var element = e.target,
+            ns, Plugin;
+        // to prevent less userexperience, we plug asynchroniously
+        asyncSilent(function() {
+            e.changed.forEach(function(attribute) {
+                if (attribute.substr(0, 7)==='plugin-') {
+                    ns = attribute.substr(7);
+                    Plugin = window._ITSAPlugins[ns];
+                    if (Plugin) {
+                        element.unplug(ns);
+                        console.log(NAME, 'unplug: '+ns+' due to attribute removal');
+                    }
+                }
+            });
+        });
+    });
+
+    // Whenever elements are added: check for plugins and initialize them
+    Event.after('UI:'+NODE_INSERT, function(e) {
+        var element = e.target;
+        // to prevent less userexperience, we plug asynchroniously
+        asyncSilent(function() {
+            var attrs = element.vnode.attrs,
+                ns, Plugin;
+            attrs && attrs.each(function(value, key) {
+                if (key.substr(0, 7)==='plugin-') {
+                    ns = key.substr(7);
+                    Plugin = window._ITSAPlugins[ns];
+                    if (Plugin) {
+                        element.plug(ns);
+                        console.log(NAME, 'plug: '+ns+' due to node insert with the plugin-attribute');
+                    }
+                }
+            });
+        });
+    });
+
+    // Whenever elements are removed: check for plugins and destoy (unplug) them
+    Event.after('UI:'+NODE_REMOVE, function(e) {
+        var element = e.target;
+        // to prevent less userexperience, we unplug after a delay
+        laterSilent(function() {
+            var Plugin;
+            if (element.plugin) {
+                element.plugin.each(function(value, ns) {
+                    Plugin = window._ITSAPlugins[ns];
+                    if (Plugin) {
+                        element.unplug(ns);
+                        console.log(NAME, 'unplug: '+ns+' due to node removal with this plugin');
+                    }
+                });
             }
-            instance._inited = true;
+        }, DELAY_DESTRUCTION);
+    });
+
+    Event.after(
+        ['*:prototypechange', '*:prototyperemove'],
+        function(e) {
+            pluginDOMresync(e.target);
         },
+        function(e) {
+            return !!e.target.prototype.$ns;
+        }
+    );
 
+   /**
+    * Creates a new Element-PluginClass.
+    *
+    * @method definePlugin
+    * @param plugin {String} the namespace of the plugin
+    * @param [constructor] {Function} The function that will serve as constructor for the new class.
+    *        If `undefined` defaults to `NOOP`
+    * @param [prototypes] {Object} Hash map of properties to be added to the prototype of the new class.
+    * @return {PluginClass}
+    * @since 0.0.1
+    */
+    DOCUMENT.definePlugin = function(plugin, constructor, prototypes) {
+        var NewClass;
+        if ((typeof plugin==='string') && (plugin=plugin.replaceAll(' ', '')) && (plugin.length>0) && !plugin.contains('-')) {
+/*jshint boss:true */
+            if (NewClass=window._ITSAPlugins[plugin]) {
+/*jshint boss:false */
+                console.warn(NAME+'definePlugin cannot redefine Plugin '+plugin+' --> already exists');
+            }
+            else {
+                console.log(NAME+'definePlugin');
+                NewClass = Base.subClass(plugin, constructor, prototypes).mergePrototypes({$ns: plugin}, true);
+            }
+        }
+        else {
+            console.warn(NAME+'definePlugin cannot create Plugin: invalid plugin: '+plugin);
+        }
+        return NewClass;
+    };
+
+   /**
+    * Returns the PluginClass that belongs with the specified `plugin`-name.
+    *
+    * @method getPluginClass
+    * @param plugin {String} the namespace of the plugin
+    * @return {PluginClass|indefined}
+    * @since 0.0.1
+    */
+    DOCUMENT.getPluginClass = function(plugin) {
+        return window._ITSAPlugins[plugin];
+    };
+
+    (function(FunctionPrototype) {
+        var originalSubClass = FunctionPrototype.subClass;
         /**
-         * Creates a notifier to response after each `Drag` event is set up, or teared down.
-         * You can use this to hook in into the drag-eventcycle: the `drop`-module uses it this way.
+         * Returns a newly created class inheriting from this class
+         * using the given `constructor` with the
+         * prototypes listed in `prototypes` merged in.
          *
-         * @static
-         * @method notify
-         * @param callback {Function} subscriber: will be invoked after every drag-event is set up.
-         *                 Recieves 2 arguments: the `eventobject` and the internal property: `ddProps`
-         * @param context {Object} context of the callback
-         * @param setup {Boolean} wheter the callback should be invoked on setup (true) or teardown (false)
-         * @return {Object} handle with a method `detach()` which you can use to remove it from the `notifier-hash`
-         * @since 0.0.1
-        */
-        notify: function(callback, context, setup) {
-            console.log(NAME, 'notify');
-            var notifier = {
-                cb: callback,
-                o: context,
-                s: setup
-            };
-            this._notifiers.push(notifier);
-            return {
-                detach: function() {
-                    this._notifiers.remove(notifier);
+         *
+         * The newly created class has the `$$super` static property
+         * available to access all of is ancestor's instance methods.
+         *
+         * Further methods can be added via the [mergePrototypes](#method_mergePrototypes).
+         *
+         * @example
+         *
+         *  var Circle = Shape.subClass(
+         *      function (x, y, r) {
+         *          // arguments will automaticly be passed through to Shape's constructor
+         *          this.r = r;
+         *      },
+         *      {
+         *          area: function () {
+         *              return this.r * this.r * Math.PI;
+         *          }
+         *      }
+         *  );
+         *
+         * @method subClass
+         * @param plugin {String} the namespace of the plugin
+         * @param [constructor] {Function} The function that will serve as constructor for the new class.
+         *        If `undefined` defaults to `NOOP`
+         * @param [prototypes] {Object} Hash map of properties to be added to the prototype of the new class.
+         * @param [chainConstruct=true] {Boolean} Whether -during instance creation- to automaticly construct in the complete hierarchy with the given constructor arguments.
+         * @return {Plugin|undefined} undefined when no valid namespace is given
+         */
+        FunctionPrototype.subClass = function (plugin, constructor, prototypes /*, chainConstruct */) {
+            var instance = this,
+                NewClass;
+            if (instance.prototype.$ns) {
+                if ((typeof plugin==='string') && (plugin=plugin.replaceAll(' ', '')) && (plugin.length>0) && !plugin.contains('-')) {
+/*jshint boss:true */
+                    if (NewClass=window._ITSAPlugins[plugin]) {
+/*jshint boss:false */
+                        console.warn(NAME+'definePlugin cannot redefine Plugin '+plugin+' --> already exists');
+                    }
+                    else {
+                        // change the constructor, so that it will end by calling `_finishInit`
+                        NewClass = originalSubClass.call(instance, constructor, prototypes).mergePrototypes({$ns: plugin}, true);
+                        window._ITSAPlugins[plugin] = NewClass;
+                        pluginDOM(NewClass);
+                    }
+                    return NewClass;
                 }
-            };
-        }
-
-    };
-
-    DD_Object = window._ITSAmodules.Drag = {
-        DD: DD,
-        Plugins: {
-            DD: DOCUMENT.definePlugin('dd', null, {
-                attrs: {
-                    draggable: 'string',
-                    constrain: 'string',
-                    handle: 'string',
-                    emitter: 'string'
-                },
-                defaults: {
-                    draggable: 'true'
+                else {
+                    console.warn(NAME+'subClass cannot create Plugin: invalid plugin: '+plugin);
                 }
-            })
-        }
-    };
+            }
+            else {
+                // Original subclassing
+                return originalSubClass.apply(instance, arguments);
+            }
+        };
+    }(Function.prototype));
 
-    return DD_Object;
+    window._ITSAmodules.ElementPlugin = true;
 };
-},{"./css/drag.css":9,"event-dom":11,"js-ext":83,"js-ext/extra/hashmap.js":82,"node-plugin":93,"polyfill":256,"useragent":265,"vdom":306,"window-ext":307}],11:[function(require,module,exports){
+},{"event-dom":6,"event/extra/promise-finalize.js":78,"event/extra/timer-finalize.js":79,"js-ext/extra/classes.js":89,"js-ext/extra/hashmap.js":90,"js-ext/lib/object.js":91,"js-ext/lib/promise.js":92,"js-ext/lib/string.js":93,"polyfill":99,"utils/lib/timers.js":100,"vdom":144}],6:[function(require,module,exports){
 "use strict";
 
 /**
@@ -2767,7 +1749,7 @@ module.exports = function (window) {
     return Event;
 };
 
-},{"event":15,"js-ext/extra/hashmap.js":25,"js-ext/lib/array.js":26,"js-ext/lib/object.js":27,"js-ext/lib/string.js":28,"polyfill/polyfill-base.js":34,"utils":35,"vdom":81}],12:[function(require,module,exports){
+},{"event":10,"js-ext/extra/hashmap.js":20,"js-ext/lib/array.js":21,"js-ext/lib/object.js":22,"js-ext/lib/string.js":23,"polyfill/polyfill-base.js":29,"utils":30,"vdom":76}],7:[function(require,module,exports){
 (function (global){
 /**
  * Defines the Event-Class, which should be instantiated to get its functionality
@@ -4146,7 +3128,7 @@ var createHashMap = require('js-ext/extra/hashmap.js').createMap;
     return Event;
 }));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"js-ext/extra/hashmap.js":17,"js-ext/lib/object.js":18,"polyfill/polyfill-base.js":24}],13:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":12,"js-ext/lib/object.js":13,"polyfill/polyfill-base.js":19}],8:[function(require,module,exports){
 "use strict";
 
 /**
@@ -4267,7 +3249,7 @@ Event.Emitter = function(emitterName) {
 };
 
 module.exports = Event;
-},{"./event-base.js":12}],14:[function(require,module,exports){
+},{"./event-base.js":7}],9:[function(require,module,exports){
 "use strict";
 
 /**
@@ -4535,11 +3517,11 @@ Classes.BaseClass.mergePrototypes(Event.Listener, true)
                  .mergePrototypes(ClassListener, true, {}, {});
 
 module.exports = Event;
-},{"./event-base.js":12,"js-ext/extra/classes.js":16,"js-ext/lib/object.js":18}],15:[function(require,module,exports){
+},{"./event-base.js":7,"js-ext/extra/classes.js":11,"js-ext/lib/object.js":13}],10:[function(require,module,exports){
 module.exports = require('./event-base.js');
 require('./event-emitter.js');
 require('./event-listener.js');
-},{"./event-base.js":12,"./event-emitter.js":13,"./event-listener.js":14}],16:[function(require,module,exports){
+},{"./event-base.js":7,"./event-emitter.js":8,"./event-listener.js":9}],11:[function(require,module,exports){
 (function (global){
 /**
  *
@@ -5152,30 +4134,9 @@ require('../lib/object.js');
 }(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../lib/object.js":18,"js-ext/extra/hashmap.js":17,"polyfill/polyfill-base.js":21}],17:[function(require,module,exports){
-"use strict";
-
-var merge = function (source, target) {
-        var keys = Object.keys(source),
-            l = keys.length,
-            i = -1,
-            key;
-        while (++i < l) {
-            key = keys[i];
-            target[key] = source[key];
-        }
-    },
-    hashMap = function(members) {
-        // important to set the prototype to `null` --> this will exclude any Object.prototype members
-        var obj = Object.create(null);
-        members && merge(members, obj);
-        return obj;
-    };
-
-module.exports = {
-    createMap: hashMap
-};
-},{}],18:[function(require,module,exports){
+},{"../lib/object.js":13,"js-ext/extra/hashmap.js":12,"polyfill/polyfill-base.js":16}],12:[function(require,module,exports){
+module.exports=require(4)
+},{}],13:[function(require,module,exports){
 /**
  *
  * Pollyfils for often used functionality for Objects
@@ -5637,7 +4598,7 @@ Object.merge = function () {
     });
     return m;
 };
-},{"js-ext/extra/hashmap.js":17,"polyfill/polyfill-base.js":21}],19:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":12,"polyfill/polyfill-base.js":16}],14:[function(require,module,exports){
 (function (global){
 // based upon https://gist.github.com/jonathantneal/3062955
 (function (global) {
@@ -5661,7 +4622,7 @@ Object.merge = function () {
 
 }(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],20:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 (function (global){
 (function (global) {
     "use strict";
@@ -5680,18 +4641,18 @@ Object.merge = function () {
     module.exports = CONSOLE;
 }(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],21:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 require('./lib/window.console.js');
 require('./lib/matchesselector.js');
-},{"./lib/matchesselector.js":19,"./lib/window.console.js":20}],22:[function(require,module,exports){
-module.exports=require(19)
-},{}],23:[function(require,module,exports){
-module.exports=require(20)
-},{}],24:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":22,"./lib/window.console.js":23}],25:[function(require,module,exports){
-module.exports=require(17)
-},{}],26:[function(require,module,exports){
+},{"./lib/matchesselector.js":14,"./lib/window.console.js":15}],17:[function(require,module,exports){
+module.exports=require(14)
+},{}],18:[function(require,module,exports){
+module.exports=require(15)
+},{}],19:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":17,"./lib/window.console.js":18}],20:[function(require,module,exports){
+module.exports=require(4)
+},{}],21:[function(require,module,exports){
 /**
  *
  * Pollyfils for often used functionality for Arrays
@@ -5842,9 +4803,9 @@ var cloneObj = function(obj) {
      };
 
 }(Array.prototype));
-},{"polyfill/polyfill-base.js":31}],27:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":25,"polyfill/polyfill-base.js":31}],28:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":26}],22:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":20,"polyfill/polyfill-base.js":26}],23:[function(require,module,exports){
 /**
  *
  * Pollyfils for often used functionality for Strings
@@ -6126,19 +5087,19 @@ module.exports=require(18)
 
 }(String.prototype));
 
+},{}],24:[function(require,module,exports){
+module.exports=require(14)
+},{}],25:[function(require,module,exports){
+module.exports=require(15)
+},{}],26:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":24,"./lib/window.console.js":25}],27:[function(require,module,exports){
+module.exports=require(14)
+},{}],28:[function(require,module,exports){
+module.exports=require(15)
 },{}],29:[function(require,module,exports){
-module.exports=require(19)
-},{}],30:[function(require,module,exports){
-module.exports=require(20)
-},{}],31:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":29,"./lib/window.console.js":30}],32:[function(require,module,exports){
-module.exports=require(19)
-},{}],33:[function(require,module,exports){
-module.exports=require(20)
-},{}],34:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":32,"./lib/window.console.js":33}],35:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":27,"./lib/window.console.js":28}],30:[function(require,module,exports){
 module.exports = {
 	idGenerator: require('./lib/idgenerator.js').idGenerator,
     later: require('./lib/timers.js').later,
@@ -6146,7 +5107,7 @@ module.exports = {
     async: require('./lib/timers.js').async,
     asyncSilent: require('./lib/timers.js').asyncSilent
 };
-},{"./lib/idgenerator.js":36,"./lib/timers.js":37}],36:[function(require,module,exports){
+},{"./lib/idgenerator.js":31,"./lib/timers.js":32}],31:[function(require,module,exports){
 "use strict";
 
 require('polyfill/polyfill-base.js');
@@ -6204,7 +5165,7 @@ module.exports.idGenerator = function(namespace, start) {
 	return (namespace===UNDEFINED_NS) ? namespaces[namespace]++ : namespace+'-'+namespaces[namespace]++;
 };
 
-},{"js-ext/extra/hashmap.js":25,"polyfill/polyfill-base.js":40}],37:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":20,"polyfill/polyfill-base.js":35}],32:[function(require,module,exports){
 (function (global){
 /**
  * Collection of various utility functions.
@@ -6419,19 +5380,19 @@ module.exports.idGenerator = function(namespace, start) {
 }(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"polyfill/polyfill-base.js":40}],38:[function(require,module,exports){
-module.exports=require(19)
-},{}],39:[function(require,module,exports){
-module.exports=require(20)
-},{}],40:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":38,"./lib/window.console.js":39}],41:[function(require,module,exports){
-var css = ".itsa-notrans, .itsa-notrans2,\n.itsa-notrans:before, .itsa-notrans2:before,\n.itsa-notrans:after, .itsa-notrans2:after {\n    -webkit-transition: none !important;\n    -moz-transition: none !important;\n    -ms-transition: none !important;\n    -o-transition: all 0s !important; /* opera doesn't support none */\n    transition: none !important;\n}\n\n.itsa-no-overflow {\n    overflow: hidden !important;\n}\n\n.itsa-invisible {\n    position: absolute !important;\n}\n\n.itsa-invisible-relative {\n    position: relative !important;\n}\n\n/* don't set visibility to hidden --> you cannot set a focus on those items */\n.itsa-invisible,\n.itsa-invisible *,\n.itsa-invisible-relative,\n.itsa-invisible-relative * {\n    opacity: 0 !important;\n}\n\n/* don't set visibility to hidden --> you cannot set a focus on those items */\n.itsa-invisible-unfocusable,\n.itsa-invisible-unfocusable * {\n    visibility: hidden !important;\n}\n\n.itsa-transparent {\n    opacity: 0;\n}\n\n/* don't set visibility to hidden --> you cannot set a focus on those items */\n.itsa-hidden {\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -9;\n}\n\n.itsa-hidden * {\n    opacity: 0 !important;\n}\n\n.itsa-block {\n    display: block !important;\n}\n\n.itsa-borderbox {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],42:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":35}],33:[function(require,module,exports){
+module.exports=require(14)
+},{}],34:[function(require,module,exports){
+module.exports=require(15)
+},{}],35:[function(require,module,exports){
 module.exports=require(16)
-},{"../lib/object.js":46,"js-ext/extra/hashmap.js":43,"polyfill/polyfill-base.js":52}],43:[function(require,module,exports){
-module.exports=require(17)
-},{}],44:[function(require,module,exports){
+},{"./lib/matchesselector.js":33,"./lib/window.console.js":34}],36:[function(require,module,exports){
+var css = ".itsa-notrans, .itsa-notrans2,\n.itsa-notrans:before, .itsa-notrans2:before,\n.itsa-notrans:after, .itsa-notrans2:after {\n    -webkit-transition: none !important;\n    -moz-transition: none !important;\n    -ms-transition: none !important;\n    -o-transition: all 0s !important; /* opera doesn't support none */\n    transition: none !important;\n}\n\n.itsa-no-overflow {\n    overflow: hidden !important;\n}\n\n.itsa-invisible {\n    position: absolute !important;\n}\n\n.itsa-invisible-relative {\n    position: relative !important;\n}\n\n/* don't set visibility to hidden --> you cannot set a focus on those items */\n.itsa-invisible,\n.itsa-invisible *,\n.itsa-invisible-relative,\n.itsa-invisible-relative * {\n    opacity: 0 !important;\n}\n\n/* don't set visibility to hidden --> you cannot set a focus on those items */\n.itsa-invisible-unfocusable,\n.itsa-invisible-unfocusable * {\n    visibility: hidden !important;\n}\n\n.itsa-transparent {\n    opacity: 0;\n}\n\n/* don't set visibility to hidden --> you cannot set a focus on those items */\n.itsa-hidden {\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -9;\n}\n\n.itsa-hidden * {\n    opacity: 0 !important;\n}\n\n.itsa-block {\n    display: block !important;\n}\n\n.itsa-borderbox {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],37:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":41,"js-ext/extra/hashmap.js":38,"polyfill/polyfill-base.js":47}],38:[function(require,module,exports){
+module.exports=require(4)
+},{}],39:[function(require,module,exports){
 (function (global){
 /**
  *
@@ -6543,11 +5504,11 @@ var LightMap, Classes,
 
 }(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../lib/array.js":45,"../lib/object.js":46,"./classes.js":42,"js-ext/extra/hashmap.js":43,"polyfill/lib/weakmap.js":50}],45:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":52}],46:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":43,"polyfill/polyfill-base.js":52}],47:[function(require,module,exports){
+},{"../lib/array.js":40,"../lib/object.js":41,"./classes.js":37,"js-ext/extra/hashmap.js":38,"polyfill/lib/weakmap.js":45}],40:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":47}],41:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":38,"polyfill/polyfill-base.js":47}],42:[function(require,module,exports){
 "use strict";
 
 /**
@@ -6852,11 +5813,11 @@ Promise.manage = function (callbackFn) {
     return promise;
 };
 
-},{"polyfill":52}],48:[function(require,module,exports){
-module.exports=require(28)
-},{}],49:[function(require,module,exports){
-module.exports=require(19)
-},{}],50:[function(require,module,exports){
+},{"polyfill":47}],43:[function(require,module,exports){
+module.exports=require(23)
+},{}],44:[function(require,module,exports){
+module.exports=require(14)
+},{}],45:[function(require,module,exports){
 (function (global){
 // based upon https://gist.github.com/Gozala/1269991
 
@@ -6966,11 +5927,11 @@ module.exports=require(19)
 
 }(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],51:[function(require,module,exports){
-module.exports=require(20)
-},{}],52:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":49,"./lib/window.console.js":51}],53:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
+module.exports=require(15)
+},{}],47:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":44,"./lib/window.console.js":46}],48:[function(require,module,exports){
 "use strict";
 
 var merge = function (source, target) {
@@ -6993,7 +5954,7 @@ var merge = function (source, target) {
 module.exports = {
     createMap: hashMap
 };
-},{}],54:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 "use strict";
 
 /*
@@ -7046,7 +6007,7 @@ module.exports = function (window) {
 
     return transition;
 };
-},{"../bin/local-hashmap.js":53}],55:[function(require,module,exports){
+},{"../bin/local-hashmap.js":48}],50:[function(require,module,exports){
 "use strict";
 
 // CAUTIOUS: need a copy of hashmap --> we cannot use js-ext/extra/hashap.js for that would lead to circular references!
@@ -7091,7 +6052,7 @@ module.exports = function (window) {
 
     return transitionEnd;
 };
-},{"../bin/local-hashmap.js":53}],56:[function(require,module,exports){
+},{"../bin/local-hashmap.js":48}],51:[function(require,module,exports){
 (function (global){
 "use strict";
 
@@ -7162,31 +6123,31 @@ module.exports = function (window) {
     return vendorCSS;
 };
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../bin/local-hashmap.js":53}],57:[function(require,module,exports){
-module.exports=require(19)
-},{}],58:[function(require,module,exports){
-module.exports=require(20)
+},{"../bin/local-hashmap.js":48}],52:[function(require,module,exports){
+module.exports=require(14)
+},{}],53:[function(require,module,exports){
+module.exports=require(15)
+},{}],54:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":52,"./lib/window.console.js":53}],55:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":56,"./lib/timers.js":57}],56:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":38,"polyfill/polyfill-base.js":60}],57:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":60}],58:[function(require,module,exports){
+module.exports=require(14)
 },{}],59:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":57,"./lib/window.console.js":58}],60:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":61,"./lib/timers.js":62}],61:[function(require,module,exports){
-module.exports=require(36)
-},{"js-ext/extra/hashmap.js":43,"polyfill/polyfill-base.js":65}],62:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":65}],63:[function(require,module,exports){
-module.exports=require(19)
-},{}],64:[function(require,module,exports){
-module.exports=require(20)
-},{}],65:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":63,"./lib/window.console.js":64}],66:[function(require,module,exports){
+module.exports=require(15)
+},{}],60:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":58,"./lib/window.console.js":59}],61:[function(require,module,exports){
 "use strict";
 
 module.exports = function (window) {
     require('./lib/sizes.js')(window);
 };
-},{"./lib/sizes.js":67}],67:[function(require,module,exports){
+},{"./lib/sizes.js":62}],62:[function(require,module,exports){
 "use strict";
 
 require('js-ext/lib/object.js');
@@ -7290,17 +6251,17 @@ module.exports = function (window) {
     };
 
 };
-},{"js-ext/extra/hashmap.js":68,"js-ext/lib/object.js":69}],68:[function(require,module,exports){
-module.exports=require(17)
-},{}],69:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":68,"polyfill/polyfill-base.js":72}],70:[function(require,module,exports){
-module.exports=require(19)
-},{}],71:[function(require,module,exports){
-module.exports=require(20)
-},{}],72:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":70,"./lib/window.console.js":71}],73:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":63,"js-ext/lib/object.js":64}],63:[function(require,module,exports){
+module.exports=require(4)
+},{}],64:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":63,"polyfill/polyfill-base.js":67}],65:[function(require,module,exports){
+module.exports=require(14)
+},{}],66:[function(require,module,exports){
+module.exports=require(15)
+},{}],67:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":65,"./lib/window.console.js":66}],68:[function(require,module,exports){
 "use strict";
 
 /**
@@ -7598,7 +6559,7 @@ module.exports = function (window) {
     return extractor;
 
 };
-},{"js-ext/extra/hashmap.js":43,"js-ext/lib/object.js":46,"js-ext/lib/string.js":48,"polyfill":59,"polyfill/extra/transition.js":54,"polyfill/extra/vendorCSS.js":56}],74:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":38,"js-ext/lib/object.js":41,"js-ext/lib/string.js":43,"polyfill":54,"polyfill/extra/transition.js":49,"polyfill/extra/vendorCSS.js":51}],69:[function(require,module,exports){
 "use strict";
 
 /**
@@ -8026,7 +6987,7 @@ module.exports = function (window) {
 
     return ElementArray;
 };
-},{"js-ext/extra/hashmap.js":43,"js-ext/lib/object.js":46,"polyfill":59}],75:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":38,"js-ext/lib/object.js":41,"polyfill":54}],70:[function(require,module,exports){
 "use strict";
 
 /**
@@ -8740,7 +7701,7 @@ module.exports = function (window) {
 
 
 
-},{"js-ext/extra/hashmap.js":43,"js-ext/lib/object.js":46,"js-ext/lib/string.js":48,"polyfill":59}],76:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":38,"js-ext/lib/object.js":41,"js-ext/lib/string.js":43,"polyfill":54}],71:[function(require,module,exports){
 (function (global){
 "use strict";
 
@@ -9701,7 +8662,7 @@ module.exports = function (window) {
          * @method addSystemElement
          * @param content {Element|ElementArray|String} content to append
          * @param [escape] {Boolean} whether to insert `escaped` content, leading it into only text inserted
-         * @param [silent=false] {Boolean} prevent node-mutation events by the Event-module to emit
+         * @param [silent=true] {Boolean} prevent node-mutation events by the Event-module to emit --> defaults TRUE
          * @return {Element} the created Element (or the last when multiple)
          */
         ElementPrototype.addSystemElement = function(content, escape, silent) {
@@ -9709,11 +8670,13 @@ module.exports = function (window) {
                 vChildNodes = instance.vnode.vChildNodes,
                 len = vChildNodes.length,
                 systemElement, refElement, i;
+            (typeof silent === 'boolean') || (silent=true);
             for (i=0; (i<len) && !refElement; i++) {
                 vChildNodes[i]._systemNode || (refElement=vChildNodes[i].domNode);
             }
             systemElement = refElement ? instance.prepend(content, escape, refElement, silent) : instance.append(content, escape, refElement, silent);
             systemElement.vnode._systemNode = true;
+            systemElement.setAttr('is', 'system-node', true);
             return systemElement;
         };
 
@@ -9826,7 +8789,7 @@ module.exports = function (window) {
                             plugins[plugins.length] = {
                                 domNode: targetVNode.domNode,
                                 pluginName: pluginName,
-                                model: srcVNode.domNode.plugin[pluginName].model.shallowClone()
+                                model: srcVNode.domNode._plugin[pluginName].model.shallowClone()
                             };
                         }
                     });
@@ -10314,7 +9277,7 @@ module.exports = function (window) {
         * @since 0.0.1
         */
         ElementPrototype.getElement = function(cssSelector, inspectProtectedNodes) {
-            return ((cssSelector[0]==='#') && (cssSelector.indexOf(' ')===-1)) ? this.getElementById(cssSelector.substr(1)) : this.querySelector(cssSelector, inspectProtectedNodes);
+            return ((cssSelector[0]==='#') && (cssSelector.indexOf(' ')===-1)) ? this.getElementById(cssSelector.substr(1), inspectProtectedNodes) : this.querySelector(cssSelector, inspectProtectedNodes);
         };
 
         /**
@@ -13441,7 +12404,7 @@ for (j=0; j<len2; j++) {
 * @since 0.0.1
 */
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../css/element.css":41,"./attribute-extractor.js":73,"./element-array.js":74,"./html-parser.js":77,"./node-parser.js":78,"./vdom-ns.js":79,"./vnode.js":80,"js-ext/extra/hashmap.js":43,"js-ext/lib/object.js":46,"js-ext/lib/promise.js":47,"js-ext/lib/string.js":48,"polyfill":59,"polyfill/extra/transition.js":54,"polyfill/extra/transitionend.js":55,"polyfill/extra/vendorCSS.js":56,"utils":60,"window-ext":66}],77:[function(require,module,exports){
+},{"../css/element.css":36,"./attribute-extractor.js":68,"./element-array.js":69,"./html-parser.js":72,"./node-parser.js":73,"./vdom-ns.js":74,"./vnode.js":75,"js-ext/extra/hashmap.js":38,"js-ext/lib/object.js":41,"js-ext/lib/promise.js":42,"js-ext/lib/string.js":43,"polyfill":54,"polyfill/extra/transition.js":49,"polyfill/extra/transitionend.js":50,"polyfill/extra/vendorCSS.js":51,"utils":55,"window-ext":61}],72:[function(require,module,exports){
 "use strict";
 
 /**
@@ -13612,6 +12575,7 @@ module.exports = function (window) {
                         extractStyle.attrStyle && (vnode.attrs.style=extractStyle.attrStyle);
                         vnode.styles = extractStyle.styles;
 
+                        (vnode.attrs.is==='system-node') && (vnode._systemNode=true);
                     }
 
                     if (!vnode.isVoid) {
@@ -13812,7 +12776,7 @@ module.exports = function (window) {
     return htmlToVNodes;
 
 };
-},{"./attribute-extractor.js":73,"./vdom-ns.js":79,"js-ext/extra/hashmap.js":43,"js-ext/lib/object.js":46,"polyfill":59}],78:[function(require,module,exports){
+},{"./attribute-extractor.js":68,"./vdom-ns.js":74,"js-ext/extra/hashmap.js":38,"js-ext/lib/object.js":41,"polyfill":54}],73:[function(require,module,exports){
 "use strict";
 
 /**
@@ -13902,6 +12866,8 @@ module.exports = function (window) {
                 extractStyle.attrStyle && (vnode.attrs.style=extractStyle.attrStyle);
                 vnode.styles = extractStyle.styles;
 
+                (vnode.attrs.is==='system-node') && (vnode._systemNode=true);
+
                 if (voidElements[tag]) {
                     vnode.isVoid = true;
                 }
@@ -13951,7 +12917,7 @@ module.exports = function (window) {
     return domNodeToVNode;
 
 };
-},{"./attribute-extractor.js":73,"./vdom-ns.js":79,"./vnode.js":80,"js-ext/extra/hashmap.js":43,"js-ext/lib/object.js":46,"polyfill":59}],79:[function(require,module,exports){
+},{"./attribute-extractor.js":68,"./vdom-ns.js":74,"./vnode.js":75,"js-ext/extra/hashmap.js":38,"js-ext/lib/object.js":41,"polyfill":54}],74:[function(require,module,exports){
 /**
  * Creates a Namespace that can be used accros multiple vdom-modules to share information.
  *
@@ -14182,7 +13148,7 @@ module.exports = function (window) {
 
     return NS;
 };
-},{"js-ext/extra/hashmap.js":43,"js-ext/lib/object.js":46,"polyfill":59}],80:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":38,"js-ext/lib/object.js":41,"polyfill":54}],75:[function(require,module,exports){
 "use strict";
 
 /**
@@ -16914,7 +15880,7 @@ module.exports = function (window) {
     return vNodeProto;
 
 };
-},{"./attribute-extractor.js":73,"./html-parser.js":77,"./vdom-ns.js":79,"js-ext/extra/hashmap.js":43,"js-ext/extra/lightmap.js":44,"js-ext/lib/array.js":45,"js-ext/lib/object.js":46,"js-ext/lib/string.js":48,"polyfill":59,"utils/lib/timers.js":62}],81:[function(require,module,exports){
+},{"./attribute-extractor.js":68,"./html-parser.js":72,"./vdom-ns.js":74,"js-ext/extra/hashmap.js":38,"js-ext/extra/lightmap.js":39,"js-ext/lib/array.js":40,"js-ext/lib/object.js":41,"js-ext/lib/string.js":43,"polyfill":54,"utils/lib/timers.js":57}],76:[function(require,module,exports){
 "use strict";
 
 require('js-ext/lib/object.js');
@@ -16957,953 +15923,79 @@ module.exports = function (window) {
 
     window._ITSAmodules.VDOM = true;
 };
-},{"./partials/extend-document.js":75,"./partials/extend-element.js":76,"./partials/node-parser.js":78,"js-ext/extra/hashmap.js":43,"js-ext/lib/object.js":46,"utils/lib/timers.js":62}],82:[function(require,module,exports){
-module.exports=require(17)
-},{}],83:[function(require,module,exports){
-require('./lib/function.js');
-require('./lib/object.js');
-require('./lib/string.js');
-require('./lib/array.js');
-require('./lib/json.js');
-require('./lib/promise.js');
-},{"./lib/array.js":84,"./lib/function.js":85,"./lib/json.js":86,"./lib/object.js":87,"./lib/promise.js":88,"./lib/string.js":89}],84:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":92}],85:[function(require,module,exports){
-/**
- *
- * Pollyfils for often used functionality for Functions
- *
- * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
- * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
- *
- * @module js-ext
- * @submodule lib/function.js
- * @class Function
- *
-*/
+},{"./partials/extend-document.js":70,"./partials/extend-element.js":71,"./partials/node-parser.js":73,"js-ext/extra/hashmap.js":38,"js-ext/lib/object.js":41,"utils/lib/timers.js":57}],77:[function(require,module,exports){
+module.exports=require(7)
+},{"js-ext/extra/hashmap.js":80,"js-ext/lib/object.js":81,"polyfill/polyfill-base.js":88}],78:[function(require,module,exports){
+(function (global){
+(function (global) {
 
-"use strict";
+    "use strict";
 
-require('polyfill/polyfill-base.js');
-
-var NAME = '[Function]: ';
-
-(function(FunctionPrototype) {
-	/**
-	 * Sets the context of which the function will be execute. in the
-	 * supplied object's context, optionally adding any additional
-	 * supplied parameters to the end of the arguments the function
-	 * is executed with.
-	 *
-	 * @method rbind
-	 * @param [context] {Object} the execution context.
-	 *        The value is ignored if the bound function is constructed using the new operator.
-	 * @param [args*] {any} args* 0..n arguments to append to the end of
-	 *        arguments collection supplied to the function.
-	 * @return {function} the wrapped function.
-	 */
-	FunctionPrototype.rbind = function (context /*, args* */ ) {
-		console.log(NAME+'rbind');
-		var thisFunction = this,
-			arrayArgs,
-			slice = Array.prototype.slice;
-		context || (context = this);
-		if (arguments.length > 1) {
-			// removing `context` (first item) by slicing it out:
-			arrayArgs = slice.call(arguments, 1);
-		}
-
-		return (arrayArgs ?
-			function () {
-				// over here, `arguments` will be the "new" arguments when the final function is called!
-				return thisFunction.apply(context, slice.call(arguments, 0).concat(arrayArgs));
-			} :
-			function () {
-				// over here, `arguments` will be the "new" arguments when the final function is called!
-				return thisFunction.apply(context, arguments);
-			}
-		);
-	};
-
-}(Function.prototype));
-
-},{"polyfill/polyfill-base.js":92}],86:[function(require,module,exports){
-/**
- *
- * Pollyfils for often used functionality for Arrays
- *
- * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
- * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
- *
- * @module js-ext
- * @submodule lib/array.js
- * @class Array
- *
- */
-
-"use strict";
-
-require('polyfill/polyfill-base.js');
-
-var REVIVER = function(key, value) {
-    return ((typeof value==='string') && value.toDate()) || value;
-};
-
-JSON.parseWithDate = function(stringifiedObj) {
-    return this.parse(stringifiedObj, REVIVER);
-};
-},{"polyfill/polyfill-base.js":92}],87:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":82,"polyfill/polyfill-base.js":92}],88:[function(require,module,exports){
-module.exports=require(47)
-},{"polyfill":92}],89:[function(require,module,exports){
-module.exports=require(28)
-},{}],90:[function(require,module,exports){
-module.exports=require(19)
-},{}],91:[function(require,module,exports){
-module.exports=require(20)
-},{}],92:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":90,"./lib/window.console.js":91}],93:[function(require,module,exports){
-"use strict";
-module.exports = function (window) {
-    require('./lib/element-plugin.js')(window);
-    return {
-        Constrain: require('./lib/constrain.js')(window)
-    };
-};
-},{"./lib/constrain.js":94,"./lib/element-plugin.js":95}],94:[function(require,module,exports){
-"use strict";
-module.exports = function (window) {
-    require('./element-plugin.js')(window);
-
-    var createHashMap = require('js-ext/extra/hashmap.js').createMap,
-        PluginConstrain;
-
-    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
-
-/*jshint boss:true */
-    if (PluginConstrain=window._ITSAmodules.PluginConstrain) {
-/*jshint boss:false */
-        return PluginConstrain;
-    }
-
-    window._ITSAmodules.PluginConstrain = PluginConstrain = window.document.definePlugin('constrain', null, {
-            attrs: {
-                selector: 'string'
-            },
-            defaults: {
-                selector: 'window'
-            }
-        }
-    );
-
-    return PluginConstrain;
-};
-},{"./element-plugin.js":95,"js-ext/extra/hashmap.js":199}],95:[function(require,module,exports){
-"use strict";
-
-/**
- * Integrates DOM-events to event. more about DOM-events:
- * http://www.smashingmagazine.com/2013/11/12/an-introduction-to-dom-events/
- *
- *
- * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
- * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
- *
- *
- * @module vdom
- * @submodule element-plugin
- * @class Plugins
- * @since 0.0.1
-*/
-
-require('js-ext/lib/object.js');
-require('js-ext/lib/string.js');
-require('js-ext/lib/promise.js');
-require('polyfill');
-require('event/extra/timer-finalize.js');
-
-var createHashMap = require('js-ext/extra/hashmap.js').createMap,
-    fromCamelCase = function(input) {
-        return input.replace(/[a-z]([A-Z])/g, function(match, group) {
-            return match[0]+'-'+group.toLowerCase();
-        });
-    };
-
-module.exports = function (window) {
-
-    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
-
-    if (window._ITSAmodules.ElementPlugin) {
-        return; // ElementPlugin was already created
-    }
-
-    require('vdom')(window);
-    var NAME = '[ElementPlugin]: ',
-        Classes = require('js-ext/extra/classes.js'),
-        timers = require('utils/lib/timers.js'),
-        IO = require('io')(window),
-        Event = require('event-dom')(window),
-        asyncSilent = timers.asyncSilent,
-        laterSilent = timers.laterSilent,
-        DELAY_DESTRUCTION = 5000, // must be kept below vnode.js its DESTROY_DELAY (which is currently 60000)
-        DELAYED_EVT_TIME = 500,
+    var NAME = '[promise-finalize]: ',
         NATIVE_OBJECT_OBSERVE = !!Object.observe,
-        DOCUMENT = window.document,
-        types = [],
-        NODE = 'node',
-        REMOVE = 'remove',
-        INSERT = 'insert',
-        CHANGE = 'change',
-        ATTRIBUTE = 'attribute',
-        NODE_REMOVE = NODE+REMOVE,
-        NODE_INSERT = NODE+INSERT,
-        NODE_CONTENT_CHANGE = NODE+'content'+CHANGE,
-        ATTRIBUTE_REMOVE = ATTRIBUTE+REMOVE,
-        ATTRIBUTE_CHANGE = ATTRIBUTE+CHANGE,
-        ATTRIBUTE_INSERT = ATTRIBUTE+INSERT,
-        MUTATION_EVENTS = [NODE_REMOVE, NODE_INSERT, NODE_CONTENT_CHANGE, ATTRIBUTE_REMOVE, ATTRIBUTE_CHANGE, ATTRIBUTE_INSERT],
-        Base, pluginDOM, modelToAttrs, attrsToModel, syncPlugin, autoRefreshPlugin, pluginDOMresync, DEFAULT_DELAYED_FINALIZE_EVENTS;
+        createHashMap = require('js-ext/extra/hashmap.js').createMap,
+        afterFunc, afterFuncReject, finallyBKP, catchBKP, thenFulfillBKP;
 
-    Object.protectedProp(window, '_ITSAPlugins', createHashMap());
+    global._ITSAmodules || Object.protectedProp(global, '_ITSAmodules', createHashMap());
 
-    /**
-     * Default internal hash containing all DOM-events that will not directly call `event-finalize`
-     * but after a delay of 1 second
-     *
-     * @property DEFAULT_DELAYED_FINALIZE_EVENTS
-     * @default {
-     *    mousedown: true,
-     *    mouseup: true,
-     *    mousemove: true,
-     *    panmove: true,
-     *    panstart: true,
-     *    panleft: true,
-     *    panright: true,
-     *    panup: true,
-     *    pandown: true,
-     *    pinchmove: true,
-     *    rotatemove: true,
-     *    focus: true,
-     *    manualfocus: true,
-     *    keydown: true,
-     *    keyup: true,
-     *    keypress: true,
-     *    blur: true,
-     *    resize: true,
-     *    scroll: true
-     * }
-     * @type Object
-     * @private
-     * @since 0.0.1
-    */
-    DEFAULT_DELAYED_FINALIZE_EVENTS = {
-        mousedown: true,
-        mouseup: true,
-        mousemove: true,
-        panmove: true,
-        panstart: true,
-        panleft: true,
-        panright: true,
-        panup: true,
-        pandown: true,
-        pinchmove: true,
-        rotatemove: true,
-        focus: true,
-        manualfocus: true,
-        keydown: true,
-        keyup: true,
-        keypress: true,
-        blur: true,
-        resize: true,
-        scroll: true
+    if (global._ITSAmodules.PromiseFinalize) {
+        return;
+    }
+
+    require('js-ext/lib/promise.js');
+
+    afterFunc = function(response) {
+        // we will run a NOOP every 500ms --> even if we tried to catch all async-actions, there still might be
+        // situations where we miss model-updates.
+        global.setTimeout(function() { /* NOOP */ }, 0);
+        return response;
     };
 
-    pluginDOM = function(NewClass) {
-        // asynchroniously we check all current elements and render when needed:
-        var ns = NewClass.prototype.$ns;
-        asyncSilent(function() {
-            var elements = DOCUMENT.getAll('[plugin-'+ns+'="true"]'),
-                len = elements.length,
-                element, i;
-            for (i=0; i<len; i++) {
-                element = elements[i];
-                element.plug(NewClass);
-            }
-        });
+    afterFuncReject = function(response) {
+        // we will run a NOOP every 500ms --> even if we tried to catch all async-actions, there still might be
+        // situations where we miss model-updates.
+        global.setTimeout(function() { /* NOOP */ }, 0);
+        throw new Error(response);
     };
 
-    pluginDOMresync = function(NewClass) {
-        // asynchroniously we check all current elements and render when needed:
-        var ns = NewClass.prototype.$ns;
-        asyncSilent(function() {
-            var elements = DOCUMENT.getAll('[plugin-'+ns+'="true"]'),
-                len = elements.length,
-                element, i;
-            for (i=0; i<len; i++) {
-                element = elements[i];
-                syncPlugin(element[ns]);
-            }
-        });
-    };
+    if (!NATIVE_OBJECT_OBSERVE) {
+        (function(PromisePrototype) {
+            finallyBKP = PromisePrototype.finally;
+            PromisePrototype.finally = function () {
+                return finallyBKP.apply(this, arguments)._originalThen(afterFunc, afterFuncReject);
+            };
 
-    attrsToModel = function(plugin, config) {
-        var host = plugin.host,
-            attrs = plugin.attrs,
-            defaults = plugin.defaults,
-            ns = plugin.$ns + '-',
-            attrValue, validValue;
-        config || (config={});
-        // read the current ns-attributes on the node, overrule them with config and set the new attributes
-        attrs.each(function(value, key) {
-            attrValue = config[key] || host.getAttr(ns+key) || defaults[key];
-            if (attrValue) {
-                switch (value.toLowerCase()) {
-                    case 'boolean':
-                        validValue = attrValue.validateBoolean();
-                        attrValue = (attrValue==='true');
-                        break;
-                    case 'number':
-                        validValue = attrValue.validateFloat();
-                        attrValue = parseFloat(attrValue);
-                        break;
-                    case 'date':
-                        validValue = attrValue.validateDate();
-                        attrValue = attrValue.toDate();
-                        break;
-                    case 'string':
-                        validValue = true;
-                        break;
-                    default:
-                        validValue = false;
-                }
-            }
-            else if (value.toLowerCase()==='boolean') {
-                // undefined `boolean` attributes need to be stored as `false`
-                validValue = true;
-                attrValue = false;
-            }
-            else {
-                validValue = false;
-            }
-            if (validValue && !plugin.model[key]) {
-                plugin.model[key] = attrValue;
-            }
-        });
-    };
+            catchBKP = PromisePrototype.catch;
+            PromisePrototype.catch = function () {
+                return catchBKP.apply(this, arguments)._originalThen(afterFunc, afterFuncReject);
+            };
 
-    modelToAttrs = function(plugin) {
-        console.log(NAME+'modelToAttrs');
-        var attrs = plugin.attrs,
-            model = plugin.model,
-            domElement = plugin.host,
-            ns = plugin.$ns,
-            newAttrs = [];
-        attrs.each(function(value, key) {
-            model[key] && (newAttrs[newAttrs.length] = {name: ns+'-'+fromCamelCase(key), value: model[key]});
-        });
-        if (newAttrs.length>0) {
-            domElement.setAttrs(newAttrs, true);
-        }
-    };
+            PromisePrototype._originalThen = PromisePrototype.then;
+            PromisePrototype.then = function () {
+                return this._originalThen.apply(this, arguments)._originalThen(afterFunc, afterFuncReject);
+            };
 
-    syncPlugin = function(plugin) {
-        modelToAttrs(plugin);
-        plugin.sync();
-    };
+            thenFulfillBKP = PromisePrototype.thenFulfill;
+            PromisePrototype.thenFulfill = function () {
+                return thenFulfillBKP.apply(this, arguments)._originalThen(afterFunc, afterFuncReject);
+            };
+        }(Promise.prototype));
+    }
 
-    autoRefreshPlugin = function(plugin) {
-        if (!NATIVE_OBJECT_OBSERVE) {
-            plugin._EventFinalizer = Event.finalize(function(e) {
-                var type = e.type;
-                if (!e._noRender && (!e.status || !e.status.renderPrevented)) {
-                    if (!MUTATION_EVENTS[type] && !type.endsWith('outside')) {
-                        if (plugin._DELAYED_FINALIZE_EVENTS[type]) {
-                            types.push(type);
-                            plugin.constructor.$registerDelay || (plugin.constructor.$registerDelay = laterSilent(function() {
-                                console.info('Event-finalizer will delayed-refresh itags because of events: '+JSON.stringify(types));
-                                syncPlugin(plugin);
-                                types.length = 0;
-                                plugin.constructor.$registerDelay = null;
-                            }, DELAYED_EVT_TIME));
-                        }
-                        else {
-                            console.info('Event-finalizer will refresh itags because of event: '+type);
-                            syncPlugin(plugin);
-                        }
-                    }
-                }
-            });
+    global._ITSAmodules.PromiseFinalize = true;
 
-            plugin._IOFinalizer = IO.finalize(function() {
-                syncPlugin(plugin);
-            });
-        }
-    };
-
-    // extend window.Element:
-    window.Element && (function(HTMLElementPrototype) {
-       /**
-        * Checks whether the plugin is plugged in at the HtmlElement. Checks whether all its attributes are set.
-        *
-        * @method isPlugged
-        * @param PluginClass {NodePlugin} The plugin that should be plugged. Needs to be the Class, not an instance!
-        * @return {Boolean} whether the plugin is plugged in
-        * @since 0.0.1
-        */
-        HTMLElementPrototype.isPlugged = function(PluginClass) {
-            return !!this.plugin && !!this.plugin[PluginClass.prototype.$ns];
-        };
-
-       /**
-        * Checks whether the plugin is ready to be used.
-        *
-        * @method pluginReady
-        * @param PluginClass {NodePlugin} The plugin that should be plugged. Needs to be the Class, not an instance!
-        * @return {Promise} whether the plugin is plugged in
-        * @since 0.0.1
-        */
-        HTMLElementPrototype.pluginReady = function(PluginClass) {
-            var instance = this,
-                ns = PluginClass.prototype.$ns;
-            instance._pluginReadyInfo || (instance._pluginReadyInfo={});
-            instance._pluginReadyInfo[ns] || (instance._pluginReadyInfo[ns]=window.Promise.manage());
-            return instance._pluginReadyInfo[ns];
-        };
-
-       /**
-        * Plugs in the plugin on the HtmlElement, and gives is special behaviour by setting the appropriate attributes.
-        *
-        * @method plug
-        * @param PluginClass {NodePlugin} The plugin that should be plugged. Needs to be the Class, not an instance!
-        * @param [config] {Object} any config that should be passed through when the class is instantiated.
-        * @param [model] {Object} model to used as `ns.model`
-        * @chainable
-        * @since 0.0.1
-        */
-        HTMLElementPrototype.plug = function(PluginClass, config, model) {
-            var instance = this;
-            if (!instance.isPlugged(PluginClass)) {
-                instance.plugin || Object.protectedProp(instance, 'plugin', {});
-                instance.plugin[PluginClass.prototype.$ns] = new PluginClass(instance, config, model);
-            }
-            else {
-                console.info('ElementPlugin '+PluginClass.prototype.$ns+' already plugged in');
-                model && instance.plugin[PluginClass.prototype.$ns].bindModel(model);
-            }
-            return instance;
-        };
-
-       /**
-        * Unplugs a NodePlugin from the HtmlElement.
-        *
-        * @method unplug
-        * @param PluginClass {NodePlugin} The plugin that should be unplugged. Needs to be the Class, not an instance!
-        * @chainable
-        * @since 0.0.1
-        */
-        HTMLElementPrototype.unplug = function(PluginClass) {
-            var instance = this;
-            if (instance.isPlugged(PluginClass)) {
-                instance.plugin[PluginClass.prototype.$ns].destroy();
-            }
-            return instance;
-        };
-    }(window.HTMLElement.prototype));
-
-    Base = Classes.createClass(
-        function (hostElement, config, model) {
-            var instance = this;
-            instance.host = hostElement;
-            instance.model = {};
-            attrsToModel(instance, config);
-            hostElement.setAttr('plugin-'+instance.$ns, 'true', true);
-            model && instance.bindModel(model, true);
-            syncPlugin(instance);
-            autoRefreshPlugin(instance);
-        },
-        {
-            _DELAYED_FINALIZE_EVENTS: DEFAULT_DELAYED_FINALIZE_EVENTS.shallowClone(),
-            attrs: {},
-            defaults: {},
-           /**
-            * Binds a model to the plugin, making plugin.model equals the bound model.
-            * Immediately syncs the plugin with the new model-data.
-            *
-            * Syncs the new vnode's childNodes with the dom.
-            *
-            * @method bindModel
-            * @param model {Object} the model to bind to the itag-element
-            * @param [mergeCurrent=false] {Boolean} when set true, current properties on the plugin's model that aren't defined
-            *        in the new model, get merged into the new model.
-            * @since 0.0.1
-            */
-            bindModel: function(model, mergeCurrent) {
-                console.log(NAME+'bindModel');
-                var instance = this,
-                    observer;
-                if (Object.isObject(model) && (instance.model!==model)) {
-                    instance.host.removeAttr('bound-model');
-                    if (NATIVE_OBJECT_OBSERVE) {
-                        observer = instance._observer;
-                        observer && Object.unobserve(instance.model, observer);
-                    }
-                    mergeCurrent && (model.merge(instance.model, {full: true}));
-                    instance.model = model;
-                    if (NATIVE_OBJECT_OBSERVE) {
-                        observer = function() {
-                            syncPlugin(instance);
-                        };
-                        Object.observe(instance.model, observer);
-                        instance._observer = observer;
-                    }
-                    syncPlugin(instance);
-                }
-            },
-            afterInit: function() {
-                var instance = this,
-                    ns = instance.$ns,
-                    host = instance.host;
-                if (host.getAttr(ns+'-ready')!=='true') {
-                    instance.render();
-                    host.setAttr(ns+'-ready', 'true', true);
-                }
-                host._pluginReadyInfo || (host._pluginReadyInfo={});
-                host._pluginReadyInfo[ns] || (host._pluginReadyInfo[ns]=window.Promise.manage());
-                host._pluginReadyInfo[ns].fulfill();
-            },
-           /**
-            * Defines which domevents should lead to a direct sync by the Event-finalizer.
-            * Only needed for events that are in the list set by DEFAULT_DELAYED_FINALIZE_EVENTS:
-            *
-            * <ul>
-            *     <li>mousedown</li>
-            *     <li>mouseup</li>
-            *     <li>mousemove</li>
-            *     <li>panmove</li>
-            *     <li>panstart</li>
-            *     <li>panleft</li>
-            *     <li>panright</li>
-            *     <li>panup</li>
-            *     <li>pandown</li>
-            *     <li>pinchmove</li>
-            *     <li>rotatemove</li>
-            *     <li>focus</li>
-            *     <li>manualfocus</li>
-            *     <li>keydown</li>
-            *     <li>keyup</li>
-            *     <li>keypress</li>
-            *     <li>blur</li>
-            *     <li>resize</li>
-            *     <li>scroll</li>
-            * </ul>
-            *
-            * Events that are not in this list don't need to be set: they always go through the finalizer immediatly.
-            *
-            * You need to set this if the itag-definition its `sync`-method should be updated after one of the events in the list.
-            *
-            * @method setItagDirectEventResponse
-            * @param ItagClass {Class} The ItagClass that wants to register
-            * @param domEvents {Array|String} the domevents that should directly make the itag sync
-            * @since 0.0.1
-            */
-            setDirectEventResponse :function(domEvents) {
-                console.log(NAME+'setDirectEventResponse');
-                var instance = this;
-                if (!NATIVE_OBJECT_OBSERVE) {
-                    Array.isArray(domEvents) || (domEvents=[domEvents]);
-                    domEvents.forEach(function(domEvent) {
-                        domEvent.endsWith('outside') && (domEvent=domEvent.substr(0, domEvent.length-7));
-                        domEvent = domEvent.toLowerCase();
-                        if (domEvent==='blur') {
-                            console.warn('the event "blur" cannot be delayed, for it would lead to extremely many syncing before anything changes which you don\'t need');
-                        }
-                        else {
-                            if (DEFAULT_DELAYED_FINALIZE_EVENTS[domEvent]) {
-                                ('DELAYED_FINALIZE_EVENTS' in instance.constructor.prototypes) || instance.mergePrototypes({'DELAYED_FINALIZE_EVENTS': DEFAULT_DELAYED_FINALIZE_EVENTS.shallowClone()});
-                                delete instance.DELAYED_FINALIZE_EVENTS[domEvent];
-                            }
-                        }
-                    });
-                }
-            },
-            render: function() {
-                // defaults to NOOP
-            },
-            sync: function() {
-                // defaults to NOOP
-            },
-            destroy: function () {
-                var instance = this,
-                    host = instance.host,
-                    attrs = instance.attrs,
-                    ns = instance.$ns,
-                    observer;
-                if (NATIVE_OBJECT_OBSERVE) {
-                    observer = instance._observer;
-                    if (observer) {
-                        Object.unobserve(instance.model, observer);
-                        delete instance._observer;
-                    }
-                }
-                else {
-                    instance._EventFinalizer.detach();
-                    instance._IOFinalizer.detach();
-                }
-                attrs.each(
-                    function(value, key) {
-                        host.removeAttr(ns+'-'+fromCamelCase(key), true);
-                    }
-                );
-                host.removeAttr('plugin-'+ns, true);
-                host.removeAttr(ns+'-ready', true);
-                delete host.plugin[ns];
-            },
-            $ns: 'undefined-namespace'
-        }
-    );
-
-    // Whenever elements are added: check for plugins and initialize them
-    Event.after(['UI:'+ATTRIBUTE_CHANGE, 'UI:'+ATTRIBUTE_INSERT], function(e) {
-        var element = e.target,
-            ns, Plugin;
-        // to prevent less userexperience, we plug asynchroniously
-        asyncSilent(function() {
-            e.changed.forEach(function(item) {
-                if (item.attribute.substr(0, 7)==='plugin-') {
-                    ns = item.attribute.substr(7);
-                    Plugin = window._ITSAPlugins[ns];
-                    if (Plugin) {
-                        if (item.newValue==='true') {
-                            element.plug(Plugin);
-                            console.log(NAME, 'plug: '+ns+' due to attribute change');
-                        }
-                        else {
-                            element.unplug(Plugin);
-                            console.log(NAME, 'unplug: '+ns+' due to attribute change');
-                        }
-                    }
-                }
-            });
-        });
-    });
-
-    // Whenever elements are added: check for plugins and initialize them
-    Event.after('UI:'+ATTRIBUTE_REMOVE, function(e) {
-        var element = e.target,
-            ns, Plugin;
-        // to prevent less userexperience, we plug asynchroniously
-        asyncSilent(function() {
-            e.changed.forEach(function(attribute) {
-                if (attribute.substr(0, 7)==='plugin-') {
-                    ns = attribute.substr(7);
-                    Plugin = window._ITSAPlugins[ns];
-                    if (Plugin) {
-                        element.unplug(Plugin);
-                        console.log(NAME, 'unplug: '+ns+' due to attribute removal');
-                    }
-                }
-            });
-        });
-    });
-
-    // Whenever elements are added: check for plugins and initialize them
-    Event.after('UI:'+NODE_INSERT, function(e) {
-        var element = e.target;
-        // to prevent less userexperience, we plug asynchroniously
-        asyncSilent(function() {
-            var attrs = element.vnode.attrs,
-                ns, Plugin;
-            attrs && attrs.each(function(value, key) {
-                if (key.substr(0, 7)==='plugin-') {
-                    ns = key.substr(7);
-                    Plugin = window._ITSAPlugins[ns];
-                    if (Plugin) {
-                        element.plug(Plugin);
-                        console.log(NAME, 'plug: '+ns+' due to node insert with the plugin-attribute');
-                    }
-                }
-            });
-        });
-    });
-
-    // Whenever elements are removed: check for plugins and destoy (unplug) them
-    Event.after('UI:'+NODE_REMOVE, function(e) {
-        var element = e.target;
-        // to prevent less userexperience, we unplug after a delay
-        laterSilent(function() {
-            var Plugin;
-            if (element.plugin) {
-                element.plugin.each(function(value, ns) {
-                    Plugin = window._ITSAPlugins[ns];
-                    if (Plugin) {
-                        element.unplug(Plugin);
-                        console.log(NAME, 'unplug: '+ns+' due to node removal with this plugin');
-                    }
-                });
-            }
-        }, DELAY_DESTRUCTION);
-    });
-
-    Event.after(
-        ['*:prototypechange', '*:prototyperemove'],
-        function(e) {
-            pluginDOMresync(e.target);
-        },
-        function(e) {
-            return !!e.target.prototype.$ns;
-        }
-    );
-
-   /**
-    * Creates a new Element-PluginClass.
-    *
-    * @method definePlugin
-    * @param ns {String} the namespace of the plugin
-    * @param [constructor] {Function} The function that will serve as constructor for the new class.
-    *        If `undefined` defaults to `NOOP`
-    * @param [prototypes] {Object} Hash map of properties to be added to the prototype of the new class.
-    * @return {PluginClass}
-    * @since 0.0.1
-    */
-    DOCUMENT.definePlugin = function(ns, constructor, prototypes) {
-        var NewClass;
-        if ((typeof ns==='string') && (ns=ns.replaceAll(' ', '')) && (ns.length>0) && !ns.contains('-')) {
-/*jshint boss:true */
-            if (NewClass=window._ITSAPlugins[ns]) {
-/*jshint boss:false */
-                console.warn(NAME+'definePlugin cannot redefine Plugin '+ns+' --> already exists');
-            }
-            else {
-                console.log(NAME+'definePlugin');
-                NewClass = Base.subClass(ns, constructor, prototypes).mergePrototypes({$ns: ns}, true);
-            }
-        }
-        else {
-            console.warn(NAME+'definePlugin cannot create Plugin: invalid ns: '+ns);
-        }
-        return NewClass;
-    };
-
-    (function(FunctionPrototype) {
-        var originalSubClass = FunctionPrototype.subClass;
-        /**
-         * Returns a newly created class inheriting from this class
-         * using the given `constructor` with the
-         * prototypes listed in `prototypes` merged in.
-         *
-         *
-         * The newly created class has the `$$super` static property
-         * available to access all of is ancestor's instance methods.
-         *
-         * Further methods can be added via the [mergePrototypes](#method_mergePrototypes).
-         *
-         * @example
-         *
-         *  var Circle = Shape.subClass(
-         *      function (x, y, r) {
-         *          // arguments will automaticly be passed through to Shape's constructor
-         *          this.r = r;
-         *      },
-         *      {
-         *          area: function () {
-         *              return this.r * this.r * Math.PI;
-         *          }
-         *      }
-         *  );
-         *
-         * @method subClass
-         * @param ns {String} the namespace of the plugin
-         * @param [constructor] {Function} The function that will serve as constructor for the new class.
-         *        If `undefined` defaults to `NOOP`
-         * @param [prototypes] {Object} Hash map of properties to be added to the prototype of the new class.
-         * @param [chainConstruct=true] {Boolean} Whether -during instance creation- to automaticly construct in the complete hierarchy with the given constructor arguments.
-         * @return {Plugin|undefined} undefined when no valid namespace is given
-         */
-        FunctionPrototype.subClass = function (ns, constructor, prototypes /*, chainConstruct */) {
-            var instance = this,
-                NewClass;
-            if (instance.prototype.$ns) {
-                if ((typeof ns==='string') && (ns=ns.replaceAll(' ', '')) && (ns.length>0) && !ns.contains('-')) {
-/*jshint boss:true */
-                    if (NewClass=window._ITSAPlugins[ns]) {
-/*jshint boss:false */
-                        console.warn(NAME+'definePlugin cannot redefine Plugin '+ns+' --> already exists');
-                    }
-                    else {
-                        // change the constructor, so that it will end by calling `_finishInit`
-                        NewClass = originalSubClass.call(instance, constructor, prototypes).mergePrototypes({$ns: ns}, true);
-                        window._ITSAPlugins[ns] = NewClass;
-                        pluginDOM(NewClass);
-                    }
-                    return NewClass;
-                }
-                else {
-                    console.warn(NAME+'subClass cannot create Plugin: invalid ns: '+ns);
-                }
-            }
-            else {
-                // Original subclassing
-                return originalSubClass.apply(instance, arguments);
-            }
-        };
-    }(Function.prototype));
-
-    window._ITSAmodules.ElementPlugin = true;
-};
-},{"event-dom":96,"event/extra/timer-finalize.js":168,"io":177,"js-ext/extra/classes.js":198,"js-ext/extra/hashmap.js":199,"js-ext/lib/object.js":200,"js-ext/lib/promise.js":201,"js-ext/lib/string.js":202,"polyfill":208,"utils/lib/timers.js":209,"vdom":253}],96:[function(require,module,exports){
-module.exports=require(11)
-},{"event":100,"js-ext/extra/hashmap.js":110,"js-ext/lib/array.js":111,"js-ext/lib/object.js":112,"js-ext/lib/string.js":113,"polyfill/polyfill-base.js":119,"utils":120,"vdom":166}],97:[function(require,module,exports){
-module.exports=require(12)
-},{"js-ext/extra/hashmap.js":102,"js-ext/lib/object.js":103,"polyfill/polyfill-base.js":109}],98:[function(require,module,exports){
-module.exports=require(13)
-},{"./event-base.js":97}],99:[function(require,module,exports){
-module.exports=require(14)
-},{"./event-base.js":97,"js-ext/extra/classes.js":101,"js-ext/lib/object.js":103}],100:[function(require,module,exports){
-module.exports=require(15)
-},{"./event-base.js":97,"./event-emitter.js":98,"./event-listener.js":99}],101:[function(require,module,exports){
-module.exports=require(16)
-},{"../lib/object.js":103,"js-ext/extra/hashmap.js":102,"polyfill/polyfill-base.js":106}],102:[function(require,module,exports){
-module.exports=require(17)
-},{}],103:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":102,"polyfill/polyfill-base.js":106}],104:[function(require,module,exports){
-module.exports=require(19)
-},{}],105:[function(require,module,exports){
-module.exports=require(20)
-},{}],106:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":104,"./lib/window.console.js":105}],107:[function(require,module,exports){
-module.exports=require(19)
-},{}],108:[function(require,module,exports){
-module.exports=require(20)
-},{}],109:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":107,"./lib/window.console.js":108}],110:[function(require,module,exports){
-module.exports=require(17)
-},{}],111:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":116}],112:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":110,"polyfill/polyfill-base.js":116}],113:[function(require,module,exports){
-module.exports=require(28)
-},{}],114:[function(require,module,exports){
-module.exports=require(19)
-},{}],115:[function(require,module,exports){
-module.exports=require(20)
-},{}],116:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":114,"./lib/window.console.js":115}],117:[function(require,module,exports){
-module.exports=require(19)
-},{}],118:[function(require,module,exports){
-module.exports=require(20)
-},{}],119:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":117,"./lib/window.console.js":118}],120:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":121,"./lib/timers.js":122}],121:[function(require,module,exports){
-module.exports=require(36)
-},{"js-ext/extra/hashmap.js":110,"polyfill/polyfill-base.js":125}],122:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":125}],123:[function(require,module,exports){
-module.exports=require(19)
-},{}],124:[function(require,module,exports){
-module.exports=require(20)
-},{}],125:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":123,"./lib/window.console.js":124}],126:[function(require,module,exports){
-module.exports=require(41)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],127:[function(require,module,exports){
-module.exports=require(16)
-},{"../lib/object.js":131,"js-ext/extra/hashmap.js":128,"polyfill/polyfill-base.js":137}],128:[function(require,module,exports){
-module.exports=require(17)
-},{}],129:[function(require,module,exports){
-module.exports=require(44)
-},{"../lib/array.js":130,"../lib/object.js":131,"./classes.js":127,"js-ext/extra/hashmap.js":128,"polyfill/lib/weakmap.js":135}],130:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":137}],131:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":128,"polyfill/polyfill-base.js":137}],132:[function(require,module,exports){
-module.exports=require(47)
-},{"polyfill":137}],133:[function(require,module,exports){
-module.exports=require(28)
-},{}],134:[function(require,module,exports){
-module.exports=require(19)
-},{}],135:[function(require,module,exports){
-module.exports=require(50)
-},{}],136:[function(require,module,exports){
-module.exports=require(20)
-},{}],137:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":134,"./lib/window.console.js":136}],138:[function(require,module,exports){
-module.exports=require(53)
-},{}],139:[function(require,module,exports){
-module.exports=require(54)
-},{"../bin/local-hashmap.js":138}],140:[function(require,module,exports){
-module.exports=require(55)
-},{"../bin/local-hashmap.js":138}],141:[function(require,module,exports){
-module.exports=require(56)
-},{"../bin/local-hashmap.js":138}],142:[function(require,module,exports){
-module.exports=require(19)
-},{}],143:[function(require,module,exports){
-module.exports=require(20)
-},{}],144:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":142,"./lib/window.console.js":143}],145:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":146,"./lib/timers.js":147}],146:[function(require,module,exports){
-module.exports=require(36)
-},{"js-ext/extra/hashmap.js":128,"polyfill/polyfill-base.js":150}],147:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":150}],148:[function(require,module,exports){
-module.exports=require(19)
-},{}],149:[function(require,module,exports){
-module.exports=require(20)
-},{}],150:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":148,"./lib/window.console.js":149}],151:[function(require,module,exports){
-module.exports=require(66)
-},{"./lib/sizes.js":152}],152:[function(require,module,exports){
-module.exports=require(67)
-},{"js-ext/extra/hashmap.js":153,"js-ext/lib/object.js":154}],153:[function(require,module,exports){
-module.exports=require(17)
-},{}],154:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":153,"polyfill/polyfill-base.js":157}],155:[function(require,module,exports){
-module.exports=require(19)
-},{}],156:[function(require,module,exports){
-module.exports=require(20)
-},{}],157:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":155,"./lib/window.console.js":156}],158:[function(require,module,exports){
-module.exports=require(73)
-},{"js-ext/extra/hashmap.js":128,"js-ext/lib/object.js":131,"js-ext/lib/string.js":133,"polyfill":144,"polyfill/extra/transition.js":139,"polyfill/extra/vendorCSS.js":141}],159:[function(require,module,exports){
-module.exports=require(74)
-},{"js-ext/extra/hashmap.js":128,"js-ext/lib/object.js":131,"polyfill":144}],160:[function(require,module,exports){
-module.exports=require(75)
-},{"js-ext/extra/hashmap.js":128,"js-ext/lib/object.js":131,"js-ext/lib/string.js":133,"polyfill":144}],161:[function(require,module,exports){
-module.exports=require(76)
-},{"../css/element.css":126,"./attribute-extractor.js":158,"./element-array.js":159,"./html-parser.js":162,"./node-parser.js":163,"./vdom-ns.js":164,"./vnode.js":165,"js-ext/extra/hashmap.js":128,"js-ext/lib/object.js":131,"js-ext/lib/promise.js":132,"js-ext/lib/string.js":133,"polyfill":144,"polyfill/extra/transition.js":139,"polyfill/extra/transitionend.js":140,"polyfill/extra/vendorCSS.js":141,"utils":145,"window-ext":151}],162:[function(require,module,exports){
-module.exports=require(77)
-},{"./attribute-extractor.js":158,"./vdom-ns.js":164,"js-ext/extra/hashmap.js":128,"js-ext/lib/object.js":131,"polyfill":144}],163:[function(require,module,exports){
-module.exports=require(78)
-},{"./attribute-extractor.js":158,"./vdom-ns.js":164,"./vnode.js":165,"js-ext/extra/hashmap.js":128,"js-ext/lib/object.js":131,"polyfill":144}],164:[function(require,module,exports){
-module.exports=require(79)
-},{"js-ext/extra/hashmap.js":128,"js-ext/lib/object.js":131,"polyfill":144}],165:[function(require,module,exports){
-module.exports=require(80)
-},{"./attribute-extractor.js":158,"./html-parser.js":162,"./vdom-ns.js":164,"js-ext/extra/hashmap.js":128,"js-ext/extra/lightmap.js":129,"js-ext/lib/array.js":130,"js-ext/lib/object.js":131,"js-ext/lib/string.js":133,"polyfill":144,"utils/lib/timers.js":147}],166:[function(require,module,exports){
-module.exports=require(81)
-},{"./partials/extend-document.js":160,"./partials/extend-element.js":161,"./partials/node-parser.js":163,"js-ext/extra/hashmap.js":128,"js-ext/lib/object.js":131,"utils/lib/timers.js":147}],167:[function(require,module,exports){
-module.exports=require(12)
-},{"js-ext/extra/hashmap.js":169,"js-ext/lib/object.js":170,"polyfill/polyfill-base.js":176}],168:[function(require,module,exports){
+}(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this));
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"js-ext/extra/hashmap.js":80,"js-ext/lib/promise.js":82}],79:[function(require,module,exports){
 (function (global){
 (function (global) {
 
     "use strict";
 
     var NAME = '[event-timer-finalize]: ',
+        INTERVAL_AUTOFINALIZE = 500,
         createHashMap = require('js-ext/extra/hashmap.js').createMap,
+        NATIVE_OBJECT_OBSERVE = !!Object.observe,
         Event, setTimeoutBKP, setIntervalBKP, setImmediateBKP;
 
     global._ITSAmodules || Object.protectedProp(global, '_ITSAmodules', createHashMap());
@@ -17973,561 +16065,2464 @@ module.exports=require(12)
 
     global._ITSAmodules.EventTimerFinalize = true;
 
+    if (!NATIVE_OBJECT_OBSERVE) {
+        // we will run a NOOP every 500ms --> even if we tried to catch all async-actions, there still might be
+        // situations where we miss model-updates.
+        global.setTimeout(function() { /* NOOP */ }, 0);
+        global.setInterval(function() { /* NOOP */ }, INTERVAL_AUTOFINALIZE);
+    }
+
 }(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../event-base.js":167,"js-ext/extra/hashmap.js":169}],169:[function(require,module,exports){
-module.exports=require(17)
-},{}],170:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":169,"polyfill/polyfill-base.js":173}],171:[function(require,module,exports){
-module.exports=require(19)
-},{}],172:[function(require,module,exports){
-module.exports=require(20)
-},{}],173:[function(require,module,exports){
+},{"../event-base.js":77,"js-ext/extra/hashmap.js":80}],80:[function(require,module,exports){
+module.exports=require(4)
+},{}],81:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":80,"polyfill/polyfill-base.js":85}],82:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":85}],83:[function(require,module,exports){
+module.exports=require(14)
+},{}],84:[function(require,module,exports){
+module.exports=require(15)
+},{}],85:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":83,"./lib/window.console.js":84}],86:[function(require,module,exports){
+module.exports=require(14)
+},{}],87:[function(require,module,exports){
+module.exports=require(15)
+},{}],88:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":86,"./lib/window.console.js":87}],89:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":91,"js-ext/extra/hashmap.js":90,"polyfill/polyfill-base.js":96}],90:[function(require,module,exports){
+module.exports=require(4)
+},{}],91:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":90,"polyfill/polyfill-base.js":96}],92:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":96}],93:[function(require,module,exports){
+module.exports=require(23)
+},{}],94:[function(require,module,exports){
+module.exports=require(14)
+},{}],95:[function(require,module,exports){
+module.exports=require(15)
+},{}],96:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":94,"./lib/window.console.js":95}],97:[function(require,module,exports){
+module.exports=require(14)
+},{}],98:[function(require,module,exports){
+module.exports=require(15)
+},{}],99:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":97,"./lib/window.console.js":98}],100:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":103}],101:[function(require,module,exports){
+module.exports=require(14)
+},{}],102:[function(require,module,exports){
+module.exports=require(15)
+},{}],103:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":101,"./lib/window.console.js":102}],104:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],105:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":109,"js-ext/extra/hashmap.js":106,"polyfill/polyfill-base.js":115}],106:[function(require,module,exports){
+module.exports=require(4)
+},{}],107:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":108,"../lib/object.js":109,"./classes.js":105,"js-ext/extra/hashmap.js":106,"polyfill/lib/weakmap.js":113}],108:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":171,"./lib/window.console.js":172}],174:[function(require,module,exports){
-module.exports=require(19)
-},{}],175:[function(require,module,exports){
-module.exports=require(20)
-},{}],176:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":174,"./lib/window.console.js":175}],177:[function(require,module,exports){
-(function (global){
+},{"polyfill/polyfill-base.js":115}],109:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":106,"polyfill/polyfill-base.js":115}],110:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":115}],111:[function(require,module,exports){
+module.exports=require(23)
+},{}],112:[function(require,module,exports){
+module.exports=require(14)
+},{}],113:[function(require,module,exports){
+module.exports=require(45)
+},{}],114:[function(require,module,exports){
+module.exports=require(15)
+},{}],115:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":112,"./lib/window.console.js":114}],116:[function(require,module,exports){
+module.exports=require(48)
+},{}],117:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":116}],118:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":116}],119:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":116}],120:[function(require,module,exports){
+module.exports=require(14)
+},{}],121:[function(require,module,exports){
+module.exports=require(15)
+},{}],122:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":120,"./lib/window.console.js":121}],123:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":124,"./lib/timers.js":125}],124:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":106,"polyfill/polyfill-base.js":128}],125:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":128}],126:[function(require,module,exports){
+module.exports=require(14)
+},{}],127:[function(require,module,exports){
+module.exports=require(15)
+},{}],128:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":126,"./lib/window.console.js":127}],129:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":130}],130:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":131,"js-ext/lib/object.js":132}],131:[function(require,module,exports){
+module.exports=require(4)
+},{}],132:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":131,"polyfill/polyfill-base.js":135}],133:[function(require,module,exports){
+module.exports=require(14)
+},{}],134:[function(require,module,exports){
+module.exports=require(15)
+},{}],135:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":133,"./lib/window.console.js":134}],136:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":106,"js-ext/lib/object.js":109,"js-ext/lib/string.js":111,"polyfill":122,"polyfill/extra/transition.js":117,"polyfill/extra/vendorCSS.js":119}],137:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":106,"js-ext/lib/object.js":109,"polyfill":122}],138:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":106,"js-ext/lib/object.js":109,"js-ext/lib/string.js":111,"polyfill":122}],139:[function(require,module,exports){
+module.exports=require(71)
+},{"../css/element.css":104,"./attribute-extractor.js":136,"./element-array.js":137,"./html-parser.js":140,"./node-parser.js":141,"./vdom-ns.js":142,"./vnode.js":143,"js-ext/extra/hashmap.js":106,"js-ext/lib/object.js":109,"js-ext/lib/promise.js":110,"js-ext/lib/string.js":111,"polyfill":122,"polyfill/extra/transition.js":117,"polyfill/extra/transitionend.js":118,"polyfill/extra/vendorCSS.js":119,"utils":123,"window-ext":129}],140:[function(require,module,exports){
+module.exports=require(72)
+},{"./attribute-extractor.js":136,"./vdom-ns.js":142,"js-ext/extra/hashmap.js":106,"js-ext/lib/object.js":109,"polyfill":122}],141:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":136,"./vdom-ns.js":142,"./vnode.js":143,"js-ext/extra/hashmap.js":106,"js-ext/lib/object.js":109,"polyfill":122}],142:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":106,"js-ext/lib/object.js":109,"polyfill":122}],143:[function(require,module,exports){
+module.exports=require(75)
+},{"./attribute-extractor.js":136,"./html-parser.js":140,"./vdom-ns.js":142,"js-ext/extra/hashmap.js":106,"js-ext/extra/lightmap.js":107,"js-ext/lib/array.js":108,"js-ext/lib/object.js":109,"js-ext/lib/string.js":111,"polyfill":122,"utils/lib/timers.js":125}],144:[function(require,module,exports){
+module.exports=require(76)
+},{"./partials/extend-document.js":138,"./partials/extend-element.js":139,"./partials/node-parser.js":141,"js-ext/extra/hashmap.js":106,"js-ext/lib/object.js":109,"utils/lib/timers.js":125}],145:[function(require,module,exports){
+var css = "*:focus {\n    outline: 0;\n}\n\na[target=\"_blank\"]:focus {\n    outline: 1px solid #129fea;\n}\n\n/* because we think the padding and margin should always be part of the size,\n   we define \"box-sizing: border-box\" for all elements */\n\n* {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],146:[function(require,module,exports){
+var css = ".pure-menu.pure-menu-open {\n    z-index: 3; /* prevent graph from crossing the menuarea */\n}\n\n.pure-button.pure-button-bordered,\n.pure-button.pure-button-bordered[disabled] {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n}\n\n.pure-button-active,\n.pure-button:active,\n.pure-button.pure-button-bordered.pure-button-active,\n.pure-button.pure-button-bordered.pure-button-active[disabled],\n.pure-button.pure-button-bordered:active,\n.pure-button.pure-button-bordered[disabled]:active {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.4) inset, 0 0 6px rgba(0,0,0, 0.2) inset;\n}\n\n.pure-button.pure-button-bordered:focus,\n.pure-button.pure-button-bordered[disabled]:focus,\n.pure-button.pure-button-bordered:focus,\n.pure-button.pure-button-bordered[disabled]:focus,\n.pure-button.pure-button-bordered.focussed,\n.pure-button.pure-button-bordered[disabled].focussed,\n.pure-button.pure-button-bordered.focussed,\n.pure-button.pure-button-bordered[disabled].focussed {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.6) inset;\n}\n\n/* restore pure-button:active */\n.pure-button.pure-button-bordered:active,\n.pure-button.pure-button-bordered.pure-button-active,\n.pure-button:active:focus,\n.pure-button.pure-button-active:focus {\n    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.6) inset, 0 0 10px rgba(0, 0, 0, 0.2) inset;\n}\n\n.pure-button.pure-button-rounded {\n    border-radius: 0.3em;\n}\n\n.pure-button.pure-button-heavyrounded {\n    border-radius: 0.5em;\n}\n\n.pure-button.pure-button-oval {\n    border-radius: 50%;\n}\n\n.pure-button.pure-button-halfoval {\n    border-radius: 25%;\n}\n"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],147:[function(require,module,exports){
+var css = "/*!\nPure v0.5.0\nCopyright 2014 Yahoo! Inc. All rights reserved.\nLicensed under the BSD License.\nhttps://github.com/yahoo/pure/blob/master/LICENSE.md\n*/\n/*!\nnormalize.css v^3.0 | MIT License | git.io/normalize\nCopyright (c) Nicolas Gallagher and Jonathan Neal\n*/\n/*! normalize.css v3.0.2 | MIT License | git.io/normalize */\n\n/**\n * 1. Set default font family to sans-serif.\n * 2. Prevent iOS text size adjust after orientation change, without disabling\n *    user zoom.\n */\n\nhtml {\n  font-family: sans-serif; /* 1 */\n  -ms-text-size-adjust: 100%; /* 2 */\n  -webkit-text-size-adjust: 100%; /* 2 */\n}\n\n/**\n * Remove default margin.\n */\n\nbody {\n  margin: 0;\n}\n\n/* HTML5 display definitions\n   ========================================================================== */\n\n/**\n * Correct `block` display not defined for any HTML5 element in IE 8/9.\n * Correct `block` display not defined for `details` or `summary` in IE 10/11\n * and Firefox.\n * Correct `block` display not defined for `main` in IE 11.\n */\n\narticle,\naside,\ndetails,\nfigcaption,\nfigure,\nfooter,\nheader,\nhgroup,\nmain,\nmenu,\nnav,\nsection,\nsummary {\n  display: block;\n}\n\n/**\n * 1. Correct `inline-block` display not defined in IE 8/9.\n * 2. Normalize vertical alignment of `progress` in Chrome, Firefox, and Opera.\n */\n\naudio,\ncanvas,\nprogress,\nvideo {\n  display: inline-block; /* 1 */\n  vertical-align: baseline; /* 2 */\n}\n\n/**\n * Prevent modern browsers from displaying `audio` without controls.\n * Remove excess height in iOS 5 devices.\n */\n\naudio:not([controls]) {\n  display: none;\n  height: 0;\n}\n\n/**\n * Address `[hidden]` styling not present in IE 8/9/10.\n * Hide the `template` element in IE 8/9/11, Safari, and Firefox < 22.\n */\n\n[hidden],\ntemplate {\n  display: none;\n}\n\n/* Links\n   ========================================================================== */\n\n/**\n * Remove the gray background color from active links in IE 10.\n */\n\na {\n  background-color: transparent;\n}\n\n/**\n * Improve readability when focused and also mouse hovered in all browsers.\n */\n\na:active,\na:hover {\n  outline: 0;\n}\n\n/* Text-level semantics\n   ========================================================================== */\n\n/**\n * Address styling not present in IE 8/9/10/11, Safari, and Chrome.\n */\n\nabbr[title] {\n  border-bottom: 1px dotted;\n}\n\n/**\n * Address style set to `bolder` in Firefox 4+, Safari, and Chrome.\n */\n\nb,\nstrong {\n  font-weight: bold;\n}\n\n/**\n * Address styling not present in Safari and Chrome.\n */\n\ndfn {\n  font-style: italic;\n}\n\n/**\n * Address variable `h1` font-size and margin within `section` and `article`\n * contexts in Firefox 4+, Safari, and Chrome.\n */\n\nh1 {\n  font-size: 2em;\n  margin: 0.67em 0;\n}\n\n/**\n * Address styling not present in IE 8/9.\n */\n\nmark {\n  background: #ff0;\n  color: #000;\n}\n\n/**\n * Address inconsistent and variable font size in all browsers.\n */\n\nsmall {\n  font-size: 80%;\n}\n\n/**\n * Prevent `sub` and `sup` affecting `line-height` in all browsers.\n */\n\nsub,\nsup {\n  font-size: 75%;\n  line-height: 0;\n  position: relative;\n  vertical-align: baseline;\n}\n\nsup {\n  top: -0.5em;\n}\n\nsub {\n  bottom: -0.25em;\n}\n\n/* Embedded content\n   ========================================================================== */\n\n/**\n * Remove border when inside `a` element in IE 8/9/10.\n */\n\nimg {\n  border: 0;\n}\n\n/**\n * Correct overflow not hidden in IE 9/10/11.\n */\n\nsvg:not(:root) {\n  overflow: hidden;\n}\n\n/* Grouping content\n   ========================================================================== */\n\n/**\n * Address margin not present in IE 8/9 and Safari.\n */\n\nfigure {\n  margin: 1em 40px;\n}\n\n/**\n * Address differences between Firefox and other browsers.\n */\n\nhr {\n  -moz-box-sizing: content-box;\n  box-sizing: content-box;\n  height: 0;\n}\n\n/**\n * Contain overflow in all browsers.\n */\n\npre {\n  overflow: auto;\n}\n\n/**\n * Address odd `em`-unit font size rendering in all browsers.\n */\n\ncode,\nkbd,\npre,\nsamp {\n  font-family: monospace, monospace;\n  font-size: 1em;\n}\n\n/* Forms\n   ========================================================================== */\n\n/**\n * Known limitation: by default, Chrome and Safari on OS X allow very limited\n * styling of `select`, unless a `border` property is set.\n */\n\n/**\n * 1. Correct color not being inherited.\n *    Known issue: affects color of disabled elements.\n * 2. Correct font properties not being inherited.\n * 3. Address margins set differently in Firefox 4+, Safari, and Chrome.\n */\n\nbutton,\ninput,\noptgroup,\nselect,\ntextarea {\n  color: inherit; /* 1 */\n  font: inherit; /* 2 */\n  margin: 0; /* 3 */\n}\n\n/**\n * Address `overflow` set to `hidden` in IE 8/9/10/11.\n */\n\nbutton {\n  overflow: visible;\n}\n\n/**\n * Address inconsistent `text-transform` inheritance for `button` and `select`.\n * All other form control elements do not inherit `text-transform` values.\n * Correct `button` style inheritance in Firefox, IE 8/9/10/11, and Opera.\n * Correct `select` style inheritance in Firefox.\n */\n\nbutton,\nselect {\n  text-transform: none;\n}\n\n/**\n * 1. Avoid the WebKit bug in Android 4.0.* where (2) destroys native `audio`\n *    and `video` controls.\n * 2. Correct inability to style clickable `input` types in iOS.\n * 3. Improve usability and consistency of cursor style between image-type\n *    `input` and others.\n */\n\nbutton,\nhtml input[type=\"button\"], /* 1 */\ninput[type=\"reset\"],\ninput[type=\"submit\"] {\n  -webkit-appearance: button; /* 2 */\n  cursor: pointer; /* 3 */\n}\n\n/**\n * Re-set default cursor for disabled elements.\n */\n\nbutton[disabled],\nhtml input[disabled] {\n  cursor: default;\n}\n\n/**\n * Remove inner padding and border in Firefox 4+.\n */\n\nbutton::-moz-focus-inner,\ninput::-moz-focus-inner {\n  border: 0;\n  padding: 0;\n}\n\n/**\n * Address Firefox 4+ setting `line-height` on `input` using `!important` in\n * the UA stylesheet.\n */\n\ninput {\n  line-height: normal;\n}\n\n/**\n * It's recommended that you don't attempt to style these elements.\n * Firefox's implementation doesn't respect box-sizing, padding, or width.\n *\n * 1. Address box sizing set to `content-box` in IE 8/9/10.\n * 2. Remove excess padding in IE 8/9/10.\n */\n\ninput[type=\"checkbox\"],\ninput[type=\"radio\"] {\n  box-sizing: border-box; /* 1 */\n  padding: 0; /* 2 */\n}\n\n/**\n * Fix the cursor style for Chrome's increment/decrement buttons. For certain\n * `font-size` values of the `input`, it causes the cursor style of the\n * decrement button to change from `default` to `text`.\n */\n\ninput[type=\"number\"]::-webkit-inner-spin-button,\ninput[type=\"number\"]::-webkit-outer-spin-button {\n  height: auto;\n}\n\n/**\n * 1. Address `appearance` set to `searchfield` in Safari and Chrome.\n * 2. Address `box-sizing` set to `border-box` in Safari and Chrome\n *    (include `-moz` to future-proof).\n */\n\ninput[type=\"search\"] {\n  -webkit-appearance: textfield; /* 1 */\n  -moz-box-sizing: content-box;\n  -webkit-box-sizing: content-box; /* 2 */\n  box-sizing: content-box;\n}\n\n/**\n * Remove inner padding and search cancel button in Safari and Chrome on OS X.\n * Safari (but not Chrome) clips the cancel button when the search input has\n * padding (and `textfield` appearance).\n */\n\ninput[type=\"search\"]::-webkit-search-cancel-button,\ninput[type=\"search\"]::-webkit-search-decoration {\n  -webkit-appearance: none;\n}\n\n/**\n * Define consistent border, margin, and padding.\n */\n\nfieldset {\n  border: 1px solid #c0c0c0;\n  margin: 0 2px;\n  padding: 0.35em 0.625em 0.75em;\n}\n\n/**\n * 1. Correct `color` not being inherited in IE 8/9/10/11.\n * 2. Remove padding so people aren't caught out if they zero out fieldsets.\n */\n\nlegend {\n  border: 0; /* 1 */\n  padding: 0; /* 2 */\n}\n\n/**\n * Remove default vertical scrollbar in IE 8/9/10/11.\n */\n\ntextarea {\n  overflow: auto;\n}\n\n/**\n * Don't inherit the `font-weight` (applied by a rule above).\n * NOTE: the default cannot safely be changed in Chrome and Safari on OS X.\n */\n\noptgroup {\n  font-weight: bold;\n}\n\n/* Tables\n   ========================================================================== */\n\n/**\n * Remove most spacing between table cells.\n */\n\ntable {\n  border-collapse: collapse;\n  border-spacing: 0;\n}\n\ntd,\nth {\n  padding: 0;\n}\n\n/*csslint important:false*/\n\n/* ==========================================================================\n   Pure Base Extras\n   ========================================================================== */\n\n/**\n * Extra rules that Pure adds on top of Normalize.css\n */\n\n/**\n * Always hide an element when it has the `hidden` HTML attribute.\n */\n\n[hidden] {\n    display: none !important;\n}\n\n/**\n * Add this class to an image to make it fit within it's fluid parent wrapper while maintaining\n * aspect ratio.\n */\n.pure-img {\n    max-width: 100%;\n    height: auto;\n    display: block;\n}\n\n/*csslint regex-selectors:false, known-properties:false, duplicate-properties:false*/\n\n.pure-g {\n    letter-spacing: -0.31em; /* Webkit: collapse white-space between units */\n    *letter-spacing: normal; /* reset IE < 8 */\n    *word-spacing: -0.43em; /* IE < 8: collapse white-space between units */\n    text-rendering: optimizespeed; /* Webkit: fixes text-rendering: optimizeLegibility */\n\n    /*\n    Sets the font stack to fonts known to work properly with the above letter\n    and word spacings. See: https://github.com/yahoo/pure/issues/41/\n\n    The following font stack makes Pure Grids work on all known environments.\n\n    * FreeSans: Ships with many Linux distros, including Ubuntu\n\n    * Arimo: Ships with Chrome OS. Arimo has to be defined before Helvetica and\n      Arial to get picked up by the browser, even though neither is available\n      in Chrome OS.\n\n    * Droid Sans: Ships with all versions of Android.\n\n    * Helvetica, Arial, sans-serif: Common font stack on OS X and Windows.\n    */\n    font-family: FreeSans, Arimo, \"Droid Sans\", Helvetica, Arial, sans-serif;\n\n    /*\n    Use flexbox when possible to avoid `letter-spacing` side-effects.\n\n    NOTE: Firefox (as of 25) does not currently support flex-wrap, so the\n    `-moz-` prefix version is omitted.\n    */\n\n    display: -webkit-flex;\n    -webkit-flex-flow: row wrap;\n\n    /* IE10 uses display: flexbox */\n    display: -ms-flexbox;\n    -ms-flex-flow: row wrap;\n}\n\n/* Opera as of 12 on Windows needs word-spacing.\n   The \".opera-only\" selector is used to prevent actual prefocus styling\n   and is not required in markup.\n*/\n.opera-only :-o-prefocus,\n.pure-g {\n    word-spacing: -0.43em;\n}\n\n.pure-u {\n    display: inline-block;\n    *display: inline; /* IE < 8: fake inline-block */\n    zoom: 1;\n    letter-spacing: normal;\n    word-spacing: normal;\n    vertical-align: top;\n    text-rendering: auto;\n}\n\n/*\nResets the font family back to the OS/browser's default sans-serif font,\nthis the same font stack that Normalize.css sets for the `body`.\n*/\n.pure-g [class *= \"pure-u\"] {\n    font-family: sans-serif;\n}\n\n.pure-u-1,\n.pure-u-1-1,\n.pure-u-1-2,\n.pure-u-1-3,\n.pure-u-2-3,\n.pure-u-1-4,\n.pure-u-3-4,\n.pure-u-1-5,\n.pure-u-2-5,\n.pure-u-3-5,\n.pure-u-4-5,\n.pure-u-5-5,\n.pure-u-1-6,\n.pure-u-5-6,\n.pure-u-1-8,\n.pure-u-3-8,\n.pure-u-5-8,\n.pure-u-7-8,\n.pure-u-1-12,\n.pure-u-5-12,\n.pure-u-7-12,\n.pure-u-11-12,\n.pure-u-1-24,\n.pure-u-2-24,\n.pure-u-3-24,\n.pure-u-4-24,\n.pure-u-5-24,\n.pure-u-6-24,\n.pure-u-7-24,\n.pure-u-8-24,\n.pure-u-9-24,\n.pure-u-10-24,\n.pure-u-11-24,\n.pure-u-12-24,\n.pure-u-13-24,\n.pure-u-14-24,\n.pure-u-15-24,\n.pure-u-16-24,\n.pure-u-17-24,\n.pure-u-18-24,\n.pure-u-19-24,\n.pure-u-20-24,\n.pure-u-21-24,\n.pure-u-22-24,\n.pure-u-23-24,\n.pure-u-24-24 {\n    display: inline-block;\n    *display: inline;\n    zoom: 1;\n    letter-spacing: normal;\n    word-spacing: normal;\n    vertical-align: top;\n    text-rendering: auto;\n}\n\n.pure-u-1-24 {\n    width: 4.1667%;\n    *width: 4.1357%;\n}\n\n.pure-u-1-12,\n.pure-u-2-24 {\n    width: 8.3333%;\n    *width: 8.3023%;\n}\n\n.pure-u-1-8,\n.pure-u-3-24 {\n    width: 12.5000%;\n    *width: 12.4690%;\n}\n\n.pure-u-1-6,\n.pure-u-4-24 {\n    width: 16.6667%;\n    *width: 16.6357%;\n}\n\n.pure-u-1-5 {\n    width: 20%;\n    *width: 19.9690%;\n}\n\n.pure-u-5-24 {\n    width: 20.8333%;\n    *width: 20.8023%;\n}\n\n.pure-u-1-4,\n.pure-u-6-24 {\n    width: 25%;\n    *width: 24.9690%;\n}\n\n.pure-u-7-24 {\n    width: 29.1667%;\n    *width: 29.1357%;\n}\n\n.pure-u-1-3,\n.pure-u-8-24 {\n    width: 33.3333%;\n    *width: 33.3023%;\n}\n\n.pure-u-3-8,\n.pure-u-9-24 {\n    width: 37.5000%;\n    *width: 37.4690%;\n}\n\n.pure-u-2-5 {\n    width: 40%;\n    *width: 39.9690%;\n}\n\n.pure-u-5-12,\n.pure-u-10-24 {\n    width: 41.6667%;\n    *width: 41.6357%;\n}\n\n.pure-u-11-24 {\n    width: 45.8333%;\n    *width: 45.8023%;\n}\n\n.pure-u-1-2,\n.pure-u-12-24 {\n    width: 50%;\n    *width: 49.9690%;\n}\n\n.pure-u-13-24 {\n    width: 54.1667%;\n    *width: 54.1357%;\n}\n\n.pure-u-7-12,\n.pure-u-14-24 {\n    width: 58.3333%;\n    *width: 58.3023%;\n}\n\n.pure-u-3-5 {\n    width: 60%;\n    *width: 59.9690%;\n}\n\n.pure-u-5-8,\n.pure-u-15-24 {\n    width: 62.5000%;\n    *width: 62.4690%;\n}\n\n.pure-u-2-3,\n.pure-u-16-24 {\n    width: 66.6667%;\n    *width: 66.6357%;\n}\n\n.pure-u-17-24 {\n    width: 70.8333%;\n    *width: 70.8023%;\n}\n\n.pure-u-3-4,\n.pure-u-18-24 {\n    width: 75%;\n    *width: 74.9690%;\n}\n\n.pure-u-19-24 {\n    width: 79.1667%;\n    *width: 79.1357%;\n}\n\n.pure-u-4-5 {\n    width: 80%;\n    *width: 79.9690%;\n}\n\n.pure-u-5-6,\n.pure-u-20-24 {\n    width: 83.3333%;\n    *width: 83.3023%;\n}\n\n.pure-u-7-8,\n.pure-u-21-24 {\n    width: 87.5000%;\n    *width: 87.4690%;\n}\n\n.pure-u-11-12,\n.pure-u-22-24 {\n    width: 91.6667%;\n    *width: 91.6357%;\n}\n\n.pure-u-23-24 {\n    width: 95.8333%;\n    *width: 95.8023%;\n}\n\n.pure-u-1,\n.pure-u-1-1,\n.pure-u-5-5,\n.pure-u-24-24 {\n    width: 100%;\n}\n.pure-button {\n    /* Structure */\n    display: inline-block;\n    *display: inline; /*IE 6/7*/\n    zoom: 1;\n    line-height: normal;\n    white-space: nowrap;\n    vertical-align: baseline;\n    text-align: center;\n    cursor: pointer;\n    -webkit-user-drag: none;\n    -webkit-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n}\n\n/* Firefox: Get rid of the inner focus border */\n.pure-button::-moz-focus-inner {\n    padding: 0;\n    border: 0;\n}\n\n/*csslint outline-none:false*/\n\n.pure-button {\n    font-family: inherit;\n    font-size: 100%;\n    *font-size: 90%; /*IE 6/7 - To reduce IE's oversized button text*/\n    *overflow: visible; /*IE 6/7 - Because of IE's overly large left/right padding on buttons */\n    padding: 0.5em 1em;\n    color: #444; /* rgba not supported (IE 8) */\n    color: rgba(0, 0, 0, 0.80); /* rgba supported */\n    *color: #444; /* IE 6 & 7 */\n    border: 1px solid #999;  /*IE 6/7/8*/\n    border: none rgba(0, 0, 0, 0);  /*IE9 + everything else*/\n    background-color: #E6E6E6;\n    text-decoration: none;\n    border-radius: 2px;\n}\n\n.pure-button-hover,\n.pure-button:hover,\n.pure-button:focus {\n    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#00000000', endColorstr='#1a000000',GradientType=0);\n    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(transparent), color-stop(40%, rgba(0,0,0, 0.05)), to(rgba(0,0,0, 0.10)));\n    background-image: -webkit-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: -moz-linear-gradient(top, rgba(0,0,0, 0.05) 0%, rgba(0,0,0, 0.10));\n    background-image: -o-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n}\n.pure-button:focus {\n    outline: 0;\n}\n.pure-button-active,\n.pure-button:active {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset, 0 0 6px rgba(0,0,0, 0.20) inset;\n}\n\n.pure-button[disabled],\n.pure-button-disabled,\n.pure-button-disabled:hover,\n.pure-button-disabled:focus,\n.pure-button-disabled:active {\n    border: none;\n    background-image: none;\n    filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);\n    filter: alpha(opacity=40);\n    -khtml-opacity: 0.40;\n    -moz-opacity: 0.40;\n    opacity: 0.40;\n    cursor: not-allowed;\n    box-shadow: none;\n}\n\n.pure-button-hidden {\n    display: none;\n}\n\n/* Firefox: Get rid of the inner focus border */\n.pure-button::-moz-focus-inner{\n    padding: 0;\n    border: 0;\n}\n\n.pure-button-primary,\n.pure-button-selected,\na.pure-button-primary,\na.pure-button-selected {\n    background-color: rgb(0, 120, 231);\n    color: #fff;\n}\n\n.pure-form input[type=\"text\"],\n.pure-form input[type=\"password\"],\n.pure-form input[type=\"email\"],\n.pure-form input[type=\"url\"],\n.pure-form input[type=\"date\"],\n.pure-form input[type=\"month\"],\n.pure-form input[type=\"time\"],\n.pure-form input[type=\"datetime\"],\n.pure-form input[type=\"datetime-local\"],\n.pure-form input[type=\"week\"],\n.pure-form input[type=\"number\"],\n.pure-form input[type=\"search\"],\n.pure-form input[type=\"tel\"],\n.pure-form input[type=\"color\"],\n.pure-form select,\n.pure-form textarea {\n    padding: 0.5em 0.6em;\n    display: inline-block;\n    border: 1px solid #ccc;\n    box-shadow: inset 0 1px 3px #ddd;\n    border-radius: 4px;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\n/*\nNeed to separate out the :not() selector from the rest of the CSS 2.1 selectors\nsince IE8 won't execute CSS that contains a CSS3 selector.\n*/\n.pure-form input:not([type]) {\n    padding: 0.5em 0.6em;\n    display: inline-block;\n    border: 1px solid #ccc;\n    box-shadow: inset 0 1px 3px #ddd;\n    border-radius: 4px;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\n\n/* Chrome (as of v.32/34 on OS X) needs additional room for color to display. */\n/* May be able to remove this tweak as color inputs become more standardized across browsers. */\n.pure-form input[type=\"color\"] {\n    padding: 0.2em 0.5em;\n}\n\n\n.pure-form input[type=\"text\"]:focus,\n.pure-form input[type=\"password\"]:focus,\n.pure-form input[type=\"email\"]:focus,\n.pure-form input[type=\"url\"]:focus,\n.pure-form input[type=\"date\"]:focus,\n.pure-form input[type=\"month\"]:focus,\n.pure-form input[type=\"time\"]:focus,\n.pure-form input[type=\"datetime\"]:focus,\n.pure-form input[type=\"datetime-local\"]:focus,\n.pure-form input[type=\"week\"]:focus,\n.pure-form input[type=\"number\"]:focus,\n.pure-form input[type=\"search\"]:focus,\n.pure-form input[type=\"tel\"]:focus,\n.pure-form input[type=\"color\"]:focus,\n.pure-form select:focus,\n.pure-form textarea:focus {\n    outline: 0;\n    outline: thin dotted \\9; /* IE6-9 */\n    border-color: #129FEA;\n}\n\n/*\nNeed to separate out the :not() selector from the rest of the CSS 2.1 selectors\nsince IE8 won't execute CSS that contains a CSS3 selector.\n*/\n.pure-form input:not([type]):focus {\n    outline: 0;\n    outline: thin dotted \\9; /* IE6-9 */\n    border-color: #129FEA;\n}\n\n.pure-form input[type=\"file\"]:focus,\n.pure-form input[type=\"radio\"]:focus,\n.pure-form input[type=\"checkbox\"]:focus {\n    outline: thin dotted #333;\n    outline: 1px auto #129FEA;\n}\n.pure-form .pure-checkbox,\n.pure-form .pure-radio {\n    margin: 0.5em 0;\n    display: block;\n}\n\n.pure-form input[type=\"text\"][disabled],\n.pure-form input[type=\"password\"][disabled],\n.pure-form input[type=\"email\"][disabled],\n.pure-form input[type=\"url\"][disabled],\n.pure-form input[type=\"date\"][disabled],\n.pure-form input[type=\"month\"][disabled],\n.pure-form input[type=\"time\"][disabled],\n.pure-form input[type=\"datetime\"][disabled],\n.pure-form input[type=\"datetime-local\"][disabled],\n.pure-form input[type=\"week\"][disabled],\n.pure-form input[type=\"number\"][disabled],\n.pure-form input[type=\"search\"][disabled],\n.pure-form input[type=\"tel\"][disabled],\n.pure-form input[type=\"color\"][disabled],\n.pure-form select[disabled],\n.pure-form textarea[disabled] {\n    cursor: not-allowed;\n    background-color: #eaeded;\n    color: #cad2d3;\n}\n\n/*\nNeed to separate out the :not() selector from the rest of the CSS 2.1 selectors\nsince IE8 won't execute CSS that contains a CSS3 selector.\n*/\n.pure-form input:not([type])[disabled] {\n    cursor: not-allowed;\n    background-color: #eaeded;\n    color: #cad2d3;\n}\n.pure-form input[readonly],\n.pure-form select[readonly],\n.pure-form textarea[readonly] {\n    background: #eee; /* menu hover bg color */\n    color: #777; /* menu text color */\n    border-color: #ccc;\n}\n\n.pure-form input:focus:invalid,\n.pure-form textarea:focus:invalid,\n.pure-form select:focus:invalid {\n    color: #b94a48;\n    border-color: #ee5f5b;\n}\n.pure-form input:focus:invalid:focus,\n.pure-form textarea:focus:invalid:focus,\n.pure-form select:focus:invalid:focus {\n    border-color: #e9322d;\n}\n.pure-form input[type=\"file\"]:focus:invalid:focus,\n.pure-form input[type=\"radio\"]:focus:invalid:focus,\n.pure-form input[type=\"checkbox\"]:focus:invalid:focus {\n    outline-color: #e9322d;\n}\n.pure-form select {\n    border: 1px solid #ccc;\n    background-color: white;\n}\n.pure-form select[multiple] {\n    height: auto;\n}\n.pure-form label {\n    margin: 0.5em 0 0.2em;\n}\n.pure-form fieldset {\n    margin: 0;\n    padding: 0.35em 0 0.75em;\n    border: 0;\n}\n.pure-form legend {\n    display: block;\n    width: 100%;\n    padding: 0.3em 0;\n    margin-bottom: 0.3em;\n    color: #333;\n    border-bottom: 1px solid #e5e5e5;\n}\n\n.pure-form-stacked input[type=\"text\"],\n.pure-form-stacked input[type=\"password\"],\n.pure-form-stacked input[type=\"email\"],\n.pure-form-stacked input[type=\"url\"],\n.pure-form-stacked input[type=\"date\"],\n.pure-form-stacked input[type=\"month\"],\n.pure-form-stacked input[type=\"time\"],\n.pure-form-stacked input[type=\"datetime\"],\n.pure-form-stacked input[type=\"datetime-local\"],\n.pure-form-stacked input[type=\"week\"],\n.pure-form-stacked input[type=\"number\"],\n.pure-form-stacked input[type=\"search\"],\n.pure-form-stacked input[type=\"tel\"],\n.pure-form-stacked input[type=\"color\"],\n.pure-form-stacked select,\n.pure-form-stacked label,\n.pure-form-stacked textarea {\n    display: block;\n    margin: 0.25em 0;\n}\n\n/*\nNeed to separate out the :not() selector from the rest of the CSS 2.1 selectors\nsince IE8 won't execute CSS that contains a CSS3 selector.\n*/\n.pure-form-stacked input:not([type]) {\n    display: block;\n    margin: 0.25em 0;\n}\n.pure-form-aligned input,\n.pure-form-aligned textarea,\n.pure-form-aligned select,\n/* NOTE: pure-help-inline is deprecated. Use .pure-form-message-inline instead. */\n.pure-form-aligned .pure-help-inline,\n.pure-form-message-inline {\n    display: inline-block;\n    *display: inline;\n    *zoom: 1;\n    vertical-align: middle;\n}\n.pure-form-aligned textarea {\n    vertical-align: top;\n}\n\n/* Aligned Forms */\n.pure-form-aligned .pure-control-group {\n    margin-bottom: 0.5em;\n}\n.pure-form-aligned .pure-control-group label {\n    text-align: right;\n    display: inline-block;\n    vertical-align: middle;\n    width: 10em;\n    margin: 0 1em 0 0;\n}\n.pure-form-aligned .pure-controls {\n    margin: 1.5em 0 0 10em;\n}\n\n/* Rounded Inputs */\n.pure-form input.pure-input-rounded,\n.pure-form .pure-input-rounded {\n    border-radius: 2em;\n    padding: 0.5em 1em;\n}\n\n/* Grouped Inputs */\n.pure-form .pure-group fieldset {\n    margin-bottom: 10px;\n}\n.pure-form .pure-group input {\n    display: block;\n    padding: 10px;\n    margin: 0;\n    border-radius: 0;\n    position: relative;\n    top: -1px;\n}\n.pure-form .pure-group input:focus {\n    z-index: 2;\n}\n.pure-form .pure-group input:first-child {\n    top: 1px;\n    border-radius: 4px 4px 0 0;\n}\n.pure-form .pure-group input:last-child {\n    top: -2px;\n    border-radius: 0 0 4px 4px;\n}\n.pure-form .pure-group button {\n    margin: 0.35em 0;\n}\n\n.pure-form .pure-input-1 {\n    width: 100%;\n}\n.pure-form .pure-input-2-3 {\n    width: 66%;\n}\n.pure-form .pure-input-1-2 {\n    width: 50%;\n}\n.pure-form .pure-input-1-3 {\n    width: 33%;\n}\n.pure-form .pure-input-1-4 {\n    width: 25%;\n}\n\n/* Inline help for forms */\n/* NOTE: pure-help-inline is deprecated. Use .pure-form-message-inline instead. */\n.pure-form .pure-help-inline,\n.pure-form-message-inline {\n    display: inline-block;\n    padding-left: 0.3em;\n    color: #666;\n    vertical-align: middle;\n    font-size: 0.875em;\n}\n\n/* Block help for forms */\n.pure-form-message {\n    display: block;\n    color: #666;\n    font-size: 0.875em;\n}\n\n@media only screen and (max-width : 480px) {\n    .pure-form button[type=\"submit\"] {\n        margin: 0.7em 0 0;\n    }\n\n    .pure-form input:not([type]),\n    .pure-form input[type=\"text\"],\n    .pure-form input[type=\"password\"],\n    .pure-form input[type=\"email\"],\n    .pure-form input[type=\"url\"],\n    .pure-form input[type=\"date\"],\n    .pure-form input[type=\"month\"],\n    .pure-form input[type=\"time\"],\n    .pure-form input[type=\"datetime\"],\n    .pure-form input[type=\"datetime-local\"],\n    .pure-form input[type=\"week\"],\n    .pure-form input[type=\"number\"],\n    .pure-form input[type=\"search\"],\n    .pure-form input[type=\"tel\"],\n    .pure-form input[type=\"color\"],\n    .pure-form label {\n        margin-bottom: 0.3em;\n        display: block;\n    }\n\n    .pure-group input:not([type]),\n    .pure-group input[type=\"text\"],\n    .pure-group input[type=\"password\"],\n    .pure-group input[type=\"email\"],\n    .pure-group input[type=\"url\"],\n    .pure-group input[type=\"date\"],\n    .pure-group input[type=\"month\"],\n    .pure-group input[type=\"time\"],\n    .pure-group input[type=\"datetime\"],\n    .pure-group input[type=\"datetime-local\"],\n    .pure-group input[type=\"week\"],\n    .pure-group input[type=\"number\"],\n    .pure-group input[type=\"search\"],\n    .pure-group input[type=\"tel\"],\n    .pure-group input[type=\"color\"] {\n        margin-bottom: 0;\n    }\n\n    .pure-form-aligned .pure-control-group label {\n        margin-bottom: 0.3em;\n        text-align: left;\n        display: block;\n        width: 100%;\n    }\n\n    .pure-form-aligned .pure-controls {\n        margin: 1.5em 0 0 0;\n    }\n\n    /* NOTE: pure-help-inline is deprecated. Use .pure-form-message-inline instead. */\n    .pure-form .pure-help-inline,\n    .pure-form-message-inline,\n    .pure-form-message {\n        display: block;\n        font-size: 0.75em;\n        /* Increased bottom padding to make it group with its related input element. */\n        padding: 0.2em 0 0.8em;\n    }\n}\n\n/*csslint adjoining-classes:false, outline-none:false*/\n/*TODO: Remove this lint rule override after a refactor of this code.*/\n\n.pure-menu ul {\n    position: absolute;\n    visibility: hidden;\n}\n\n.pure-menu.pure-menu-open {\n    visibility: visible;\n    z-index: 2;\n    width: 100%;\n}\n\n.pure-menu ul {\n    left: -10000px;\n    list-style: none;\n    margin: 0;\n    padding: 0;\n    top: -10000px;\n    z-index: 1;\n}\n\n.pure-menu > ul { position: relative; }\n\n.pure-menu-open > ul {\n    left: 0;\n    top: 0;\n    visibility: visible;\n}\n\n.pure-menu-open > ul:focus {\n    outline: 0;\n}\n\n.pure-menu li { position: relative; }\n\n.pure-menu a,\n.pure-menu .pure-menu-heading {\n    display: block;\n    color: inherit;\n    line-height: 1.5em;\n    padding: 5px 20px;\n    text-decoration: none;\n    white-space: nowrap;\n}\n\n.pure-menu.pure-menu-horizontal > .pure-menu-heading {\n    display: inline-block;\n    *display: inline;\n    zoom: 1;\n    margin: 0;\n    vertical-align: middle;\n}\n.pure-menu.pure-menu-horizontal > ul {\n    display: inline-block;\n    *display: inline;\n    zoom: 1;\n    vertical-align: middle;\n}\n\n.pure-menu li a { padding: 5px 20px; }\n\n.pure-menu-can-have-children > .pure-menu-label:after {\n    content: '\\25B8';\n    float: right;\n    /* These specific fonts have the Unicode char we need. */\n    font-family: 'Lucida Grande', 'Lucida Sans Unicode', 'DejaVu Sans', sans-serif;\n    margin-right: -20px;\n    margin-top: -1px;\n}\n\n.pure-menu-can-have-children > .pure-menu-label {\n    padding-right: 30px;\n}\n\n.pure-menu-separator {\n    background-color: #dfdfdf;\n    display: block;\n    height: 1px;\n    font-size: 0;\n    margin: 7px 2px;\n    overflow: hidden;\n}\n\n.pure-menu-hidden {\n    display: none;\n}\n\n/* FIXED MENU */\n.pure-menu-fixed {\n    position: fixed;\n    top: 0;\n    left: 0;\n    width: 100%;\n}\n\n\n/* HORIZONTAL MENU CODE */\n\n/* Initial menus should be inline-block so that they are horizontal */\n.pure-menu-horizontal li {\n    display: inline-block;\n    *display: inline;\n    zoom: 1;\n    vertical-align: middle;\n}\n\n/* Submenus should still be display: block; */\n.pure-menu-horizontal li li {\n    display: block;\n}\n\n/* Content after should be down arrow */\n.pure-menu-horizontal > .pure-menu-children > .pure-menu-can-have-children > .pure-menu-label:after {\n    content: \"\\25BE\";\n}\n/*Add extra padding to elements that have the arrow so that the hover looks nice */\n.pure-menu-horizontal > .pure-menu-children > .pure-menu-can-have-children > .pure-menu-label {\n    padding-right: 30px;\n}\n\n/* Adjusting separator for vertical menus */\n.pure-menu-horizontal li.pure-menu-separator {\n    height: 50%;\n    width: 1px;\n    margin: 0 7px;\n}\n\n/* Submenus should be horizontal separator again */\n.pure-menu-horizontal li li.pure-menu-separator {\n    height: 1px;\n    width: auto;\n    margin: 7px 2px;\n}\n\n\n/*csslint adjoining-classes:false*/\n/*TODO: Remove this lint rule override after a refactor of this code.*/\n\n/* MAIN MENU STYLING */\n\n.pure-menu.pure-menu-open,\n.pure-menu.pure-menu-horizontal li .pure-menu-children {\n    background: #fff; /* Old browsers */\n    border: 1px solid #b7b7b7;\n}\n\n/* remove borders for horizontal menus */\n.pure-menu.pure-menu-horizontal,\n.pure-menu.pure-menu-horizontal .pure-menu-heading {\n    border: none;\n}\n\n\n/* LINK STYLES */\n\n.pure-menu a {\n    border: 1px solid transparent;\n    border-left: none;\n    border-right: none;\n\n}\n\n.pure-menu a,\n.pure-menu .pure-menu-can-have-children > li:after {\n    color: #777;\n}\n\n.pure-menu .pure-menu-can-have-children > li:hover:after {\n    color: #fff;\n}\n\n/* Focus style for a dropdown menu-item when the parent has been opened */\n.pure-menu .pure-menu-open {\n    background: #dedede;\n}\n\n\n.pure-menu li a:hover,\n.pure-menu li a:focus {\n    background: #eee;\n}\n\n/* DISABLED STATES */\n.pure-menu li.pure-menu-disabled a:hover,\n.pure-menu li.pure-menu-disabled a:focus {\n    background: #fff;\n    color: #bfbfbf;\n}\n\n.pure-menu .pure-menu-disabled > a {\n    background-image: none;\n    border-color: transparent;\n    cursor: default;\n}\n\n.pure-menu .pure-menu-disabled > a,\n.pure-menu .pure-menu-can-have-children.pure-menu-disabled > a:after {\n    color: #bfbfbf;\n}\n\n/* HEADINGS */\n.pure-menu .pure-menu-heading {\n    color: #565d64;\n    text-transform: uppercase;\n    font-size: 90%;\n    margin-top: 0.5em;\n    border-bottom-width: 1px;\n    border-bottom-style: solid;\n    border-bottom-color: #dfdfdf;\n}\n\n/* ACTIVE MENU ITEM */\n.pure-menu .pure-menu-selected a {\n    color: #000;\n}\n\n/* FIXED MENU */\n.pure-menu.pure-menu-open.pure-menu-fixed {\n    border: none;\n    border-bottom: 1px solid #b7b7b7;\n}\n\n/*csslint box-model:false*/\n/*TODO: Remove this lint rule override after a refactor of this code.*/\n\n\n.pure-paginator {\n\n    /* `pure-g` Grid styles */\n    letter-spacing: -0.31em; /* Webkit: collapse white-space between units */\n    *letter-spacing: normal; /* reset IE < 8 */\n    *word-spacing: -0.43em; /* IE < 8: collapse white-space between units */\n    text-rendering: optimizespeed; /* Webkit: fixes text-rendering: optimizeLegibility */\n\n    /* `pure-paginator` Specific styles */\n    list-style: none;\n    margin: 0;\n    padding: 0;\n}\n.opera-only :-o-prefocus,\n.pure-paginator {\n    word-spacing: -0.43em;\n}\n\n/* `pure-u` Grid styles */\n.pure-paginator li {\n    display: inline-block;\n    *display: inline; /* IE < 8: fake inline-block */\n    zoom: 1;\n    letter-spacing: normal;\n    word-spacing: normal;\n    vertical-align: top;\n    text-rendering: auto;\n}\n\n\n.pure-paginator .pure-button {\n    border-radius: 0;\n    padding: 0.8em 1.4em;\n    vertical-align: top;\n    height: 1.1em;\n}\n.pure-paginator .pure-button:focus,\n.pure-paginator .pure-button:active {\n    outline-style: none;\n}\n.pure-paginator .prev,\n.pure-paginator .next {\n    color: #C0C1C3;\n    text-shadow: 0 -1px 0 rgba(0,0,0, 0.45);\n}\n.pure-paginator .prev {\n    border-radius: 2px 0 0 2px;\n}\n.pure-paginator .next {\n    border-radius: 0 2px 2px 0;\n}\n\n@media (max-width: 480px) {\n    .pure-menu-horizontal {\n        width: 100%;\n    }\n\n    .pure-menu-children li {\n        display: block;\n        border-bottom: 1px solid black;\n    }\n}\n\n.pure-table {\n    /* Remove spacing between table cells (from Normalize.css) */\n    border-collapse: collapse;\n    border-spacing: 0;\n    empty-cells: show;\n    border: 1px solid #cbcbcb;\n}\n\n.pure-table caption {\n    color: #000;\n    font: italic 85%/1 arial, sans-serif;\n    padding: 1em 0;\n    text-align: center;\n}\n\n.pure-table td,\n.pure-table th {\n    border-left: 1px solid #cbcbcb;/*  inner column border */\n    border-width: 0 0 0 1px;\n    font-size: inherit;\n    margin: 0;\n    overflow: visible; /*to make ths where the title is really long work*/\n    padding: 0.5em 1em; /* cell padding */\n}\n.pure-table td:first-child,\n.pure-table th:first-child {\n    border-left-width: 0;\n}\n\n.pure-table thead {\n    background: #e0e0e0;\n    color: #000;\n    text-align: left;\n    vertical-align: bottom;\n}\n\n/*\nstriping:\n   even - #fff (white)\n   odd  - #f2f2f2 (light gray)\n*/\n.pure-table td {\n    background-color: transparent;\n}\n.pure-table-odd td {\n    background-color: #f2f2f2;\n}\n\n/* nth-child selector for modern browsers */\n.pure-table-striped tr:nth-child(2n-1) td {\n    background-color: #f2f2f2;\n}\n\n/* BORDERED TABLES */\n.pure-table-bordered td {\n    border-bottom: 1px solid #cbcbcb;\n}\n.pure-table-bordered tbody > tr:last-child > td {\n    border-bottom-width: 0;\n}\n\n\n/* HORIZONTAL BORDERED TABLES */\n\n.pure-table-horizontal td,\n.pure-table-horizontal th {\n    border-width: 0 0 1px 0;\n    border-bottom: 1px solid #cbcbcb;\n}\n.pure-table-horizontal tbody > tr:last-child > td {\n    border-bottom-width: 0;\n}\n"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],148:[function(require,module,exports){
+require('./css/default.css');
+require('./css/purecss-0.5.0.css');
+require('./css/pure-finetuned.css');
+},{"./css/default.css":145,"./css/pure-finetuned.css":146,"./css/purecss-0.5.0.css":147}],149:[function(require,module,exports){
+var css = "[dd-draggable] {\n    -moz-user-select: none;\n    -khtml-user-select: none;\n    -webkit-user-select: none;\n    user-select: none;\n    float: left;\n    position: relative;\n}\n.dd-hidden-source {\n    visibility: hidden !important;\n}\n.dd-dragging {\n    cursor: move;\n}\n.dd-transition {\n    -webkit-transition: top 0.25s ease-out, left 0.25s ease-out;\n    -moz-transition: top 0.25s ease-out, left 0.25s ease-out;\n    -ms-transition: top 0.25s ease-out, left 0.25s ease-out;\n    -o-transition: top 0.25s ease-out, left 0.25s ease-out;\n    transition: top 0.25s ease-out, left 0.25s ease-out;\n}\n.dd-high-z {\n    z-index: 999 !important;\n}\n.dd-opacity {\n    opacity: 0.6;\n    filter: alpha(opacity=60); /* For IE8 and earlier */\n}\n[dropzone] {\n    position: relative; /* otherwise we cannot place absolute positioned items */\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],150:[function(require,module,exports){
+"use strict";
+
 /**
- * Provides core IO-functionality.
+ * Provides `drag and drop` functionality with dropzones
  *
  *
  * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
  * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
  *
- * @module io
- * @class IO
+ * @example
+ * DD = require('drag-drop')(window);
+ * DD.init();
+ *
+ * @module drag-drop
+ * @class DD
+ * @since 0.0.4
 */
 
-"use strict";
+
+// Redefine the API for the events `dd`, `dd-drag` and `dd-drop`, for they have more properties:
+
+/**
+* Emitted during the drag-cycle of a draggable Element (while it is dragged).
+*
+* @event *:dd-drag (extended by drag-drop)
+* @param e {Object} eventobject including:
+* @param e.target {HtmlElement} the HtmlElement that is being dragged
+* @param e.dragNode {HtmlElement} The HtmlElement that is being dragged (equals e.target)
+* @param [e.sourceNode] {HtmlElement} The original Element. Only when a `copy` is made --> e.dragNode is being moved while
+*        e.sourceNode stand at its place.
+* @param e.currentTarget {HtmlElement} the HtmlElement that is delegating
+* @param e.sourceTarget {HtmlElement} the deepest HtmlElement where the mouse lies upon
+* @param [e.dropTarget] {HtmlElement} The dropzone HtmlElement that will be available whenever the draggable gets over a dropzone.
+* @param e.dd {Promise} Promise that gets fulfilled when dragging is ended. The fullfilled-callback has no arguments.
+* @param [e.dropzone] {Promise} a Promise that will be available whenever the draggable gets over a dropzone.
+*        The Promise that gets fulfilled as soon as the draggable is dropped, or outside the dropzone
+*        Will fulfill with one argument: `onDropzone` {Boolean} when `true`, the draggable is dropped inside the dropzone, otherwise
+*        the draggable got outside the dropzone without beging dropped.
+* @param e.ctrlKey {Boolean} Whether the Ctrl/cmd key is pressed
+* @param e.isCopied {Boolean} Whether the drag is a copy-drag
+* @param e.xMouse {Number} the current x-position in the window-view
+* @param e.yMouse {Number} the current y-position in the window-view
+* @param e.clientX {Number} the current x-position in the window-view
+* @param e.clientY {Number} the current y-position in the window-view
+* @param e.xMouseOrigin {Number} the original x-position in the document when drag started (incl. scrollOffset)
+* @param e.yMouseOrigin {Number} the original y-position in the document when drag started (incl. scrollOffset)
+* @param [e.relatives] {NodeList} an optional list that the user could set in a `before`-subscriber of the `dd`-event
+*        to inform which nodes are related to the draggable node and should be dragged as well.
+* @param [e.relativeDragNodes] {NodeList} an optional list that holds the HtmlElements that corresponds with
+*        the `e.relative` list, but is a list with draggable Elements.
+
+* @since 0.0.1
+*/
+
+/**
+* Emitted when drag-cycle of a draggable Element is ended.
+*
+* @event *:dd-drop (extended by drag-drop)
+* @param e {Object} eventobject including:
+* @param e.target {HtmlElement} the HtmlElement that is being dragged
+* @param e.dragNode {HtmlElement} The HtmlElement that is being dragged (equals e.target)
+* @param [e.sourceNode] {HtmlElement} The original Element. Only when a `copy` is made --> e.dragNode is being moved while
+*        e.sourceNode stand at its place.
+* @param e.currentTarget {HtmlElement} the HtmlElement that is delegating
+* @param e.sourceTarget {HtmlElement} the deepest HtmlElement where the mouse lies upon
+* @param [e.dropTarget] {HtmlElement} The dropzone HtmlElement that will be available whenever the draggable gets over a dropzone.
+* @param e.dd {Promise} Promise that gets fulfilled when dragging is ended. The fullfilled-callback has no arguments.
+* @param [e.dropzone] {Promise} a Promise that will be available whenever the draggable gets over a dropzone.
+*        The Promise that gets fulfilled as soon as the draggable is dropped, or outside the dropzone
+*        Will fulfill with one argument: `onDropzone` {Boolean} when `true`, the draggable is dropped inside the dropzone, otherwise
+*        the draggable got outside the dropzone without beging dropped.
+* @param e.ctrlKey {Boolean} Whether the Ctrl/cmd key is pressed
+* @param e.isCopied {Boolean} Whether the drag is a copy-drag
+* @param e.xMouse {Number} the current x-position in the window-view
+* @param e.yMouse {Number} the current y-position in the window-view
+* @param e.clientX {Number} the current x-position in the window-view
+* @param e.clientY {Number} the current y-position in the window-view
+* @param e.xMouseOrigin {Number} the original x-position in the document when drag started (incl. scrollOffset)
+* @param e.yMouseOrigin {Number} the original y-position in the document when drag started (incl. scrollOffset)
+* @param [e.relatives] {NodeList} an optional list that the user could set in a `before`-subscriber of the `dd`-event
+*        to inform which nodes are related to the draggable node and should be dragged as well.
+* @param [e.relativeDragNodes] {NodeList} an optional list that holds the HtmlElements that corresponds with
+*        the `e.relative` list, but is a list with draggable Elements.
+
+* @since 0.0.1
+*/
+
+/**
+* Emitted when a draggable Element's drag-cycle starts. You can use a `before`-subscriber to specify
+* e.relatives, which should be a nodelist with HtmlElements, that should be dragged togehter with the master
+* draggable Element.
+*
+* @event dd (extended by drag-drop)
+* @param e {Object} eventobject including:
+* @param e.target {HtmlElement} the HtmlElement that is being dragged
+* @param e.dragNode {HtmlElement} The HtmlElement that is being dragged (equals e.target)
+* @param [e.sourceNode] {HtmlElement} The original Element. Only when a `copy` is made --> e.dragNode is being moved while
+*        e.sourceNode stand at its place.
+* @param e.currentTarget {HtmlElement} the HtmlElement that is delegating
+* @param e.sourceTarget {HtmlElement} the deepest HtmlElement where the mouse lies upon
+* @param e.dd {Promise} Promise that gets fulfilled when dragging is ended. The fullfilled-callback has no arguments.
+* @param e.ctrlKey {Boolean} Whether the Ctrl/cmd key is pressed
+* @param e.isCopied {Boolean} Whether the drag is a copy-drag
+* @param e.xMouse {Number} the current x-position in the window-view
+* @param e.yMouse {Number} the current y-position in the window-view
+* @param e.clientX {Number} the current x-position in the window-view
+* @param e.clientY {Number} the current y-position in the window-view
+* @param e.xMouseOrigin {Number} the original x-position in the document when drag started (incl. scrollOffset)
+* @param e.yMouseOrigin {Number} the original y-position in the document when drag started (incl. scrollOffset)
+* @param [e.relatives] {NodeList} an optional list that the user could set in a `before`-subscriber of the `dd`-event
+*        to inform which nodes are related to the draggable node and should be dragged as well.
+* @param [e.relativeDragNodes] {NodeList} an optional list that holds the HtmlElements that corresponds with
+*        the `e.relative` list, but is a list with draggable Elements.
+
+* @since 0.0.1
+*/
+
+/**
+ * Objecthash containing all specific information about the particular drag-cycle.
+ * It has a structure like this:
+ *
+ * ddProps = {
+ *     sourceNode {HtmlElement} original node (defined by drag-drop)
+ *     dragNode {HtmlElement} Element that is dragged
+ *     x {Number} absolute x-position of the draggable inside `document` when the drag starts
+ *     y {Number} absolute y-position of the draggable inside `document` when the drag starts
+ *     inlineLeft {String} inline css of the property `left` when drag starts
+ *     inlineTop {String} inline css of the property `top` when drag starts
+ *     winConstrained {Boolean} whether the draggable should be constrained to `window`
+ *     xMouseLast {Number} absolute x-position of the mouse inside `document` when the drag starts
+ *     yMouseLast {Number} absolute y-position of the draggable inside `document` when the drag starts
+ *     winScrollLeft {Number} the left-scroll of window when drag starts
+ *     winScrollTop {Number} the top-scroll of window when drag starts
+ *     constrain = { // constrain-properties when constrained to a HtmlElement
+ *         xOrig {Number} x-position in the document, included with left-border-width
+ *         yOrig {Number} y-position in the document, included with top-border-width
+ *         x {Number} xOrig corrected with scroll-left of the constrained node
+ *         y {Number} yOrig corrected with scroll-top of the constrained node
+ *         w {Number} scrollWidth
+ *         h {Number} scrollHeight
+ *     };
+ *     dropzoneSpecified {Boolean} whether the draggable has a dropzone specified (either by `dd-dropzone` or by `dd-emitter`) (defined by drag-drop)
+ *     dragOverEv {Object} Eventhandler that watches for `mousemove` to detect dropzone-over events (defined by drag-drop)
+ *     relatives[{ // Array with objects that represent all draggables that come along with the master-draggable (in case of multiple items), excluded the master draggable itself
+ *         sourceNode {HtmlElement} original node (defined by drag-drop)
+ *         dragNode {HtmlElement} draggable node
+ *         shiftX {Number} the amount of left-pixels that this HtmlElement differs from the dragged element
+ *         shiftY {Number} the amount of top-pixels that this HtmlElement differs from the dragged element
+ *         inlineLeft {String} inline css of the property `left` when drag starts
+ *         inlineTop {String} inline css of the property `top` when drag starts
+ *     }]
+ *     relativeDragNodes [HtmlElements] Array with all `copyied` Nodes corresponding to `ddProps.relatives`. Only in case of copying multiple items (defined by drag-drop)
+ * }
+ *
+ * @property ddProps (extended by drag-drop)
+ * @default {}
+ * @type Object
+ * @since 0.0.1
+*/
+
+var DRAG = 'drag',
+    DROP = 'drop',
+    NAME = '['+DRAG+'-'+DROP+']: ',
+    createHashMap = require('js-ext/extra/hashmap.js').createMap,
+    COPY = 'copy',
+    DROPZONE = DROP+'zone',
+    SOURCE = 'source',
+    DRAGGABLE = DRAG+'gable',
+    DEL_DRAGGABLE = 'del-'+DRAGGABLE,
+    DD_MINUS = 'dd-',
+    DZ_MINUS = 'dz-',
+    PLUGIN_DD = 'plugin-dd',
+    DZ_DROPZONE = DZ_MINUS+DROPZONE,
+    DD_DRAGGING_CLASS = DD_MINUS+DRAG+'ging',
+    DD_MASTER_CLASS = DD_MINUS+'master',
+    DD_HANDLE = DD_MINUS+'handle',
+    DD_SOURCE_ISCOPIED_CLASS = DD_MINUS+COPY+SOURCE,
+    DD_COPIED_CLASS = DD_MINUS+COPY,
+    DROPZONE_MOVABLE = DROPZONE+'-movable',
+    DD_DROPZONE_MOVABLE = DD_MINUS+DROPZONE_MOVABLE,
+    CONSTRAIN_ATTR = 'constrain-selector',
+    MOUSE = 'mouse',
+    DROPZONE_OVER = DROPZONE+'-over',
+    DROPZONE_DROP = DROPZONE+'-'+DROP,
+    DD_DROPZONE = DD_MINUS+DROPZONE,
+    NO_TRANS_CLASS = 'el-notrans', // delivered by `vdom`
+    DD_HIDDEN_SOURCE_CLASS = DD_MINUS+'hidden-'+SOURCE,
+    INVISIBLE_CLASS = 'el-invisible', // delivered by `vdom`
+    DD_TRANSITION_CLASS = DD_MINUS+'transition',
+    DD_OPACITY_CLASS = DD_MINUS+'opacity',
+    HIGH_Z_CLASS = DD_MINUS+'high-z',
+    DD_DROPACTIVE_CLASS = DROPZONE+'-awake',
+    DD_ABOVE_DROPZONE_CLASS = DD_MINUS+'above'+DROPZONE,
+    REGEXP_MOVE = /\bmove\b/i,
+    REGEXP_COPY = /\bcopy\b/i,
+    REGEXP_ALL = /\b(all|true)\b/i,
+    EMITTER = 'emitter',
+    REGEXP_EMITTER = /\bemitter=((\w|,)+)\b/,
+    DD_EMITTER = DD_MINUS+EMITTER,
+    MOVE = 'move',
+    DROPZONE_OUT = DROPZONE+'-out',
+    DD_DROP = DD_MINUS+DROP,
+    DD_FAKE = DD_MINUS+'fake-',
+    DOWN = 'down',
+    UP = 'up',
+    KEY = 'key',
+    MOUSEMOVE = MOUSE+MOVE,
+    PANMOVE = 'pan'+MOVE,
+    DD_FAKE_MOUSEMOVE = DD_FAKE+MOUSEMOVE,
+    UI = 'UI',
+    DROPZONE_BRACKETS = '[' + DZ_DROPZONE + ']',
+    EFFECT_ALLOWED = 'effect-allowed',
+    DD_EFFECT_ALLOWED = DD_MINUS+EFFECT_ALLOWED,
+    BORDER = 'border',
+    WIDTH = 'width',
+    BORDER_LEFT_WIDTH = BORDER+'-left-'+WIDTH,
+    BORDER_RIGHT_WIDTH = BORDER+'-right-'+WIDTH,
+    BORDER_TOP_WIDTH = BORDER+'-top-'+WIDTH,
+    BORDER_BOTTOM_WIDTH = BORDER+'-bottom-'+WIDTH,
+    LEFT = 'left',
+    TOP = 'top',
+    POSITION = 'position',
+    ABSOLUTE = 'absolute',
+    TRUE = 'true',
+    DD_MINUSDRAGGABLE = DD_MINUS+DRAGGABLE,
+    PLUGIN_ATTRS = [PLUGIN_DD, DD_DROPZONE, CONSTRAIN_ATTR, DD_EMITTER, DD_HANDLE, DD_EFFECT_ALLOWED, DD_DROPZONE_MOVABLE];
 
 require('polyfill/polyfill-base.js');
 require('js-ext');
-
-var NAME = '[io]: ',
-    GET = 'GET',
-    createHashMap = require('js-ext/extra/hashmap.js').createMap,
-    asyncSilent = require('utils').asyncSilent,
-    DEF_REQ_TIMEOUT = 300000, // don't create an ever-lasting request: always quit after 5 minutes
-    BODY_METHODS = createHashMap({
-        POST: 1,
-        PUT: 1
-    }),
-    CONTENT_TYPE = 'Content-Type',
-    MIME_JSON = 'application/json',
-    DEF_CONTENT_TYPE_POST = 'application/x-www-form-urlencoded; charset=UTF-8',
-    ERROR_NO_XHR = 'no valid xhr transport-mechanism available',
-    REQUEST_TIMEOUT = 'Request-timeout',
-    UNKNOW_ERROR = 'Unknown response-error',
-    XHR_ERROR = 'XHR Error',
-    ABORTED = 'Request aborted',
-    NO_XHR = 'No valid xhr found on this browser';
+require('./css/drag-drop.css');
 
 module.exports = function (window) {
 
-    // to prevent multiple IO instances
-    // (which might happen: http://nodejs.org/docs/latest/api/modules.html#modules_module_caching_caveats)
-    // we make sure IO is defined only once. Therefore we bind it to `window` and return it if created before
-    // We need a singleton IO, because submodules might merge in. You can't have them merging
-    // into some other IO-instance than which is used.
-    var Glob = (typeof global !== 'undefined' ? global : /* istanbul ignore next */ this);
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
 
-    Glob._ITSAmodules || Object.protectedProp(Glob, '_ITSAmodules', createHashMap());
-
-    if (Glob._ITSAmodules.IO) {
-        return Glob._ITSAmodules.IO;
+    if (window._ITSAmodules.DragDrop) {
+        return window._ITSAmodules.DragDrop; // DragDrop was already created
     }
 
-    var ENCODE_URI_COMPONENT = encodeURIComponent,
-        IO;
+    var Event = require('event-dom')(window),
+        DragModule = require('drag')(window),
+        $superInit = DragModule.init,
+        ctrlPressed = false,
+        dropEffect = MOVE,
+        DOCUMENT = window.document,
+        isMobile = require('useragent')(window).isMobile,
+        supportHammer = !!Event.Hammer,
+        mobileEvents = supportHammer && isMobile,
+        DD;
 
-    IO = {
-        config: {},
+    require('vdom')(window);
+    require('node-plugin')(window);
+    require('window-ext')(window);
 
-        //===============================================================================================
-        // private methods:
-        //===============================================================================================
-
-        _xhrList: [],
+    DD = {
+      /**
+        * Returns the allowed effects on the dragable-HtmlElement. Is determined by the attribute `dd-effect-allowed`
+        * Will be set to "move" when undefined.
+        *
+        * @method _allowedEffects
+        * @param dragableElement {HtmlElement} HtmlElement that is checked for its allowed effects
+        * @return {String} allowed effects: "move", "copy" or "all"
+        * @private
+        * @since 0.0.1
+        */
+        _allowedEffects: function(dragableElement) {
+            console.log(NAME, '_allowedEffects');
+            var allowedEffects = dragableElement.getAttr(DD_EFFECT_ALLOWED);
+            return allowedEffects || MOVE;
+        },
 
         /**
-         * Initializes the xhr-instance, based on the config-params.
-         * This method is the standard way of doing xhr-requests without processing streams.
+         * Default function for the `*:dd-drop`-event. Overrides the definition of the `drag`-module.
          *
-         * @method _initXHR
-         * @param xhr {Object} xhr-instance
-         * @param options {Object}
-         *    @param [options.url] {String} The url to which the request is sent.
-         *    @param [options.method='GET'] {String} The HTTP method to use.
-         *    can be ignored, even if streams are used --> the returned Promise will always hold all data
-         *    @param [options.sync=false] {boolean} By default, all requests are sent asynchronously. To send synchronous requests, set to true.
-         *           This feature only works in the browser: nodejs will always perform asynchronous requests.
-         *    @param [options.data] {Object} Data to be sent to the server, either to be used by `query-params` or `body`.
-         *    @param [options.headers] {Object} HTTP request headers.
-         *    @param [options.responseType] {String} Force the response type.
-         *    @param [options.timeout=3000] {number} to timeout the request, leading into a rejected Promise.
-         *    @param [options.withCredentials=false] {boolean} Whether or not to send credentials on the request.
-         * @param fulfill {Function} reference to xhr-promise's fulfill-function
-         * @param reject {Function} reference to xhr-promise's reject-function
-         * @param promise {Promise} the xhr-promise which will be extended with the `abort()`-method
+         * @method _defFnDrop (extended by drag-drop)
+         * @param e {Object} eventobject
+         * @param sourceNode {HtmlElement} the original HtmlElement
+         * @param dragNode {HtmlElement} the dragged HtmlElement (either original or clone)
+         * @param dropzoneSpecified {Boolean} whether the sourceNode had a dropzone specified
+         * @param relatives {Array} hash with all draggables that are being move togerther with the master draggable
          * @private
-        */
-        _initXHR: function (xhr, options, promise) {
-            console.log(NAME, '_initXHR');
-            var instance = this,
-                url = options.url,
-                method = options.method || GET,
-                headers = options.headers || {}, // all request will get some headers
-                async = !options.sync,
-                data = options.data,
-                reject = promise.reject;
-            // xhr will be null in case of a CORS-request when no CORS is possible
-            if (!xhr) {
-                console.error(NAME, '_initXHR fails: '+ERROR_NO_XHR);
-                reject(new Error(ERROR_NO_XHR));
-                return;
-            }
-            console.log(NAME, '_initXHR succesfully created '+(xhr._isXHR2 ? 'XMLHttpRequest2' : (xhr._isXDR ? 'XDomainRequest' : 'XMLHttpRequest1'))+'-instance');
-
-            // method-name should be in uppercase:
-            method = method.toUpperCase();
-
-            // in case of BODY-method: eliminate any data behind querystring:
-            // else: append data-object behind querystring
-            if (BODY_METHODS[method]) {
-                url = url.split('?'); // now url is an array
-                url = url[0]; // now url is a String again
-            }
-            else if (data) {
-                url += ((url.indexOf('?') > 0) ? '&' : '?') + instance._toQueryString(data);
-            }
-
-            xhr.open(method, url, async);
-            // xhr.responseType = options.responseType || 'text';
-            options.withCredentials && (xhr.withCredentials=true);
-
-
-            // more initialisation might be needed by extended modules:
-            instance._xhrInitList.each(
-                function(fn) {
-                    fn(xhr, promise, headers, method);
-                }
-            );
-
-            // send the request:
-            xhr.send((BODY_METHODS[method] && data) ? (((headers[CONTENT_TYPE]===MIME_JSON) || xhr._isXDR) ? JSON.stringify(data) : instance._toQueryString(data)) : null);
-
-            console.log(NAME, 'xhr send to '+url+' with method '+method);
-
-            // now add xhr.abort() to the promise, so we can call from within the returned promise-instance
-            promise.abort = function() {
-                console.log(NAME, 'xhr aborted');
-                reject(new Error(ABORTED));
-                xhr._aborted = true; // must be set: IE9 won't allow to read anything on xhr after being aborted
-                xhr.abort();
-            };
-
-            // in case synchronous transfer: force an xhr.onreadystatechange:
-            async || xhr.onreadystatechange();
-        },
-
-        /**
-         * Adds the `headers`-object to `xhr`-headers.
-         *
-         * @method _setHeaders
-         * @param xhr {Object} containing the xhr-instance
-         * @param headers {Object} containing all headers
-         * @param method {String} the request-method used
-         * @private
-        */
-        _setHeaders: function(xhr, promise, headers, method) {
-            // XDR cannot set requestheaders, only XHR:
-            if (!xhr._isXDR) {
-                console.log(NAME, '_setHeaders');
-                var name;
-                if ((method!=='POST') && (method!=='PUT')) {
-                    // force GET-request to make a request instead of using cache (like IE does):
-                    headers['If-Modified-Since'] = 'Wed, 15 Nov 1995 01:00:00 GMT';
-                    // header 'Content-Type' should only be set with POST or PUT requests:
-                    delete headers[CONTENT_TYPE];
-                }
-                // set all headers
-                for (name in headers) {
-                    xhr.setRequestHeader(name, headers[name]);
-                }
-
-                // in case of POST or PUT method: always make sure 'Content-Type' is specified
-                ((method!=='POST') && (method!=='PUT')) || (headers && (CONTENT_TYPE in headers)) || xhr.setRequestHeader(CONTENT_TYPE, DEF_CONTENT_TYPE_POST);
-            }
-        },
-
-        /**
-         * Adds 2 methods on the xhr-instance which are used by xhr when events occur:
-         *
-         * xhr.onreadystatechange()
-         * xhr.ontimeout()  // only XMLHttpRequest2
-         *
-         * These events are responsible for making the Promise resolve.
-         * @method _setReadyHandle
-         * @param xhr {Object} containing the xhr-instance
-         * @param fulfill {Function} reference to the Promise fulfill-function
-         * @param reject {Function} reference to the Promise reject-function
-         * @private
-        */
-        _setReadyHandle: function(xhr, promise) {
-            console.log(NAME, '_setReadyHandle');
-            // for XDomainRequest, we need 'onload' instead of 'onreadystatechange'
-            xhr.onreadystatechange = function() {
-                // CANNOT console xhr.responseText here! IE9 will throw an error:
-                // you can only acces it after (xhr.readyState===4)
-                // also check xhr._aborted --> IE9 comes here after aborted and will throw an error when reading xhr's native properties
-                if (!xhr._aborted && (xhr.readyState===4)) {
-                    clearTimeout(xhr._timer);
-                    if ((xhr.status>=200) && (xhr.status<300)) {
-                        console.log(NAME, 'xhr.onreadystatechange will fulfill xhr-instance: '+xhr.responseText);
-                        // In case streamback function is set, but when no intermediate stream-data was send
-                        // (or in case of XDR: below 2kb it doesn't call onprogress)
-                        // --> we might need to call onprogress ourselve.
-                        if (xhr._isStream && !xhr._gotstreamed) {
-                            xhr.onprogress(xhr.responseText);
-                        }
-                        promise.fulfill(xhr);
-                    }
-                    else {
-                        console.warn(NAME, 'xhr.onreadystatechange will reject xhr-instance: '+xhr.statusText);
-                        promise.reject(new Error(xhr.statusText || UNKNOW_ERROR+' '+xhr.status));
-                    }
-                }
-            };
-            xhr.onerror = function() {
-                clearTimeout(xhr._timer);
-                promise.reject(new Error(XHR_ERROR));
-            };
-        },
-
-        /**
-         * Stringifies an object into one string with every pair separated by `&`
-         *
-         * @method _toQueryString
-         * @param data {Object} containing key-value pairs
-         * @return {String} stringified presentation of the object, with every pair separated by `&`
-         * @private
-        */
-        _toQueryString: function(data) {
-            var paramArray = [],
-                key, value;
-        // TODO: use `object` module
-            for (key in data) {
-                value = data[key];
-                key = ENCODE_URI_COMPONENT(key);
-                paramArray.push((value === null) ? key : (key + '=' + ENCODE_URI_COMPONENT(value)));
-            }
-            console.log(NAME, '_toQueryString --> '+paramArray.join('&'));
-            return paramArray.join('&');
-        },
-
-        /**
-         * Sends a HTTP request to the server and returns a Promise with an additional .abort() method to cancel the request.
-         * This method is the standard way of doing xhr-requests without processing streams.
-         *
-         * @method request
-         * @param options {Object}
-         *    @param [options.url] {String} The url to which the request is sent.
-         *    @param [options.method='GET'] {String} The HTTP method to use.
-         *    can be ignored, even if streams are used --> the returned Promise will always hold all data
-         *    @param [options.sync=false] {boolean} By default, all requests are sent asynchronously. To send synchronous requests, set to true.
-         *    @param [options.data] {Object} Data to be sent to the server, either to be used by `query-params` or `body`.
-         *    @param [options.headers] {Object} HTTP request headers.
-         *    @param [options.responseType] {String} Force the response type.
-         *    @param [options.timeout=3000] {number} to timeout the request, leading into a rejected Promise.
-         *    @param [options.withCredentials=false] {boolean} Whether or not to send credentials on the request.
-         *    @param [options.streamback] {Function} callbackfunction in case you want to process streams (needs io-stream module).
-         * @return {Promise} Promise holding the request. Has an additional .abort() method to cancel the request.
-         * <ul>
-         *     <li>on success: xhr {XMLHttpRequest1|XMLHttpRequest2} xhr-response</li>
-         *     <li>on failure: reason {Error}</li>
-         * </ul>
-        */
-        request: function(options) {
-            console.log(NAME, 'request');
-            var instance = this,
-                props = {},
-                xhr, promise;
-            options || (options={});
-            promise = Promise.manage(options.streamback);
-
-            xhr = new window.XMLHttpRequest();
-            props._isXHR2 = ('withCredentials' in xhr) || (window.navigator.userAgent==='fake');
-            // it could be other modules like io-cors or io-stream have subscribed
-            // xhr might be changed, also private properties might be extended
-            instance._xhrList.each(
-                function(fn) {
-                    xhr = fn(xhr, props, options, promise);
-                }
-            );
-            if (!xhr) {
-                return Promise.reject(NO_XHR);
-            }
-            xhr.merge(props);
-            console.log(NAME, 'request creating xhr of type: '+ (props._isXHR2 ? 'XMLHttpRequest2' : (props._isXDR ? 'XDomainRequest' : 'XMLHttpRequest1')));
-            console.log(NAME, 'CORS-IE: '+ props._CORS_IE + ', canStream: '+props._canStream);
-
-            // Don't use xhr.timeout --> IE<10 throws an error when set xhr.timeout
-            // We use a timer that aborts the request
-            Object.defineProperty(xhr, '_timer', {
-                configurable: false,
-                enumerable: false,
-                writable: false,
-                value: setTimeout(function() {
-                           promise.reject(new Error(REQUEST_TIMEOUT));
-                           xhr._aborted = true; // must be set: IE9 won't allow to read anything on xhr after being aborted
-                           xhr.abort();
-                       }, options.timeout || instance.config.timeout || DEF_REQ_TIMEOUT)
-            });
-
-            instance._initXHR(xhr, options, promise);
-
-            // to make any routine informed for the end of xhr.
-            // to make sure they get informed after aother routines have handled the response,
-            // we go async
-            promise.then(function() {
-                asyncSilent(function() {
-                    instance._final.forEach(function(finallySubscriber) {
-                        finallySubscriber(xhr);
-                    });
-                });
-            });
-
-            return promise;
-        },
-
-        /**
-         * Adds a subscriber to the finalization-cycle, which happens after the xhr finishes.
-         * Only gets invoked on fulfilled io.
-         *
-         * @method finalize
-         * @param finallySubscriber {Function} callback to be invoked
-         *        Function recieves `xhr` as its only argument
-         * @return {Object} handler with a `detach()`-method which can be used to detach the subscriber
          * @since 0.0.1
          */
-        finalize: function (finallySubscriber) {
-            console.log(NAME, 'finalize');
-            var finalHash = this._final;
-            finalHash.push(finallySubscriber);
+        _defFnDrop: function(e, ddProps) {
+            console.log(NAME, '_defFnDrop: default function dd-drop. dropzoneSpecified: '+ddProps.dropzoneSpecified);
+            var instance = this,
+                sourceNode = ddProps.sourceNode,
+                dragNode = ddProps.dragNode,
+                dropzoneSpecified = ddProps.dropzoneSpecified,
+                relatives = ddProps.relatives,
+                willBeCopied,
+                removeClasses = function (node) {
+                    node.removeClass([NO_TRANS_CLASS, HIGH_Z_CLASS, DD_DRAGGING_CLASS, DEL_DRAGGABLE, DD_MASTER_CLASS, DD_SOURCE_ISCOPIED_CLASS]);
+                };
+
+            willBeCopied =  (e.dropTarget && ((ctrlPressed && instance.allowCopy(dragNode)) || instance.onlyCopy(dragNode)));
+            willBeCopied || (e.relativeDragNodes=null);
+            e.isCopied = willBeCopied;
+
+            // handle drop
+            if (dropzoneSpecified) {
+                instance._handleDrop(e, sourceNode, dragNode, relatives);
+            }
+            else {
+                PLUGIN_ATTRS.forEach(function(attribute) {
+                    var data = '_del_'+attribute;
+                    if (dragNode.getData(data)) {
+                        delete dragNode._plugin.dd.model[attribute];
+                        dragNode.removeData(data);
+                    }
+                });
+                removeClasses(dragNode);
+                ddProps.relatives && ddProps.relatives.forEach(
+                    function(item) {
+                        removeClasses(item.dragNode);
+                    }
+                );
+            }
+            instance.restoreDraggables = function() {/* NOOP */ return this;};
+        },
+
+       /**
+         * Default function for the `*:dropzone`-event
+         *
+         * @method _defFnOver
+         * @param e {Object} eventobject
+         * @private
+         * @since 0.0.1
+         */
+        _defFnOver: function(e) {
+            console.log(NAME, '_defFnOver: default function dropzone');
+            var dropzone = e.target;
+            dropzone.setClass(DD_DROPACTIVE_CLASS);
+            e.sourceNode.setClass(DD_ABOVE_DROPZONE_CLASS);
+            e.dragNode.setClass(DD_ABOVE_DROPZONE_CLASS);
+            e.dropzone.then(
+                function(insideDropTarget) {
+                    dropzone.removeClass(DD_DROPACTIVE_CLASS);
+                    e.sourceNode.removeClass(DD_ABOVE_DROPZONE_CLASS);
+                    e.dragNode.removeClass(DD_ABOVE_DROPZONE_CLASS);
+                    /**
+                    * Emitted when the draggable gets out of the dropzone.
+                    *
+                    * @event *:dropzone-out
+                    * @param e {Object} eventobject including:
+                    * @param e.target {HtmlElement} the dropzone
+                    * @param e.dragNode {HtmlElement} The HtmlElement that is being dragged
+                    * @param e.dropzone {Promise} The Promise that gets fulfilled as soon as the draggable is dropped, or outside the dropzone
+                    *        Will fulfill with one argument: `onDropzone` {Boolean} when `true`, the draggable is dropped inside the dropzone, otherwise
+                    *        the draggable got outside the dropzone without beging dropped.
+                    * @param e.dropTarget {HtmlElement} The dropzone HtmlElement. Equals e.target
+                    * @param e.ctrlKey {Boolean} Whether the Ctrl/cmd key is pressed
+                    * @param e.isCopied {Boolean} Whether the drag is a copy-drag
+                    * @param [e.sourceNode] {HtmlElement} The original Element. Only when a `copy` is made --> e.dragNode is being moved while
+                    *        e.sourceNode stand at its place.
+                    * @param e.currentTarget {HtmlElement} the HtmlElement that is delegating the draggable
+                    * @param e.sourceTarget {HtmlElement} the deepest HtmlElement of the draggable where the mouse lies upon
+                    * @param e.dd {Promise} Promise that gets fulfilled when dragging is ended. The fullfilled-callback has no arguments.
+                    * @param e.xMouse {Number} the current x-position in the window-view
+                    * @param e.yMouse {Number} the current y-position in the window-view
+                    * @param e.clientX {Number} the current x-position in the window-view
+                    * @param e.clientY {Number} the current y-position in the window-view
+                    * @param e.xMouseOrigin {Number} the original x-position in the document when drag started (incl. scrollOffset)
+                    * @param e.yMouseOrigin {Number} the original y-position in the document when drag started (incl. scrollOffset)
+                    * @param [e.relatives] {NodeList} an optional list that the user could set in a `before`-subscriber of the `dd`-event
+                    *        to inform which nodes are related to the draggable node and should be dragged as well.
+                    * @param [e.relativeDragNodes] {NodeList} an optional list that holds the HtmlElements that corresponds with
+                    *        the `e.relative` list, but is a list with draggable Elements.
+                    * @since 0.1
+                    */
+                    insideDropTarget || e._noDDoutEvt || Event.emit(dropzone, e.emitter+':'+DROPZONE_OUT, e);
+                }
+            );
+        },
+
+        /**
+         * Defines the definition of the `dd-drop` event: the last phase of the drag-eventcycle (dd-start, *:dd-drag, *:dd-drop)
+         *
+         * @method _defineDropEv
+         * @param e {Object} eventobject
+         * @param sourceNode {HtmlElement} the original HtmlElement
+         * @param dragNode {HtmlElement} the dragged HtmlElement (either original or clone)
+         * @param dropzoneSpecified {Boolean} whether the sourceNode had a dropzone specified
+         * @param x {Number} x-position in coordinaties relative to `document` (like getX())
+         * @param y {Number} y-position in coordinaties relative to `document` (like getX())
+         * @param inlineLeft {String} inline css `left` for the original sourceNode
+         * @param inlineTop {String} inline css `top` for the original sourceNode
+         * @param relatives {Array} hash with all draggables that are being move togerther with the master draggable
+         * @private
+         * @since 0.0.1
+         */
+        _defineDropEv: function(e, ddProps) {
+            console.log(NAME, '_defineDropEv '+ddProps.dragNode);
+            var instance = this;
+            instance.restoreDraggables = instance._restoreDraggables.bind(instance, e, ddProps);
+            Event.defineEvent(e.emitter+':'+DD_DROP)
+                .defaultFn(instance._defFnDrop.rbind(instance, ddProps))
+                .forceAssign(); // need to reassign, because all arguments need to be bound again and we need to override the definition of the `drag`-module
+        },
+
+        /**
+         * Defines the definition of the `dropzone` event.
+         * Also sets up listeners to tricker dd-over when the mouse is above an dropzone.
+         *
+         * @method _defineOverEv
+         * @param e {Object} eventobject
+         * @param dropzones {NodeList} list with dropzonenodes
+         * @private
+         * @since 0.0.1
+         */
+        _defineOverEv: function(e, dropzones) {
+            console.log(NAME, '_defineOverEv');
+            var instance = this,
+                emitterName = e.emitter,
+                ddProps = instance.ddProps;
+            Event.defineEvent(emitterName+':'+DROPZONE_OVER)
+                 .defaultFn(instance._defFnOver.bind(instance)); // no need to reassign
+            return Event.after([mobileEvents ? PANMOVE : MOUSEMOVE, DD_FAKE_MOUSEMOVE], function(e2) {
+                var overDropzone = false,
+                    dragNode = ddProps.dragNode;
+                if (typeof e2.center==='object') {
+                    e2.clientX = e2.center.x;
+                    e2.clientY = e2.center.y;
+                }
+                ddProps.mouseOverNode = e.target;
+                if (e2.clientX) {
+                    ddProps.xMouseLast = e2.clientX + window.getScrollLeft();
+                    ddProps.yMouseLast = e2.clientY + window.getScrollTop();
+                }
+                dropzones.forEach(
+                    function(dropzone) {
+                        // don't do double:
+                        if (dropzone === e.dropTarget) {
+                            overDropzone = true;
+                            return;
+                        }
+                        var dropzoneAccept = dropzone.getAttr(DZ_DROPZONE) || '',
+                            dropzoneMove = REGEXP_MOVE.test(dropzoneAccept),
+                            dropzoneCopy = REGEXP_COPY.test(dropzoneAccept),
+                            dropzoneDefDraggable = dragNode.getAttr(DD_DROPZONE),
+                            dragOverPromise, dragOutEvent, effectAllowed, emitterAllowed, dropzoneEmitter, xMouseLast, yMouseLast, dropzoneAllowed;
+                        // check if the mouse is inside the dropzone
+                        // also check if the mouse is inside the dragged node: the dragged node might have been constrained
+                        // and check if the dragged node is effectAllowed to go into the dropzone
+                        xMouseLast = ddProps.xMouseLast;
+                        yMouseLast = ddProps.yMouseLast;
+
+                        if (dropzone.insidePos(xMouseLast, yMouseLast) && dragNode.insidePos(xMouseLast, yMouseLast)) {
+                            effectAllowed = (!dropzoneMove && !dropzoneCopy) || (dropzoneCopy && (dropEffect===COPY)) || (dropzoneMove && (dropEffect===MOVE));
+                            dropzoneEmitter = instance.getDropzoneEmitter(dropzoneAccept);
+                            emitterAllowed = !dropzoneEmitter || (dropzoneEmitter.contains(emitterName));
+                            dropzoneAllowed = !dropzoneDefDraggable || ((dropzoneDefDraggable===TRUE) || dropzone.matchesSelector(dropzoneDefDraggable));
+                            if (dropzoneAllowed && effectAllowed && emitterAllowed) {
+                                overDropzone = true;
+                                e.dropTarget = dropzone;
+                                // mouse is in area of dropzone
+                                dragOverPromise = Promise.manage();
+                                e.dropzone = dragOverPromise;
+                                dragOutEvent = Event.after(
+                                    [mobileEvents ? PANMOVE : MOUSEMOVE, DD_FAKE_MOUSEMOVE],
+                                    function() {
+                                        dragOverPromise.fulfill(false);
+                                    },
+                                    function(e3) {
+                                        var effectAllowed, dropzoneAccept, dropzoneMove, dropzoneCopy;
+                                        if (e3.type===DD_FAKE_MOUSEMOVE) {
+                                            dropzoneAccept = dropzone.getAttr(DZ_DROPZONE) || '';
+                                            dropzoneMove = REGEXP_MOVE.test(dropzoneAccept);
+                                            dropzoneCopy = REGEXP_COPY.test(dropzoneAccept);
+                                            effectAllowed = (!dropzoneMove && !dropzoneCopy) || (dropzoneCopy && (dropEffect===COPY)) || (dropzoneMove && (dropEffect===MOVE));
+                                            return !effectAllowed;
+                                        }
+                                        return !dropzone.insidePos((e3.clientX || e3.center.x)+window.getScrollLeft(), (e3.clientY || e3.center.y)+window.getScrollTop());
+                                    }
+                                );
+                                dragOverPromise.finally(
+                                    function(insideDropzone) {
+                                        dragOutEvent.detach();
+                                        insideDropzone || (e.dropTarget=null);
+                                    }
+                                );
+                                ddProps.dragOverList.push(dragOverPromise);
+                                /**
+                                * Emitted when the draggable gets inside a dropzone.
+                                *
+                                * @event *:dropzone-over
+                                * @param e {Object} eventobject including:
+                                * @param e.target {HtmlElement} the dropzone
+                                * @param e.dragNode {HtmlElement} The HtmlElement that is being dragged
+                                * @param e.dropzone {Promise} The Promise that gets fulfilled as soon as the draggable is dropped, or outside the dropzone
+                                *        Will fulfill with one argument: `onDropzone` {Boolean} when `true`, the draggable is dropped inside the dropzone, otherwise
+                                *        the draggable got outside the dropzone without beging dropped.
+                                * @param e.dropTarget {HtmlElement} The dropzone HtmlElement. Equals e.target
+                                * @param e.ctrlKey {Boolean} Whether the Ctrl/cmd key is pressed
+                                * @param e.isCopied {Boolean} Whether the drag is a copy-drag
+                                * @param [e.sourceNode] {HtmlElement} The original Element. Only when a `copy` is made --> e.dragNode is being moved while
+                                *        e.sourceNode stand at its place.
+                                * @param e.currentTarget {HtmlElement} the HtmlElement that is delegating the draggable
+                                * @param e.sourceTarget {HtmlElement} the deepest HtmlElement of the draggable where the mouse lies upon
+                                * @param e.dd {Promise} Promise that gets fulfilled when dragging is ended. The fullfilled-callback has no arguments.
+                                * @param e.xMouse {Number} the current x-position in the window-view
+                                * @param e.yMouse {Number} the current y-position in the window-view
+                                * @param e.clientX {Number} the current x-position in the window-view
+                                * @param e.clientY {Number} the current y-position in the window-view
+                                * @param e.xMouseOrigin {Number} the original x-position in the document when drag started (incl. scrollOffset)
+                                * @param e.yMouseOrigin {Number} the original y-position in the document when drag started (incl. scrollOffset)
+                                * @param [e.relatives] {NodeList} an optional list that the user could set in a `before`-subscriber of the `dd`-event
+                                *        to inform which nodes are related to the draggable node and should be dragged as well.
+                                * @param [e.relativeDragNodes] {NodeList} an optional list that holds the HtmlElements that corresponds with
+                                *        the `e.relative` list, but is a list with draggable Elements.
+                                * @since 0.1
+                                */
+                                Event.emit(dropzone, emitterName+':'+DROPZONE_OVER, e);
+                            }
+                        }
+                    }
+                );
+                overDropzone || (e.dropTarget=null);
+            });
+        },
+
+       /**
+         * Emits a dropzone-drop event.
+         *
+         * @method _emitDropzoneDrop
+         * @param e {Object} eventobject to pass arround
+         * @private
+         * @since 0.0.1
+         */
+        _emitDropzoneDrop: function(e) {
+            /**
+            * Emitted when a draggable gets dropped inside a dropzone.
+            *
+            * @event *:dropzone-drop
+            * @param e {Object} eventobject including:
+            * @param e.target {HtmlElement} the dropzone
+            * @param e.dragNode {HtmlElement} The HtmlElement that is being dragged
+            * @param e.dropzone {Promise} The Promise that gets fulfilled as soon as the draggable is dropped, or outside the dropzone
+            *        Will fulfill with one argument: `onDropzone` {Boolean} when `true`, the draggable is dropped inside the dropzone, otherwise
+            *        the draggable got outside the dropzone without beging dropped.
+            * @param e.dropTarget {HtmlElement} The dropzone HtmlElement. Equals e.target
+            * @param e.ctrlKey {Boolean} Whether the Ctrl/cmd key is pressed
+            * @param e.isCopied {Boolean} Whether the drag is a copy-drag
+            * @param [e.sourceNode] {HtmlElement} The original Element. Only when a `copy` is made --> e.dragNode is being moved while
+            *        e.sourceNode stand at its place.
+            * @param e.currentTarget {HtmlElement} the HtmlElement that is delegating the draggable
+            * @param e.sourceTarget {HtmlElement} the deepest HtmlElement of the draggable where the mouse lies upon
+            * @param e.dd {Promise} Promise that gets fulfilled when dragging is ended. The fullfilled-callback has no arguments.
+            * @param e.xMouse {Number} the current x-position in the window-view
+            * @param e.yMouse {Number} the current y-position in the window-view
+            * @param e.clientX {Number} the current x-position in the window-view
+            * @param e.clientY {Number} the current y-position in the window-view
+            * @param e.xMouseOrigin {Number} the original x-position in the document when drag started (incl. scrollOffset)
+            * @param e.yMouseOrigin {Number} the original y-position in the document when drag started (incl. scrollOffset)
+            * @param [e.relatives] {NodeList} an optional list that the user could set in a `before`-subscriber of the `dd`-event
+            *        to inform which nodes are related to the draggable node and should be dragged as well.
+            * @param [e.relativeDragNodes] {NodeList} an optional list that holds the HtmlElements that corresponds with
+            *        the `e.relative` list, but is a list with draggable Elements.
+            * @since 0.1
+            */
+            Event.emit(e.dropTarget, e.emitter+':'+DROPZONE_DROP, e);
+        },
+
+      /**
+        * Sets the draggable node back to its original position
+        *
+        * @method _handleDrop
+        * @param e {Object} eventobject
+        * @param sourceNode {HtmlElement} the original HtmlElement
+        * @param dragNode {HtmlElement} the dragged HtmlElement (either original or clone)
+        * @param relatives {Array} hash with all draggables that are being move togerther with the master draggable
+        * @private
+        * @since 0.0.1
+        */
+        _handleDrop: function(e, sourceNode, dragNode, relatives) {
+            console.log(NAME, '_handleDrop '+dragNode);
+            var instance = this,
+                dropzoneNode = e.dropTarget,
+                delegatedDragging = sourceNode.hasClass(DEL_DRAGGABLE),
+                constrainRectangle, borderLeft, borderTop, dragNodeX, dragNodeY, copyToDropzone, moveToDropzone,
+                moveInsideDropzone, isCopied, dropzoneDelegatedDraggable, dropzoneIsDelegated;
+            if (dropzoneNode) {
+                dropzoneDelegatedDraggable = dropzoneNode.getAttr(DD_MINUSDRAGGABLE);
+                dropzoneIsDelegated = dropzoneDelegatedDraggable && (dropzoneNode.getAttr(DD_MINUSDRAGGABLE)!=='true');
+                copyToDropzone = function(nodeSource, nodeDrag, shiftX, shiftY) {
+                    if (delegatedDragging) {
+                        dropzoneIsDelegated || (nodeDrag._plugin.dd.model[DRAGGABLE]=TRUE);
+                        nodeDrag.removeClass(DEL_DRAGGABLE);
+                    }
+                    PLUGIN_ATTRS.forEach(function(attribute) {
+                        var data = '_del_'+attribute,
+                            attr = sourceNode.getData(data);
+                        if (attr) {
+                            if (dropzoneIsDelegated) {
+                                nodeDrag.removeAttr(attribute);
+                            }
+                            else {
+                                nodeDrag._plugin.dd.model[attribute] = attr;
+                            }
+                            delete nodeSource._plugin.dd.model[attribute];
+                            nodeSource.removeData(data);
+                            nodeDrag.removeData(data);
+                        }
+                    });
+                    dropzoneNode.append(nodeDrag);
+                    nodeDrag.removeClass([DD_OPACITY_CLASS, DD_TRANSITION_CLASS, HIGH_Z_CLASS, DD_DRAGGING_CLASS, NO_TRANS_CLASS, DD_MASTER_CLASS, DD_COPIED_CLASS]);
+                    nodeSource.removeClass(DD_SOURCE_ISCOPIED_CLASS);
+                    nodeDrag.setXY(dragNodeX+shiftX, dragNodeY+shiftY, constrainRectangle, true);
+                    // make the new HtmlElement non-copyable: it only can be replaced inside its dropzone
+                    if (!dropzoneIsDelegated) {
+                        nodeDrag._plugin.dd.model[EFFECT_ALLOWED] = MOVE;
+                        nodeDrag._plugin.dd.model[DROPZONE_MOVABLE] = TRUE;
+                    }
+                };
+                moveToDropzone = function(nodeSource, nodeDrag, shiftX, shiftY) {
+                    nodeSource.setInlineStyle(POSITION, ABSOLUTE);
+                    if (delegatedDragging) {
+                        dropzoneIsDelegated || (nodeSource._plugin.dd.model[DRAGGABLE]=TRUE);
+                        nodeSource.removeClass(DEL_DRAGGABLE);
+                    }
+                    PLUGIN_ATTRS.forEach(function(attribute) {
+                        var data = '_del_'+attribute,
+                            attr = sourceNode.getData(data);
+                        if (attr) {
+                            if (dropzoneIsDelegated) {
+                                nodeSource.removeAttr(attribute);
+                            }
+                            else {
+                                nodeSource._plugin.dd.model[attribute] = attr;
+                            }
+                            nodeSource.removeData(data);
+                        }
+                    });
+                    dropzoneNode.append(nodeSource);
+                    nodeSource.setXY(dragNodeX+shiftX, dragNodeY+shiftY, constrainRectangle, true);
+                    // make the new HtmlElement non-copyable: it only can be replaced inside its dropzone
+                    if (!dropzoneIsDelegated) {
+                        nodeSource._plugin.dd.model[EFFECT_ALLOWED] = MOVE;
+                        nodeSource._plugin.dd.model[DROPZONE_MOVABLE] = TRUE;
+                    }
+                    nodeSource.removeClass(DD_HIDDEN_SOURCE_CLASS);
+                    nodeDrag.remove();
+                };
+                // reset its position, only now constrain it to the dropzondenode
+                // we need to specify exactly the droparea: because we don't want to compare to any
+                // scrollWidth/scrollHeight, but exaclty to the visible part of the dropzone
+                borderLeft = parseInt(dropzoneNode.getStyle(BORDER_LEFT_WIDTH), 10);
+                borderTop = parseInt(dropzoneNode.getStyle(BORDER_TOP_WIDTH), 10);
+                constrainRectangle = {
+                    x: dropzoneNode.left + borderLeft,
+                    y: dropzoneNode.top + borderTop,
+                    w: dropzoneNode.offsetWidth - borderLeft - parseInt(dropzoneNode.getStyle(BORDER_RIGHT_WIDTH), 10),
+                    h: dropzoneNode.offsetHeight - borderTop - parseInt(dropzoneNode.getStyle(BORDER_BOTTOM_WIDTH), 10)
+                };
+                isCopied = (ctrlPressed && instance.allowCopy(dragNode)) || instance.onlyCopy(dragNode);
+                if (isCopied) {
+                    // backup x,y before move it into dropzone (which leads to new x,y)
+                    dragNodeX = dragNode.left;
+                    dragNodeY = dragNode.top;
+                    // now move the dragNode into dropzone
+                    relatives && relatives.forEach(
+                        function(item) {
+                            (dragNode!==item.dragNode) && copyToDropzone(item.sourceNode, item.dragNode, item.shiftX, item.shiftY);
+                        }
+                    );
+                    copyToDropzone(sourceNode, dragNode, 0 ,0);
+                }
+                else {
+                    dragNodeX = dragNode.left;
+                    dragNodeY = dragNode.top;
+                    relatives && relatives.forEach(
+                        function(item) {
+                           (dragNode!==item.dragNode) && moveToDropzone(item.sourceNode, item.dragNode, item.shiftX, item.shiftY);
+                        }
+                    );
+                    moveToDropzone(sourceNode, dragNode, 0, 0);
+                }
+
+                sourceNode.removeClass(DEL_DRAGGABLE);
+                instance._emitDropzoneDrop(e);
+            }
+            else {
+                (dragNode.hasAttr(DD_DROPZONE_MOVABLE)) && (dropzoneNode=dragNode.inside(DROPZONE_BRACKETS));
+                if (dropzoneNode && dragNode.rectangleInside(dropzoneNode)) {
+                    moveInsideDropzone = function(hasMatch, nodeSource, nodeDrag, shiftX, shiftY) {
+                        hasMatch && nodeSource.setXY(nodeSource+shiftX, nodeSource+shiftY, constrainRectangle, true);
+                        if (delegatedDragging) {
+                            nodeSource.removeClass(DEL_DRAGGABLE);
+                        }
+                        PLUGIN_ATTRS.forEach(function(attribute) {
+                            var data = '_del_'+attribute,
+                                attr = dragNode.getData(data);
+                            if (attr) {
+                                if (dropzoneIsDelegated) {
+                                    nodeSource.removeAttr(attribute);
+                                }
+                                else {
+                                    nodeSource._plugin.dd.model[attribute] = attr;
+                                }
+                                nodeSource.removeData(data);
+                            }
+                        });
+                        nodeSource.removeClass(DD_HIDDEN_SOURCE_CLASS);
+                        nodeDrag.remove();
+                    };
+                    // reset its position, only now constrain it to the dropzondenode
+                    // we need to specify exactly the droparea: because we don't want to compare to any
+                    // scrollWidth/scrollHeight, but exaclty to the visible part of the dropzone
+                    dropzoneDelegatedDraggable = dropzoneNode.getAttr(DD_MINUSDRAGGABLE);
+                    dropzoneIsDelegated = dropzoneDelegatedDraggable && (dropzoneNode.getAttr(DD_MINUSDRAGGABLE)!=='true');
+                    borderLeft = parseInt(dropzoneNode.getStyle(BORDER_LEFT_WIDTH), 10);
+                    borderTop = parseInt(dropzoneNode.getStyle(BORDER_TOP_WIDTH), 10);
+                    constrainRectangle = {
+                        x: dropzoneNode.left + borderLeft,
+                        y: dropzoneNode.top + borderTop,
+                        w: dropzoneNode.offsetWidth - borderLeft - parseInt(dropzoneNode.getStyle(BORDER_RIGHT_WIDTH), 10),
+                        h: dropzoneNode.offsetHeight - borderTop - parseInt(dropzoneNode.getStyle(BORDER_BOTTOM_WIDTH), 10)
+                    };
+                    dragNodeX = dragNode.left;
+                    dragNodeY = dragNode.top;
+                    relatives && relatives.forEach(
+                        function(item) {
+                            (sourceNode!==item.sourceNode) && moveInsideDropzone(dropzoneNode, item.sourceNode, item.dragNode, item.shiftX, item.shiftY);
+                        }
+                    );
+                    moveInsideDropzone(dropzoneNode, sourceNode, dragNode, 0, 0);
+                }
+                else {
+                    instance.restoreDraggables();
+                }
+            }
+            sourceNode.removeClass(DD_MASTER_CLASS);
+            dragNode.removeClass(DD_MASTER_CLASS);
+        },
+
+       /**
+         * Sets the draggable items back to their original place. Should only be used when you prevent the default-function of `dd-drop`,
+         * so you can choose to do set the draggables back conditionally.
+         *
+         * @method _restoreDraggables
+         * @param e {Object} eventobject
+         * @param sourceNode {HtmlElement} the original HtmlElement
+         * @param dragNode {HtmlElement} the dragged HtmlElement (either original or clone)
+         * @param dropzoneSpecified {Boolean} whether the sourceNode had a dropzone specified
+         * @param x {Number} x-position in coordinaties relative to `document` (like getX())
+         * @param y {Number} y-position in coordinaties relative to `document` (like getX())
+         * @param inlineLeft {String} inline css `left` for the original sourceNode
+         * @param inlineTop {String} inline css `top` for the original sourceNode
+         * @param relatives {Array} hash with all draggables that are being move togerther with the master draggable
+         * @private
+         * @since 0.0.1
+         */
+        _restoreDraggables: function(e, ddProps) {
+            console.log(NAME, '_restoreDraggables');
+            var instance = this,
+                sourceNode = ddProps.sourceNode,
+                dragNode = ddProps.dragNode,
+                dropzoneSpecified = ddProps.dropzoneSpecified,
+                x = ddProps.x,
+                y = ddProps.y,
+                inlineLeft = ddProps.inlineLeft,
+                inlineTop = ddProps.inlineTop,
+                relatives = ddProps.relatives;
+            instance.restoreDraggables = function() {/* NOOP */ return this;};
+            instance._setBack(e, sourceNode, dragNode, dropzoneSpecified, x, y, inlineLeft, inlineTop, e.dropzone);
+            relatives && relatives.forEach(
+                function(item) {
+                    (dragNode!==item.dragNode) && instance._setBack(e, item.sourceNode, item.dragNode, dropzoneSpecified, x+item.shiftX, y+item.shiftY, item.inlineLeft, item.inlineTop);
+                }
+            );
+            return instance;
+        },
+
+      /**
+        * Sets the draggable node back to its original position
+        *
+        * @method _setBack
+        * @param sourceNode {HtmlElement} the original HtmlElement
+        * @param dragNode {HtmlElement} the dragged HtmlElement (either original or clone)
+        * @param dropzoneSpecified {Boolean} whether the sourceNode had a dropzone specified
+        * @param x {Number} x-position in coordinaties relative to `document` (like getX())
+        * @param y {Number} y-position in coordinaties relative to `document` (like getX())
+        * @param inlineLeft {String} inline css `left` for the original sourceNode
+        * @param inlineTop {String} inline css `top` for the original sourceNode
+        * @param [emitDropzoneEvent] {Boolean} whether dropzone-event should be emitted
+        * @private
+        * @since 0.0.1
+        */
+        _setBack: function(e, sourceNode, dragNode, dropzoneSpecified, x, y, inlineLeft, inlineTop, emitDropzoneEvent) {
+            console.log(NAME, '_setBack to '+x+', '+y);
+            var tearedDown,
+                winScrollTop,
+                winScrollLeft,
+                dropzones,
+                tearDown = function() {
+                    // dragNode might be gone when this method is called for the second time
+                    // therefor check its existance:
+                    if (!tearedDown) {
+                        tearedDown = true;
+// notransRemoval || (dragNode.removeEventListener && dragNode.removeEventListener(TRANS_END, tearDown, true));
+                        if (dropzoneSpecified) {
+                            sourceNode.removeClass([DD_HIDDEN_SOURCE_CLASS, DEL_DRAGGABLE, DD_MASTER_CLASS, DD_SOURCE_ISCOPIED_CLASS]);
+                            dragNode.remove();
+                        }
+                        else {
+                            dragNode.removeClass([DD_TRANSITION_CLASS, HIGH_Z_CLASS, DD_DRAGGING_CLASS, DEL_DRAGGABLE, DD_MASTER_CLASS, DD_SOURCE_ISCOPIED_CLASS]);
+                            dragNode.setInlineStyle(LEFT, inlineLeft)
+                                    .setInlineStyle(TOP, inlineTop);
+                        }
+                        PLUGIN_ATTRS.forEach(function(attribute) {
+                            var data = '_del_'+attribute;
+                            if (sourceNode.getData(data)) {
+                                sourceNode.removeData(data);
+                                delete sourceNode._plugin.dd.model[attribute];
+                            }
+                        });
+                    }
+                };
+            dragNode.removeClass([NO_TRANS_CLASS, DD_DRAGGING_CLASS]);
+            dragNode.setClass(DD_TRANSITION_CLASS);
+            // transitions only work with IE10+, and that browser has addEventListener
+            // when it doesn't have, it doesn;t harm to leave the transitionclass on: it would work anyway
+            // nevertheless we will remove it with a timeout
+// if (dragNode.addEventListener) {
+    // dragNode.addEventListener(TRANS_END, tearDown, true);
+// }
+// ALWAYS tearDowm after delay --> when there was no repositioning, there never will be a transition-event
+// LATER(tearDown, 260);
+            dragNode.setXY(x, y).finally(tearDown);
+            // now we might need to fire a last `dropzone` event when the dragged element returns to a dropzone when it wasn't before set it back
+            if (emitDropzoneEvent) {
+                dropzones = DOCUMENT.getAll(DROPZONE_BRACKETS);
+                if (dropzones) {
+                    winScrollTop = window.getScrollTop();
+                    winScrollLeft = window.getScrollLeft();
+                    dropzones.forEach(
+                        function(dropzone) {
+                            if (dropzone.insidePos(x, y) && !dropzone.insidePos(e.xMouse+winScrollLeft, e.yMouse+winScrollTop)) {
+                                e.dropTarget = dropzone;
+                                e._noDDoutEvt = true;
+                                Event.emit(dropzone, e.emitter+':'+DROPZONE_OVER, e);
+                            }
+                        }
+                    );
+                }
+            }
+        },
+
+      /**
+        * Sets up a `keydown` and `keyup` listener, to monitor whether a `ctrlKey` (windows) or `metaKey` (Mac)
+        * is pressed to support the copying of draggable items
+        *
+        * @method _setupKeyEv
+        * @private
+        * @since 0.0.1
+        */
+        _setupKeyEv: function() {
+            console.log(NAME, '_setupKeyEv');
+            var instance = this,
+                changeClasses = function(sourceNode, dragNode) {
+                    sourceNode.toggleClass(DD_HIDDEN_SOURCE_CLASS, !ctrlPressed);
+                    sourceNode.toggleClass(DD_SOURCE_ISCOPIED_CLASS, ctrlPressed);
+                    dragNode.toggleClass([DD_OPACITY_CLASS, DD_COPIED_CLASS], ctrlPressed);
+                };
+            Event.after([KEY+DOWN, KEY+UP], function(e) {
+                console.log(NAME, 'event '+e.type);
+                var ddProps = instance.ddProps,
+                    sourceNode = ddProps.sourceNode,
+                    dragNode, mouseOverNode;
+                ctrlPressed = e.ctrlKey || e.metaKey;
+                if (sourceNode && instance.allowSwitch(sourceNode)) {
+                    dragNode = ddProps.dragNode;
+                    mouseOverNode = ddProps.mouseOverNode;
+                    dropEffect = ctrlPressed ? COPY : MOVE;
+                    changeClasses(sourceNode, dragNode);
+                    ddProps.relatives && ddProps.relatives.forEach(
+                        function(item) {
+                            changeClasses(item.sourceNode, item.dragNode);
+                        }
+                    );
+                    // now, it could be that any droptarget should change its appearance (DD_DROPACTIVE_CLASS).
+                    // we need to recalculate it for all targets
+                    // we do this by emitting a DD_FAKE_MOUSEMOVE event
+                    /**
+                    * Fired when the mouse comes back into the browser-window while dd-drag was busy yet no buttons are pressed.
+                    * This is a correction to the fact that the mouseup-event wasn't noticed because the mouse was outside the browser.
+                    *
+                    * @event dd-fake-mousemove
+                    * @private
+                    * @since 0.1
+                    */
+                    mouseOverNode && Event.emit(mouseOverNode, UI+':'+DD_FAKE_MOUSEMOVE);
+                }
+            });
+        },
+
+      /**
+        * Cleansup the dragover subscriber and fulfills any dropzone-promise.
+        *
+        * @method _teardownOverEvent
+        * @param e {Object} eventobject
+        * @private
+        * @since 0.0.1
+        */
+        _teardownOverEvent: function(e, ddProps) {
+            console.log('_teardownOverEvent');
+            var dragOverEvent = ddProps.dragOverEv,
+                mouseX = e.xMouse,
+                mouseY = e.yMouse,
+                winScrollTop, winScrollLeft;
+            if (dragOverEvent) {
+                dragOverEvent.detach();
+                winScrollTop = window.getScrollTop();
+                winScrollLeft = window.getScrollLeft();
+                ddProps.dragOverList.forEach(function(promise) {
+                    promise.fulfill(e.dropTarget && e.dropTarget.insidePos(mouseX+winScrollLeft, mouseY+winScrollTop));
+                });
+            }
+        },
+
+       /**
+         * Returns true if the dropzone-HtmlElement accepts copy-dragables.
+         * Is determined by the attribute `dd-effect-allowed="copy"` or `dd-effect-allowed="all"`
+         *
+         * @method allowCopy
+         * @param dropzone {HtmlElement} HtmlElement that is checked for its allowed effects
+         * @return {Boolean} if copy-dragables are allowed
+         * @since 0.0.1
+         */
+        allowCopy: function(dropzone) {
+            var allowedEffects = this._allowedEffects(dropzone);
+            console.log('allowCopy --> '+REGEXP_ALL.test(allowedEffects) || REGEXP_COPY.test(allowedEffects));
+            return REGEXP_ALL.test(allowedEffects) || REGEXP_COPY.test(allowedEffects);
+        },
+
+       /**
+         * Returns true if the dragable-HtmlElement allowes to switch between `copy` and `move`.
+         *
+         * @method allowSwitch
+         * @param dragableElement {HtmlElement} HtmlElement that is checked for its allowed effects
+         * @return {Boolean} if copy-dragables are allowed
+         * @since 0.0.1
+         */
+        allowSwitch: function(dragableElement) {
+            console.log('allowSwitch --> '+REGEXP_ALL.test(this._allowedEffects(dragableElement)));
+            return REGEXP_ALL.test(this._allowedEffects(dragableElement));
+        },
+
+       /**
+         * Returns the emitterName that the dropzone accepts.
+         *
+         * @method getDropzoneEmitter
+         * @param dropzone {String} dropzone attribute of the dropzone HtmlElement
+         * @return {String|null} the emitterName that is accepted
+         * @since 0.0.1
+         */
+        getDropzoneEmitter: function(dropzone) {
+            var extract = dropzone.match(REGEXP_EMITTER);
+            console.log('getDropzoneEmitter --> '+(extract && extract[1]));
+            return extract && (','+extract[1]+',');
+        },
+
+       /**
+         * Initializes dragdrop. Needs to be invoked, otherwise DD won't run.
+         *
+         * @method init (extended by drag-drop)
+         * @param dragableElement {HtmlElement} HtmlElement that is checked for its allowed effects
+         * @return {Boolean} if copy-dragables are allowed
+         * @since 0.0.1
+         */
+        init: function() {
+            console.log(NAME, 'init');
+            var instance = this;
+            if (!instance._ddInited) {
+                // we will initialize `Drag` --> don;t worry if it was initialised before,
+                // Drag.init() will only run once
+                $superInit.call(instance);
+                instance._setupKeyEv();
+
+                instance.notify(function(e, ddProps) {
+                    var dropzones, sourceNode,
+                        dragNode = ddProps.dragNode,
+                        dropzoneSpecified = ddProps.dropzoneSpecified = dragNode.hasAttr(DD_DROPZONE) || dragNode.hasAttr(DD_EMITTER) || (e.emitter!==UI),
+                        setupDragnode = function(nodeSource, nodeDrag, shiftX, shiftY) {
+                            if (dropEffect===COPY) {
+                                nodeDrag.setClass([DD_OPACITY_CLASS, DD_COPIED_CLASS]);
+                                nodeSource.setClass(DD_SOURCE_ISCOPIED_CLASS);
+                            }
+                            else {
+                                nodeSource.setClass(DD_HIDDEN_SOURCE_CLASS);
+                            }
+                            nodeDrag.setClass(INVISIBLE_CLASS);
+                            nodeDrag.setInlineStyle(POSITION, ABSOLUTE);
+                            nodeSource.parentNode.append(nodeDrag, false, nodeSource);
+                            nodeDrag.setXY(ddProps.xMouseLast+shiftX, ddProps.yMouseLast+shiftY, ddProps.constrain, true);
+                            nodeDrag.removeClass(INVISIBLE_CLASS);
+                        };
+                    if (dropzoneSpecified) {
+                        sourceNode = e.sourceNode = ddProps.sourceNode = ddProps.dragNode;
+                        e.dragNode = ddProps.dragNode = ddProps.sourceNode.cloneNode(true);
+                        // correct sourceNode class: reset CSS set by `drag`:
+                        sourceNode.removeClass([NO_TRANS_CLASS, HIGH_Z_CLASS, DD_DRAGGING_CLASS]);
+                        // also correct inline CSS style for `left` and `top` of the sourceNode:
+                        sourceNode.setInlineStyle(LEFT, ddProps.inlineLeft);
+                        sourceNode.setInlineStyle(TOP, ddProps.inlineTop);
+
+                        dropEffect = (instance.onlyCopy(dragNode) || (ctrlPressed && instance.allowCopy(dragNode))) ? COPY : MOVE;
+                        setupDragnode(ddProps.sourceNode, ddProps.dragNode, 0, 0);
+                        if (ddProps.relatives) {
+                            e.relativeDragNodes = [];
+                            ddProps.relatives.forEach(
+                                function(item) {
+                                    item.sourceNode = item.dragNode;
+                                    item.dragNode = item.dragNode.cloneNode(true);
+                                    setupDragnode(item.sourceNode, item.dragNode, item.shiftX, item.shiftY);
+                                    e.relativeDragNodes.push(item.dragNode);
+                                }
+                            );
+                        }
+                        dropzones = DOCUMENT.getAll(DROPZONE_BRACKETS);
+                        if (dropzones.length>0) {
+                            // create a custom over-event that fires exactly when the mouse is over any dropzone
+                            // we cannot use `hover`, because that event fails when there is an absolute floated element outsize `dropzone`
+                            // lying on top of the dropzone. -> we need to check by coördinates
+                            ddProps.dragOverEv = instance._defineOverEv(e, dropzones);
+
+                        }
+                    }
+                    else {
+                        e.dragNode = ddProps.dragNode;
+                    }
+                    ddProps.dragDropEv = instance._defineDropEv(e, ddProps);
+                }, instance, true);
+
+                instance.notify(instance._teardownOverEvent, instance);
+
+            }
+            instance._ddInited = true;
+        },
+
+       /**
+         * Returns true if the dragable-HtmlElement accepts only copy-dragables (no moveable)
+         * Is determined by the attribute `dd-effect-allowed="copy"`
+         *
+         * @method onlyCopy
+         * @param dragableElement {HtmlElement} HtmlElement that is checked for its allowed effects
+         * @return {Boolean} if only copy-dragables are allowed
+         * @since 0.0.1
+         */
+        onlyCopy: function(dragableElement) {
+            console.log('onlyCopy --> '+REGEXP_COPY.test(this._allowedEffects(dragableElement)));
+            return REGEXP_COPY.test(this._allowedEffects(dragableElement));
+        },
+
+       /**
+         * Sets the draggable items back to their original place. Should only be used when you prevent the default-function of `dd-drop`,
+         * so you can choose to do set the draggables back conditionally.
+         *
+         * @method restoreDraggables
+         * @private
+         * @chainable
+         * @since 0.0.1
+         */
+        restoreDraggables: function() {/* NOOP */ return this;}
+
+    };
+
+    DragModule.merge(DD, {force: true});
+    window._ITSAPlugins.dd.mergePrototypes({
+        attrs: {
+            draggable: 'string',
+            handle: 'string',
+            emitter: 'string',
+            'effect-allowed': 'string',
+            'dropzone-movable': 'string',
+            dropzone: 'string'
+        }
+    }, true);
+
+    DOCUMENT.definePlugin('dz', null, {
+        attrs: {
+            dropzone: 'string'
+        },
+        defaults: {
+            dropzone: 'true'
+        }
+    });
+
+    window._ITSAmodules.DragDrop = DragModule;
+
+    return DragModule;
+
+};
+},{"./css/drag-drop.css":149,"drag":152,"event-dom":435,"js-ext":507,"js-ext/extra/hashmap.js":506,"node-plugin":517,"polyfill/polyfill-base.js":659,"useragent":1848,"vdom":700,"window-ext":701}],151:[function(require,module,exports){
+module.exports=require(149)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],152:[function(require,module,exports){
+"use strict";
+
+/**
+ * Provides `drag and drop` functionality, without dropzones.
+ * For `dropzone`-support, you should use the module: `drag-drop`.
+ *
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ * @example
+ * DD = require('drag')(window);
+ * DD.init();
+ *
+ * @module drag
+ * @class DD
+ * @since 0.0.4
+*/
+
+var NAME = '[drag]: ',
+    createHashMap = require('js-ext/extra/hashmap.js').createMap,
+    DRAG = 'drag',
+    DROP = 'drop',
+    DRAGGABLE = DRAG+'gable',
+    DEL_DRAGGABLE = 'del-'+DRAGGABLE,
+    DD_MINUS = 'dd-',
+    DD_DRAGGING_CLASS = DD_MINUS+DRAG+'ging',
+    DD_MASTER_CLASS = DD_MINUS+'master',
+    DD_HANDLE = DD_MINUS+'handle',
+    DD_DROPZONE_MOVABLE = DD_MINUS+'dropzone-movable',
+    CONSTRAIN_ATTR = 'constrain-selector',
+    MOUSE = 'mouse',
+    DROPZONE = 'dropzone',
+    NO_TRANS_CLASS = 'el-notrans', // delivered by `vdom`
+    HIGH_Z_CLASS = DD_MINUS+'high-z',
+    REGEXP_NODE_ID = /^#\S+$/,
+    EMITTER = 'emitter',
+    DD_EMITTER = DD_MINUS+EMITTER,
+    DD_DRAG = DD_MINUS+DRAG,
+    DD_DROP = DD_MINUS+DROP,
+    DD_FAKE = DD_MINUS+'fake-',
+    DOWN = 'down',
+    UP = 'up',
+    MOVE = 'move',
+    MOUSEUP = MOUSE+UP,
+    MOUSEDOWN = MOUSE+DOWN,
+    MOUSEMOVE = MOUSE+MOVE,
+    PAN = 'pan',
+    PANSTART = PAN+'start',
+    PANMOVE = PAN+MOVE,
+    PANEND = PAN+'end',
+    DD_FAKE_MOUSEUP = DD_FAKE+MOUSEUP,
+    UI = 'UI',
+    DD_EFFECT_ALLOWED = DD_MINUS+'effect-allowed',
+    BORDER = 'border',
+    WIDTH = 'width',
+    BORDER_LEFT_WIDTH = BORDER+'-left-'+WIDTH,
+    BORDER_TOP_WIDTH = BORDER+'-top-'+WIDTH,
+    LEFT = 'left',
+    TOP = 'top',
+    WINDOW = 'window',
+    TRUE = 'true',
+    NO_OVERFLOW = 'itsa-no-overflow',
+    DD_MINUSDRAGGABLE = DD_MINUS+DRAGGABLE,
+    PLUGIN_ATTRS = [DD_MINUS+DROPZONE, CONSTRAIN_ATTR, DD_EMITTER, DD_HANDLE, DD_EFFECT_ALLOWED, DD_DROPZONE_MOVABLE];
+
+require('polyfill');
+require('js-ext');
+require('./css/drag.css');
+
+module.exports = function (window) {
+
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
+
+    if (window._ITSAmodules.Drag) {
+        return window._ITSAmodules.Drag; // Drag was already created
+    }
+
+    var Event = require('event-dom')(window),
+        isMobile = require('useragent')(window).isMobile,
+        DOCUMENT = window.document,
+        bodyNode = DOCUMENT.body,
+        supportHammer = !!Event.Hammer,
+        mobileEvents = supportHammer && isMobile,
+        DD;
+
+    require('vdom')(window);
+    require('node-plugin')(window);
+    require('window-ext')(window);
+
+    DD = {
+        /**
+         * Objecthash containing all specific information about the particular drag-cycle.
+         * It has a structure like this:
+         *
+         * ddProps = {
+         *     dragNode {HtmlElement} Element that is dragged
+         *     x {Number} absolute x-position of the draggable inside `document` when the drag starts
+         *     y {Number} absolute y-position of the draggable inside `document` when the drag starts
+         *     inlineLeft {String} inline css of the property `left` when drag starts
+         *     inlineTop {String} inline css of the property `top` when drag starts
+         *     winConstrained {Boolean} whether the draggable should be constrained to `window`
+         *     xMouseLast {Number} absolute x-position of the mouse inside `document` when the drag starts
+         *     yMouseLast {Number} absolute y-position of the draggable inside `document` when the drag starts
+         *     winScrollLeft {Number} the left-scroll of window when drag starts
+         *     winScrollTop {Number} the top-scroll of window when drag starts
+         *     constrain = { // constrain-properties when constrained to a HtmlElement
+         *         xOrig {Number} x-position in the document, included with left-border-width
+         *         yOrig {Number} y-position in the document, included with top-border-width
+         *         x {Number} xOrig corrected with scroll-left of the constrained node
+         *         y {Number} yOrig corrected with scroll-top of the constrained node
+         *         w {Number} scrollWidth
+         *         h {Number} scrollHeight
+         *     };
+         *     relatives[{ // Array with objects that represent all draggables that come along with the master-draggable (in case of multiple items), excluded the master draggable itself
+         *         sourceNode {HtmlElement} original node (defined by drag-drop)
+         *         dragNode {HtmlElement} draggable node
+         *         shiftX {Number} the amount of left-pixels that this HtmlElement differs from the dragged element
+         *         shiftY {Number} the amount of top-pixels that this HtmlElement differs from the dragged element
+         *         inlineLeft {String} inline css of the property `left` when drag starts
+         *         inlineTop {String} inline css of the property `top` when drag starts
+         *     }]
+         * }
+         *
+         * @property ddProps
+         * @default {}
+         * @type Object
+         * @since 0.0.1
+        */
+       ddProps: {},
+
+        /**
+         * Internal hash with notifiers to response after each `Drag` event is set up, or teared down.
+         * You can use this to hook in into the drag-eventcycle: the `drop`-module uses it this way.
+         * Is filled by using `notify()`.
+         *
+         * @property _notifiers
+         * @default []
+         * @type Array
+         * @private
+         * @since 0.0.1
+         */
+        _notifiers: [],
+
+        /**
+        * Default function for the `*:dd-drag`-event
+        *
+        * @method _defFnDrag
+        * @param e {Object} eventobject
+        * @private
+        * @since 0.0.1
+        */
+        _defFnDrag: function(e) {
+            console.log(NAME, '_defFnDrag: default function dd-drag');
+            var ddProps = this.ddProps,
+                dragNode = ddProps.dragNode,
+                constrainNode = ddProps.constrainNode,
+                winConstrained = ddProps.winConstrained,
+                x, y;
+            // is the drag is finished, there will be no ddProps.defined
+            // return then, to prevent any events that stayed behind
+            if (!ddProps.defined) {
+                return;
+            }
+
+            // caution: the user might have put the mouse out of the screen and released the mousebutton!
+            // If that is the case, the a mouseup-event should be initiated instead of draggin the element
+            if (e.buttons===0) {
+                // no more button pressed
+                /**
+                * Fired when the mouse comes back into the browser-window while dd-drag was busy yet no buttons are pressed.
+                * This is a correction to the fact that the mouseup-event wasn't noticed because the mouse was outside the browser.
+                *
+                * @event dd-fake-mouseup
+                * @private
+                * @since 0.1
+                */
+                Event.emit(dragNode, DD_FAKE_MOUSEUP);
+            }
+            else {
+                console.log(NAME, '_defFnDrag: dragging:');
+                if (constrainNode) {
+                    ddProps.constrain.x = ddProps.constrain.xOrig - constrainNode.scrollLeft;
+                    ddProps.constrain.y = ddProps.constrain.yOrig - constrainNode.scrollTop;
+                }
+
+                x = ddProps.x+e.xMouse+(winConstrained ? ddProps.winScrollLeft : window.getScrollLeft())-e.xMouseOrigin;
+                y = ddProps.y+e.yMouse+(winConstrained ? ddProps.winScrollTop : window.getScrollTop())-e.yMouseOrigin;
+
+                dragNode.setXY(x, y, ddProps.constrain, true);
+
+                ddProps.relatives && ddProps.relatives.forEach(
+                    function(item) {
+                        item.dragNode.setXY(x+item.shiftX, y+item.shiftY, null, true);
+                    }
+                );
+                ddProps.winConstrained || dragNode.forceIntoView(true);
+                constrainNode && dragNode.forceIntoNodeView(constrainNode);
+            }
+        },
+
+        /**
+         * Default function for the `*:dd-drop`-event
+         *
+         * @method _defFnDrop
+         * @param e {Object} eventobject
+         * @private
+         * @since 0.0.1
+         */
+        _defFnDrop: function(e) {
+            console.log(NAME, '_defFnDrop');
+            var dragNode = e.target,
+                removeClasses = function (node) {
+                    node.removeClass([NO_TRANS_CLASS, HIGH_Z_CLASS, DD_DRAGGING_CLASS, DEL_DRAGGABLE, DD_MASTER_CLASS]);
+                };
+
+            PLUGIN_ATTRS.forEach(function(attribute) {
+                var data = '_del_'+attribute;
+                if (dragNode.getData(data)) {
+                    delete dragNode._plugin.dd.model[attribute];
+                    dragNode.removeData(data);
+                }
+            });
+            removeClasses(dragNode);
+            e.relatives && e.relatives.forEach(
+                function(node) {
+                    removeClasses(node);
+                }
+            );
+        },
+
+        /**
+         * Default function for the `*:dd`-event
+         *
+         * @method _defFnStart
+         * @param e {Object} eventobject
+         * @private
+         * @since 0.0.1
+         */
+        _defFnStart: function(e) {
+            var instance = this,
+                customEvent;
+            customEvent = e.emitter + ':'+DD_DRAG;
+            console.log(NAME, '_defFnStart: default function UI:dd-start. Defining customEvent '+customEvent);
+            Event.defineEvent(customEvent).defaultFn(instance._defFnDrag.bind(instance));
+            DOCUMENT.getAll('.'+DD_MASTER_CLASS).removeClass(DD_MASTER_CLASS);
+            instance._initializeDrag(e);
+        },
+
+      /**
+        * Defines the definition of the `dd` event: the first phase of the drag-eventcycle (dd, *:dd-drag, *:dd-drop)
+        *
+        * @method _defineDDStart
+        * @param emitterName {String} the emitterName, which leads into the definition of event `emitterName:dd`
+        * @private
+        * @since 0.0.1
+        */
+        _defineDDStart: function(emitterName) {
+            console.log(NAME, '_defineDDStart');
+            var instance = this;
+            // by using dd before dd-drag, the user can create a `before`-subscriber to dd
+            // and define e.emitter and/or e.relatives before going into `dd-drag`
+            Event.defineEvent(emitterName+':dd')
+                .defaultFn(instance._defFnStart.bind(instance))
+                .preventedFn(instance._prevFnStart.bind(instance));
+        },
+
+       /**
+         * Default function for the `*:dd-drag`-event
+         *
+         * @method _initializeDrag
+         * @param e {Object} eventobject
+         * @private
+         * @since 0.0.1
+         */
+        _initializeDrag: function(e) {
+            console.log(NAME, '_initializeDrag '+e.xMouseOrigin);
+            var instance = this,
+                dragNode = e.target,
+                constrain = dragNode.getAttr(CONSTRAIN_ATTR),
+                ddProps = instance.ddProps,
+                emitterName = e.emitter,
+                moveEv, x, y, byExactId, match, constrainNode, winConstrained, winScrollLeft, winScrollTop,
+                xOrig, yOrig;
+
+            // define ddProps --> internal object with data about the draggable instance
+            ddProps.dragNode = dragNode;
+            ddProps.x = x = dragNode.left;
+            ddProps.y = y = dragNode.top;
+            ddProps.inlineLeft = dragNode.getInlineStyle(LEFT);
+            ddProps.inlineTop = dragNode.getInlineStyle(TOP);
+            ddProps.winConstrained = winConstrained = (constrain===WINDOW);
+            ddProps.xMouseLast = x;
+            ddProps.yMouseLast = y;
+
+            if (constrain) {
+                if (winConstrained) {
+                    ddProps.winScrollLeft = winScrollLeft = window.getScrollLeft();
+                    ddProps.winScrollTop = winScrollTop = window.getScrollTop();
+                    ddProps.constrain = {
+                        x: winScrollLeft,
+                        y: winScrollTop,
+                        w: window.getWidth(),
+                        h: window.getHeight()
+                    };
+                    // if constrained to window:
+                    // set a class that makes overflow hidden --> this will prevent
+                    // some browsers from scrolling the window when a pressed mouse
+                    // gets out of the window
+                    bodyNode.setClass(NO_OVERFLOW);
+                }
+                else {
+                    byExactId = REGEXP_NODE_ID.test(constrain);
+                    constrainNode = dragNode.parentNode;
+                    while (constrainNode.matchesSelector && !match) {
+                        match = byExactId ? (constrainNode.id===constrain.substr(1)) : constrainNode.matchesSelector(constrain);
+                        // if there is a match, then make sure x and y fall within the region
+                        if (match) {
+                            ddProps.constrainNode = constrainNode;
+                            xOrig = constrainNode.left + parseInt(constrainNode.getStyle(BORDER_LEFT_WIDTH), 10);
+                            yOrig = constrainNode.top + parseInt(constrainNode.getStyle(BORDER_TOP_WIDTH), 10);
+                            ddProps.constrain = {
+                                xOrig: xOrig,
+                                yOrig: yOrig,
+                                x: xOrig - constrainNode.scrollLeft,
+                                y: yOrig - constrainNode.scrollTop,
+                                w: constrainNode.scrollWidth,
+                                h: constrainNode.scrollHeight
+                            };
+                        }
+                        else {
+                            constrainNode = constrainNode.parentNode;
+                        }
+                    }
+                }
+            }
+
+            // create listener for `mousemove` and transform it into the `*:dd:drag`-event
+            moveEv = Event.after(mobileEvents ? PANMOVE : MOUSEMOVE, function(e2) {
+                if (typeof e2.center==='object') {
+                    e2.clientX = e2.center.x;
+                    e2.clientY = e2.center.y;
+                }
+                if (!e2.clientX) {
+                    return;
+                }
+                // move the object
+                e.xMouse = e2.clientX;
+                e.yMouse = e2.clientY;
+                /**
+                * Emitted during the drag-cycle of a draggable Element (while it is dragged).
+                *
+                * @event *:dd-drag
+                * @param e {Object} eventobject including:
+                * @param e.target {HtmlElement} the HtmlElement that is being dragged
+                * @param e.currentTarget {HtmlElement} the HtmlElement that is delegating
+                * @param e.sourceTarget {HtmlElement} the deepest HtmlElement where the mouse lies upon
+                * @param e.dd {Promise} Promise that gets fulfilled when dragging is ended. The fullfilled-callback has no arguments.
+                * @param e.xMouse {Number} the current x-position in the window-view
+                * @param e.yMouse {Number} the current y-position in the window-view
+                * @param e.clientX {Number} the current x-position in the window-view
+                * @param e.clientY {Number} the current y-position in the window-view
+                * @param e.xMouseOrigin {Number} the original x-position in the document when drag started (incl. scrollOffset)
+                * @param e.yMouseOrigin {Number} the original y-position in the document when drag started (incl. scrollOffset)
+                * @param [e.relatives] {NodeList} an optional list that the user could set in a `before`-subscriber of the `dd`-event
+                *        to inform which nodes are related to the draggable node and should be dragged as well.
+                * @since 0.1
+                */
+                Event.emit(dragNode, emitterName+':'+DD_DRAG, e);
+                e.dd.callback();
+            });
+
+            // prepare dragNode class for the right CSS:
+            dragNode.setClass([NO_TRANS_CLASS, HIGH_Z_CLASS, DD_DRAGGING_CLASS]);
+
+            Event.onceAfter([mobileEvents ? PANEND : MOUSEUP, DD_FAKE_MOUSEUP], function(e3) {
+                moveEv.detach();
+                // set mousepos for the last time:
+                if (typeof e3.center==='object') {
+                    e3.clientX = e3.center.x;
+                    e3.clientY = e3.center.y;
+                }
+                e.xMouse = e3.clientX;
+                e.yMouse = e3.clientY;
+                // invoke all teardown notifiers:
+                instance._notifiers.forEach(
+                    function(notifier) {
+                        notifier.s || notifier.cb.call(notifier.o, e, ddProps);
+                    }
+                );
+
+                if (constrain && ddProps.winConstrained) {
+                    // if constrained to window:
+                    // remove overflow=hidden from the bodynode
+                    bodyNode.removeClass(NO_OVERFLOW);
+                }
+
+                instance.ddProps = {};
+                /**
+                * Emitted when drag-cycle of a draggable Element is ended.
+                *
+                * @event *:dd-drop
+                * @param e {Object} eventobject including:
+                * @param e.target {HtmlElement} the HtmlElement that is being dragged
+                * @param e.currentTarget {HtmlElement} the HtmlElement that is delegating
+                * @param e.sourceTarget {HtmlElement} the deepest HtmlElement where the mouse lies upon
+                * @param e.dd {Promise} Promise that gets fulfilled when dragging is ended. The fullfilled-callback has no arguments.
+                * @param e.xMouse {Number} the current x-position in the window-view
+                * @param e.yMouse {Number} the current y-position in the window-view
+                * @param e.clientX {Number} the current x-position in the window-view
+                * @param e.clientY {Number} the current y-position in the window-view
+                * @param e.xMouseOrigin {Number} the original x-position in the document when drag started (incl. scrollOffset)
+                * @param e.yMouseOrigin {Number} the original y-position in the document when drag started (incl. scrollOffset)
+                * @param [e.relatives] {NodeList} an optional list that the user could set in a `before`-subscriber of the `dd`-event
+                *        to inform which nodes are related to the draggable node and should be dragged as well.
+                * @since 0.1
+                */
+                Event.emit(dragNode, emitterName+':'+DD_DROP, e);
+                e.dd.fulfill();
+            });
+
+            dragNode.setXY(ddProps.xMouseLast, ddProps.yMouseLast, ddProps.constrain, true);
+
+            if (e.relatives) {
+                // relatives are extra HtmlElements that should be moved aside with the main dragged element
+                // e.relatives is a selector, e.relativeNodes will be an array with nodes
+                e.relativeNodes = [];
+                dragNode.setClass(DD_MASTER_CLASS);
+                dragNode.setClass(DD_MASTER_CLASS);
+                ddProps.relatives = [];
+                e.relatives.forEach(
+                    function(node) {
+                        var item;
+                        if (node !== dragNode) {
+                            item = {
+                                dragNode: node,
+                                shiftX: node.left - x,
+                                shiftY: node.top - y,
+                                inlineLeft: node.getInlineStyle(LEFT),
+                                inlineTop: node.getInlineStyle(TOP)
+                            };
+                            item.dragNode.setClass([NO_TRANS_CLASS, HIGH_Z_CLASS, DD_DRAGGING_CLASS]);
+                            ddProps.relatives.push(item);
+                            e.relativeNodes.push(item.dragNode);
+                        }
+                    }
+                );
+            }
+            // invoke all setup notifiers:
+            instance._notifiers.forEach(
+                function(notifier) {
+                    notifier.s && notifier.cb.call(notifier.o, e, ddProps);
+                }
+            );
+        },
+
+        /**
+         * Prevented function for the `*:dd-start`-event
+         *
+         * @method _prevFnStart
+         * @param e {Object} eventobject
+         * @private
+         * @since 0.0.1
+         */
+        _prevFnStart: function(e) {
+            console.log(NAME, '_prevFnStart');
+            e.dd.reject();
+        },
+
+      /**
+        * Engine behind the drag-drop-cycle.
+        * Sets up a `mousedown` listener to initiate a drag-drop eventcycle. The eventcycle start whenever
+        * one of these events happens on a HtmlElement with the attribute `dd-draggable="true"`.
+        * The drag-drop eventcycle consists of the events: `dd-start`, `emitterName:dd-drag` and `emitterName:dd-drop`
+        *
+        *
+        * @method _setupMouseEv
+        * @private
+        * @since 0.0.1
+        */
+        _setupMouseEv: function() {
+            console.log(NAME, '_setupMouseEv: setting up mousedown event');
+            var instance = this,
+                nodeTargetFn,
+                delegatedTargetFn;
+
+            nodeTargetFn = function(e) {
+                var node = e.target,
+                    handle, availableHandles, insideHandle, emitterName;
+
+                // first check if there is a handle to determine if the drag started here:
+                handle = node.getAttr(DD_HANDLE);
+                if (handle) {
+                    availableHandles = node.getAll(handle);
+                    insideHandle = false;
+                    availableHandles.some(function(handleNode) {
+                        insideHandle = handleNode.contains(e.sourceTarget);
+                        return insideHandle;
+                    });
+                    if (!insideHandle) {
+                        return;
+                    }
+                }
+
+                // initialize ddProps: have to do here, because the event might not start because it wasn't inside the handle when it should be
+                instance.ddProps = {
+                    defined: true,
+                    dragOverList: []
+                };
+
+                // prevent the emitter from resetting e.target to e.sourceTarget:
+                e._noResetSourceTarget = true;
+                // add `dd`-Promise to the eventobject --> this Promise will be resolved once the pointer has released.
+                e.dd = Promise.manage();
+                // define e.setOnDrag --> users
+                e.setOnDrag = function(callbackFn) {
+                    e.dd.setCallback(callbackFn);
+                };
+                // store the orriginal mouseposition:
+                e.xMouseOrigin = e.clientX + window.getScrollLeft();
+                e.yMouseOrigin = e.clientY + window.getScrollTop();
+
+                //set the emitterName:
+                emitterName = e.target.getAttr(DD_EMITTER) || UI;
+                // now we can start the eventcycle by emitting emitterName:dd:
+                /**
+                * Emitted when a draggable Element's drag-cycle starts. You can use a `before`-subscriber to specify
+                * e.relatives, which should be a nodelist with HtmlElements, that should be dragged togehter with the master
+                * draggable Element.
+                *
+                * @event *:dd
+                * @param e {Object} eventobject including:
+                * @param e.target {HtmlElement} the HtmlElement that is being dragged
+                * @param e.currentTarget {HtmlElement} the HtmlElement that is delegating
+                * @param e.sourceTarget {HtmlElement} the deepest HtmlElement where the mouse lies upon
+                * @param e.dd {Promise} Promise that gets fulfilled when dragging is ended. The fullfilled-callback has no arguments.
+                * @param e.xMouse {Number} the current x-position in the window-view
+                * @param e.yMouse {Number} the current y-position in the window-view
+                * @param e.clientX {Number} the current x-position in the window-view
+                * @param e.clientY {Number} the current y-position in the window-view
+                * @param e.xMouseOrigin {Number} the original x-position in the document when drag started (incl. scrollOffset)
+                * @param e.yMouseOrigin {Number} the original y-position in the document when drag started (incl. scrollOffset)
+                * @param [e.relatives] {NodeList} an optional list that the user could set in a `before`-subscriber of the `dd`-event
+                *        to inform which nodes are related to the draggable node and should be dragged as well.
+                * @since 0.1
+                */
+                instance._defineDDStart(emitterName);
+                Event.emit(e.target, emitterName+':dd', e);
+            };
+
+            delegatedTargetFn = function(e, cssSelector) {
+                var container = e.target,
+                    nodelist = container.getAll(cssSelector),
+                    foundNode;
+                nodelist.some(
+                    function(node) {
+                        (node.contains(e.sourceTarget)) && (foundNode=node);
+                        return foundNode;
+                    }
+                );
+                if (foundNode) {
+                    // e.currentTarget = container;
+                    e.target = foundNode;
+                    // Mark the delegated node, so it has the same style as [draggable]:
+                    foundNode.setClass(DEL_DRAGGABLE);
+                    // We must transport the other relevant dd-attributes (and constrain-selector)
+                    // which we will remove when finished dragging:
+                    PLUGIN_ATTRS.forEach(function(attribute) {
+                        var attr = container.getAttr(attribute);
+                        if (attr && !foundNode.hasAttr(attribute)) {
+                            foundNode.setData('_del_'+attribute, attr);
+                            foundNode.setAttr(attribute, attr);
+                            // foundNode._plugin.dd.model[attribute] = attr;
+                        }
+                    });
+                    nodeTargetFn(e);
+                }
+            };
+            Event.after(mobileEvents ? PANSTART : MOUSEDOWN, function(e) {
+                var draggableAttr = e.target.getAttr(DD_MINUSDRAGGABLE);
+                if (typeof e.center==='object') {
+                    e.clientX = e.center.x;
+                    e.clientY = e.center.y;
+                }
+                (draggableAttr===TRUE) ? nodeTargetFn(e) : delegatedTargetFn(e, draggableAttr);
+            }, '['+DD_MINUSDRAGGABLE+']');
+
+        },
+
+       /**
+         * Initializes dragdrop. Needs to be invoked, otherwise DD won't run.
+         *
+         * @method init
+         * @param dragableElement {HtmlElement} HtmlElement that is checked for its allowed effects
+         * @return {Boolean} if copy-dragables are allowed
+         * @since 0.0.1
+         */
+        init: function() {
+            console.log(NAME, 'init');
+            var instance = this;
+            if (!instance._inited) {
+                instance._setupMouseEv(); // engine behind the dragdrop-eventcycle
+                if (mobileEvents) {
+                    Event.before(['touchstart', 'touchmove'], function(ev) {
+                        (instance.ddProps.size()>0) && ev.preventDefault();
+                    });
+                }
+                Event.defineEvent('UI:'+DD_DROP)
+                     .defaultFn(instance._defFnDrop.rbind(instance));
+            }
+            instance._inited = true;
+        },
+
+        /**
+         * Creates a notifier to response after each `Drag` event is set up, or teared down.
+         * You can use this to hook in into the drag-eventcycle: the `drop`-module uses it this way.
+         *
+         * @static
+         * @method notify
+         * @param callback {Function} subscriber: will be invoked after every drag-event is set up.
+         *                 Recieves 2 arguments: the `eventobject` and the internal property: `ddProps`
+         * @param context {Object} context of the callback
+         * @param setup {Boolean} wheter the callback should be invoked on setup (true) or teardown (false)
+         * @return {Object} handle with a method `detach()` which you can use to remove it from the `notifier-hash`
+         * @since 0.0.1
+        */
+        notify: function(callback, context, setup) {
+            console.log(NAME, 'notify');
+            var notifier = {
+                cb: callback,
+                o: context,
+                s: setup
+            };
+            this._notifiers.push(notifier);
             return {
                 detach: function() {
-                    console.log(NAME, 'detach finalizer');
-                    var index = finalHash.indexOf(finallySubscriber);
-                    (index===-1) || finalHash.splice(index, 1);
+                    this._notifiers.remove(notifier);
                 }
             };
         }
 
     };
 
-    /**
-     * Internal list of finalize-subscribers which are invoked at the end of a successful xhr,
-     * Is an array of function-references.
-     *
-     * @property _final
-     * @default []
-     * @type Array
-     * @private
-     * @since 0.0.1
-    */
-    Object.protectedProp(IO, '_final', []);
+    DOCUMENT.definePlugin('dd', null, {
+        attrs: {
+            draggable: 'string',
+            handle: 'string',
+            emitter: 'string'
+        },
+        defaults: {
+            draggable: 'true'
+        }
+    });
 
-    IO._xhrInitList = [
-        IO._setReadyHandle,
-        IO._setHeaders
-    ];
+    window._ITSAmodules.Drag = DD;
 
-    Glob._ITSAmodules.IO = IO;
-
-    return IO;
+    return DD;
 };
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"js-ext":179,"js-ext/extra/hashmap.js":178,"polyfill/polyfill-base.js":191,"utils":192}],178:[function(require,module,exports){
-module.exports=require(17)
-},{}],179:[function(require,module,exports){
-module.exports=require(83)
-},{"./lib/array.js":180,"./lib/function.js":181,"./lib/json.js":182,"./lib/object.js":183,"./lib/promise.js":184,"./lib/string.js":185}],180:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":188}],181:[function(require,module,exports){
-module.exports=require(85)
-},{"polyfill/polyfill-base.js":188}],182:[function(require,module,exports){
-module.exports=require(86)
-},{"polyfill/polyfill-base.js":188}],183:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":178,"polyfill/polyfill-base.js":188}],184:[function(require,module,exports){
-module.exports=require(47)
-},{"polyfill":188}],185:[function(require,module,exports){
-module.exports=require(28)
+},{"./css/drag.css":151,"event-dom":153,"js-ext":225,"js-ext/extra/hashmap.js":224,"node-plugin":235,"polyfill":377,"useragent":386,"vdom":427,"window-ext":428}],153:[function(require,module,exports){
+module.exports=require(6)
+},{"event":157,"js-ext/extra/hashmap.js":167,"js-ext/lib/array.js":168,"js-ext/lib/object.js":169,"js-ext/lib/string.js":170,"polyfill/polyfill-base.js":176,"utils":177,"vdom":223}],154:[function(require,module,exports){
+module.exports=require(7)
+},{"js-ext/extra/hashmap.js":159,"js-ext/lib/object.js":160,"polyfill/polyfill-base.js":166}],155:[function(require,module,exports){
+module.exports=require(8)
+},{"./event-base.js":154}],156:[function(require,module,exports){
+module.exports=require(9)
+},{"./event-base.js":154,"js-ext/extra/classes.js":158,"js-ext/lib/object.js":160}],157:[function(require,module,exports){
+module.exports=require(10)
+},{"./event-base.js":154,"./event-emitter.js":155,"./event-listener.js":156}],158:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":160,"js-ext/extra/hashmap.js":159,"polyfill/polyfill-base.js":163}],159:[function(require,module,exports){
+module.exports=require(4)
+},{}],160:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":159,"polyfill/polyfill-base.js":163}],161:[function(require,module,exports){
+module.exports=require(14)
+},{}],162:[function(require,module,exports){
+module.exports=require(15)
+},{}],163:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":161,"./lib/window.console.js":162}],164:[function(require,module,exports){
+module.exports=require(14)
+},{}],165:[function(require,module,exports){
+module.exports=require(15)
+},{}],166:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":164,"./lib/window.console.js":165}],167:[function(require,module,exports){
+module.exports=require(4)
+},{}],168:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":173}],169:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":167,"polyfill/polyfill-base.js":173}],170:[function(require,module,exports){
+module.exports=require(23)
+},{}],171:[function(require,module,exports){
+module.exports=require(14)
+},{}],172:[function(require,module,exports){
+module.exports=require(15)
+},{}],173:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":171,"./lib/window.console.js":172}],174:[function(require,module,exports){
+module.exports=require(14)
+},{}],175:[function(require,module,exports){
+module.exports=require(15)
+},{}],176:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":174,"./lib/window.console.js":175}],177:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":178,"./lib/timers.js":179}],178:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":167,"polyfill/polyfill-base.js":182}],179:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":182}],180:[function(require,module,exports){
+module.exports=require(14)
+},{}],181:[function(require,module,exports){
+module.exports=require(15)
+},{}],182:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":180,"./lib/window.console.js":181}],183:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],184:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":188,"js-ext/extra/hashmap.js":185,"polyfill/polyfill-base.js":194}],185:[function(require,module,exports){
+module.exports=require(4)
 },{}],186:[function(require,module,exports){
-module.exports=require(19)
-},{}],187:[function(require,module,exports){
-module.exports=require(20)
-},{}],188:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":187,"../lib/object.js":188,"./classes.js":184,"js-ext/extra/hashmap.js":185,"polyfill/lib/weakmap.js":192}],187:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":186,"./lib/window.console.js":187}],189:[function(require,module,exports){
-module.exports=require(19)
-},{}],190:[function(require,module,exports){
-module.exports=require(20)
+},{"polyfill/polyfill-base.js":194}],188:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":185,"polyfill/polyfill-base.js":194}],189:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":194}],190:[function(require,module,exports){
+module.exports=require(23)
 },{}],191:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":189,"./lib/window.console.js":190}],192:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":193,"./lib/timers.js":194}],193:[function(require,module,exports){
-module.exports=require(36)
-},{"js-ext/extra/hashmap.js":178,"polyfill/polyfill-base.js":197}],194:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":197}],195:[function(require,module,exports){
-module.exports=require(19)
+module.exports=require(14)
+},{}],192:[function(require,module,exports){
+module.exports=require(45)
+},{}],193:[function(require,module,exports){
+module.exports=require(15)
+},{}],194:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":191,"./lib/window.console.js":193}],195:[function(require,module,exports){
+module.exports=require(48)
 },{}],196:[function(require,module,exports){
-module.exports=require(20)
-},{}],197:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":195,"./lib/window.console.js":196}],198:[function(require,module,exports){
-module.exports=require(16)
-},{"../lib/object.js":200,"js-ext/extra/hashmap.js":199,"polyfill/polyfill-base.js":205}],199:[function(require,module,exports){
-module.exports=require(17)
-},{}],200:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":199,"polyfill/polyfill-base.js":205}],201:[function(require,module,exports){
-module.exports=require(47)
-},{"polyfill":205}],202:[function(require,module,exports){
-module.exports=require(28)
-},{}],203:[function(require,module,exports){
-module.exports=require(19)
-},{}],204:[function(require,module,exports){
-module.exports=require(20)
-},{}],205:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":203,"./lib/window.console.js":204}],206:[function(require,module,exports){
-module.exports=require(19)
-},{}],207:[function(require,module,exports){
-module.exports=require(20)
-},{}],208:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":206,"./lib/window.console.js":207}],209:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":212}],210:[function(require,module,exports){
-module.exports=require(19)
-},{}],211:[function(require,module,exports){
-module.exports=require(20)
-},{}],212:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":210,"./lib/window.console.js":211}],213:[function(require,module,exports){
-module.exports=require(41)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],214:[function(require,module,exports){
-module.exports=require(16)
-},{"../lib/object.js":218,"js-ext/extra/hashmap.js":215,"polyfill/polyfill-base.js":224}],215:[function(require,module,exports){
-module.exports=require(17)
-},{}],216:[function(require,module,exports){
-module.exports=require(44)
-},{"../lib/array.js":217,"../lib/object.js":218,"./classes.js":214,"js-ext/extra/hashmap.js":215,"polyfill/lib/weakmap.js":222}],217:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":224}],218:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":215,"polyfill/polyfill-base.js":224}],219:[function(require,module,exports){
-module.exports=require(47)
-},{"polyfill":224}],220:[function(require,module,exports){
-module.exports=require(28)
-},{}],221:[function(require,module,exports){
-module.exports=require(19)
-},{}],222:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":195}],197:[function(require,module,exports){
 module.exports=require(50)
-},{}],223:[function(require,module,exports){
-module.exports=require(20)
-},{}],224:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":221,"./lib/window.console.js":223}],225:[function(require,module,exports){
-module.exports=require(53)
-},{}],226:[function(require,module,exports){
-module.exports=require(54)
-},{"../bin/local-hashmap.js":225}],227:[function(require,module,exports){
-module.exports=require(55)
-},{"../bin/local-hashmap.js":225}],228:[function(require,module,exports){
-module.exports=require(56)
-},{"../bin/local-hashmap.js":225}],229:[function(require,module,exports){
-module.exports=require(19)
-},{}],230:[function(require,module,exports){
-module.exports=require(20)
-},{}],231:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":229,"./lib/window.console.js":230}],232:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":233,"./lib/timers.js":234}],233:[function(require,module,exports){
-module.exports=require(36)
-},{"js-ext/extra/hashmap.js":215,"polyfill/polyfill-base.js":237}],234:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":237}],235:[function(require,module,exports){
-module.exports=require(19)
-},{}],236:[function(require,module,exports){
-module.exports=require(20)
-},{}],237:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":235,"./lib/window.console.js":236}],238:[function(require,module,exports){
-module.exports=require(66)
-},{"./lib/sizes.js":239}],239:[function(require,module,exports){
-module.exports=require(67)
-},{"js-ext/extra/hashmap.js":240,"js-ext/lib/object.js":241}],240:[function(require,module,exports){
-module.exports=require(17)
-},{}],241:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":240,"polyfill/polyfill-base.js":244}],242:[function(require,module,exports){
-module.exports=require(19)
-},{}],243:[function(require,module,exports){
-module.exports=require(20)
-},{}],244:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":242,"./lib/window.console.js":243}],245:[function(require,module,exports){
+},{"../bin/local-hashmap.js":195}],198:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":195}],199:[function(require,module,exports){
+module.exports=require(14)
+},{}],200:[function(require,module,exports){
+module.exports=require(15)
+},{}],201:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":199,"./lib/window.console.js":200}],202:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":203,"./lib/timers.js":204}],203:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":185,"polyfill/polyfill-base.js":207}],204:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":207}],205:[function(require,module,exports){
+module.exports=require(14)
+},{}],206:[function(require,module,exports){
+module.exports=require(15)
+},{}],207:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":205,"./lib/window.console.js":206}],208:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":209}],209:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":210,"js-ext/lib/object.js":211}],210:[function(require,module,exports){
+module.exports=require(4)
+},{}],211:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":210,"polyfill/polyfill-base.js":214}],212:[function(require,module,exports){
+module.exports=require(14)
+},{}],213:[function(require,module,exports){
+module.exports=require(15)
+},{}],214:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":212,"./lib/window.console.js":213}],215:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":185,"js-ext/lib/object.js":188,"js-ext/lib/string.js":190,"polyfill":201,"polyfill/extra/transition.js":196,"polyfill/extra/vendorCSS.js":198}],216:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":185,"js-ext/lib/object.js":188,"polyfill":201}],217:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":185,"js-ext/lib/object.js":188,"js-ext/lib/string.js":190,"polyfill":201}],218:[function(require,module,exports){
+module.exports=require(71)
+},{"../css/element.css":183,"./attribute-extractor.js":215,"./element-array.js":216,"./html-parser.js":219,"./node-parser.js":220,"./vdom-ns.js":221,"./vnode.js":222,"js-ext/extra/hashmap.js":185,"js-ext/lib/object.js":188,"js-ext/lib/promise.js":189,"js-ext/lib/string.js":190,"polyfill":201,"polyfill/extra/transition.js":196,"polyfill/extra/transitionend.js":197,"polyfill/extra/vendorCSS.js":198,"utils":202,"window-ext":208}],219:[function(require,module,exports){
+module.exports=require(72)
+},{"./attribute-extractor.js":215,"./vdom-ns.js":221,"js-ext/extra/hashmap.js":185,"js-ext/lib/object.js":188,"polyfill":201}],220:[function(require,module,exports){
 module.exports=require(73)
-},{"js-ext/extra/hashmap.js":215,"js-ext/lib/object.js":218,"js-ext/lib/string.js":220,"polyfill":231,"polyfill/extra/transition.js":226,"polyfill/extra/vendorCSS.js":228}],246:[function(require,module,exports){
+},{"./attribute-extractor.js":215,"./vdom-ns.js":221,"./vnode.js":222,"js-ext/extra/hashmap.js":185,"js-ext/lib/object.js":188,"polyfill":201}],221:[function(require,module,exports){
 module.exports=require(74)
-},{"js-ext/extra/hashmap.js":215,"js-ext/lib/object.js":218,"polyfill":231}],247:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":185,"js-ext/lib/object.js":188,"polyfill":201}],222:[function(require,module,exports){
 module.exports=require(75)
-},{"js-ext/extra/hashmap.js":215,"js-ext/lib/object.js":218,"js-ext/lib/string.js":220,"polyfill":231}],248:[function(require,module,exports){
+},{"./attribute-extractor.js":215,"./html-parser.js":219,"./vdom-ns.js":221,"js-ext/extra/hashmap.js":185,"js-ext/extra/lightmap.js":186,"js-ext/lib/array.js":187,"js-ext/lib/object.js":188,"js-ext/lib/string.js":190,"polyfill":201,"utils/lib/timers.js":204}],223:[function(require,module,exports){
 module.exports=require(76)
-},{"../css/element.css":213,"./attribute-extractor.js":245,"./element-array.js":246,"./html-parser.js":249,"./node-parser.js":250,"./vdom-ns.js":251,"./vnode.js":252,"js-ext/extra/hashmap.js":215,"js-ext/lib/object.js":218,"js-ext/lib/promise.js":219,"js-ext/lib/string.js":220,"polyfill":231,"polyfill/extra/transition.js":226,"polyfill/extra/transitionend.js":227,"polyfill/extra/vendorCSS.js":228,"utils":232,"window-ext":238}],249:[function(require,module,exports){
-module.exports=require(77)
-},{"./attribute-extractor.js":245,"./vdom-ns.js":251,"js-ext/extra/hashmap.js":215,"js-ext/lib/object.js":218,"polyfill":231}],250:[function(require,module,exports){
-module.exports=require(78)
-},{"./attribute-extractor.js":245,"./vdom-ns.js":251,"./vnode.js":252,"js-ext/extra/hashmap.js":215,"js-ext/lib/object.js":218,"polyfill":231}],251:[function(require,module,exports){
-module.exports=require(79)
-},{"js-ext/extra/hashmap.js":215,"js-ext/lib/object.js":218,"polyfill":231}],252:[function(require,module,exports){
-module.exports=require(80)
-},{"./attribute-extractor.js":245,"./html-parser.js":249,"./vdom-ns.js":251,"js-ext/extra/hashmap.js":215,"js-ext/extra/lightmap.js":216,"js-ext/lib/array.js":217,"js-ext/lib/object.js":218,"js-ext/lib/string.js":220,"polyfill":231,"utils/lib/timers.js":234}],253:[function(require,module,exports){
-module.exports=require(81)
-},{"./partials/extend-document.js":247,"./partials/extend-element.js":248,"./partials/node-parser.js":250,"js-ext/extra/hashmap.js":215,"js-ext/lib/object.js":218,"utils/lib/timers.js":234}],254:[function(require,module,exports){
-module.exports=require(19)
+},{"./partials/extend-document.js":217,"./partials/extend-element.js":218,"./partials/node-parser.js":220,"js-ext/extra/hashmap.js":185,"js-ext/lib/object.js":188,"utils/lib/timers.js":204}],224:[function(require,module,exports){
+module.exports=require(4)
+},{}],225:[function(require,module,exports){
+require('./lib/function.js');
+require('./lib/object.js');
+require('./lib/string.js');
+require('./lib/array.js');
+require('./lib/json.js');
+require('./lib/promise.js');
+},{"./lib/array.js":226,"./lib/function.js":227,"./lib/json.js":228,"./lib/object.js":229,"./lib/promise.js":230,"./lib/string.js":231}],226:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":234}],227:[function(require,module,exports){
+/**
+ *
+ * Pollyfils for often used functionality for Functions
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ * @module js-ext
+ * @submodule lib/function.js
+ * @class Function
+ *
+*/
+
+"use strict";
+
+require('polyfill/polyfill-base.js');
+
+var NAME = '[Function]: ';
+
+(function(FunctionPrototype) {
+	/**
+	 * Sets the context of which the function will be execute. in the
+	 * supplied object's context, optionally adding any additional
+	 * supplied parameters to the end of the arguments the function
+	 * is executed with.
+	 *
+	 * @method rbind
+	 * @param [context] {Object} the execution context.
+	 *        The value is ignored if the bound function is constructed using the new operator.
+	 * @param [args*] {any} args* 0..n arguments to append to the end of
+	 *        arguments collection supplied to the function.
+	 * @return {function} the wrapped function.
+	 */
+	FunctionPrototype.rbind = function (context /*, args* */ ) {
+		console.log(NAME+'rbind');
+		var thisFunction = this,
+			arrayArgs,
+			slice = Array.prototype.slice;
+		context || (context = this);
+		if (arguments.length > 1) {
+			// removing `context` (first item) by slicing it out:
+			arrayArgs = slice.call(arguments, 1);
+		}
+
+		return (arrayArgs ?
+			function () {
+				// over here, `arguments` will be the "new" arguments when the final function is called!
+				return thisFunction.apply(context, slice.call(arguments, 0).concat(arrayArgs));
+			} :
+			function () {
+				// over here, `arguments` will be the "new" arguments when the final function is called!
+				return thisFunction.apply(context, arguments);
+			}
+		);
+	};
+
+}(Function.prototype));
+
+},{"polyfill/polyfill-base.js":234}],228:[function(require,module,exports){
+/**
+ *
+ * Pollyfils for often used functionality for Arrays
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ * @module js-ext
+ * @submodule lib/array.js
+ * @class Array
+ *
+ */
+
+"use strict";
+
+require('polyfill/polyfill-base.js');
+
+var REVIVER = function(key, value) {
+    return ((typeof value==='string') && value.toDate()) || value;
+};
+
+JSON.parseWithDate = function(stringifiedObj) {
+    return this.parse(stringifiedObj, REVIVER);
+};
+},{"polyfill/polyfill-base.js":234}],229:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":224,"polyfill/polyfill-base.js":234}],230:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":234}],231:[function(require,module,exports){
+module.exports=require(23)
+},{}],232:[function(require,module,exports){
+module.exports=require(14)
+},{}],233:[function(require,module,exports){
+module.exports=require(15)
+},{}],234:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":232,"./lib/window.console.js":233}],235:[function(require,module,exports){
+module.exports=require(5)
+},{"event-dom":236,"event/extra/promise-finalize.js":308,"event/extra/timer-finalize.js":309,"js-ext/extra/classes.js":319,"js-ext/extra/hashmap.js":320,"js-ext/lib/object.js":321,"js-ext/lib/promise.js":322,"js-ext/lib/string.js":323,"polyfill":329,"utils/lib/timers.js":330,"vdom":374}],236:[function(require,module,exports){
+module.exports=require(6)
+},{"event":240,"js-ext/extra/hashmap.js":250,"js-ext/lib/array.js":251,"js-ext/lib/object.js":252,"js-ext/lib/string.js":253,"polyfill/polyfill-base.js":259,"utils":260,"vdom":306}],237:[function(require,module,exports){
+module.exports=require(7)
+},{"js-ext/extra/hashmap.js":242,"js-ext/lib/object.js":243,"polyfill/polyfill-base.js":249}],238:[function(require,module,exports){
+module.exports=require(8)
+},{"./event-base.js":237}],239:[function(require,module,exports){
+module.exports=require(9)
+},{"./event-base.js":237,"js-ext/extra/classes.js":241,"js-ext/lib/object.js":243}],240:[function(require,module,exports){
+module.exports=require(10)
+},{"./event-base.js":237,"./event-emitter.js":238,"./event-listener.js":239}],241:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":243,"js-ext/extra/hashmap.js":242,"polyfill/polyfill-base.js":246}],242:[function(require,module,exports){
+module.exports=require(4)
+},{}],243:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":242,"polyfill/polyfill-base.js":246}],244:[function(require,module,exports){
+module.exports=require(14)
+},{}],245:[function(require,module,exports){
+module.exports=require(15)
+},{}],246:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":244,"./lib/window.console.js":245}],247:[function(require,module,exports){
+module.exports=require(14)
+},{}],248:[function(require,module,exports){
+module.exports=require(15)
+},{}],249:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":247,"./lib/window.console.js":248}],250:[function(require,module,exports){
+module.exports=require(4)
+},{}],251:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":256}],252:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":250,"polyfill/polyfill-base.js":256}],253:[function(require,module,exports){
+module.exports=require(23)
+},{}],254:[function(require,module,exports){
+module.exports=require(14)
 },{}],255:[function(require,module,exports){
-module.exports=require(20)
+module.exports=require(15)
 },{}],256:[function(require,module,exports){
-module.exports=require(21)
+module.exports=require(16)
 },{"./lib/matchesselector.js":254,"./lib/window.console.js":255}],257:[function(require,module,exports){
-module.exports=require(17)
+module.exports=require(14)
 },{}],258:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":257,"polyfill/polyfill-base.js":261}],259:[function(require,module,exports){
-module.exports=require(19)
-},{}],260:[function(require,module,exports){
-module.exports=require(20)
-},{}],261:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":259,"./lib/window.console.js":260}],262:[function(require,module,exports){
-module.exports=require(19)
-},{}],263:[function(require,module,exports){
-module.exports=require(20)
+module.exports=require(15)
+},{}],259:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":257,"./lib/window.console.js":258}],260:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":261,"./lib/timers.js":262}],261:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":250,"polyfill/polyfill-base.js":265}],262:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":265}],263:[function(require,module,exports){
+module.exports=require(14)
 },{}],264:[function(require,module,exports){
+module.exports=require(15)
+},{}],265:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":263,"./lib/window.console.js":264}],266:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],267:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":271,"js-ext/extra/hashmap.js":268,"polyfill/polyfill-base.js":277}],268:[function(require,module,exports){
+module.exports=require(4)
+},{}],269:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":270,"../lib/object.js":271,"./classes.js":267,"js-ext/extra/hashmap.js":268,"polyfill/lib/weakmap.js":275}],270:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":262,"./lib/window.console.js":263}],265:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":277}],271:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":268,"polyfill/polyfill-base.js":277}],272:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":277}],273:[function(require,module,exports){
+module.exports=require(23)
+},{}],274:[function(require,module,exports){
+module.exports=require(14)
+},{}],275:[function(require,module,exports){
+module.exports=require(45)
+},{}],276:[function(require,module,exports){
+module.exports=require(15)
+},{}],277:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":274,"./lib/window.console.js":276}],278:[function(require,module,exports){
+module.exports=require(48)
+},{}],279:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":278}],280:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":278}],281:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":278}],282:[function(require,module,exports){
+module.exports=require(14)
+},{}],283:[function(require,module,exports){
+module.exports=require(15)
+},{}],284:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":282,"./lib/window.console.js":283}],285:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":286,"./lib/timers.js":287}],286:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":268,"polyfill/polyfill-base.js":290}],287:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":290}],288:[function(require,module,exports){
+module.exports=require(14)
+},{}],289:[function(require,module,exports){
+module.exports=require(15)
+},{}],290:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":288,"./lib/window.console.js":289}],291:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":292}],292:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":293,"js-ext/lib/object.js":294}],293:[function(require,module,exports){
+module.exports=require(4)
+},{}],294:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":293,"polyfill/polyfill-base.js":297}],295:[function(require,module,exports){
+module.exports=require(14)
+},{}],296:[function(require,module,exports){
+module.exports=require(15)
+},{}],297:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":295,"./lib/window.console.js":296}],298:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":268,"js-ext/lib/object.js":271,"js-ext/lib/string.js":273,"polyfill":284,"polyfill/extra/transition.js":279,"polyfill/extra/vendorCSS.js":281}],299:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":268,"js-ext/lib/object.js":271,"polyfill":284}],300:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":268,"js-ext/lib/object.js":271,"js-ext/lib/string.js":273,"polyfill":284}],301:[function(require,module,exports){
+module.exports=require(71)
+},{"../css/element.css":266,"./attribute-extractor.js":298,"./element-array.js":299,"./html-parser.js":302,"./node-parser.js":303,"./vdom-ns.js":304,"./vnode.js":305,"js-ext/extra/hashmap.js":268,"js-ext/lib/object.js":271,"js-ext/lib/promise.js":272,"js-ext/lib/string.js":273,"polyfill":284,"polyfill/extra/transition.js":279,"polyfill/extra/transitionend.js":280,"polyfill/extra/vendorCSS.js":281,"utils":285,"window-ext":291}],302:[function(require,module,exports){
+module.exports=require(72)
+},{"./attribute-extractor.js":298,"./vdom-ns.js":304,"js-ext/extra/hashmap.js":268,"js-ext/lib/object.js":271,"polyfill":284}],303:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":298,"./vdom-ns.js":304,"./vnode.js":305,"js-ext/extra/hashmap.js":268,"js-ext/lib/object.js":271,"polyfill":284}],304:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":268,"js-ext/lib/object.js":271,"polyfill":284}],305:[function(require,module,exports){
+module.exports=require(75)
+},{"./attribute-extractor.js":298,"./html-parser.js":302,"./vdom-ns.js":304,"js-ext/extra/hashmap.js":268,"js-ext/extra/lightmap.js":269,"js-ext/lib/array.js":270,"js-ext/lib/object.js":271,"js-ext/lib/string.js":273,"polyfill":284,"utils/lib/timers.js":287}],306:[function(require,module,exports){
+module.exports=require(76)
+},{"./partials/extend-document.js":300,"./partials/extend-element.js":301,"./partials/node-parser.js":303,"js-ext/extra/hashmap.js":268,"js-ext/lib/object.js":271,"utils/lib/timers.js":287}],307:[function(require,module,exports){
+module.exports=require(7)
+},{"js-ext/extra/hashmap.js":310,"js-ext/lib/object.js":311,"polyfill/polyfill-base.js":318}],308:[function(require,module,exports){
+module.exports=require(78)
+},{"js-ext/extra/hashmap.js":310,"js-ext/lib/promise.js":312}],309:[function(require,module,exports){
+module.exports=require(79)
+},{"../event-base.js":307,"js-ext/extra/hashmap.js":310}],310:[function(require,module,exports){
+module.exports=require(4)
+},{}],311:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":310,"polyfill/polyfill-base.js":315}],312:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":315}],313:[function(require,module,exports){
+module.exports=require(14)
+},{}],314:[function(require,module,exports){
+module.exports=require(15)
+},{}],315:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":313,"./lib/window.console.js":314}],316:[function(require,module,exports){
+module.exports=require(14)
+},{}],317:[function(require,module,exports){
+module.exports=require(15)
+},{}],318:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":316,"./lib/window.console.js":317}],319:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":321,"js-ext/extra/hashmap.js":320,"polyfill/polyfill-base.js":326}],320:[function(require,module,exports){
+module.exports=require(4)
+},{}],321:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":320,"polyfill/polyfill-base.js":326}],322:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":326}],323:[function(require,module,exports){
+module.exports=require(23)
+},{}],324:[function(require,module,exports){
+module.exports=require(14)
+},{}],325:[function(require,module,exports){
+module.exports=require(15)
+},{}],326:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":324,"./lib/window.console.js":325}],327:[function(require,module,exports){
+module.exports=require(14)
+},{}],328:[function(require,module,exports){
+module.exports=require(15)
+},{}],329:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":327,"./lib/window.console.js":328}],330:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":333}],331:[function(require,module,exports){
+module.exports=require(14)
+},{}],332:[function(require,module,exports){
+module.exports=require(15)
+},{}],333:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":331,"./lib/window.console.js":332}],334:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],335:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":339,"js-ext/extra/hashmap.js":336,"polyfill/polyfill-base.js":345}],336:[function(require,module,exports){
+module.exports=require(4)
+},{}],337:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":338,"../lib/object.js":339,"./classes.js":335,"js-ext/extra/hashmap.js":336,"polyfill/lib/weakmap.js":343}],338:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":345}],339:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":336,"polyfill/polyfill-base.js":345}],340:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":345}],341:[function(require,module,exports){
+module.exports=require(23)
+},{}],342:[function(require,module,exports){
+module.exports=require(14)
+},{}],343:[function(require,module,exports){
+module.exports=require(45)
+},{}],344:[function(require,module,exports){
+module.exports=require(15)
+},{}],345:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":342,"./lib/window.console.js":344}],346:[function(require,module,exports){
+module.exports=require(48)
+},{}],347:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":346}],348:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":346}],349:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":346}],350:[function(require,module,exports){
+module.exports=require(14)
+},{}],351:[function(require,module,exports){
+module.exports=require(15)
+},{}],352:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":350,"./lib/window.console.js":351}],353:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":354,"./lib/timers.js":355}],354:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":336,"polyfill/polyfill-base.js":358}],355:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":358}],356:[function(require,module,exports){
+module.exports=require(14)
+},{}],357:[function(require,module,exports){
+module.exports=require(15)
+},{}],358:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":356,"./lib/window.console.js":357}],359:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":360}],360:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":361,"js-ext/lib/object.js":362}],361:[function(require,module,exports){
+module.exports=require(4)
+},{}],362:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":361,"polyfill/polyfill-base.js":365}],363:[function(require,module,exports){
+module.exports=require(14)
+},{}],364:[function(require,module,exports){
+module.exports=require(15)
+},{}],365:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":363,"./lib/window.console.js":364}],366:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":336,"js-ext/lib/object.js":339,"js-ext/lib/string.js":341,"polyfill":352,"polyfill/extra/transition.js":347,"polyfill/extra/vendorCSS.js":349}],367:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":336,"js-ext/lib/object.js":339,"polyfill":352}],368:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":336,"js-ext/lib/object.js":339,"js-ext/lib/string.js":341,"polyfill":352}],369:[function(require,module,exports){
+module.exports=require(71)
+},{"../css/element.css":334,"./attribute-extractor.js":366,"./element-array.js":367,"./html-parser.js":370,"./node-parser.js":371,"./vdom-ns.js":372,"./vnode.js":373,"js-ext/extra/hashmap.js":336,"js-ext/lib/object.js":339,"js-ext/lib/promise.js":340,"js-ext/lib/string.js":341,"polyfill":352,"polyfill/extra/transition.js":347,"polyfill/extra/transitionend.js":348,"polyfill/extra/vendorCSS.js":349,"utils":353,"window-ext":359}],370:[function(require,module,exports){
+module.exports=require(72)
+},{"./attribute-extractor.js":366,"./vdom-ns.js":372,"js-ext/extra/hashmap.js":336,"js-ext/lib/object.js":339,"polyfill":352}],371:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":366,"./vdom-ns.js":372,"./vnode.js":373,"js-ext/extra/hashmap.js":336,"js-ext/lib/object.js":339,"polyfill":352}],372:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":336,"js-ext/lib/object.js":339,"polyfill":352}],373:[function(require,module,exports){
+module.exports=require(75)
+},{"./attribute-extractor.js":366,"./html-parser.js":370,"./vdom-ns.js":372,"js-ext/extra/hashmap.js":336,"js-ext/extra/lightmap.js":337,"js-ext/lib/array.js":338,"js-ext/lib/object.js":339,"js-ext/lib/string.js":341,"polyfill":352,"utils/lib/timers.js":355}],374:[function(require,module,exports){
+module.exports=require(76)
+},{"./partials/extend-document.js":368,"./partials/extend-element.js":369,"./partials/node-parser.js":371,"js-ext/extra/hashmap.js":336,"js-ext/lib/object.js":339,"utils/lib/timers.js":355}],375:[function(require,module,exports){
+module.exports=require(14)
+},{}],376:[function(require,module,exports){
+module.exports=require(15)
+},{}],377:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":375,"./lib/window.console.js":376}],378:[function(require,module,exports){
+module.exports=require(4)
+},{}],379:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":378,"polyfill/polyfill-base.js":382}],380:[function(require,module,exports){
+module.exports=require(14)
+},{}],381:[function(require,module,exports){
+module.exports=require(15)
+},{}],382:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":380,"./lib/window.console.js":381}],383:[function(require,module,exports){
+module.exports=require(14)
+},{}],384:[function(require,module,exports){
+module.exports=require(15)
+},{}],385:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":383,"./lib/window.console.js":384}],386:[function(require,module,exports){
 "use strict";
 
 /**
@@ -18566,693 +18561,651 @@ module.exports = function (window) {
 
     return UserAgent;
 };
-},{"js-ext/extra/hashmap.js":257,"js-ext/lib/object.js":258,"polyfill":264}],266:[function(require,module,exports){
-module.exports=require(41)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],267:[function(require,module,exports){
-module.exports=require(16)
-},{"../lib/object.js":271,"js-ext/extra/hashmap.js":268,"polyfill/polyfill-base.js":277}],268:[function(require,module,exports){
-module.exports=require(17)
-},{}],269:[function(require,module,exports){
-module.exports=require(44)
-},{"../lib/array.js":270,"../lib/object.js":271,"./classes.js":267,"js-ext/extra/hashmap.js":268,"polyfill/lib/weakmap.js":275}],270:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":277}],271:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":268,"polyfill/polyfill-base.js":277}],272:[function(require,module,exports){
-module.exports=require(47)
-},{"polyfill":277}],273:[function(require,module,exports){
-module.exports=require(28)
-},{}],274:[function(require,module,exports){
-module.exports=require(19)
-},{}],275:[function(require,module,exports){
-module.exports=require(50)
-},{}],276:[function(require,module,exports){
-module.exports=require(20)
-},{}],277:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":274,"./lib/window.console.js":276}],278:[function(require,module,exports){
-module.exports=require(53)
-},{}],279:[function(require,module,exports){
-module.exports=require(54)
-},{"../bin/local-hashmap.js":278}],280:[function(require,module,exports){
-module.exports=require(55)
-},{"../bin/local-hashmap.js":278}],281:[function(require,module,exports){
-module.exports=require(56)
-},{"../bin/local-hashmap.js":278}],282:[function(require,module,exports){
-module.exports=require(19)
-},{}],283:[function(require,module,exports){
-module.exports=require(20)
-},{}],284:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":282,"./lib/window.console.js":283}],285:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":286,"./lib/timers.js":287}],286:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":378,"js-ext/lib/object.js":379,"polyfill":385}],387:[function(require,module,exports){
 module.exports=require(36)
-},{"js-ext/extra/hashmap.js":268,"polyfill/polyfill-base.js":290}],287:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":290}],288:[function(require,module,exports){
-module.exports=require(19)
-},{}],289:[function(require,module,exports){
-module.exports=require(20)
-},{}],290:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":288,"./lib/window.console.js":289}],291:[function(require,module,exports){
-module.exports=require(66)
-},{"./lib/sizes.js":292}],292:[function(require,module,exports){
-module.exports=require(67)
-},{"js-ext/extra/hashmap.js":293,"js-ext/lib/object.js":294}],293:[function(require,module,exports){
-module.exports=require(17)
-},{}],294:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":293,"polyfill/polyfill-base.js":297}],295:[function(require,module,exports){
-module.exports=require(19)
-},{}],296:[function(require,module,exports){
-module.exports=require(20)
-},{}],297:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":295,"./lib/window.console.js":296}],298:[function(require,module,exports){
-module.exports=require(73)
-},{"js-ext/extra/hashmap.js":268,"js-ext/lib/object.js":271,"js-ext/lib/string.js":273,"polyfill":284,"polyfill/extra/transition.js":279,"polyfill/extra/vendorCSS.js":281}],299:[function(require,module,exports){
-module.exports=require(74)
-},{"js-ext/extra/hashmap.js":268,"js-ext/lib/object.js":271,"polyfill":284}],300:[function(require,module,exports){
-module.exports=require(75)
-},{"js-ext/extra/hashmap.js":268,"js-ext/lib/object.js":271,"js-ext/lib/string.js":273,"polyfill":284}],301:[function(require,module,exports){
-module.exports=require(76)
-},{"../css/element.css":266,"./attribute-extractor.js":298,"./element-array.js":299,"./html-parser.js":302,"./node-parser.js":303,"./vdom-ns.js":304,"./vnode.js":305,"js-ext/extra/hashmap.js":268,"js-ext/lib/object.js":271,"js-ext/lib/promise.js":272,"js-ext/lib/string.js":273,"polyfill":284,"polyfill/extra/transition.js":279,"polyfill/extra/transitionend.js":280,"polyfill/extra/vendorCSS.js":281,"utils":285,"window-ext":291}],302:[function(require,module,exports){
-module.exports=require(77)
-},{"./attribute-extractor.js":298,"./vdom-ns.js":304,"js-ext/extra/hashmap.js":268,"js-ext/lib/object.js":271,"polyfill":284}],303:[function(require,module,exports){
-module.exports=require(78)
-},{"./attribute-extractor.js":298,"./vdom-ns.js":304,"./vnode.js":305,"js-ext/extra/hashmap.js":268,"js-ext/lib/object.js":271,"polyfill":284}],304:[function(require,module,exports){
-module.exports=require(79)
-},{"js-ext/extra/hashmap.js":268,"js-ext/lib/object.js":271,"polyfill":284}],305:[function(require,module,exports){
-module.exports=require(80)
-},{"./attribute-extractor.js":298,"./html-parser.js":302,"./vdom-ns.js":304,"js-ext/extra/hashmap.js":268,"js-ext/extra/lightmap.js":269,"js-ext/lib/array.js":270,"js-ext/lib/object.js":271,"js-ext/lib/string.js":273,"polyfill":284,"utils/lib/timers.js":287}],306:[function(require,module,exports){
-module.exports=require(81)
-},{"./partials/extend-document.js":300,"./partials/extend-element.js":301,"./partials/node-parser.js":303,"js-ext/extra/hashmap.js":268,"js-ext/lib/object.js":271,"utils/lib/timers.js":287}],307:[function(require,module,exports){
-module.exports=require(66)
-},{"./lib/sizes.js":308}],308:[function(require,module,exports){
-module.exports=require(67)
-},{"js-ext/extra/hashmap.js":309,"js-ext/lib/object.js":310}],309:[function(require,module,exports){
-module.exports=require(17)
-},{}],310:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":309,"polyfill/polyfill-base.js":313}],311:[function(require,module,exports){
-module.exports=require(19)
-},{}],312:[function(require,module,exports){
-module.exports=require(20)
-},{}],313:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":311,"./lib/window.console.js":312}],314:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],388:[function(require,module,exports){
 module.exports=require(11)
-},{"event":318,"js-ext/extra/hashmap.js":328,"js-ext/lib/array.js":329,"js-ext/lib/object.js":330,"js-ext/lib/string.js":331,"polyfill/polyfill-base.js":337,"utils":338,"vdom":384}],315:[function(require,module,exports){
-module.exports=require(12)
-},{"js-ext/extra/hashmap.js":320,"js-ext/lib/object.js":321,"polyfill/polyfill-base.js":327}],316:[function(require,module,exports){
+},{"../lib/object.js":392,"js-ext/extra/hashmap.js":389,"polyfill/polyfill-base.js":398}],389:[function(require,module,exports){
+module.exports=require(4)
+},{}],390:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":391,"../lib/object.js":392,"./classes.js":388,"js-ext/extra/hashmap.js":389,"polyfill/lib/weakmap.js":396}],391:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":398}],392:[function(require,module,exports){
 module.exports=require(13)
-},{"./event-base.js":315}],317:[function(require,module,exports){
-module.exports=require(14)
-},{"./event-base.js":315,"js-ext/extra/classes.js":319,"js-ext/lib/object.js":321}],318:[function(require,module,exports){
-module.exports=require(15)
-},{"./event-base.js":315,"./event-emitter.js":316,"./event-listener.js":317}],319:[function(require,module,exports){
-module.exports=require(16)
-},{"../lib/object.js":321,"js-ext/extra/hashmap.js":320,"polyfill/polyfill-base.js":324}],320:[function(require,module,exports){
-module.exports=require(17)
-},{}],321:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":320,"polyfill/polyfill-base.js":324}],322:[function(require,module,exports){
-module.exports=require(19)
-},{}],323:[function(require,module,exports){
-module.exports=require(20)
-},{}],324:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":322,"./lib/window.console.js":323}],325:[function(require,module,exports){
-module.exports=require(19)
-},{}],326:[function(require,module,exports){
-module.exports=require(20)
-},{}],327:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":325,"./lib/window.console.js":326}],328:[function(require,module,exports){
-module.exports=require(17)
-},{}],329:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":334}],330:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":328,"polyfill/polyfill-base.js":334}],331:[function(require,module,exports){
-module.exports=require(28)
-},{}],332:[function(require,module,exports){
-module.exports=require(19)
-},{}],333:[function(require,module,exports){
-module.exports=require(20)
-},{}],334:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":332,"./lib/window.console.js":333}],335:[function(require,module,exports){
-module.exports=require(19)
-},{}],336:[function(require,module,exports){
-module.exports=require(20)
-},{}],337:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":335,"./lib/window.console.js":336}],338:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":339,"./lib/timers.js":340}],339:[function(require,module,exports){
-module.exports=require(36)
-},{"js-ext/extra/hashmap.js":328,"polyfill/polyfill-base.js":343}],340:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":343}],341:[function(require,module,exports){
-module.exports=require(19)
-},{}],342:[function(require,module,exports){
-module.exports=require(20)
-},{}],343:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":341,"./lib/window.console.js":342}],344:[function(require,module,exports){
-module.exports=require(41)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],345:[function(require,module,exports){
-module.exports=require(16)
-},{"../lib/object.js":349,"js-ext/extra/hashmap.js":346,"polyfill/polyfill-base.js":355}],346:[function(require,module,exports){
-module.exports=require(17)
-},{}],347:[function(require,module,exports){
-module.exports=require(44)
-},{"../lib/array.js":348,"../lib/object.js":349,"./classes.js":345,"js-ext/extra/hashmap.js":346,"polyfill/lib/weakmap.js":353}],348:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":355}],349:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":346,"polyfill/polyfill-base.js":355}],350:[function(require,module,exports){
-module.exports=require(47)
-},{"polyfill":355}],351:[function(require,module,exports){
-module.exports=require(28)
-},{}],352:[function(require,module,exports){
-module.exports=require(19)
-},{}],353:[function(require,module,exports){
-module.exports=require(50)
-},{}],354:[function(require,module,exports){
-module.exports=require(20)
-},{}],355:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":352,"./lib/window.console.js":354}],356:[function(require,module,exports){
-module.exports=require(53)
-},{}],357:[function(require,module,exports){
-module.exports=require(54)
-},{"../bin/local-hashmap.js":356}],358:[function(require,module,exports){
-module.exports=require(55)
-},{"../bin/local-hashmap.js":356}],359:[function(require,module,exports){
-module.exports=require(56)
-},{"../bin/local-hashmap.js":356}],360:[function(require,module,exports){
-module.exports=require(19)
-},{}],361:[function(require,module,exports){
-module.exports=require(20)
-},{}],362:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":360,"./lib/window.console.js":361}],363:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":364,"./lib/timers.js":365}],364:[function(require,module,exports){
-module.exports=require(36)
-},{"js-ext/extra/hashmap.js":346,"polyfill/polyfill-base.js":368}],365:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":368}],366:[function(require,module,exports){
-module.exports=require(19)
-},{}],367:[function(require,module,exports){
-module.exports=require(20)
-},{}],368:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":366,"./lib/window.console.js":367}],369:[function(require,module,exports){
-module.exports=require(66)
-},{"./lib/sizes.js":370}],370:[function(require,module,exports){
-module.exports=require(67)
-},{"js-ext/extra/hashmap.js":371,"js-ext/lib/object.js":372}],371:[function(require,module,exports){
-module.exports=require(17)
-},{}],372:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":371,"polyfill/polyfill-base.js":375}],373:[function(require,module,exports){
-module.exports=require(19)
-},{}],374:[function(require,module,exports){
-module.exports=require(20)
-},{}],375:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":373,"./lib/window.console.js":374}],376:[function(require,module,exports){
-module.exports=require(73)
-},{"js-ext/extra/hashmap.js":346,"js-ext/lib/object.js":349,"js-ext/lib/string.js":351,"polyfill":362,"polyfill/extra/transition.js":357,"polyfill/extra/vendorCSS.js":359}],377:[function(require,module,exports){
-module.exports=require(74)
-},{"js-ext/extra/hashmap.js":346,"js-ext/lib/object.js":349,"polyfill":362}],378:[function(require,module,exports){
-module.exports=require(75)
-},{"js-ext/extra/hashmap.js":346,"js-ext/lib/object.js":349,"js-ext/lib/string.js":351,"polyfill":362}],379:[function(require,module,exports){
-module.exports=require(76)
-},{"../css/element.css":344,"./attribute-extractor.js":376,"./element-array.js":377,"./html-parser.js":380,"./node-parser.js":381,"./vdom-ns.js":382,"./vnode.js":383,"js-ext/extra/hashmap.js":346,"js-ext/lib/object.js":349,"js-ext/lib/promise.js":350,"js-ext/lib/string.js":351,"polyfill":362,"polyfill/extra/transition.js":357,"polyfill/extra/transitionend.js":358,"polyfill/extra/vendorCSS.js":359,"utils":363,"window-ext":369}],380:[function(require,module,exports){
-module.exports=require(77)
-},{"./attribute-extractor.js":376,"./vdom-ns.js":382,"js-ext/extra/hashmap.js":346,"js-ext/lib/object.js":349,"polyfill":362}],381:[function(require,module,exports){
-module.exports=require(78)
-},{"./attribute-extractor.js":376,"./vdom-ns.js":382,"./vnode.js":383,"js-ext/extra/hashmap.js":346,"js-ext/lib/object.js":349,"polyfill":362}],382:[function(require,module,exports){
-module.exports=require(79)
-},{"js-ext/extra/hashmap.js":346,"js-ext/lib/object.js":349,"polyfill":362}],383:[function(require,module,exports){
-module.exports=require(80)
-},{"./attribute-extractor.js":376,"./html-parser.js":380,"./vdom-ns.js":382,"js-ext/extra/hashmap.js":346,"js-ext/extra/lightmap.js":347,"js-ext/lib/array.js":348,"js-ext/lib/object.js":349,"js-ext/lib/string.js":351,"polyfill":362,"utils/lib/timers.js":365}],384:[function(require,module,exports){
-module.exports=require(81)
-},{"./partials/extend-document.js":378,"./partials/extend-element.js":379,"./partials/node-parser.js":381,"js-ext/extra/hashmap.js":346,"js-ext/lib/object.js":349,"utils/lib/timers.js":365}],385:[function(require,module,exports){
-module.exports=require(17)
-},{}],386:[function(require,module,exports){
-module.exports=require(83)
-},{"./lib/array.js":387,"./lib/function.js":388,"./lib/json.js":389,"./lib/object.js":390,"./lib/promise.js":391,"./lib/string.js":392}],387:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":395}],388:[function(require,module,exports){
-module.exports=require(85)
-},{"polyfill/polyfill-base.js":395}],389:[function(require,module,exports){
-module.exports=require(86)
-},{"polyfill/polyfill-base.js":395}],390:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":385,"polyfill/polyfill-base.js":395}],391:[function(require,module,exports){
-module.exports=require(47)
-},{"polyfill":395}],392:[function(require,module,exports){
-module.exports=require(28)
-},{}],393:[function(require,module,exports){
-module.exports=require(19)
-},{}],394:[function(require,module,exports){
-module.exports=require(20)
+},{"js-ext/extra/hashmap.js":389,"polyfill/polyfill-base.js":398}],393:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":398}],394:[function(require,module,exports){
+module.exports=require(23)
 },{}],395:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":393,"./lib/window.console.js":394}],396:[function(require,module,exports){
-module.exports=require(93)
-},{"./lib/constrain.js":397,"./lib/element-plugin.js":398}],397:[function(require,module,exports){
-module.exports=require(94)
-},{"./element-plugin.js":398,"js-ext/extra/hashmap.js":502}],398:[function(require,module,exports){
-module.exports=require(95)
-},{"event-dom":399,"event/extra/timer-finalize.js":471,"io":480,"js-ext/extra/classes.js":501,"js-ext/extra/hashmap.js":502,"js-ext/lib/object.js":503,"js-ext/lib/promise.js":504,"js-ext/lib/string.js":505,"polyfill":511,"utils/lib/timers.js":512,"vdom":556}],399:[function(require,module,exports){
-module.exports=require(11)
-},{"event":403,"js-ext/extra/hashmap.js":413,"js-ext/lib/array.js":414,"js-ext/lib/object.js":415,"js-ext/lib/string.js":416,"polyfill/polyfill-base.js":422,"utils":423,"vdom":469}],400:[function(require,module,exports){
-module.exports=require(12)
-},{"js-ext/extra/hashmap.js":405,"js-ext/lib/object.js":406,"polyfill/polyfill-base.js":412}],401:[function(require,module,exports){
-module.exports=require(13)
-},{"./event-base.js":400}],402:[function(require,module,exports){
 module.exports=require(14)
-},{"./event-base.js":400,"js-ext/extra/classes.js":404,"js-ext/lib/object.js":406}],403:[function(require,module,exports){
+},{}],396:[function(require,module,exports){
+module.exports=require(45)
+},{}],397:[function(require,module,exports){
 module.exports=require(15)
-},{"./event-base.js":400,"./event-emitter.js":401,"./event-listener.js":402}],404:[function(require,module,exports){
+},{}],398:[function(require,module,exports){
 module.exports=require(16)
-},{"../lib/object.js":406,"js-ext/extra/hashmap.js":405,"polyfill/polyfill-base.js":409}],405:[function(require,module,exports){
-module.exports=require(17)
-},{}],406:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":405,"polyfill/polyfill-base.js":409}],407:[function(require,module,exports){
-module.exports=require(19)
-},{}],408:[function(require,module,exports){
-module.exports=require(20)
-},{}],409:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":407,"./lib/window.console.js":408}],410:[function(require,module,exports){
-module.exports=require(19)
+},{"./lib/matchesselector.js":395,"./lib/window.console.js":397}],399:[function(require,module,exports){
+module.exports=require(48)
+},{}],400:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":399}],401:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":399}],402:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":399}],403:[function(require,module,exports){
+module.exports=require(14)
+},{}],404:[function(require,module,exports){
+module.exports=require(15)
+},{}],405:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":403,"./lib/window.console.js":404}],406:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":407,"./lib/timers.js":408}],407:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":389,"polyfill/polyfill-base.js":411}],408:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":411}],409:[function(require,module,exports){
+module.exports=require(14)
+},{}],410:[function(require,module,exports){
+module.exports=require(15)
 },{}],411:[function(require,module,exports){
-module.exports=require(20)
-},{}],412:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":410,"./lib/window.console.js":411}],413:[function(require,module,exports){
-module.exports=require(17)
-},{}],414:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":419}],415:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":413,"polyfill/polyfill-base.js":419}],416:[function(require,module,exports){
-module.exports=require(28)
+module.exports=require(16)
+},{"./lib/matchesselector.js":409,"./lib/window.console.js":410}],412:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":413}],413:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":414,"js-ext/lib/object.js":415}],414:[function(require,module,exports){
+module.exports=require(4)
+},{}],415:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":414,"polyfill/polyfill-base.js":418}],416:[function(require,module,exports){
+module.exports=require(14)
 },{}],417:[function(require,module,exports){
-module.exports=require(19)
+module.exports=require(15)
 },{}],418:[function(require,module,exports){
-module.exports=require(20)
-},{}],419:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":417,"./lib/window.console.js":418}],420:[function(require,module,exports){
-module.exports=require(19)
-},{}],421:[function(require,module,exports){
-module.exports=require(20)
-},{}],422:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":420,"./lib/window.console.js":421}],423:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":424,"./lib/timers.js":425}],424:[function(require,module,exports){
-module.exports=require(36)
-},{"js-ext/extra/hashmap.js":413,"polyfill/polyfill-base.js":428}],425:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":428}],426:[function(require,module,exports){
-module.exports=require(19)
-},{}],427:[function(require,module,exports){
-module.exports=require(20)
-},{}],428:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":426,"./lib/window.console.js":427}],429:[function(require,module,exports){
-module.exports=require(41)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],430:[function(require,module,exports){
 module.exports=require(16)
-},{"../lib/object.js":434,"js-ext/extra/hashmap.js":431,"polyfill/polyfill-base.js":440}],431:[function(require,module,exports){
-module.exports=require(17)
-},{}],432:[function(require,module,exports){
-module.exports=require(44)
-},{"../lib/array.js":433,"../lib/object.js":434,"./classes.js":430,"js-ext/extra/hashmap.js":431,"polyfill/lib/weakmap.js":438}],433:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":440}],434:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":431,"polyfill/polyfill-base.js":440}],435:[function(require,module,exports){
-module.exports=require(47)
-},{"polyfill":440}],436:[function(require,module,exports){
-module.exports=require(28)
-},{}],437:[function(require,module,exports){
-module.exports=require(19)
-},{}],438:[function(require,module,exports){
-module.exports=require(50)
-},{}],439:[function(require,module,exports){
-module.exports=require(20)
-},{}],440:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":437,"./lib/window.console.js":439}],441:[function(require,module,exports){
-module.exports=require(53)
-},{}],442:[function(require,module,exports){
-module.exports=require(54)
-},{"../bin/local-hashmap.js":441}],443:[function(require,module,exports){
-module.exports=require(55)
-},{"../bin/local-hashmap.js":441}],444:[function(require,module,exports){
-module.exports=require(56)
-},{"../bin/local-hashmap.js":441}],445:[function(require,module,exports){
-module.exports=require(19)
-},{}],446:[function(require,module,exports){
-module.exports=require(20)
-},{}],447:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":445,"./lib/window.console.js":446}],448:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":449,"./lib/timers.js":450}],449:[function(require,module,exports){
-module.exports=require(36)
-},{"js-ext/extra/hashmap.js":431,"polyfill/polyfill-base.js":453}],450:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":453}],451:[function(require,module,exports){
-module.exports=require(19)
-},{}],452:[function(require,module,exports){
-module.exports=require(20)
-},{}],453:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":451,"./lib/window.console.js":452}],454:[function(require,module,exports){
-module.exports=require(66)
-},{"./lib/sizes.js":455}],455:[function(require,module,exports){
-module.exports=require(67)
-},{"js-ext/extra/hashmap.js":456,"js-ext/lib/object.js":457}],456:[function(require,module,exports){
-module.exports=require(17)
-},{}],457:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":456,"polyfill/polyfill-base.js":460}],458:[function(require,module,exports){
-module.exports=require(19)
-},{}],459:[function(require,module,exports){
-module.exports=require(20)
-},{}],460:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":458,"./lib/window.console.js":459}],461:[function(require,module,exports){
+},{"./lib/matchesselector.js":416,"./lib/window.console.js":417}],419:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":389,"js-ext/lib/object.js":392,"js-ext/lib/string.js":394,"polyfill":405,"polyfill/extra/transition.js":400,"polyfill/extra/vendorCSS.js":402}],420:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":389,"js-ext/lib/object.js":392,"polyfill":405}],421:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":389,"js-ext/lib/object.js":392,"js-ext/lib/string.js":394,"polyfill":405}],422:[function(require,module,exports){
+module.exports=require(71)
+},{"../css/element.css":387,"./attribute-extractor.js":419,"./element-array.js":420,"./html-parser.js":423,"./node-parser.js":424,"./vdom-ns.js":425,"./vnode.js":426,"js-ext/extra/hashmap.js":389,"js-ext/lib/object.js":392,"js-ext/lib/promise.js":393,"js-ext/lib/string.js":394,"polyfill":405,"polyfill/extra/transition.js":400,"polyfill/extra/transitionend.js":401,"polyfill/extra/vendorCSS.js":402,"utils":406,"window-ext":412}],423:[function(require,module,exports){
+module.exports=require(72)
+},{"./attribute-extractor.js":419,"./vdom-ns.js":425,"js-ext/extra/hashmap.js":389,"js-ext/lib/object.js":392,"polyfill":405}],424:[function(require,module,exports){
 module.exports=require(73)
-},{"js-ext/extra/hashmap.js":431,"js-ext/lib/object.js":434,"js-ext/lib/string.js":436,"polyfill":447,"polyfill/extra/transition.js":442,"polyfill/extra/vendorCSS.js":444}],462:[function(require,module,exports){
+},{"./attribute-extractor.js":419,"./vdom-ns.js":425,"./vnode.js":426,"js-ext/extra/hashmap.js":389,"js-ext/lib/object.js":392,"polyfill":405}],425:[function(require,module,exports){
 module.exports=require(74)
-},{"js-ext/extra/hashmap.js":431,"js-ext/lib/object.js":434,"polyfill":447}],463:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":389,"js-ext/lib/object.js":392,"polyfill":405}],426:[function(require,module,exports){
 module.exports=require(75)
-},{"js-ext/extra/hashmap.js":431,"js-ext/lib/object.js":434,"js-ext/lib/string.js":436,"polyfill":447}],464:[function(require,module,exports){
+},{"./attribute-extractor.js":419,"./html-parser.js":423,"./vdom-ns.js":425,"js-ext/extra/hashmap.js":389,"js-ext/extra/lightmap.js":390,"js-ext/lib/array.js":391,"js-ext/lib/object.js":392,"js-ext/lib/string.js":394,"polyfill":405,"utils/lib/timers.js":408}],427:[function(require,module,exports){
 module.exports=require(76)
-},{"../css/element.css":429,"./attribute-extractor.js":461,"./element-array.js":462,"./html-parser.js":465,"./node-parser.js":466,"./vdom-ns.js":467,"./vnode.js":468,"js-ext/extra/hashmap.js":431,"js-ext/lib/object.js":434,"js-ext/lib/promise.js":435,"js-ext/lib/string.js":436,"polyfill":447,"polyfill/extra/transition.js":442,"polyfill/extra/transitionend.js":443,"polyfill/extra/vendorCSS.js":444,"utils":448,"window-ext":454}],465:[function(require,module,exports){
-module.exports=require(77)
-},{"./attribute-extractor.js":461,"./vdom-ns.js":467,"js-ext/extra/hashmap.js":431,"js-ext/lib/object.js":434,"polyfill":447}],466:[function(require,module,exports){
-module.exports=require(78)
-},{"./attribute-extractor.js":461,"./vdom-ns.js":467,"./vnode.js":468,"js-ext/extra/hashmap.js":431,"js-ext/lib/object.js":434,"polyfill":447}],467:[function(require,module,exports){
-module.exports=require(79)
-},{"js-ext/extra/hashmap.js":431,"js-ext/lib/object.js":434,"polyfill":447}],468:[function(require,module,exports){
-module.exports=require(80)
-},{"./attribute-extractor.js":461,"./html-parser.js":465,"./vdom-ns.js":467,"js-ext/extra/hashmap.js":431,"js-ext/extra/lightmap.js":432,"js-ext/lib/array.js":433,"js-ext/lib/object.js":434,"js-ext/lib/string.js":436,"polyfill":447,"utils/lib/timers.js":450}],469:[function(require,module,exports){
-module.exports=require(81)
-},{"./partials/extend-document.js":463,"./partials/extend-element.js":464,"./partials/node-parser.js":466,"js-ext/extra/hashmap.js":431,"js-ext/lib/object.js":434,"utils/lib/timers.js":450}],470:[function(require,module,exports){
-module.exports=require(12)
-},{"js-ext/extra/hashmap.js":472,"js-ext/lib/object.js":473,"polyfill/polyfill-base.js":479}],471:[function(require,module,exports){
-module.exports=require(168)
-},{"../event-base.js":470,"js-ext/extra/hashmap.js":472}],472:[function(require,module,exports){
-module.exports=require(17)
-},{}],473:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":472,"polyfill/polyfill-base.js":476}],474:[function(require,module,exports){
-module.exports=require(19)
-},{}],475:[function(require,module,exports){
-module.exports=require(20)
-},{}],476:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":474,"./lib/window.console.js":475}],477:[function(require,module,exports){
-module.exports=require(19)
-},{}],478:[function(require,module,exports){
-module.exports=require(20)
-},{}],479:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":477,"./lib/window.console.js":478}],480:[function(require,module,exports){
-module.exports=require(177)
-},{"js-ext":482,"js-ext/extra/hashmap.js":481,"polyfill/polyfill-base.js":494,"utils":495}],481:[function(require,module,exports){
-module.exports=require(17)
-},{}],482:[function(require,module,exports){
-module.exports=require(83)
-},{"./lib/array.js":483,"./lib/function.js":484,"./lib/json.js":485,"./lib/object.js":486,"./lib/promise.js":487,"./lib/string.js":488}],483:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":491}],484:[function(require,module,exports){
-module.exports=require(85)
-},{"polyfill/polyfill-base.js":491}],485:[function(require,module,exports){
-module.exports=require(86)
-},{"polyfill/polyfill-base.js":491}],486:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":481,"polyfill/polyfill-base.js":491}],487:[function(require,module,exports){
-module.exports=require(47)
-},{"polyfill":491}],488:[function(require,module,exports){
-module.exports=require(28)
-},{}],489:[function(require,module,exports){
-module.exports=require(19)
-},{}],490:[function(require,module,exports){
-module.exports=require(20)
-},{}],491:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":489,"./lib/window.console.js":490}],492:[function(require,module,exports){
-module.exports=require(19)
-},{}],493:[function(require,module,exports){
-module.exports=require(20)
-},{}],494:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":492,"./lib/window.console.js":493}],495:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":496,"./lib/timers.js":497}],496:[function(require,module,exports){
-module.exports=require(36)
-},{"js-ext/extra/hashmap.js":481,"polyfill/polyfill-base.js":500}],497:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":500}],498:[function(require,module,exports){
-module.exports=require(19)
-},{}],499:[function(require,module,exports){
-module.exports=require(20)
-},{}],500:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":498,"./lib/window.console.js":499}],501:[function(require,module,exports){
+},{"./partials/extend-document.js":421,"./partials/extend-element.js":422,"./partials/node-parser.js":424,"js-ext/extra/hashmap.js":389,"js-ext/lib/object.js":392,"utils/lib/timers.js":408}],428:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":429}],429:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":430,"js-ext/lib/object.js":431}],430:[function(require,module,exports){
+module.exports=require(4)
+},{}],431:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":430,"polyfill/polyfill-base.js":434}],432:[function(require,module,exports){
+module.exports=require(14)
+},{}],433:[function(require,module,exports){
+module.exports=require(15)
+},{}],434:[function(require,module,exports){
 module.exports=require(16)
-},{"../lib/object.js":503,"js-ext/extra/hashmap.js":502,"polyfill/polyfill-base.js":508}],502:[function(require,module,exports){
-module.exports=require(17)
-},{}],503:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":502,"polyfill/polyfill-base.js":508}],504:[function(require,module,exports){
-module.exports=require(47)
-},{"polyfill":508}],505:[function(require,module,exports){
-module.exports=require(28)
-},{}],506:[function(require,module,exports){
-module.exports=require(19)
-},{}],507:[function(require,module,exports){
-module.exports=require(20)
-},{}],508:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":506,"./lib/window.console.js":507}],509:[function(require,module,exports){
-module.exports=require(19)
-},{}],510:[function(require,module,exports){
-module.exports=require(20)
-},{}],511:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":509,"./lib/window.console.js":510}],512:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":515}],513:[function(require,module,exports){
-module.exports=require(19)
-},{}],514:[function(require,module,exports){
-module.exports=require(20)
-},{}],515:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":513,"./lib/window.console.js":514}],516:[function(require,module,exports){
-module.exports=require(41)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],517:[function(require,module,exports){
-module.exports=require(16)
-},{"../lib/object.js":521,"js-ext/extra/hashmap.js":518,"polyfill/polyfill-base.js":527}],518:[function(require,module,exports){
-module.exports=require(17)
-},{}],519:[function(require,module,exports){
-module.exports=require(44)
-},{"../lib/array.js":520,"../lib/object.js":521,"./classes.js":517,"js-ext/extra/hashmap.js":518,"polyfill/lib/weakmap.js":525}],520:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":527}],521:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":518,"polyfill/polyfill-base.js":527}],522:[function(require,module,exports){
-module.exports=require(47)
-},{"polyfill":527}],523:[function(require,module,exports){
-module.exports=require(28)
-},{}],524:[function(require,module,exports){
-module.exports=require(19)
-},{}],525:[function(require,module,exports){
-module.exports=require(50)
-},{}],526:[function(require,module,exports){
-module.exports=require(20)
-},{}],527:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":524,"./lib/window.console.js":526}],528:[function(require,module,exports){
-module.exports=require(53)
-},{}],529:[function(require,module,exports){
-module.exports=require(54)
-},{"../bin/local-hashmap.js":528}],530:[function(require,module,exports){
-module.exports=require(55)
-},{"../bin/local-hashmap.js":528}],531:[function(require,module,exports){
-module.exports=require(56)
-},{"../bin/local-hashmap.js":528}],532:[function(require,module,exports){
-module.exports=require(19)
-},{}],533:[function(require,module,exports){
-module.exports=require(20)
-},{}],534:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":532,"./lib/window.console.js":533}],535:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":536,"./lib/timers.js":537}],536:[function(require,module,exports){
-module.exports=require(36)
-},{"js-ext/extra/hashmap.js":518,"polyfill/polyfill-base.js":540}],537:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":540}],538:[function(require,module,exports){
-module.exports=require(19)
-},{}],539:[function(require,module,exports){
-module.exports=require(20)
-},{}],540:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":538,"./lib/window.console.js":539}],541:[function(require,module,exports){
-module.exports=require(66)
-},{"./lib/sizes.js":542}],542:[function(require,module,exports){
-module.exports=require(67)
-},{"js-ext/extra/hashmap.js":543,"js-ext/lib/object.js":544}],543:[function(require,module,exports){
-module.exports=require(17)
-},{}],544:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":543,"polyfill/polyfill-base.js":547}],545:[function(require,module,exports){
-module.exports=require(19)
-},{}],546:[function(require,module,exports){
-module.exports=require(20)
-},{}],547:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":545,"./lib/window.console.js":546}],548:[function(require,module,exports){
-module.exports=require(73)
-},{"js-ext/extra/hashmap.js":518,"js-ext/lib/object.js":521,"js-ext/lib/string.js":523,"polyfill":534,"polyfill/extra/transition.js":529,"polyfill/extra/vendorCSS.js":531}],549:[function(require,module,exports){
-module.exports=require(74)
-},{"js-ext/extra/hashmap.js":518,"js-ext/lib/object.js":521,"polyfill":534}],550:[function(require,module,exports){
-module.exports=require(75)
-},{"js-ext/extra/hashmap.js":518,"js-ext/lib/object.js":521,"js-ext/lib/string.js":523,"polyfill":534}],551:[function(require,module,exports){
-module.exports=require(76)
-},{"../css/element.css":516,"./attribute-extractor.js":548,"./element-array.js":549,"./html-parser.js":552,"./node-parser.js":553,"./vdom-ns.js":554,"./vnode.js":555,"js-ext/extra/hashmap.js":518,"js-ext/lib/object.js":521,"js-ext/lib/promise.js":522,"js-ext/lib/string.js":523,"polyfill":534,"polyfill/extra/transition.js":529,"polyfill/extra/transitionend.js":530,"polyfill/extra/vendorCSS.js":531,"utils":535,"window-ext":541}],552:[function(require,module,exports){
-module.exports=require(77)
-},{"./attribute-extractor.js":548,"./vdom-ns.js":554,"js-ext/extra/hashmap.js":518,"js-ext/lib/object.js":521,"polyfill":534}],553:[function(require,module,exports){
-module.exports=require(78)
-},{"./attribute-extractor.js":548,"./vdom-ns.js":554,"./vnode.js":555,"js-ext/extra/hashmap.js":518,"js-ext/lib/object.js":521,"polyfill":534}],554:[function(require,module,exports){
-module.exports=require(79)
-},{"js-ext/extra/hashmap.js":518,"js-ext/lib/object.js":521,"polyfill":534}],555:[function(require,module,exports){
-module.exports=require(80)
-},{"./attribute-extractor.js":548,"./html-parser.js":552,"./vdom-ns.js":554,"js-ext/extra/hashmap.js":518,"js-ext/extra/lightmap.js":519,"js-ext/lib/array.js":520,"js-ext/lib/object.js":521,"js-ext/lib/string.js":523,"polyfill":534,"utils/lib/timers.js":537}],556:[function(require,module,exports){
-module.exports=require(81)
-},{"./partials/extend-document.js":550,"./partials/extend-element.js":551,"./partials/node-parser.js":553,"js-ext/extra/hashmap.js":518,"js-ext/lib/object.js":521,"utils/lib/timers.js":537}],557:[function(require,module,exports){
-module.exports=require(19)
-},{}],558:[function(require,module,exports){
-module.exports=require(20)
-},{}],559:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":557,"./lib/window.console.js":558}],560:[function(require,module,exports){
-module.exports=require(41)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],561:[function(require,module,exports){
-module.exports=require(16)
-},{"../lib/object.js":565,"js-ext/extra/hashmap.js":562,"polyfill/polyfill-base.js":571}],562:[function(require,module,exports){
-module.exports=require(17)
-},{}],563:[function(require,module,exports){
-module.exports=require(44)
-},{"../lib/array.js":564,"../lib/object.js":565,"./classes.js":561,"js-ext/extra/hashmap.js":562,"polyfill/lib/weakmap.js":569}],564:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":571}],565:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":562,"polyfill/polyfill-base.js":571}],566:[function(require,module,exports){
-module.exports=require(47)
-},{"polyfill":571}],567:[function(require,module,exports){
-module.exports=require(28)
-},{}],568:[function(require,module,exports){
-module.exports=require(19)
-},{}],569:[function(require,module,exports){
-module.exports=require(50)
-},{}],570:[function(require,module,exports){
-module.exports=require(20)
-},{}],571:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":568,"./lib/window.console.js":570}],572:[function(require,module,exports){
-module.exports=require(53)
-},{}],573:[function(require,module,exports){
-module.exports=require(54)
-},{"../bin/local-hashmap.js":572}],574:[function(require,module,exports){
-module.exports=require(55)
-},{"../bin/local-hashmap.js":572}],575:[function(require,module,exports){
-module.exports=require(56)
-},{"../bin/local-hashmap.js":572}],576:[function(require,module,exports){
-module.exports=require(19)
-},{}],577:[function(require,module,exports){
-module.exports=require(20)
-},{}],578:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":576,"./lib/window.console.js":577}],579:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":580,"./lib/timers.js":581}],580:[function(require,module,exports){
-module.exports=require(36)
-},{"js-ext/extra/hashmap.js":562,"polyfill/polyfill-base.js":584}],581:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":584}],582:[function(require,module,exports){
-module.exports=require(19)
-},{}],583:[function(require,module,exports){
-module.exports=require(20)
-},{}],584:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":582,"./lib/window.console.js":583}],585:[function(require,module,exports){
-module.exports=require(66)
-},{"./lib/sizes.js":586}],586:[function(require,module,exports){
-module.exports=require(67)
-},{"js-ext/extra/hashmap.js":587,"js-ext/lib/object.js":588}],587:[function(require,module,exports){
-module.exports=require(17)
-},{}],588:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":587,"polyfill/polyfill-base.js":591}],589:[function(require,module,exports){
-module.exports=require(19)
-},{}],590:[function(require,module,exports){
-module.exports=require(20)
-},{}],591:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":589,"./lib/window.console.js":590}],592:[function(require,module,exports){
-module.exports=require(73)
-},{"js-ext/extra/hashmap.js":562,"js-ext/lib/object.js":565,"js-ext/lib/string.js":567,"polyfill":578,"polyfill/extra/transition.js":573,"polyfill/extra/vendorCSS.js":575}],593:[function(require,module,exports){
-module.exports=require(74)
-},{"js-ext/extra/hashmap.js":562,"js-ext/lib/object.js":565,"polyfill":578}],594:[function(require,module,exports){
-module.exports=require(75)
-},{"js-ext/extra/hashmap.js":562,"js-ext/lib/object.js":565,"js-ext/lib/string.js":567,"polyfill":578}],595:[function(require,module,exports){
-module.exports=require(76)
-},{"../css/element.css":560,"./attribute-extractor.js":592,"./element-array.js":593,"./html-parser.js":596,"./node-parser.js":597,"./vdom-ns.js":598,"./vnode.js":599,"js-ext/extra/hashmap.js":562,"js-ext/lib/object.js":565,"js-ext/lib/promise.js":566,"js-ext/lib/string.js":567,"polyfill":578,"polyfill/extra/transition.js":573,"polyfill/extra/transitionend.js":574,"polyfill/extra/vendorCSS.js":575,"utils":579,"window-ext":585}],596:[function(require,module,exports){
-module.exports=require(77)
-},{"./attribute-extractor.js":592,"./vdom-ns.js":598,"js-ext/extra/hashmap.js":562,"js-ext/lib/object.js":565,"polyfill":578}],597:[function(require,module,exports){
-module.exports=require(78)
-},{"./attribute-extractor.js":592,"./vdom-ns.js":598,"./vnode.js":599,"js-ext/extra/hashmap.js":562,"js-ext/lib/object.js":565,"polyfill":578}],598:[function(require,module,exports){
-module.exports=require(79)
-},{"js-ext/extra/hashmap.js":562,"js-ext/lib/object.js":565,"polyfill":578}],599:[function(require,module,exports){
-module.exports=require(80)
-},{"./attribute-extractor.js":592,"./html-parser.js":596,"./vdom-ns.js":598,"js-ext/extra/hashmap.js":562,"js-ext/extra/lightmap.js":563,"js-ext/lib/array.js":564,"js-ext/lib/object.js":565,"js-ext/lib/string.js":567,"polyfill":578,"utils/lib/timers.js":581}],600:[function(require,module,exports){
-module.exports=require(81)
-},{"./partials/extend-document.js":594,"./partials/extend-element.js":595,"./partials/node-parser.js":597,"js-ext/extra/hashmap.js":562,"js-ext/lib/object.js":565,"utils/lib/timers.js":581}],601:[function(require,module,exports){
-module.exports=require(66)
-},{"./lib/sizes.js":602}],602:[function(require,module,exports){
-module.exports=require(67)
-},{"js-ext/extra/hashmap.js":603,"js-ext/lib/object.js":604}],603:[function(require,module,exports){
-module.exports=require(17)
-},{}],604:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":603,"polyfill/polyfill-base.js":607}],605:[function(require,module,exports){
-module.exports=require(19)
-},{}],606:[function(require,module,exports){
-module.exports=require(20)
-},{}],607:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":605,"./lib/window.console.js":606}],608:[function(require,module,exports){
+},{"./lib/matchesselector.js":432,"./lib/window.console.js":433}],435:[function(require,module,exports){
+module.exports=require(6)
+},{"event":439,"js-ext/extra/hashmap.js":449,"js-ext/lib/array.js":450,"js-ext/lib/object.js":451,"js-ext/lib/string.js":452,"polyfill/polyfill-base.js":458,"utils":459,"vdom":505}],436:[function(require,module,exports){
+module.exports=require(7)
+},{"js-ext/extra/hashmap.js":441,"js-ext/lib/object.js":442,"polyfill/polyfill-base.js":448}],437:[function(require,module,exports){
+module.exports=require(8)
+},{"./event-base.js":436}],438:[function(require,module,exports){
+module.exports=require(9)
+},{"./event-base.js":436,"js-ext/extra/classes.js":440,"js-ext/lib/object.js":442}],439:[function(require,module,exports){
+module.exports=require(10)
+},{"./event-base.js":436,"./event-emitter.js":437,"./event-listener.js":438}],440:[function(require,module,exports){
 module.exports=require(11)
-},{"event":616,"js-ext/extra/hashmap.js":626,"js-ext/lib/array.js":627,"js-ext/lib/object.js":628,"js-ext/lib/string.js":629,"polyfill/polyfill-base.js":635,"utils":636,"vdom":682}],609:[function(require,module,exports){
+},{"../lib/object.js":442,"js-ext/extra/hashmap.js":441,"polyfill/polyfill-base.js":445}],441:[function(require,module,exports){
+module.exports=require(4)
+},{}],442:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":441,"polyfill/polyfill-base.js":445}],443:[function(require,module,exports){
+module.exports=require(14)
+},{}],444:[function(require,module,exports){
+module.exports=require(15)
+},{}],445:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":443,"./lib/window.console.js":444}],446:[function(require,module,exports){
+module.exports=require(14)
+},{}],447:[function(require,module,exports){
+module.exports=require(15)
+},{}],448:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":446,"./lib/window.console.js":447}],449:[function(require,module,exports){
+module.exports=require(4)
+},{}],450:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":455}],451:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":449,"polyfill/polyfill-base.js":455}],452:[function(require,module,exports){
+module.exports=require(23)
+},{}],453:[function(require,module,exports){
+module.exports=require(14)
+},{}],454:[function(require,module,exports){
+module.exports=require(15)
+},{}],455:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":453,"./lib/window.console.js":454}],456:[function(require,module,exports){
+module.exports=require(14)
+},{}],457:[function(require,module,exports){
+module.exports=require(15)
+},{}],458:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":456,"./lib/window.console.js":457}],459:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":460,"./lib/timers.js":461}],460:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":449,"polyfill/polyfill-base.js":464}],461:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":464}],462:[function(require,module,exports){
+module.exports=require(14)
+},{}],463:[function(require,module,exports){
+module.exports=require(15)
+},{}],464:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":462,"./lib/window.console.js":463}],465:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],466:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":470,"js-ext/extra/hashmap.js":467,"polyfill/polyfill-base.js":476}],467:[function(require,module,exports){
+module.exports=require(4)
+},{}],468:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":469,"../lib/object.js":470,"./classes.js":466,"js-ext/extra/hashmap.js":467,"polyfill/lib/weakmap.js":474}],469:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":476}],470:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":467,"polyfill/polyfill-base.js":476}],471:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":476}],472:[function(require,module,exports){
+module.exports=require(23)
+},{}],473:[function(require,module,exports){
+module.exports=require(14)
+},{}],474:[function(require,module,exports){
+module.exports=require(45)
+},{}],475:[function(require,module,exports){
+module.exports=require(15)
+},{}],476:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":473,"./lib/window.console.js":475}],477:[function(require,module,exports){
+module.exports=require(48)
+},{}],478:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":477}],479:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":477}],480:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":477}],481:[function(require,module,exports){
+module.exports=require(14)
+},{}],482:[function(require,module,exports){
+module.exports=require(15)
+},{}],483:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":481,"./lib/window.console.js":482}],484:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":485,"./lib/timers.js":486}],485:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":467,"polyfill/polyfill-base.js":489}],486:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":489}],487:[function(require,module,exports){
+module.exports=require(14)
+},{}],488:[function(require,module,exports){
+module.exports=require(15)
+},{}],489:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":487,"./lib/window.console.js":488}],490:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":491}],491:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":492,"js-ext/lib/object.js":493}],492:[function(require,module,exports){
+module.exports=require(4)
+},{}],493:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":492,"polyfill/polyfill-base.js":496}],494:[function(require,module,exports){
+module.exports=require(14)
+},{}],495:[function(require,module,exports){
+module.exports=require(15)
+},{}],496:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":494,"./lib/window.console.js":495}],497:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":467,"js-ext/lib/object.js":470,"js-ext/lib/string.js":472,"polyfill":483,"polyfill/extra/transition.js":478,"polyfill/extra/vendorCSS.js":480}],498:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":467,"js-ext/lib/object.js":470,"polyfill":483}],499:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":467,"js-ext/lib/object.js":470,"js-ext/lib/string.js":472,"polyfill":483}],500:[function(require,module,exports){
+module.exports=require(71)
+},{"../css/element.css":465,"./attribute-extractor.js":497,"./element-array.js":498,"./html-parser.js":501,"./node-parser.js":502,"./vdom-ns.js":503,"./vnode.js":504,"js-ext/extra/hashmap.js":467,"js-ext/lib/object.js":470,"js-ext/lib/promise.js":471,"js-ext/lib/string.js":472,"polyfill":483,"polyfill/extra/transition.js":478,"polyfill/extra/transitionend.js":479,"polyfill/extra/vendorCSS.js":480,"utils":484,"window-ext":490}],501:[function(require,module,exports){
+module.exports=require(72)
+},{"./attribute-extractor.js":497,"./vdom-ns.js":503,"js-ext/extra/hashmap.js":467,"js-ext/lib/object.js":470,"polyfill":483}],502:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":497,"./vdom-ns.js":503,"./vnode.js":504,"js-ext/extra/hashmap.js":467,"js-ext/lib/object.js":470,"polyfill":483}],503:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":467,"js-ext/lib/object.js":470,"polyfill":483}],504:[function(require,module,exports){
+module.exports=require(75)
+},{"./attribute-extractor.js":497,"./html-parser.js":501,"./vdom-ns.js":503,"js-ext/extra/hashmap.js":467,"js-ext/extra/lightmap.js":468,"js-ext/lib/array.js":469,"js-ext/lib/object.js":470,"js-ext/lib/string.js":472,"polyfill":483,"utils/lib/timers.js":486}],505:[function(require,module,exports){
+module.exports=require(76)
+},{"./partials/extend-document.js":499,"./partials/extend-element.js":500,"./partials/node-parser.js":502,"js-ext/extra/hashmap.js":467,"js-ext/lib/object.js":470,"utils/lib/timers.js":486}],506:[function(require,module,exports){
+module.exports=require(4)
+},{}],507:[function(require,module,exports){
+module.exports=require(225)
+},{"./lib/array.js":508,"./lib/function.js":509,"./lib/json.js":510,"./lib/object.js":511,"./lib/promise.js":512,"./lib/string.js":513}],508:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":516}],509:[function(require,module,exports){
+module.exports=require(227)
+},{"polyfill/polyfill-base.js":516}],510:[function(require,module,exports){
+module.exports=require(228)
+},{"polyfill/polyfill-base.js":516}],511:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":506,"polyfill/polyfill-base.js":516}],512:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":516}],513:[function(require,module,exports){
+module.exports=require(23)
+},{}],514:[function(require,module,exports){
+module.exports=require(14)
+},{}],515:[function(require,module,exports){
+module.exports=require(15)
+},{}],516:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":514,"./lib/window.console.js":515}],517:[function(require,module,exports){
+module.exports=require(5)
+},{"event-dom":518,"event/extra/promise-finalize.js":590,"event/extra/timer-finalize.js":591,"js-ext/extra/classes.js":601,"js-ext/extra/hashmap.js":602,"js-ext/lib/object.js":603,"js-ext/lib/promise.js":604,"js-ext/lib/string.js":605,"polyfill":611,"utils/lib/timers.js":612,"vdom":656}],518:[function(require,module,exports){
+module.exports=require(6)
+},{"event":522,"js-ext/extra/hashmap.js":532,"js-ext/lib/array.js":533,"js-ext/lib/object.js":534,"js-ext/lib/string.js":535,"polyfill/polyfill-base.js":541,"utils":542,"vdom":588}],519:[function(require,module,exports){
+module.exports=require(7)
+},{"js-ext/extra/hashmap.js":524,"js-ext/lib/object.js":525,"polyfill/polyfill-base.js":531}],520:[function(require,module,exports){
+module.exports=require(8)
+},{"./event-base.js":519}],521:[function(require,module,exports){
+module.exports=require(9)
+},{"./event-base.js":519,"js-ext/extra/classes.js":523,"js-ext/lib/object.js":525}],522:[function(require,module,exports){
+module.exports=require(10)
+},{"./event-base.js":519,"./event-emitter.js":520,"./event-listener.js":521}],523:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":525,"js-ext/extra/hashmap.js":524,"polyfill/polyfill-base.js":528}],524:[function(require,module,exports){
+module.exports=require(4)
+},{}],525:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":524,"polyfill/polyfill-base.js":528}],526:[function(require,module,exports){
+module.exports=require(14)
+},{}],527:[function(require,module,exports){
+module.exports=require(15)
+},{}],528:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":526,"./lib/window.console.js":527}],529:[function(require,module,exports){
+module.exports=require(14)
+},{}],530:[function(require,module,exports){
+module.exports=require(15)
+},{}],531:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":529,"./lib/window.console.js":530}],532:[function(require,module,exports){
+module.exports=require(4)
+},{}],533:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":538}],534:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":532,"polyfill/polyfill-base.js":538}],535:[function(require,module,exports){
+module.exports=require(23)
+},{}],536:[function(require,module,exports){
+module.exports=require(14)
+},{}],537:[function(require,module,exports){
+module.exports=require(15)
+},{}],538:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":536,"./lib/window.console.js":537}],539:[function(require,module,exports){
+module.exports=require(14)
+},{}],540:[function(require,module,exports){
+module.exports=require(15)
+},{}],541:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":539,"./lib/window.console.js":540}],542:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":543,"./lib/timers.js":544}],543:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":532,"polyfill/polyfill-base.js":547}],544:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":547}],545:[function(require,module,exports){
+module.exports=require(14)
+},{}],546:[function(require,module,exports){
+module.exports=require(15)
+},{}],547:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":545,"./lib/window.console.js":546}],548:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],549:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":553,"js-ext/extra/hashmap.js":550,"polyfill/polyfill-base.js":559}],550:[function(require,module,exports){
+module.exports=require(4)
+},{}],551:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":552,"../lib/object.js":553,"./classes.js":549,"js-ext/extra/hashmap.js":550,"polyfill/lib/weakmap.js":557}],552:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":559}],553:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":550,"polyfill/polyfill-base.js":559}],554:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":559}],555:[function(require,module,exports){
+module.exports=require(23)
+},{}],556:[function(require,module,exports){
+module.exports=require(14)
+},{}],557:[function(require,module,exports){
+module.exports=require(45)
+},{}],558:[function(require,module,exports){
+module.exports=require(15)
+},{}],559:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":556,"./lib/window.console.js":558}],560:[function(require,module,exports){
+module.exports=require(48)
+},{}],561:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":560}],562:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":560}],563:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":560}],564:[function(require,module,exports){
+module.exports=require(14)
+},{}],565:[function(require,module,exports){
+module.exports=require(15)
+},{}],566:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":564,"./lib/window.console.js":565}],567:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":568,"./lib/timers.js":569}],568:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":550,"polyfill/polyfill-base.js":572}],569:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":572}],570:[function(require,module,exports){
+module.exports=require(14)
+},{}],571:[function(require,module,exports){
+module.exports=require(15)
+},{}],572:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":570,"./lib/window.console.js":571}],573:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":574}],574:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":575,"js-ext/lib/object.js":576}],575:[function(require,module,exports){
+module.exports=require(4)
+},{}],576:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":575,"polyfill/polyfill-base.js":579}],577:[function(require,module,exports){
+module.exports=require(14)
+},{}],578:[function(require,module,exports){
+module.exports=require(15)
+},{}],579:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":577,"./lib/window.console.js":578}],580:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":550,"js-ext/lib/object.js":553,"js-ext/lib/string.js":555,"polyfill":566,"polyfill/extra/transition.js":561,"polyfill/extra/vendorCSS.js":563}],581:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":550,"js-ext/lib/object.js":553,"polyfill":566}],582:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":550,"js-ext/lib/object.js":553,"js-ext/lib/string.js":555,"polyfill":566}],583:[function(require,module,exports){
+module.exports=require(71)
+},{"../css/element.css":548,"./attribute-extractor.js":580,"./element-array.js":581,"./html-parser.js":584,"./node-parser.js":585,"./vdom-ns.js":586,"./vnode.js":587,"js-ext/extra/hashmap.js":550,"js-ext/lib/object.js":553,"js-ext/lib/promise.js":554,"js-ext/lib/string.js":555,"polyfill":566,"polyfill/extra/transition.js":561,"polyfill/extra/transitionend.js":562,"polyfill/extra/vendorCSS.js":563,"utils":567,"window-ext":573}],584:[function(require,module,exports){
+module.exports=require(72)
+},{"./attribute-extractor.js":580,"./vdom-ns.js":586,"js-ext/extra/hashmap.js":550,"js-ext/lib/object.js":553,"polyfill":566}],585:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":580,"./vdom-ns.js":586,"./vnode.js":587,"js-ext/extra/hashmap.js":550,"js-ext/lib/object.js":553,"polyfill":566}],586:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":550,"js-ext/lib/object.js":553,"polyfill":566}],587:[function(require,module,exports){
+module.exports=require(75)
+},{"./attribute-extractor.js":580,"./html-parser.js":584,"./vdom-ns.js":586,"js-ext/extra/hashmap.js":550,"js-ext/extra/lightmap.js":551,"js-ext/lib/array.js":552,"js-ext/lib/object.js":553,"js-ext/lib/string.js":555,"polyfill":566,"utils/lib/timers.js":569}],588:[function(require,module,exports){
+module.exports=require(76)
+},{"./partials/extend-document.js":582,"./partials/extend-element.js":583,"./partials/node-parser.js":585,"js-ext/extra/hashmap.js":550,"js-ext/lib/object.js":553,"utils/lib/timers.js":569}],589:[function(require,module,exports){
+module.exports=require(7)
+},{"js-ext/extra/hashmap.js":592,"js-ext/lib/object.js":593,"polyfill/polyfill-base.js":600}],590:[function(require,module,exports){
+module.exports=require(78)
+},{"js-ext/extra/hashmap.js":592,"js-ext/lib/promise.js":594}],591:[function(require,module,exports){
+module.exports=require(79)
+},{"../event-base.js":589,"js-ext/extra/hashmap.js":592}],592:[function(require,module,exports){
+module.exports=require(4)
+},{}],593:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":592,"polyfill/polyfill-base.js":597}],594:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":597}],595:[function(require,module,exports){
+module.exports=require(14)
+},{}],596:[function(require,module,exports){
+module.exports=require(15)
+},{}],597:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":595,"./lib/window.console.js":596}],598:[function(require,module,exports){
+module.exports=require(14)
+},{}],599:[function(require,module,exports){
+module.exports=require(15)
+},{}],600:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":598,"./lib/window.console.js":599}],601:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":603,"js-ext/extra/hashmap.js":602,"polyfill/polyfill-base.js":608}],602:[function(require,module,exports){
+module.exports=require(4)
+},{}],603:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":602,"polyfill/polyfill-base.js":608}],604:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":608}],605:[function(require,module,exports){
+module.exports=require(23)
+},{}],606:[function(require,module,exports){
+module.exports=require(14)
+},{}],607:[function(require,module,exports){
+module.exports=require(15)
+},{}],608:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":606,"./lib/window.console.js":607}],609:[function(require,module,exports){
+module.exports=require(14)
+},{}],610:[function(require,module,exports){
+module.exports=require(15)
+},{}],611:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":609,"./lib/window.console.js":610}],612:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":615}],613:[function(require,module,exports){
+module.exports=require(14)
+},{}],614:[function(require,module,exports){
+module.exports=require(15)
+},{}],615:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":613,"./lib/window.console.js":614}],616:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],617:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":621,"js-ext/extra/hashmap.js":618,"polyfill/polyfill-base.js":627}],618:[function(require,module,exports){
+module.exports=require(4)
+},{}],619:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":620,"../lib/object.js":621,"./classes.js":617,"js-ext/extra/hashmap.js":618,"polyfill/lib/weakmap.js":625}],620:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":627}],621:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":618,"polyfill/polyfill-base.js":627}],622:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":627}],623:[function(require,module,exports){
+module.exports=require(23)
+},{}],624:[function(require,module,exports){
+module.exports=require(14)
+},{}],625:[function(require,module,exports){
+module.exports=require(45)
+},{}],626:[function(require,module,exports){
+module.exports=require(15)
+},{}],627:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":624,"./lib/window.console.js":626}],628:[function(require,module,exports){
+module.exports=require(48)
+},{}],629:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":628}],630:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":628}],631:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":628}],632:[function(require,module,exports){
+module.exports=require(14)
+},{}],633:[function(require,module,exports){
+module.exports=require(15)
+},{}],634:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":632,"./lib/window.console.js":633}],635:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":636,"./lib/timers.js":637}],636:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":618,"polyfill/polyfill-base.js":640}],637:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":640}],638:[function(require,module,exports){
+module.exports=require(14)
+},{}],639:[function(require,module,exports){
+module.exports=require(15)
+},{}],640:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":638,"./lib/window.console.js":639}],641:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":642}],642:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":643,"js-ext/lib/object.js":644}],643:[function(require,module,exports){
+module.exports=require(4)
+},{}],644:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":643,"polyfill/polyfill-base.js":647}],645:[function(require,module,exports){
+module.exports=require(14)
+},{}],646:[function(require,module,exports){
+module.exports=require(15)
+},{}],647:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":645,"./lib/window.console.js":646}],648:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":618,"js-ext/lib/object.js":621,"js-ext/lib/string.js":623,"polyfill":634,"polyfill/extra/transition.js":629,"polyfill/extra/vendorCSS.js":631}],649:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":618,"js-ext/lib/object.js":621,"polyfill":634}],650:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":618,"js-ext/lib/object.js":621,"js-ext/lib/string.js":623,"polyfill":634}],651:[function(require,module,exports){
+module.exports=require(71)
+},{"../css/element.css":616,"./attribute-extractor.js":648,"./element-array.js":649,"./html-parser.js":652,"./node-parser.js":653,"./vdom-ns.js":654,"./vnode.js":655,"js-ext/extra/hashmap.js":618,"js-ext/lib/object.js":621,"js-ext/lib/promise.js":622,"js-ext/lib/string.js":623,"polyfill":634,"polyfill/extra/transition.js":629,"polyfill/extra/transitionend.js":630,"polyfill/extra/vendorCSS.js":631,"utils":635,"window-ext":641}],652:[function(require,module,exports){
+module.exports=require(72)
+},{"./attribute-extractor.js":648,"./vdom-ns.js":654,"js-ext/extra/hashmap.js":618,"js-ext/lib/object.js":621,"polyfill":634}],653:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":648,"./vdom-ns.js":654,"./vnode.js":655,"js-ext/extra/hashmap.js":618,"js-ext/lib/object.js":621,"polyfill":634}],654:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":618,"js-ext/lib/object.js":621,"polyfill":634}],655:[function(require,module,exports){
+module.exports=require(75)
+},{"./attribute-extractor.js":648,"./html-parser.js":652,"./vdom-ns.js":654,"js-ext/extra/hashmap.js":618,"js-ext/extra/lightmap.js":619,"js-ext/lib/array.js":620,"js-ext/lib/object.js":621,"js-ext/lib/string.js":623,"polyfill":634,"utils/lib/timers.js":637}],656:[function(require,module,exports){
+module.exports=require(76)
+},{"./partials/extend-document.js":650,"./partials/extend-element.js":651,"./partials/node-parser.js":653,"js-ext/extra/hashmap.js":618,"js-ext/lib/object.js":621,"utils/lib/timers.js":637}],657:[function(require,module,exports){
+module.exports=require(14)
+},{}],658:[function(require,module,exports){
+module.exports=require(15)
+},{}],659:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":657,"./lib/window.console.js":658}],660:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],661:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":665,"js-ext/extra/hashmap.js":662,"polyfill/polyfill-base.js":671}],662:[function(require,module,exports){
+module.exports=require(4)
+},{}],663:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":664,"../lib/object.js":665,"./classes.js":661,"js-ext/extra/hashmap.js":662,"polyfill/lib/weakmap.js":669}],664:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":671}],665:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":662,"polyfill/polyfill-base.js":671}],666:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":671}],667:[function(require,module,exports){
+module.exports=require(23)
+},{}],668:[function(require,module,exports){
+module.exports=require(14)
+},{}],669:[function(require,module,exports){
+module.exports=require(45)
+},{}],670:[function(require,module,exports){
+module.exports=require(15)
+},{}],671:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":668,"./lib/window.console.js":670}],672:[function(require,module,exports){
+module.exports=require(48)
+},{}],673:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":672}],674:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":672}],675:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":672}],676:[function(require,module,exports){
+module.exports=require(14)
+},{}],677:[function(require,module,exports){
+module.exports=require(15)
+},{}],678:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":676,"./lib/window.console.js":677}],679:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":680,"./lib/timers.js":681}],680:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":662,"polyfill/polyfill-base.js":684}],681:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":684}],682:[function(require,module,exports){
+module.exports=require(14)
+},{}],683:[function(require,module,exports){
+module.exports=require(15)
+},{}],684:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":682,"./lib/window.console.js":683}],685:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":686}],686:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":687,"js-ext/lib/object.js":688}],687:[function(require,module,exports){
+module.exports=require(4)
+},{}],688:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":687,"polyfill/polyfill-base.js":691}],689:[function(require,module,exports){
+module.exports=require(14)
+},{}],690:[function(require,module,exports){
+module.exports=require(15)
+},{}],691:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":689,"./lib/window.console.js":690}],692:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":662,"js-ext/lib/object.js":665,"js-ext/lib/string.js":667,"polyfill":678,"polyfill/extra/transition.js":673,"polyfill/extra/vendorCSS.js":675}],693:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":662,"js-ext/lib/object.js":665,"polyfill":678}],694:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":662,"js-ext/lib/object.js":665,"js-ext/lib/string.js":667,"polyfill":678}],695:[function(require,module,exports){
+module.exports=require(71)
+},{"../css/element.css":660,"./attribute-extractor.js":692,"./element-array.js":693,"./html-parser.js":696,"./node-parser.js":697,"./vdom-ns.js":698,"./vnode.js":699,"js-ext/extra/hashmap.js":662,"js-ext/lib/object.js":665,"js-ext/lib/promise.js":666,"js-ext/lib/string.js":667,"polyfill":678,"polyfill/extra/transition.js":673,"polyfill/extra/transitionend.js":674,"polyfill/extra/vendorCSS.js":675,"utils":679,"window-ext":685}],696:[function(require,module,exports){
+module.exports=require(72)
+},{"./attribute-extractor.js":692,"./vdom-ns.js":698,"js-ext/extra/hashmap.js":662,"js-ext/lib/object.js":665,"polyfill":678}],697:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":692,"./vdom-ns.js":698,"./vnode.js":699,"js-ext/extra/hashmap.js":662,"js-ext/lib/object.js":665,"polyfill":678}],698:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":662,"js-ext/lib/object.js":665,"polyfill":678}],699:[function(require,module,exports){
+module.exports=require(75)
+},{"./attribute-extractor.js":692,"./html-parser.js":696,"./vdom-ns.js":698,"js-ext/extra/hashmap.js":662,"js-ext/extra/lightmap.js":663,"js-ext/lib/array.js":664,"js-ext/lib/object.js":665,"js-ext/lib/string.js":667,"polyfill":678,"utils/lib/timers.js":681}],700:[function(require,module,exports){
+module.exports=require(76)
+},{"./partials/extend-document.js":694,"./partials/extend-element.js":695,"./partials/node-parser.js":697,"js-ext/extra/hashmap.js":662,"js-ext/lib/object.js":665,"utils/lib/timers.js":681}],701:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":702}],702:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":703,"js-ext/lib/object.js":704}],703:[function(require,module,exports){
+module.exports=require(4)
+},{}],704:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":703,"polyfill/polyfill-base.js":707}],705:[function(require,module,exports){
+module.exports=require(14)
+},{}],706:[function(require,module,exports){
+module.exports=require(15)
+},{}],707:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":705,"./lib/window.console.js":706}],708:[function(require,module,exports){
+module.exports=require(6)
+},{"event":716,"js-ext/extra/hashmap.js":726,"js-ext/lib/array.js":727,"js-ext/lib/object.js":728,"js-ext/lib/string.js":729,"polyfill/polyfill-base.js":735,"utils":736,"vdom":782}],709:[function(require,module,exports){
 "use strict";
 
 /**
@@ -19352,7 +19305,7 @@ module.exports = function (window) {
     return Event;
 };
 
-},{"../event-dom.js":608,"js-ext/extra/hashmap.js":626,"js-ext/lib/object.js":628}],610:[function(require,module,exports){
+},{"../event-dom.js":708,"js-ext/extra/hashmap.js":726,"js-ext/lib/object.js":728}],710:[function(require,module,exports){
 "use strict";
 
 /**
@@ -19453,7 +19406,7 @@ module.exports = function (window) {
     return Event;
 };
 
-},{"../event-dom.js":608,"js-ext/extra/hashmap.js":626,"js-ext/lib/object.js":628}],611:[function(require,module,exports){
+},{"../event-dom.js":708,"js-ext/extra/hashmap.js":726,"js-ext/lib/object.js":728}],711:[function(require,module,exports){
 "use strict";
 
 /**
@@ -19555,7 +19508,7 @@ module.exports = function (window) {
     return Event;
 };
 
-},{"../event-dom.js":608,"js-ext/extra/hashmap.js":626,"js-ext/lib/object.js":628}],612:[function(require,module,exports){
+},{"../event-dom.js":708,"js-ext/extra/hashmap.js":726,"js-ext/lib/object.js":728}],712:[function(require,module,exports){
 "use strict";
 
 /**
@@ -19842,147 +19795,147 @@ module.exports = function (window) {
     return Event;
 };
 
-},{"../event-dom.js":608,"js-ext/extra/hashmap.js":626,"js-ext/lib/object.js":628,"utils":636,"vdom":682}],613:[function(require,module,exports){
-module.exports=require(12)
-},{"js-ext/extra/hashmap.js":618,"js-ext/lib/object.js":619,"polyfill/polyfill-base.js":625}],614:[function(require,module,exports){
+},{"../event-dom.js":708,"js-ext/extra/hashmap.js":726,"js-ext/lib/object.js":728,"utils":736,"vdom":782}],713:[function(require,module,exports){
+module.exports=require(7)
+},{"js-ext/extra/hashmap.js":718,"js-ext/lib/object.js":719,"polyfill/polyfill-base.js":725}],714:[function(require,module,exports){
+module.exports=require(8)
+},{"./event-base.js":713}],715:[function(require,module,exports){
+module.exports=require(9)
+},{"./event-base.js":713,"js-ext/extra/classes.js":717,"js-ext/lib/object.js":719}],716:[function(require,module,exports){
+module.exports=require(10)
+},{"./event-base.js":713,"./event-emitter.js":714,"./event-listener.js":715}],717:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":719,"js-ext/extra/hashmap.js":718,"polyfill/polyfill-base.js":722}],718:[function(require,module,exports){
+module.exports=require(4)
+},{}],719:[function(require,module,exports){
 module.exports=require(13)
-},{"./event-base.js":613}],615:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":718,"polyfill/polyfill-base.js":722}],720:[function(require,module,exports){
 module.exports=require(14)
-},{"./event-base.js":613,"js-ext/extra/classes.js":617,"js-ext/lib/object.js":619}],616:[function(require,module,exports){
+},{}],721:[function(require,module,exports){
 module.exports=require(15)
-},{"./event-base.js":613,"./event-emitter.js":614,"./event-listener.js":615}],617:[function(require,module,exports){
+},{}],722:[function(require,module,exports){
 module.exports=require(16)
-},{"../lib/object.js":619,"js-ext/extra/hashmap.js":618,"polyfill/polyfill-base.js":622}],618:[function(require,module,exports){
-module.exports=require(17)
-},{}],619:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":618,"polyfill/polyfill-base.js":622}],620:[function(require,module,exports){
-module.exports=require(19)
-},{}],621:[function(require,module,exports){
-module.exports=require(20)
-},{}],622:[function(require,module,exports){
+},{"./lib/matchesselector.js":720,"./lib/window.console.js":721}],723:[function(require,module,exports){
+module.exports=require(14)
+},{}],724:[function(require,module,exports){
+module.exports=require(15)
+},{}],725:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":723,"./lib/window.console.js":724}],726:[function(require,module,exports){
+module.exports=require(4)
+},{}],727:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":620,"./lib/window.console.js":621}],623:[function(require,module,exports){
-module.exports=require(19)
-},{}],624:[function(require,module,exports){
-module.exports=require(20)
-},{}],625:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":623,"./lib/window.console.js":624}],626:[function(require,module,exports){
-module.exports=require(17)
-},{}],627:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":632}],628:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":626,"polyfill/polyfill-base.js":632}],629:[function(require,module,exports){
-module.exports=require(28)
-},{}],630:[function(require,module,exports){
-module.exports=require(19)
-},{}],631:[function(require,module,exports){
-module.exports=require(20)
-},{}],632:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":630,"./lib/window.console.js":631}],633:[function(require,module,exports){
-module.exports=require(19)
-},{}],634:[function(require,module,exports){
-module.exports=require(20)
-},{}],635:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":633,"./lib/window.console.js":634}],636:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":637,"./lib/timers.js":638}],637:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":732}],728:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":726,"polyfill/polyfill-base.js":732}],729:[function(require,module,exports){
+module.exports=require(23)
+},{}],730:[function(require,module,exports){
+module.exports=require(14)
+},{}],731:[function(require,module,exports){
+module.exports=require(15)
+},{}],732:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":730,"./lib/window.console.js":731}],733:[function(require,module,exports){
+module.exports=require(14)
+},{}],734:[function(require,module,exports){
+module.exports=require(15)
+},{}],735:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":733,"./lib/window.console.js":734}],736:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":737,"./lib/timers.js":738}],737:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":726,"polyfill/polyfill-base.js":741}],738:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":741}],739:[function(require,module,exports){
+module.exports=require(14)
+},{}],740:[function(require,module,exports){
+module.exports=require(15)
+},{}],741:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":739,"./lib/window.console.js":740}],742:[function(require,module,exports){
 module.exports=require(36)
-},{"js-ext/extra/hashmap.js":626,"polyfill/polyfill-base.js":641}],638:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":641}],639:[function(require,module,exports){
-module.exports=require(19)
-},{}],640:[function(require,module,exports){
-module.exports=require(20)
-},{}],641:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],743:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":747,"js-ext/extra/hashmap.js":744,"polyfill/polyfill-base.js":753}],744:[function(require,module,exports){
+module.exports=require(4)
+},{}],745:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":746,"../lib/object.js":747,"./classes.js":743,"js-ext/extra/hashmap.js":744,"polyfill/lib/weakmap.js":751}],746:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":639,"./lib/window.console.js":640}],642:[function(require,module,exports){
-module.exports=require(41)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],643:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":753}],747:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":744,"polyfill/polyfill-base.js":753}],748:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":753}],749:[function(require,module,exports){
+module.exports=require(23)
+},{}],750:[function(require,module,exports){
+module.exports=require(14)
+},{}],751:[function(require,module,exports){
+module.exports=require(45)
+},{}],752:[function(require,module,exports){
+module.exports=require(15)
+},{}],753:[function(require,module,exports){
 module.exports=require(16)
-},{"../lib/object.js":647,"js-ext/extra/hashmap.js":644,"polyfill/polyfill-base.js":653}],644:[function(require,module,exports){
-module.exports=require(17)
-},{}],645:[function(require,module,exports){
-module.exports=require(44)
-},{"../lib/array.js":646,"../lib/object.js":647,"./classes.js":643,"js-ext/extra/hashmap.js":644,"polyfill/lib/weakmap.js":651}],646:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":653}],647:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":644,"polyfill/polyfill-base.js":653}],648:[function(require,module,exports){
-module.exports=require(47)
-},{"polyfill":653}],649:[function(require,module,exports){
-module.exports=require(28)
-},{}],650:[function(require,module,exports){
-module.exports=require(19)
-},{}],651:[function(require,module,exports){
+},{"./lib/matchesselector.js":750,"./lib/window.console.js":752}],754:[function(require,module,exports){
+module.exports=require(48)
+},{}],755:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":754}],756:[function(require,module,exports){
 module.exports=require(50)
-},{}],652:[function(require,module,exports){
-module.exports=require(20)
-},{}],653:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":650,"./lib/window.console.js":652}],654:[function(require,module,exports){
-module.exports=require(53)
-},{}],655:[function(require,module,exports){
-module.exports=require(54)
-},{"../bin/local-hashmap.js":654}],656:[function(require,module,exports){
-module.exports=require(55)
-},{"../bin/local-hashmap.js":654}],657:[function(require,module,exports){
-module.exports=require(56)
-},{"../bin/local-hashmap.js":654}],658:[function(require,module,exports){
-module.exports=require(19)
-},{}],659:[function(require,module,exports){
-module.exports=require(20)
-},{}],660:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":658,"./lib/window.console.js":659}],661:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":662,"./lib/timers.js":663}],662:[function(require,module,exports){
-module.exports=require(36)
-},{"js-ext/extra/hashmap.js":644,"polyfill/polyfill-base.js":666}],663:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":666}],664:[function(require,module,exports){
-module.exports=require(19)
-},{}],665:[function(require,module,exports){
-module.exports=require(20)
-},{}],666:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":664,"./lib/window.console.js":665}],667:[function(require,module,exports){
-module.exports=require(66)
-},{"./lib/sizes.js":668}],668:[function(require,module,exports){
-module.exports=require(67)
-},{"js-ext/extra/hashmap.js":669,"js-ext/lib/object.js":670}],669:[function(require,module,exports){
-module.exports=require(17)
-},{}],670:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":669,"polyfill/polyfill-base.js":673}],671:[function(require,module,exports){
-module.exports=require(19)
-},{}],672:[function(require,module,exports){
-module.exports=require(20)
-},{}],673:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":671,"./lib/window.console.js":672}],674:[function(require,module,exports){
+},{"../bin/local-hashmap.js":754}],757:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":754}],758:[function(require,module,exports){
+module.exports=require(14)
+},{}],759:[function(require,module,exports){
+module.exports=require(15)
+},{}],760:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":758,"./lib/window.console.js":759}],761:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":762,"./lib/timers.js":763}],762:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":744,"polyfill/polyfill-base.js":766}],763:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":766}],764:[function(require,module,exports){
+module.exports=require(14)
+},{}],765:[function(require,module,exports){
+module.exports=require(15)
+},{}],766:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":764,"./lib/window.console.js":765}],767:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":768}],768:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":769,"js-ext/lib/object.js":770}],769:[function(require,module,exports){
+module.exports=require(4)
+},{}],770:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":769,"polyfill/polyfill-base.js":773}],771:[function(require,module,exports){
+module.exports=require(14)
+},{}],772:[function(require,module,exports){
+module.exports=require(15)
+},{}],773:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":771,"./lib/window.console.js":772}],774:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":744,"js-ext/lib/object.js":747,"js-ext/lib/string.js":749,"polyfill":760,"polyfill/extra/transition.js":755,"polyfill/extra/vendorCSS.js":757}],775:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":744,"js-ext/lib/object.js":747,"polyfill":760}],776:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":744,"js-ext/lib/object.js":747,"js-ext/lib/string.js":749,"polyfill":760}],777:[function(require,module,exports){
+module.exports=require(71)
+},{"../css/element.css":742,"./attribute-extractor.js":774,"./element-array.js":775,"./html-parser.js":778,"./node-parser.js":779,"./vdom-ns.js":780,"./vnode.js":781,"js-ext/extra/hashmap.js":744,"js-ext/lib/object.js":747,"js-ext/lib/promise.js":748,"js-ext/lib/string.js":749,"polyfill":760,"polyfill/extra/transition.js":755,"polyfill/extra/transitionend.js":756,"polyfill/extra/vendorCSS.js":757,"utils":761,"window-ext":767}],778:[function(require,module,exports){
+module.exports=require(72)
+},{"./attribute-extractor.js":774,"./vdom-ns.js":780,"js-ext/extra/hashmap.js":744,"js-ext/lib/object.js":747,"polyfill":760}],779:[function(require,module,exports){
 module.exports=require(73)
-},{"js-ext/extra/hashmap.js":644,"js-ext/lib/object.js":647,"js-ext/lib/string.js":649,"polyfill":660,"polyfill/extra/transition.js":655,"polyfill/extra/vendorCSS.js":657}],675:[function(require,module,exports){
+},{"./attribute-extractor.js":774,"./vdom-ns.js":780,"./vnode.js":781,"js-ext/extra/hashmap.js":744,"js-ext/lib/object.js":747,"polyfill":760}],780:[function(require,module,exports){
 module.exports=require(74)
-},{"js-ext/extra/hashmap.js":644,"js-ext/lib/object.js":647,"polyfill":660}],676:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":744,"js-ext/lib/object.js":747,"polyfill":760}],781:[function(require,module,exports){
 module.exports=require(75)
-},{"js-ext/extra/hashmap.js":644,"js-ext/lib/object.js":647,"js-ext/lib/string.js":649,"polyfill":660}],677:[function(require,module,exports){
+},{"./attribute-extractor.js":774,"./html-parser.js":778,"./vdom-ns.js":780,"js-ext/extra/hashmap.js":744,"js-ext/extra/lightmap.js":745,"js-ext/lib/array.js":746,"js-ext/lib/object.js":747,"js-ext/lib/string.js":749,"polyfill":760,"utils/lib/timers.js":763}],782:[function(require,module,exports){
 module.exports=require(76)
-},{"../css/element.css":642,"./attribute-extractor.js":674,"./element-array.js":675,"./html-parser.js":678,"./node-parser.js":679,"./vdom-ns.js":680,"./vnode.js":681,"js-ext/extra/hashmap.js":644,"js-ext/lib/object.js":647,"js-ext/lib/promise.js":648,"js-ext/lib/string.js":649,"polyfill":660,"polyfill/extra/transition.js":655,"polyfill/extra/transitionend.js":656,"polyfill/extra/vendorCSS.js":657,"utils":661,"window-ext":667}],678:[function(require,module,exports){
-module.exports=require(77)
-},{"./attribute-extractor.js":674,"./vdom-ns.js":680,"js-ext/extra/hashmap.js":644,"js-ext/lib/object.js":647,"polyfill":660}],679:[function(require,module,exports){
-module.exports=require(78)
-},{"./attribute-extractor.js":674,"./vdom-ns.js":680,"./vnode.js":681,"js-ext/extra/hashmap.js":644,"js-ext/lib/object.js":647,"polyfill":660}],680:[function(require,module,exports){
-module.exports=require(79)
-},{"js-ext/extra/hashmap.js":644,"js-ext/lib/object.js":647,"polyfill":660}],681:[function(require,module,exports){
-module.exports=require(80)
-},{"./attribute-extractor.js":674,"./html-parser.js":678,"./vdom-ns.js":680,"js-ext/extra/hashmap.js":644,"js-ext/extra/lightmap.js":645,"js-ext/lib/array.js":646,"js-ext/lib/object.js":647,"js-ext/lib/string.js":649,"polyfill":660,"utils/lib/timers.js":663}],682:[function(require,module,exports){
-module.exports=require(81)
-},{"./partials/extend-document.js":676,"./partials/extend-element.js":677,"./partials/node-parser.js":679,"js-ext/extra/hashmap.js":644,"js-ext/lib/object.js":647,"utils/lib/timers.js":663}],683:[function(require,module,exports){
+},{"./partials/extend-document.js":776,"./partials/extend-element.js":777,"./partials/node-parser.js":779,"js-ext/extra/hashmap.js":744,"js-ext/lib/object.js":747,"utils/lib/timers.js":763}],783:[function(require,module,exports){
 "use strict";
 
 /**
@@ -20086,7 +20039,7 @@ module.exports = function (window) {
     return Event;
 };
 
-},{"./lib/hammer-2.0.4.js":684,"event-dom":685}],684:[function(require,module,exports){
+},{"./lib/hammer-2.0.4.js":784,"event-dom":785}],784:[function(require,module,exports){
 /* Changes mad to native hammerjs:
  *
  * Wrapped "(function(window, DOCUMENT, exportName, undefined) {"
@@ -22477,167 +22430,167 @@ module.exports = function (window) {
 
 };
 
-},{"utils":756}],685:[function(require,module,exports){
+},{"utils":856}],785:[function(require,module,exports){
+module.exports=require(6)
+},{"event":789,"js-ext/extra/hashmap.js":799,"js-ext/lib/array.js":800,"js-ext/lib/object.js":801,"js-ext/lib/string.js":802,"polyfill/polyfill-base.js":808,"utils":809,"vdom":855}],786:[function(require,module,exports){
+module.exports=require(7)
+},{"js-ext/extra/hashmap.js":791,"js-ext/lib/object.js":792,"polyfill/polyfill-base.js":798}],787:[function(require,module,exports){
+module.exports=require(8)
+},{"./event-base.js":786}],788:[function(require,module,exports){
+module.exports=require(9)
+},{"./event-base.js":786,"js-ext/extra/classes.js":790,"js-ext/lib/object.js":792}],789:[function(require,module,exports){
+module.exports=require(10)
+},{"./event-base.js":786,"./event-emitter.js":787,"./event-listener.js":788}],790:[function(require,module,exports){
 module.exports=require(11)
-},{"event":689,"js-ext/extra/hashmap.js":699,"js-ext/lib/array.js":700,"js-ext/lib/object.js":701,"js-ext/lib/string.js":702,"polyfill/polyfill-base.js":708,"utils":709,"vdom":755}],686:[function(require,module,exports){
-module.exports=require(12)
-},{"js-ext/extra/hashmap.js":691,"js-ext/lib/object.js":692,"polyfill/polyfill-base.js":698}],687:[function(require,module,exports){
+},{"../lib/object.js":792,"js-ext/extra/hashmap.js":791,"polyfill/polyfill-base.js":795}],791:[function(require,module,exports){
+module.exports=require(4)
+},{}],792:[function(require,module,exports){
 module.exports=require(13)
-},{"./event-base.js":686}],688:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":791,"polyfill/polyfill-base.js":795}],793:[function(require,module,exports){
 module.exports=require(14)
-},{"./event-base.js":686,"js-ext/extra/classes.js":690,"js-ext/lib/object.js":692}],689:[function(require,module,exports){
+},{}],794:[function(require,module,exports){
 module.exports=require(15)
-},{"./event-base.js":686,"./event-emitter.js":687,"./event-listener.js":688}],690:[function(require,module,exports){
+},{}],795:[function(require,module,exports){
 module.exports=require(16)
-},{"../lib/object.js":692,"js-ext/extra/hashmap.js":691,"polyfill/polyfill-base.js":695}],691:[function(require,module,exports){
-module.exports=require(17)
-},{}],692:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":691,"polyfill/polyfill-base.js":695}],693:[function(require,module,exports){
-module.exports=require(19)
-},{}],694:[function(require,module,exports){
-module.exports=require(20)
-},{}],695:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":693,"./lib/window.console.js":694}],696:[function(require,module,exports){
-module.exports=require(19)
-},{}],697:[function(require,module,exports){
-module.exports=require(20)
-},{}],698:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":696,"./lib/window.console.js":697}],699:[function(require,module,exports){
-module.exports=require(17)
-},{}],700:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":705}],701:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":699,"polyfill/polyfill-base.js":705}],702:[function(require,module,exports){
-module.exports=require(28)
-},{}],703:[function(require,module,exports){
-module.exports=require(19)
-},{}],704:[function(require,module,exports){
-module.exports=require(20)
-},{}],705:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":703,"./lib/window.console.js":704}],706:[function(require,module,exports){
-module.exports=require(19)
-},{}],707:[function(require,module,exports){
-module.exports=require(20)
-},{}],708:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":706,"./lib/window.console.js":707}],709:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":710,"./lib/timers.js":711}],710:[function(require,module,exports){
-module.exports=require(36)
-},{"js-ext/extra/hashmap.js":699,"polyfill/polyfill-base.js":714}],711:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":714}],712:[function(require,module,exports){
-module.exports=require(19)
-},{}],713:[function(require,module,exports){
-module.exports=require(20)
-},{}],714:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":712,"./lib/window.console.js":713}],715:[function(require,module,exports){
-module.exports=require(41)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],716:[function(require,module,exports){
-module.exports=require(16)
-},{"../lib/object.js":720,"js-ext/extra/hashmap.js":717,"polyfill/polyfill-base.js":726}],717:[function(require,module,exports){
-module.exports=require(17)
-},{}],718:[function(require,module,exports){
-module.exports=require(44)
-},{"../lib/array.js":719,"../lib/object.js":720,"./classes.js":716,"js-ext/extra/hashmap.js":717,"polyfill/lib/weakmap.js":724}],719:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":726}],720:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":717,"polyfill/polyfill-base.js":726}],721:[function(require,module,exports){
-module.exports=require(47)
-},{"polyfill":726}],722:[function(require,module,exports){
-module.exports=require(28)
-},{}],723:[function(require,module,exports){
-module.exports=require(19)
-},{}],724:[function(require,module,exports){
-module.exports=require(50)
-},{}],725:[function(require,module,exports){
-module.exports=require(20)
-},{}],726:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":723,"./lib/window.console.js":725}],727:[function(require,module,exports){
-module.exports=require(53)
-},{}],728:[function(require,module,exports){
-module.exports=require(54)
-},{"../bin/local-hashmap.js":727}],729:[function(require,module,exports){
-module.exports=require(55)
-},{"../bin/local-hashmap.js":727}],730:[function(require,module,exports){
-module.exports=require(56)
-},{"../bin/local-hashmap.js":727}],731:[function(require,module,exports){
-module.exports=require(19)
-},{}],732:[function(require,module,exports){
-module.exports=require(20)
-},{}],733:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":731,"./lib/window.console.js":732}],734:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":735,"./lib/timers.js":736}],735:[function(require,module,exports){
-module.exports=require(36)
-},{"js-ext/extra/hashmap.js":717,"polyfill/polyfill-base.js":739}],736:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":739}],737:[function(require,module,exports){
-module.exports=require(19)
-},{}],738:[function(require,module,exports){
-module.exports=require(20)
-},{}],739:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":737,"./lib/window.console.js":738}],740:[function(require,module,exports){
-module.exports=require(66)
-},{"./lib/sizes.js":741}],741:[function(require,module,exports){
-module.exports=require(67)
-},{"js-ext/extra/hashmap.js":742,"js-ext/lib/object.js":743}],742:[function(require,module,exports){
-module.exports=require(17)
-},{}],743:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":742,"polyfill/polyfill-base.js":746}],744:[function(require,module,exports){
-module.exports=require(19)
-},{}],745:[function(require,module,exports){
-module.exports=require(20)
-},{}],746:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":744,"./lib/window.console.js":745}],747:[function(require,module,exports){
-module.exports=require(73)
-},{"js-ext/extra/hashmap.js":717,"js-ext/lib/object.js":720,"js-ext/lib/string.js":722,"polyfill":733,"polyfill/extra/transition.js":728,"polyfill/extra/vendorCSS.js":730}],748:[function(require,module,exports){
-module.exports=require(74)
-},{"js-ext/extra/hashmap.js":717,"js-ext/lib/object.js":720,"polyfill":733}],749:[function(require,module,exports){
-module.exports=require(75)
-},{"js-ext/extra/hashmap.js":717,"js-ext/lib/object.js":720,"js-ext/lib/string.js":722,"polyfill":733}],750:[function(require,module,exports){
-module.exports=require(76)
-},{"../css/element.css":715,"./attribute-extractor.js":747,"./element-array.js":748,"./html-parser.js":751,"./node-parser.js":752,"./vdom-ns.js":753,"./vnode.js":754,"js-ext/extra/hashmap.js":717,"js-ext/lib/object.js":720,"js-ext/lib/promise.js":721,"js-ext/lib/string.js":722,"polyfill":733,"polyfill/extra/transition.js":728,"polyfill/extra/transitionend.js":729,"polyfill/extra/vendorCSS.js":730,"utils":734,"window-ext":740}],751:[function(require,module,exports){
-module.exports=require(77)
-},{"./attribute-extractor.js":747,"./vdom-ns.js":753,"js-ext/extra/hashmap.js":717,"js-ext/lib/object.js":720,"polyfill":733}],752:[function(require,module,exports){
-module.exports=require(78)
-},{"./attribute-extractor.js":747,"./vdom-ns.js":753,"./vnode.js":754,"js-ext/extra/hashmap.js":717,"js-ext/lib/object.js":720,"polyfill":733}],753:[function(require,module,exports){
-module.exports=require(79)
-},{"js-ext/extra/hashmap.js":717,"js-ext/lib/object.js":720,"polyfill":733}],754:[function(require,module,exports){
-module.exports=require(80)
-},{"./attribute-extractor.js":747,"./html-parser.js":751,"./vdom-ns.js":753,"js-ext/extra/hashmap.js":717,"js-ext/extra/lightmap.js":718,"js-ext/lib/array.js":719,"js-ext/lib/object.js":720,"js-ext/lib/string.js":722,"polyfill":733,"utils/lib/timers.js":736}],755:[function(require,module,exports){
-module.exports=require(81)
-},{"./partials/extend-document.js":749,"./partials/extend-element.js":750,"./partials/node-parser.js":752,"js-ext/extra/hashmap.js":717,"js-ext/lib/object.js":720,"utils/lib/timers.js":736}],756:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":757,"./lib/timers.js":758}],757:[function(require,module,exports){
-module.exports=require(36)
-},{"js-ext/extra/hashmap.js":1071,"polyfill/polyfill-base.js":761}],758:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":761}],759:[function(require,module,exports){
-module.exports=require(19)
-},{}],760:[function(require,module,exports){
-module.exports=require(20)
-},{}],761:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":759,"./lib/window.console.js":760}],762:[function(require,module,exports){
-module.exports=require(12)
-},{"js-ext/extra/hashmap.js":769,"js-ext/lib/object.js":770,"polyfill/polyfill-base.js":776}],763:[function(require,module,exports){
-module.exports=require(13)
-},{"./event-base.js":762}],764:[function(require,module,exports){
+},{"./lib/matchesselector.js":793,"./lib/window.console.js":794}],796:[function(require,module,exports){
 module.exports=require(14)
-},{"./event-base.js":762,"js-ext/extra/classes.js":768,"js-ext/lib/object.js":770}],765:[function(require,module,exports){
+},{}],797:[function(require,module,exports){
+module.exports=require(15)
+},{}],798:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":796,"./lib/window.console.js":797}],799:[function(require,module,exports){
+module.exports=require(4)
+},{}],800:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":805}],801:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":799,"polyfill/polyfill-base.js":805}],802:[function(require,module,exports){
+module.exports=require(23)
+},{}],803:[function(require,module,exports){
+module.exports=require(14)
+},{}],804:[function(require,module,exports){
+module.exports=require(15)
+},{}],805:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":803,"./lib/window.console.js":804}],806:[function(require,module,exports){
+module.exports=require(14)
+},{}],807:[function(require,module,exports){
+module.exports=require(15)
+},{}],808:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":806,"./lib/window.console.js":807}],809:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":810,"./lib/timers.js":811}],810:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":799,"polyfill/polyfill-base.js":814}],811:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":814}],812:[function(require,module,exports){
+module.exports=require(14)
+},{}],813:[function(require,module,exports){
+module.exports=require(15)
+},{}],814:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":812,"./lib/window.console.js":813}],815:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],816:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":820,"js-ext/extra/hashmap.js":817,"polyfill/polyfill-base.js":826}],817:[function(require,module,exports){
+module.exports=require(4)
+},{}],818:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":819,"../lib/object.js":820,"./classes.js":816,"js-ext/extra/hashmap.js":817,"polyfill/lib/weakmap.js":824}],819:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":826}],820:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":817,"polyfill/polyfill-base.js":826}],821:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":826}],822:[function(require,module,exports){
+module.exports=require(23)
+},{}],823:[function(require,module,exports){
+module.exports=require(14)
+},{}],824:[function(require,module,exports){
+module.exports=require(45)
+},{}],825:[function(require,module,exports){
+module.exports=require(15)
+},{}],826:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":823,"./lib/window.console.js":825}],827:[function(require,module,exports){
+module.exports=require(48)
+},{}],828:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":827}],829:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":827}],830:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":827}],831:[function(require,module,exports){
+module.exports=require(14)
+},{}],832:[function(require,module,exports){
+module.exports=require(15)
+},{}],833:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":831,"./lib/window.console.js":832}],834:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":835,"./lib/timers.js":836}],835:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":817,"polyfill/polyfill-base.js":839}],836:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":839}],837:[function(require,module,exports){
+module.exports=require(14)
+},{}],838:[function(require,module,exports){
+module.exports=require(15)
+},{}],839:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":837,"./lib/window.console.js":838}],840:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":841}],841:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":842,"js-ext/lib/object.js":843}],842:[function(require,module,exports){
+module.exports=require(4)
+},{}],843:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":842,"polyfill/polyfill-base.js":846}],844:[function(require,module,exports){
+module.exports=require(14)
+},{}],845:[function(require,module,exports){
+module.exports=require(15)
+},{}],846:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":844,"./lib/window.console.js":845}],847:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":817,"js-ext/lib/object.js":820,"js-ext/lib/string.js":822,"polyfill":833,"polyfill/extra/transition.js":828,"polyfill/extra/vendorCSS.js":830}],848:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":817,"js-ext/lib/object.js":820,"polyfill":833}],849:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":817,"js-ext/lib/object.js":820,"js-ext/lib/string.js":822,"polyfill":833}],850:[function(require,module,exports){
+module.exports=require(71)
+},{"../css/element.css":815,"./attribute-extractor.js":847,"./element-array.js":848,"./html-parser.js":851,"./node-parser.js":852,"./vdom-ns.js":853,"./vnode.js":854,"js-ext/extra/hashmap.js":817,"js-ext/lib/object.js":820,"js-ext/lib/promise.js":821,"js-ext/lib/string.js":822,"polyfill":833,"polyfill/extra/transition.js":828,"polyfill/extra/transitionend.js":829,"polyfill/extra/vendorCSS.js":830,"utils":834,"window-ext":840}],851:[function(require,module,exports){
+module.exports=require(72)
+},{"./attribute-extractor.js":847,"./vdom-ns.js":853,"js-ext/extra/hashmap.js":817,"js-ext/lib/object.js":820,"polyfill":833}],852:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":847,"./vdom-ns.js":853,"./vnode.js":854,"js-ext/extra/hashmap.js":817,"js-ext/lib/object.js":820,"polyfill":833}],853:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":817,"js-ext/lib/object.js":820,"polyfill":833}],854:[function(require,module,exports){
+module.exports=require(75)
+},{"./attribute-extractor.js":847,"./html-parser.js":851,"./vdom-ns.js":853,"js-ext/extra/hashmap.js":817,"js-ext/extra/lightmap.js":818,"js-ext/lib/array.js":819,"js-ext/lib/object.js":820,"js-ext/lib/string.js":822,"polyfill":833,"utils/lib/timers.js":836}],855:[function(require,module,exports){
+module.exports=require(76)
+},{"./partials/extend-document.js":849,"./partials/extend-element.js":850,"./partials/node-parser.js":852,"js-ext/extra/hashmap.js":817,"js-ext/lib/object.js":820,"utils/lib/timers.js":836}],856:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":857,"./lib/timers.js":858}],857:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1152,"polyfill/polyfill-base.js":861}],858:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":861}],859:[function(require,module,exports){
+module.exports=require(14)
+},{}],860:[function(require,module,exports){
+module.exports=require(15)
+},{}],861:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":859,"./lib/window.console.js":860}],862:[function(require,module,exports){
+module.exports=require(7)
+},{"js-ext/extra/hashmap.js":870,"js-ext/lib/object.js":871,"polyfill/polyfill-base.js":878}],863:[function(require,module,exports){
+module.exports=require(8)
+},{"./event-base.js":862}],864:[function(require,module,exports){
+module.exports=require(9)
+},{"./event-base.js":862,"js-ext/extra/classes.js":869,"js-ext/lib/object.js":871}],865:[function(require,module,exports){
 "use strict";
 
 /**
@@ -22676,6 +22629,7 @@ module.exports=require(14)
 
 require('js-ext/lib/object.js');
 require('./timer-finalize.js');
+require('./promise-finalize.js');
 
 module.exports = function (window) {
 
@@ -22883,41 +22837,45 @@ module.exports = function (window) {
     module.exports = Event;
 
 };
-},{"../event-base.js":762,"./timer-finalize.js":766,"io":1049,"js-ext/lib/object.js":770,"utils":777}],766:[function(require,module,exports){
-module.exports=require(168)
-},{"../event-base.js":762,"js-ext/extra/hashmap.js":769}],767:[function(require,module,exports){
+},{"../event-base.js":862,"./promise-finalize.js":866,"./timer-finalize.js":867,"io":1130,"js-ext/lib/object.js":871,"utils":879}],866:[function(require,module,exports){
+module.exports=require(78)
+},{"js-ext/extra/hashmap.js":870,"js-ext/lib/promise.js":872}],867:[function(require,module,exports){
+module.exports=require(79)
+},{"../event-base.js":862,"js-ext/extra/hashmap.js":870}],868:[function(require,module,exports){
+module.exports=require(10)
+},{"./event-base.js":862,"./event-emitter.js":863,"./event-listener.js":864}],869:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":871,"js-ext/extra/hashmap.js":870,"polyfill/polyfill-base.js":875}],870:[function(require,module,exports){
+module.exports=require(4)
+},{}],871:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":870,"polyfill/polyfill-base.js":875}],872:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":875}],873:[function(require,module,exports){
+module.exports=require(14)
+},{}],874:[function(require,module,exports){
 module.exports=require(15)
-},{"./event-base.js":762,"./event-emitter.js":763,"./event-listener.js":764}],768:[function(require,module,exports){
+},{}],875:[function(require,module,exports){
 module.exports=require(16)
-},{"../lib/object.js":770,"js-ext/extra/hashmap.js":769,"polyfill/polyfill-base.js":773}],769:[function(require,module,exports){
-module.exports=require(17)
-},{}],770:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":769,"polyfill/polyfill-base.js":773}],771:[function(require,module,exports){
-module.exports=require(19)
-},{}],772:[function(require,module,exports){
-module.exports=require(20)
-},{}],773:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":771,"./lib/window.console.js":772}],774:[function(require,module,exports){
-module.exports=require(19)
-},{}],775:[function(require,module,exports){
-module.exports=require(20)
-},{}],776:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":774,"./lib/window.console.js":775}],777:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":778,"./lib/timers.js":779}],778:[function(require,module,exports){
-module.exports=require(36)
-},{"js-ext/extra/hashmap.js":769,"polyfill/polyfill-base.js":782}],779:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":782}],780:[function(require,module,exports){
-module.exports=require(19)
-},{}],781:[function(require,module,exports){
-module.exports=require(20)
-},{}],782:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":780,"./lib/window.console.js":781}],783:[function(require,module,exports){
+},{"./lib/matchesselector.js":873,"./lib/window.console.js":874}],876:[function(require,module,exports){
+module.exports=require(14)
+},{}],877:[function(require,module,exports){
+module.exports=require(15)
+},{}],878:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":876,"./lib/window.console.js":877}],879:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":880,"./lib/timers.js":881}],880:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":870,"polyfill/polyfill-base.js":884}],881:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":884}],882:[function(require,module,exports){
+module.exports=require(14)
+},{}],883:[function(require,module,exports){
+module.exports=require(15)
+},{}],884:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":882,"./lib/window.console.js":883}],885:[function(require,module,exports){
 "use strict";
 
 require('js-ext/lib/object.js');
@@ -22948,8 +22906,7 @@ var NAME = '[focusmanager]: ',
     },
     DEFAULT_KEYUP = 'shift+9',
     DEFAULT_KEYDOWN = '9',
-    // DEFAULT_ENTER = '39',
-    // DEFAULT_LEAVE = '27',
+    DEFAULT_NOLOOP = false,
     FM_SELECTION = 'fm-selection',
     FM_SELECTION_START = FM_SELECTION+'start',
     FM_SELECTION_END = FM_SELECTION+'end',
@@ -22975,7 +22932,7 @@ module.exports = function (window) {
     Event = require('event-mobile')(window);
 
     getFocusManagerSelector = function(focusContainerNode) {
-        var selector = focusContainerNode.plugin.fm.model.manage;
+        var selector = focusContainerNode._plugin.fm.model.manage;
         (selector.toLowerCase()==='true') && (selector=DEFAULT_SELECTOR);
         return selector;
     };
@@ -23030,7 +22987,7 @@ module.exports = function (window) {
             }
         }
         if (specialKeysMatch) {
-            noloop = focusContainerNode.plugin.fm.model.noloop;
+            noloop = focusContainerNode._plugin.fm.model.noloop;
             // in case sourceNode is an innernode of a selector, we need to start from the selector:
             sourceNode.matches(selector) || (sourceNode=sourceNode.inside(selector));
             if (downwards) {
@@ -23106,7 +23063,7 @@ module.exports = function (window) {
             else {
                 // find the right node that should get focus
 /*jshint boss:true */
-                alwaysDefault = focusContainerNode.plugin.fm.model.alwaysdefault;
+                alwaysDefault = focusContainerNode._plugin.fm.model.alwaysdefault;
 /*jshint boss:false */
                 alwaysDefault && (focusNode=focusContainerNode.getElement('[fm-defaultitem="true"]'));
                 if (!focusNode) {
@@ -23154,17 +23111,17 @@ module.exports = function (window) {
                 keyCode = e.keyCode;
 
                 // first check for keydown:
-                actionkey = focusContainerNode.plugin.fm.model.keydown;
+                actionkey = focusContainerNode._plugin.fm.model.keydown;
                 focusNode = nextFocusNode(e, keyCode, actionkey, focusContainerNode, sourceNode, selector, true);
                 if (!focusNode) {
                     // check for keyup:
-                    actionkey = focusContainerNode.plugin.fm.model.keyup;
+                    actionkey = focusContainerNode._plugin.fm.model.keyup;
                     focusNode = nextFocusNode(e, keyCode, actionkey, focusContainerNode, sourceNode, selector);
                 }
                 if (!focusNode) {
                     // check for keyenter, but only when e.target equals a focusmanager:
                     if (sourceNode.matches('[plugin-fm="true"]')) {
-                        actionkey = focusContainerNode.plugin.fm.model.keyenter;
+                        actionkey = focusContainerNode._plugin.fm.model.keyenter;
                         if (actionkey) {
                             keys = actionkey.split('+');
                             len = keys.length;
@@ -23191,7 +23148,7 @@ module.exports = function (window) {
                 }
                 if (!focusNode) {
                     // check for keyleave:
-                    actionkey = focusContainerNode.plugin.fm.model.keyleave;
+                    actionkey = focusContainerNode._plugin.fm.model.keyleave;
                     if (actionkey) {
                         keys = actionkey.split('+');
                         len = keys.length;
@@ -23354,9 +23311,7 @@ module.exports = function (window) {
                     alwaysdefault: false,
                     keyup: DEFAULT_KEYUP,
                     keydown: DEFAULT_KEYDOWN,
-                    // keyenter: DEFAULT_ENTER,
-                    // keyleave: DEFAULT_LEAVE,
-                    noloop: 'boolean'
+                    noloop: DEFAULT_NOLOOP
                 }
             });
 
@@ -23398,7 +23353,7 @@ module.exports = function (window) {
             else {
                 focusContainerNode = (this.getAttr('plugin-fm')==='true') ? focusElement : focusElement.inside('[plugin-fm="true"]');
                 if (focusContainerNode) {
-                    focusContainerNode.pluginReady(FocusManager).then(
+                    focusContainerNode.pluginReady('fm').then(
                         function() {
                             doEmit(searchFocusNode(focusElement));
                         }
@@ -23415,529 +23370,487 @@ module.exports = function (window) {
 
     return FocusManager;
 };
-},{"event-mobile":784,"js-ext/extra/hashmap.js":863,"js-ext/lib/object.js":864,"node-plugin":868,"polyfill":1031,"utils":1032,"window-ext":1038}],784:[function(require,module,exports){
-module.exports=require(683)
-},{"./lib/hammer-2.0.4.js":785,"event-dom":786}],785:[function(require,module,exports){
-module.exports=require(684)
-},{"utils":857}],786:[function(require,module,exports){
+},{"event-mobile":886,"js-ext/extra/hashmap.js":965,"js-ext/lib/object.js":966,"node-plugin":970,"polyfill":1112,"utils":1113,"window-ext":1119}],886:[function(require,module,exports){
+module.exports=require(783)
+},{"./lib/hammer-2.0.4.js":887,"event-dom":888}],887:[function(require,module,exports){
+module.exports=require(784)
+},{"utils":959}],888:[function(require,module,exports){
+module.exports=require(6)
+},{"event":892,"js-ext/extra/hashmap.js":902,"js-ext/lib/array.js":903,"js-ext/lib/object.js":904,"js-ext/lib/string.js":905,"polyfill/polyfill-base.js":911,"utils":912,"vdom":958}],889:[function(require,module,exports){
+module.exports=require(7)
+},{"js-ext/extra/hashmap.js":894,"js-ext/lib/object.js":895,"polyfill/polyfill-base.js":901}],890:[function(require,module,exports){
+module.exports=require(8)
+},{"./event-base.js":889}],891:[function(require,module,exports){
+module.exports=require(9)
+},{"./event-base.js":889,"js-ext/extra/classes.js":893,"js-ext/lib/object.js":895}],892:[function(require,module,exports){
+module.exports=require(10)
+},{"./event-base.js":889,"./event-emitter.js":890,"./event-listener.js":891}],893:[function(require,module,exports){
 module.exports=require(11)
-},{"event":790,"js-ext/extra/hashmap.js":800,"js-ext/lib/array.js":801,"js-ext/lib/object.js":802,"js-ext/lib/string.js":803,"polyfill/polyfill-base.js":809,"utils":810,"vdom":856}],787:[function(require,module,exports){
-module.exports=require(12)
-},{"js-ext/extra/hashmap.js":792,"js-ext/lib/object.js":793,"polyfill/polyfill-base.js":799}],788:[function(require,module,exports){
+},{"../lib/object.js":895,"js-ext/extra/hashmap.js":894,"polyfill/polyfill-base.js":898}],894:[function(require,module,exports){
+module.exports=require(4)
+},{}],895:[function(require,module,exports){
 module.exports=require(13)
-},{"./event-base.js":787}],789:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":894,"polyfill/polyfill-base.js":898}],896:[function(require,module,exports){
 module.exports=require(14)
-},{"./event-base.js":787,"js-ext/extra/classes.js":791,"js-ext/lib/object.js":793}],790:[function(require,module,exports){
+},{}],897:[function(require,module,exports){
 module.exports=require(15)
-},{"./event-base.js":787,"./event-emitter.js":788,"./event-listener.js":789}],791:[function(require,module,exports){
+},{}],898:[function(require,module,exports){
 module.exports=require(16)
-},{"../lib/object.js":793,"js-ext/extra/hashmap.js":792,"polyfill/polyfill-base.js":796}],792:[function(require,module,exports){
-module.exports=require(17)
-},{}],793:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":792,"polyfill/polyfill-base.js":796}],794:[function(require,module,exports){
-module.exports=require(19)
-},{}],795:[function(require,module,exports){
-module.exports=require(20)
-},{}],796:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":794,"./lib/window.console.js":795}],797:[function(require,module,exports){
-module.exports=require(19)
-},{}],798:[function(require,module,exports){
-module.exports=require(20)
-},{}],799:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":797,"./lib/window.console.js":798}],800:[function(require,module,exports){
-module.exports=require(17)
-},{}],801:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":806}],802:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":800,"polyfill/polyfill-base.js":806}],803:[function(require,module,exports){
-module.exports=require(28)
-},{}],804:[function(require,module,exports){
-module.exports=require(19)
-},{}],805:[function(require,module,exports){
-module.exports=require(20)
-},{}],806:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":804,"./lib/window.console.js":805}],807:[function(require,module,exports){
-module.exports=require(19)
-},{}],808:[function(require,module,exports){
-module.exports=require(20)
-},{}],809:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":807,"./lib/window.console.js":808}],810:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":811,"./lib/timers.js":812}],811:[function(require,module,exports){
-module.exports=require(36)
-},{"js-ext/extra/hashmap.js":800,"polyfill/polyfill-base.js":815}],812:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":815}],813:[function(require,module,exports){
-module.exports=require(19)
-},{}],814:[function(require,module,exports){
-module.exports=require(20)
-},{}],815:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":813,"./lib/window.console.js":814}],816:[function(require,module,exports){
-module.exports=require(41)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],817:[function(require,module,exports){
-module.exports=require(16)
-},{"../lib/object.js":821,"js-ext/extra/hashmap.js":818,"polyfill/polyfill-base.js":827}],818:[function(require,module,exports){
-module.exports=require(17)
-},{}],819:[function(require,module,exports){
-module.exports=require(44)
-},{"../lib/array.js":820,"../lib/object.js":821,"./classes.js":817,"js-ext/extra/hashmap.js":818,"polyfill/lib/weakmap.js":825}],820:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":827}],821:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":818,"polyfill/polyfill-base.js":827}],822:[function(require,module,exports){
-module.exports=require(47)
-},{"polyfill":827}],823:[function(require,module,exports){
-module.exports=require(28)
-},{}],824:[function(require,module,exports){
-module.exports=require(19)
-},{}],825:[function(require,module,exports){
-module.exports=require(50)
-},{}],826:[function(require,module,exports){
-module.exports=require(20)
-},{}],827:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":824,"./lib/window.console.js":826}],828:[function(require,module,exports){
-module.exports=require(53)
-},{}],829:[function(require,module,exports){
-module.exports=require(54)
-},{"../bin/local-hashmap.js":828}],830:[function(require,module,exports){
-module.exports=require(55)
-},{"../bin/local-hashmap.js":828}],831:[function(require,module,exports){
-module.exports=require(56)
-},{"../bin/local-hashmap.js":828}],832:[function(require,module,exports){
-module.exports=require(19)
-},{}],833:[function(require,module,exports){
-module.exports=require(20)
-},{}],834:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":832,"./lib/window.console.js":833}],835:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":836,"./lib/timers.js":837}],836:[function(require,module,exports){
-module.exports=require(36)
-},{"js-ext/extra/hashmap.js":818,"polyfill/polyfill-base.js":840}],837:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":840}],838:[function(require,module,exports){
-module.exports=require(19)
-},{}],839:[function(require,module,exports){
-module.exports=require(20)
-},{}],840:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":838,"./lib/window.console.js":839}],841:[function(require,module,exports){
-module.exports=require(66)
-},{"./lib/sizes.js":842}],842:[function(require,module,exports){
-module.exports=require(67)
-},{"js-ext/extra/hashmap.js":843,"js-ext/lib/object.js":844}],843:[function(require,module,exports){
-module.exports=require(17)
-},{}],844:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":843,"polyfill/polyfill-base.js":847}],845:[function(require,module,exports){
-module.exports=require(19)
-},{}],846:[function(require,module,exports){
-module.exports=require(20)
-},{}],847:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":845,"./lib/window.console.js":846}],848:[function(require,module,exports){
-module.exports=require(73)
-},{"js-ext/extra/hashmap.js":818,"js-ext/lib/object.js":821,"js-ext/lib/string.js":823,"polyfill":834,"polyfill/extra/transition.js":829,"polyfill/extra/vendorCSS.js":831}],849:[function(require,module,exports){
-module.exports=require(74)
-},{"js-ext/extra/hashmap.js":818,"js-ext/lib/object.js":821,"polyfill":834}],850:[function(require,module,exports){
-module.exports=require(75)
-},{"js-ext/extra/hashmap.js":818,"js-ext/lib/object.js":821,"js-ext/lib/string.js":823,"polyfill":834}],851:[function(require,module,exports){
-module.exports=require(76)
-},{"../css/element.css":816,"./attribute-extractor.js":848,"./element-array.js":849,"./html-parser.js":852,"./node-parser.js":853,"./vdom-ns.js":854,"./vnode.js":855,"js-ext/extra/hashmap.js":818,"js-ext/lib/object.js":821,"js-ext/lib/promise.js":822,"js-ext/lib/string.js":823,"polyfill":834,"polyfill/extra/transition.js":829,"polyfill/extra/transitionend.js":830,"polyfill/extra/vendorCSS.js":831,"utils":835,"window-ext":841}],852:[function(require,module,exports){
-module.exports=require(77)
-},{"./attribute-extractor.js":848,"./vdom-ns.js":854,"js-ext/extra/hashmap.js":818,"js-ext/lib/object.js":821,"polyfill":834}],853:[function(require,module,exports){
-module.exports=require(78)
-},{"./attribute-extractor.js":848,"./vdom-ns.js":854,"./vnode.js":855,"js-ext/extra/hashmap.js":818,"js-ext/lib/object.js":821,"polyfill":834}],854:[function(require,module,exports){
-module.exports=require(79)
-},{"js-ext/extra/hashmap.js":818,"js-ext/lib/object.js":821,"polyfill":834}],855:[function(require,module,exports){
-module.exports=require(80)
-},{"./attribute-extractor.js":848,"./html-parser.js":852,"./vdom-ns.js":854,"js-ext/extra/hashmap.js":818,"js-ext/extra/lightmap.js":819,"js-ext/lib/array.js":820,"js-ext/lib/object.js":821,"js-ext/lib/string.js":823,"polyfill":834,"utils/lib/timers.js":837}],856:[function(require,module,exports){
-module.exports=require(81)
-},{"./partials/extend-document.js":850,"./partials/extend-element.js":851,"./partials/node-parser.js":853,"js-ext/extra/hashmap.js":818,"js-ext/lib/object.js":821,"utils/lib/timers.js":837}],857:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":858,"./lib/timers.js":859}],858:[function(require,module,exports){
-module.exports=require(36)
-},{"js-ext/extra/hashmap.js":863,"polyfill/polyfill-base.js":862}],859:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":862}],860:[function(require,module,exports){
-module.exports=require(19)
-},{}],861:[function(require,module,exports){
-module.exports=require(20)
-},{}],862:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":860,"./lib/window.console.js":861}],863:[function(require,module,exports){
-module.exports=require(17)
-},{}],864:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":863,"polyfill/polyfill-base.js":867}],865:[function(require,module,exports){
-module.exports=require(19)
-},{}],866:[function(require,module,exports){
-module.exports=require(20)
-},{}],867:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":865,"./lib/window.console.js":866}],868:[function(require,module,exports){
-module.exports=require(93)
-},{"./lib/constrain.js":869,"./lib/element-plugin.js":870}],869:[function(require,module,exports){
-module.exports=require(94)
-},{"./element-plugin.js":870,"js-ext/extra/hashmap.js":974}],870:[function(require,module,exports){
-module.exports=require(95)
-},{"event-dom":871,"event/extra/timer-finalize.js":943,"io":952,"js-ext/extra/classes.js":973,"js-ext/extra/hashmap.js":974,"js-ext/lib/object.js":975,"js-ext/lib/promise.js":976,"js-ext/lib/string.js":977,"polyfill":983,"utils/lib/timers.js":984,"vdom":1028}],871:[function(require,module,exports){
-module.exports=require(11)
-},{"event":875,"js-ext/extra/hashmap.js":885,"js-ext/lib/array.js":886,"js-ext/lib/object.js":887,"js-ext/lib/string.js":888,"polyfill/polyfill-base.js":894,"utils":895,"vdom":941}],872:[function(require,module,exports){
-module.exports=require(12)
-},{"js-ext/extra/hashmap.js":877,"js-ext/lib/object.js":878,"polyfill/polyfill-base.js":884}],873:[function(require,module,exports){
-module.exports=require(13)
-},{"./event-base.js":872}],874:[function(require,module,exports){
+},{"./lib/matchesselector.js":896,"./lib/window.console.js":897}],899:[function(require,module,exports){
 module.exports=require(14)
-},{"./event-base.js":872,"js-ext/extra/classes.js":876,"js-ext/lib/object.js":878}],875:[function(require,module,exports){
-module.exports=require(15)
-},{"./event-base.js":872,"./event-emitter.js":873,"./event-listener.js":874}],876:[function(require,module,exports){
-module.exports=require(16)
-},{"../lib/object.js":878,"js-ext/extra/hashmap.js":877,"polyfill/polyfill-base.js":881}],877:[function(require,module,exports){
-module.exports=require(17)
-},{}],878:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":877,"polyfill/polyfill-base.js":881}],879:[function(require,module,exports){
-module.exports=require(19)
-},{}],880:[function(require,module,exports){
-module.exports=require(20)
-},{}],881:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":879,"./lib/window.console.js":880}],882:[function(require,module,exports){
-module.exports=require(19)
-},{}],883:[function(require,module,exports){
-module.exports=require(20)
-},{}],884:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":882,"./lib/window.console.js":883}],885:[function(require,module,exports){
-module.exports=require(17)
-},{}],886:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":891}],887:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":885,"polyfill/polyfill-base.js":891}],888:[function(require,module,exports){
-module.exports=require(28)
-},{}],889:[function(require,module,exports){
-module.exports=require(19)
-},{}],890:[function(require,module,exports){
-module.exports=require(20)
-},{}],891:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":889,"./lib/window.console.js":890}],892:[function(require,module,exports){
-module.exports=require(19)
-},{}],893:[function(require,module,exports){
-module.exports=require(20)
-},{}],894:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":892,"./lib/window.console.js":893}],895:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":896,"./lib/timers.js":897}],896:[function(require,module,exports){
-module.exports=require(36)
-},{"js-ext/extra/hashmap.js":885,"polyfill/polyfill-base.js":900}],897:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":900}],898:[function(require,module,exports){
-module.exports=require(19)
-},{}],899:[function(require,module,exports){
-module.exports=require(20)
 },{}],900:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":898,"./lib/window.console.js":899}],901:[function(require,module,exports){
-module.exports=require(41)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],902:[function(require,module,exports){
+module.exports=require(15)
+},{}],901:[function(require,module,exports){
 module.exports=require(16)
-},{"../lib/object.js":906,"js-ext/extra/hashmap.js":903,"polyfill/polyfill-base.js":912}],903:[function(require,module,exports){
-module.exports=require(17)
-},{}],904:[function(require,module,exports){
-module.exports=require(44)
-},{"../lib/array.js":905,"../lib/object.js":906,"./classes.js":902,"js-ext/extra/hashmap.js":903,"polyfill/lib/weakmap.js":910}],905:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":912}],906:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":903,"polyfill/polyfill-base.js":912}],907:[function(require,module,exports){
-module.exports=require(47)
-},{"polyfill":912}],908:[function(require,module,exports){
-module.exports=require(28)
-},{}],909:[function(require,module,exports){
-module.exports=require(19)
+},{"./lib/matchesselector.js":899,"./lib/window.console.js":900}],902:[function(require,module,exports){
+module.exports=require(4)
+},{}],903:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":908}],904:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":902,"polyfill/polyfill-base.js":908}],905:[function(require,module,exports){
+module.exports=require(23)
+},{}],906:[function(require,module,exports){
+module.exports=require(14)
+},{}],907:[function(require,module,exports){
+module.exports=require(15)
+},{}],908:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":906,"./lib/window.console.js":907}],909:[function(require,module,exports){
+module.exports=require(14)
 },{}],910:[function(require,module,exports){
-module.exports=require(50)
+module.exports=require(15)
 },{}],911:[function(require,module,exports){
-module.exports=require(20)
-},{}],912:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":909,"./lib/window.console.js":911}],913:[function(require,module,exports){
-module.exports=require(53)
-},{}],914:[function(require,module,exports){
-module.exports=require(54)
-},{"../bin/local-hashmap.js":913}],915:[function(require,module,exports){
-module.exports=require(55)
-},{"../bin/local-hashmap.js":913}],916:[function(require,module,exports){
-module.exports=require(56)
-},{"../bin/local-hashmap.js":913}],917:[function(require,module,exports){
-module.exports=require(19)
-},{}],918:[function(require,module,exports){
-module.exports=require(20)
-},{}],919:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":917,"./lib/window.console.js":918}],920:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":921,"./lib/timers.js":922}],921:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":909,"./lib/window.console.js":910}],912:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":913,"./lib/timers.js":914}],913:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":902,"polyfill/polyfill-base.js":917}],914:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":917}],915:[function(require,module,exports){
+module.exports=require(14)
+},{}],916:[function(require,module,exports){
+module.exports=require(15)
+},{}],917:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":915,"./lib/window.console.js":916}],918:[function(require,module,exports){
 module.exports=require(36)
-},{"js-ext/extra/hashmap.js":903,"polyfill/polyfill-base.js":925}],922:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":925}],923:[function(require,module,exports){
-module.exports=require(19)
-},{}],924:[function(require,module,exports){
-module.exports=require(20)
-},{}],925:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],919:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":923,"js-ext/extra/hashmap.js":920,"polyfill/polyfill-base.js":929}],920:[function(require,module,exports){
+module.exports=require(4)
+},{}],921:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":922,"../lib/object.js":923,"./classes.js":919,"js-ext/extra/hashmap.js":920,"polyfill/lib/weakmap.js":927}],922:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":923,"./lib/window.console.js":924}],926:[function(require,module,exports){
-module.exports=require(66)
-},{"./lib/sizes.js":927}],927:[function(require,module,exports){
-module.exports=require(67)
-},{"js-ext/extra/hashmap.js":928,"js-ext/lib/object.js":929}],928:[function(require,module,exports){
-module.exports=require(17)
+},{"polyfill/polyfill-base.js":929}],923:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":920,"polyfill/polyfill-base.js":929}],924:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":929}],925:[function(require,module,exports){
+module.exports=require(23)
+},{}],926:[function(require,module,exports){
+module.exports=require(14)
+},{}],927:[function(require,module,exports){
+module.exports=require(45)
+},{}],928:[function(require,module,exports){
+module.exports=require(15)
 },{}],929:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":928,"polyfill/polyfill-base.js":932}],930:[function(require,module,exports){
-module.exports=require(19)
+module.exports=require(16)
+},{"./lib/matchesselector.js":926,"./lib/window.console.js":928}],930:[function(require,module,exports){
+module.exports=require(48)
 },{}],931:[function(require,module,exports){
-module.exports=require(20)
-},{}],932:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":930,"./lib/window.console.js":931}],933:[function(require,module,exports){
-module.exports=require(73)
-},{"js-ext/extra/hashmap.js":903,"js-ext/lib/object.js":906,"js-ext/lib/string.js":908,"polyfill":919,"polyfill/extra/transition.js":914,"polyfill/extra/vendorCSS.js":916}],934:[function(require,module,exports){
-module.exports=require(74)
-},{"js-ext/extra/hashmap.js":903,"js-ext/lib/object.js":906,"polyfill":919}],935:[function(require,module,exports){
-module.exports=require(75)
-},{"js-ext/extra/hashmap.js":903,"js-ext/lib/object.js":906,"js-ext/lib/string.js":908,"polyfill":919}],936:[function(require,module,exports){
-module.exports=require(76)
-},{"../css/element.css":901,"./attribute-extractor.js":933,"./element-array.js":934,"./html-parser.js":937,"./node-parser.js":938,"./vdom-ns.js":939,"./vnode.js":940,"js-ext/extra/hashmap.js":903,"js-ext/lib/object.js":906,"js-ext/lib/promise.js":907,"js-ext/lib/string.js":908,"polyfill":919,"polyfill/extra/transition.js":914,"polyfill/extra/transitionend.js":915,"polyfill/extra/vendorCSS.js":916,"utils":920,"window-ext":926}],937:[function(require,module,exports){
-module.exports=require(77)
-},{"./attribute-extractor.js":933,"./vdom-ns.js":939,"js-ext/extra/hashmap.js":903,"js-ext/lib/object.js":906,"polyfill":919}],938:[function(require,module,exports){
-module.exports=require(78)
-},{"./attribute-extractor.js":933,"./vdom-ns.js":939,"./vnode.js":940,"js-ext/extra/hashmap.js":903,"js-ext/lib/object.js":906,"polyfill":919}],939:[function(require,module,exports){
-module.exports=require(79)
-},{"js-ext/extra/hashmap.js":903,"js-ext/lib/object.js":906,"polyfill":919}],940:[function(require,module,exports){
-module.exports=require(80)
-},{"./attribute-extractor.js":933,"./html-parser.js":937,"./vdom-ns.js":939,"js-ext/extra/hashmap.js":903,"js-ext/extra/lightmap.js":904,"js-ext/lib/array.js":905,"js-ext/lib/object.js":906,"js-ext/lib/string.js":908,"polyfill":919,"utils/lib/timers.js":922}],941:[function(require,module,exports){
-module.exports=require(81)
-},{"./partials/extend-document.js":935,"./partials/extend-element.js":936,"./partials/node-parser.js":938,"js-ext/extra/hashmap.js":903,"js-ext/lib/object.js":906,"utils/lib/timers.js":922}],942:[function(require,module,exports){
-module.exports=require(12)
-},{"js-ext/extra/hashmap.js":944,"js-ext/lib/object.js":945,"polyfill/polyfill-base.js":951}],943:[function(require,module,exports){
-module.exports=require(168)
-},{"../event-base.js":942,"js-ext/extra/hashmap.js":944}],944:[function(require,module,exports){
-module.exports=require(17)
-},{}],945:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":944,"polyfill/polyfill-base.js":948}],946:[function(require,module,exports){
-module.exports=require(19)
-},{}],947:[function(require,module,exports){
-module.exports=require(20)
-},{}],948:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":946,"./lib/window.console.js":947}],949:[function(require,module,exports){
-module.exports=require(19)
-},{}],950:[function(require,module,exports){
-module.exports=require(20)
-},{}],951:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":949,"./lib/window.console.js":950}],952:[function(require,module,exports){
-module.exports=require(177)
-},{"js-ext":954,"js-ext/extra/hashmap.js":953,"polyfill/polyfill-base.js":966,"utils":967}],953:[function(require,module,exports){
-module.exports=require(17)
-},{}],954:[function(require,module,exports){
-module.exports=require(83)
-},{"./lib/array.js":955,"./lib/function.js":956,"./lib/json.js":957,"./lib/object.js":958,"./lib/promise.js":959,"./lib/string.js":960}],955:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":963}],956:[function(require,module,exports){
-module.exports=require(85)
-},{"polyfill/polyfill-base.js":963}],957:[function(require,module,exports){
-module.exports=require(86)
-},{"polyfill/polyfill-base.js":963}],958:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":953,"polyfill/polyfill-base.js":963}],959:[function(require,module,exports){
-module.exports=require(47)
-},{"polyfill":963}],960:[function(require,module,exports){
-module.exports=require(28)
-},{}],961:[function(require,module,exports){
-module.exports=require(19)
-},{}],962:[function(require,module,exports){
-module.exports=require(20)
-},{}],963:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":961,"./lib/window.console.js":962}],964:[function(require,module,exports){
-module.exports=require(19)
-},{}],965:[function(require,module,exports){
-module.exports=require(20)
-},{}],966:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":964,"./lib/window.console.js":965}],967:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":968,"./lib/timers.js":969}],968:[function(require,module,exports){
-module.exports=require(36)
-},{"js-ext/extra/hashmap.js":953,"polyfill/polyfill-base.js":972}],969:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":972}],970:[function(require,module,exports){
-module.exports=require(19)
-},{}],971:[function(require,module,exports){
-module.exports=require(20)
-},{}],972:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":970,"./lib/window.console.js":971}],973:[function(require,module,exports){
-module.exports=require(16)
-},{"../lib/object.js":975,"js-ext/extra/hashmap.js":974,"polyfill/polyfill-base.js":980}],974:[function(require,module,exports){
-module.exports=require(17)
-},{}],975:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":974,"polyfill/polyfill-base.js":980}],976:[function(require,module,exports){
-module.exports=require(47)
-},{"polyfill":980}],977:[function(require,module,exports){
-module.exports=require(28)
-},{}],978:[function(require,module,exports){
-module.exports=require(19)
-},{}],979:[function(require,module,exports){
-module.exports=require(20)
-},{}],980:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":978,"./lib/window.console.js":979}],981:[function(require,module,exports){
-module.exports=require(19)
-},{}],982:[function(require,module,exports){
-module.exports=require(20)
-},{}],983:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":981,"./lib/window.console.js":982}],984:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":987}],985:[function(require,module,exports){
-module.exports=require(19)
-},{}],986:[function(require,module,exports){
-module.exports=require(20)
-},{}],987:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":985,"./lib/window.console.js":986}],988:[function(require,module,exports){
-module.exports=require(41)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],989:[function(require,module,exports){
-module.exports=require(16)
-},{"../lib/object.js":993,"js-ext/extra/hashmap.js":990,"polyfill/polyfill-base.js":999}],990:[function(require,module,exports){
-module.exports=require(17)
-},{}],991:[function(require,module,exports){
-module.exports=require(44)
-},{"../lib/array.js":992,"../lib/object.js":993,"./classes.js":989,"js-ext/extra/hashmap.js":990,"polyfill/lib/weakmap.js":997}],992:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":999}],993:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":990,"polyfill/polyfill-base.js":999}],994:[function(require,module,exports){
-module.exports=require(47)
-},{"polyfill":999}],995:[function(require,module,exports){
-module.exports=require(28)
-},{}],996:[function(require,module,exports){
-module.exports=require(19)
-},{}],997:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":930}],932:[function(require,module,exports){
 module.exports=require(50)
-},{}],998:[function(require,module,exports){
-module.exports=require(20)
-},{}],999:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":996,"./lib/window.console.js":998}],1000:[function(require,module,exports){
-module.exports=require(53)
-},{}],1001:[function(require,module,exports){
-module.exports=require(54)
-},{"../bin/local-hashmap.js":1000}],1002:[function(require,module,exports){
-module.exports=require(55)
-},{"../bin/local-hashmap.js":1000}],1003:[function(require,module,exports){
-module.exports=require(56)
-},{"../bin/local-hashmap.js":1000}],1004:[function(require,module,exports){
-module.exports=require(19)
-},{}],1005:[function(require,module,exports){
-module.exports=require(20)
-},{}],1006:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":1004,"./lib/window.console.js":1005}],1007:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":1008,"./lib/timers.js":1009}],1008:[function(require,module,exports){
-module.exports=require(36)
-},{"js-ext/extra/hashmap.js":990,"polyfill/polyfill-base.js":1012}],1009:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":1012}],1010:[function(require,module,exports){
-module.exports=require(19)
-},{}],1011:[function(require,module,exports){
-module.exports=require(20)
-},{}],1012:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":1010,"./lib/window.console.js":1011}],1013:[function(require,module,exports){
-module.exports=require(66)
-},{"./lib/sizes.js":1014}],1014:[function(require,module,exports){
-module.exports=require(67)
-},{"js-ext/extra/hashmap.js":1015,"js-ext/lib/object.js":1016}],1015:[function(require,module,exports){
-module.exports=require(17)
-},{}],1016:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":1015,"polyfill/polyfill-base.js":1019}],1017:[function(require,module,exports){
-module.exports=require(19)
-},{}],1018:[function(require,module,exports){
-module.exports=require(20)
-},{}],1019:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":1017,"./lib/window.console.js":1018}],1020:[function(require,module,exports){
+},{"../bin/local-hashmap.js":930}],933:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":930}],934:[function(require,module,exports){
+module.exports=require(14)
+},{}],935:[function(require,module,exports){
+module.exports=require(15)
+},{}],936:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":934,"./lib/window.console.js":935}],937:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":938,"./lib/timers.js":939}],938:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":920,"polyfill/polyfill-base.js":942}],939:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":942}],940:[function(require,module,exports){
+module.exports=require(14)
+},{}],941:[function(require,module,exports){
+module.exports=require(15)
+},{}],942:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":940,"./lib/window.console.js":941}],943:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":944}],944:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":945,"js-ext/lib/object.js":946}],945:[function(require,module,exports){
+module.exports=require(4)
+},{}],946:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":945,"polyfill/polyfill-base.js":949}],947:[function(require,module,exports){
+module.exports=require(14)
+},{}],948:[function(require,module,exports){
+module.exports=require(15)
+},{}],949:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":947,"./lib/window.console.js":948}],950:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":920,"js-ext/lib/object.js":923,"js-ext/lib/string.js":925,"polyfill":936,"polyfill/extra/transition.js":931,"polyfill/extra/vendorCSS.js":933}],951:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":920,"js-ext/lib/object.js":923,"polyfill":936}],952:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":920,"js-ext/lib/object.js":923,"js-ext/lib/string.js":925,"polyfill":936}],953:[function(require,module,exports){
+module.exports=require(71)
+},{"../css/element.css":918,"./attribute-extractor.js":950,"./element-array.js":951,"./html-parser.js":954,"./node-parser.js":955,"./vdom-ns.js":956,"./vnode.js":957,"js-ext/extra/hashmap.js":920,"js-ext/lib/object.js":923,"js-ext/lib/promise.js":924,"js-ext/lib/string.js":925,"polyfill":936,"polyfill/extra/transition.js":931,"polyfill/extra/transitionend.js":932,"polyfill/extra/vendorCSS.js":933,"utils":937,"window-ext":943}],954:[function(require,module,exports){
+module.exports=require(72)
+},{"./attribute-extractor.js":950,"./vdom-ns.js":956,"js-ext/extra/hashmap.js":920,"js-ext/lib/object.js":923,"polyfill":936}],955:[function(require,module,exports){
 module.exports=require(73)
-},{"js-ext/extra/hashmap.js":990,"js-ext/lib/object.js":993,"js-ext/lib/string.js":995,"polyfill":1006,"polyfill/extra/transition.js":1001,"polyfill/extra/vendorCSS.js":1003}],1021:[function(require,module,exports){
+},{"./attribute-extractor.js":950,"./vdom-ns.js":956,"./vnode.js":957,"js-ext/extra/hashmap.js":920,"js-ext/lib/object.js":923,"polyfill":936}],956:[function(require,module,exports){
 module.exports=require(74)
-},{"js-ext/extra/hashmap.js":990,"js-ext/lib/object.js":993,"polyfill":1006}],1022:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":920,"js-ext/lib/object.js":923,"polyfill":936}],957:[function(require,module,exports){
 module.exports=require(75)
-},{"js-ext/extra/hashmap.js":990,"js-ext/lib/object.js":993,"js-ext/lib/string.js":995,"polyfill":1006}],1023:[function(require,module,exports){
+},{"./attribute-extractor.js":950,"./html-parser.js":954,"./vdom-ns.js":956,"js-ext/extra/hashmap.js":920,"js-ext/extra/lightmap.js":921,"js-ext/lib/array.js":922,"js-ext/lib/object.js":923,"js-ext/lib/string.js":925,"polyfill":936,"utils/lib/timers.js":939}],958:[function(require,module,exports){
 module.exports=require(76)
-},{"../css/element.css":988,"./attribute-extractor.js":1020,"./element-array.js":1021,"./html-parser.js":1024,"./node-parser.js":1025,"./vdom-ns.js":1026,"./vnode.js":1027,"js-ext/extra/hashmap.js":990,"js-ext/lib/object.js":993,"js-ext/lib/promise.js":994,"js-ext/lib/string.js":995,"polyfill":1006,"polyfill/extra/transition.js":1001,"polyfill/extra/transitionend.js":1002,"polyfill/extra/vendorCSS.js":1003,"utils":1007,"window-ext":1013}],1024:[function(require,module,exports){
-module.exports=require(77)
-},{"./attribute-extractor.js":1020,"./vdom-ns.js":1026,"js-ext/extra/hashmap.js":990,"js-ext/lib/object.js":993,"polyfill":1006}],1025:[function(require,module,exports){
-module.exports=require(78)
-},{"./attribute-extractor.js":1020,"./vdom-ns.js":1026,"./vnode.js":1027,"js-ext/extra/hashmap.js":990,"js-ext/lib/object.js":993,"polyfill":1006}],1026:[function(require,module,exports){
-module.exports=require(79)
-},{"js-ext/extra/hashmap.js":990,"js-ext/lib/object.js":993,"polyfill":1006}],1027:[function(require,module,exports){
-module.exports=require(80)
-},{"./attribute-extractor.js":1020,"./html-parser.js":1024,"./vdom-ns.js":1026,"js-ext/extra/hashmap.js":990,"js-ext/extra/lightmap.js":991,"js-ext/lib/array.js":992,"js-ext/lib/object.js":993,"js-ext/lib/string.js":995,"polyfill":1006,"utils/lib/timers.js":1009}],1028:[function(require,module,exports){
-module.exports=require(81)
-},{"./partials/extend-document.js":1022,"./partials/extend-element.js":1023,"./partials/node-parser.js":1025,"js-ext/extra/hashmap.js":990,"js-ext/lib/object.js":993,"utils/lib/timers.js":1009}],1029:[function(require,module,exports){
-module.exports=require(19)
-},{}],1030:[function(require,module,exports){
-module.exports=require(20)
-},{}],1031:[function(require,module,exports){
+},{"./partials/extend-document.js":952,"./partials/extend-element.js":953,"./partials/node-parser.js":955,"js-ext/extra/hashmap.js":920,"js-ext/lib/object.js":923,"utils/lib/timers.js":939}],959:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":960,"./lib/timers.js":961}],960:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":965,"polyfill/polyfill-base.js":964}],961:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":964}],962:[function(require,module,exports){
+module.exports=require(14)
+},{}],963:[function(require,module,exports){
+module.exports=require(15)
+},{}],964:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":962,"./lib/window.console.js":963}],965:[function(require,module,exports){
+module.exports=require(4)
+},{}],966:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":965,"polyfill/polyfill-base.js":969}],967:[function(require,module,exports){
+module.exports=require(14)
+},{}],968:[function(require,module,exports){
+module.exports=require(15)
+},{}],969:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":967,"./lib/window.console.js":968}],970:[function(require,module,exports){
+module.exports=require(5)
+},{"event-dom":971,"event/extra/promise-finalize.js":1043,"event/extra/timer-finalize.js":1044,"js-ext/extra/classes.js":1054,"js-ext/extra/hashmap.js":1055,"js-ext/lib/object.js":1056,"js-ext/lib/promise.js":1057,"js-ext/lib/string.js":1058,"polyfill":1064,"utils/lib/timers.js":1065,"vdom":1109}],971:[function(require,module,exports){
+module.exports=require(6)
+},{"event":975,"js-ext/extra/hashmap.js":985,"js-ext/lib/array.js":986,"js-ext/lib/object.js":987,"js-ext/lib/string.js":988,"polyfill/polyfill-base.js":994,"utils":995,"vdom":1041}],972:[function(require,module,exports){
+module.exports=require(7)
+},{"js-ext/extra/hashmap.js":977,"js-ext/lib/object.js":978,"polyfill/polyfill-base.js":984}],973:[function(require,module,exports){
+module.exports=require(8)
+},{"./event-base.js":972}],974:[function(require,module,exports){
+module.exports=require(9)
+},{"./event-base.js":972,"js-ext/extra/classes.js":976,"js-ext/lib/object.js":978}],975:[function(require,module,exports){
+module.exports=require(10)
+},{"./event-base.js":972,"./event-emitter.js":973,"./event-listener.js":974}],976:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":978,"js-ext/extra/hashmap.js":977,"polyfill/polyfill-base.js":981}],977:[function(require,module,exports){
+module.exports=require(4)
+},{}],978:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":977,"polyfill/polyfill-base.js":981}],979:[function(require,module,exports){
+module.exports=require(14)
+},{}],980:[function(require,module,exports){
+module.exports=require(15)
+},{}],981:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":979,"./lib/window.console.js":980}],982:[function(require,module,exports){
+module.exports=require(14)
+},{}],983:[function(require,module,exports){
+module.exports=require(15)
+},{}],984:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":982,"./lib/window.console.js":983}],985:[function(require,module,exports){
+module.exports=require(4)
+},{}],986:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":1029,"./lib/window.console.js":1030}],1032:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":1033,"./lib/timers.js":1034}],1033:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":991}],987:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":985,"polyfill/polyfill-base.js":991}],988:[function(require,module,exports){
+module.exports=require(23)
+},{}],989:[function(require,module,exports){
+module.exports=require(14)
+},{}],990:[function(require,module,exports){
+module.exports=require(15)
+},{}],991:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":989,"./lib/window.console.js":990}],992:[function(require,module,exports){
+module.exports=require(14)
+},{}],993:[function(require,module,exports){
+module.exports=require(15)
+},{}],994:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":992,"./lib/window.console.js":993}],995:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":996,"./lib/timers.js":997}],996:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":985,"polyfill/polyfill-base.js":1000}],997:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1000}],998:[function(require,module,exports){
+module.exports=require(14)
+},{}],999:[function(require,module,exports){
+module.exports=require(15)
+},{}],1000:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":998,"./lib/window.console.js":999}],1001:[function(require,module,exports){
 module.exports=require(36)
-},{"js-ext/extra/hashmap.js":863,"polyfill/polyfill-base.js":1037}],1034:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":1037}],1035:[function(require,module,exports){
-module.exports=require(19)
-},{}],1036:[function(require,module,exports){
-module.exports=require(20)
-},{}],1037:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1002:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1006,"js-ext/extra/hashmap.js":1003,"polyfill/polyfill-base.js":1012}],1003:[function(require,module,exports){
+module.exports=require(4)
+},{}],1004:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":1005,"../lib/object.js":1006,"./classes.js":1002,"js-ext/extra/hashmap.js":1003,"polyfill/lib/weakmap.js":1010}],1005:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":1035,"./lib/window.console.js":1036}],1038:[function(require,module,exports){
-module.exports=require(66)
-},{"./lib/sizes.js":1039}],1039:[function(require,module,exports){
-module.exports=require(67)
-},{"js-ext/extra/hashmap.js":1040,"js-ext/lib/object.js":1041}],1040:[function(require,module,exports){
-module.exports=require(17)
-},{}],1041:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":1040,"polyfill/polyfill-base.js":1044}],1042:[function(require,module,exports){
-module.exports=require(19)
-},{}],1043:[function(require,module,exports){
-module.exports=require(20)
-},{}],1044:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1012}],1006:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1003,"polyfill/polyfill-base.js":1012}],1007:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1012}],1008:[function(require,module,exports){
+module.exports=require(23)
+},{}],1009:[function(require,module,exports){
+module.exports=require(14)
+},{}],1010:[function(require,module,exports){
+module.exports=require(45)
+},{}],1011:[function(require,module,exports){
+module.exports=require(15)
+},{}],1012:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1009,"./lib/window.console.js":1011}],1013:[function(require,module,exports){
+module.exports=require(48)
+},{}],1014:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":1013}],1015:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":1013}],1016:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":1013}],1017:[function(require,module,exports){
+module.exports=require(14)
+},{}],1018:[function(require,module,exports){
+module.exports=require(15)
+},{}],1019:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1017,"./lib/window.console.js":1018}],1020:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1021,"./lib/timers.js":1022}],1021:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1003,"polyfill/polyfill-base.js":1025}],1022:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1025}],1023:[function(require,module,exports){
+module.exports=require(14)
+},{}],1024:[function(require,module,exports){
+module.exports=require(15)
+},{}],1025:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1023,"./lib/window.console.js":1024}],1026:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":1027}],1027:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":1028,"js-ext/lib/object.js":1029}],1028:[function(require,module,exports){
+module.exports=require(4)
+},{}],1029:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1028,"polyfill/polyfill-base.js":1032}],1030:[function(require,module,exports){
+module.exports=require(14)
+},{}],1031:[function(require,module,exports){
+module.exports=require(15)
+},{}],1032:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1030,"./lib/window.console.js":1031}],1033:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":1003,"js-ext/lib/object.js":1006,"js-ext/lib/string.js":1008,"polyfill":1019,"polyfill/extra/transition.js":1014,"polyfill/extra/vendorCSS.js":1016}],1034:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":1003,"js-ext/lib/object.js":1006,"polyfill":1019}],1035:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":1003,"js-ext/lib/object.js":1006,"js-ext/lib/string.js":1008,"polyfill":1019}],1036:[function(require,module,exports){
+module.exports=require(71)
+},{"../css/element.css":1001,"./attribute-extractor.js":1033,"./element-array.js":1034,"./html-parser.js":1037,"./node-parser.js":1038,"./vdom-ns.js":1039,"./vnode.js":1040,"js-ext/extra/hashmap.js":1003,"js-ext/lib/object.js":1006,"js-ext/lib/promise.js":1007,"js-ext/lib/string.js":1008,"polyfill":1019,"polyfill/extra/transition.js":1014,"polyfill/extra/transitionend.js":1015,"polyfill/extra/vendorCSS.js":1016,"utils":1020,"window-ext":1026}],1037:[function(require,module,exports){
+module.exports=require(72)
+},{"./attribute-extractor.js":1033,"./vdom-ns.js":1039,"js-ext/extra/hashmap.js":1003,"js-ext/lib/object.js":1006,"polyfill":1019}],1038:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":1033,"./vdom-ns.js":1039,"./vnode.js":1040,"js-ext/extra/hashmap.js":1003,"js-ext/lib/object.js":1006,"polyfill":1019}],1039:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":1003,"js-ext/lib/object.js":1006,"polyfill":1019}],1040:[function(require,module,exports){
+module.exports=require(75)
+},{"./attribute-extractor.js":1033,"./html-parser.js":1037,"./vdom-ns.js":1039,"js-ext/extra/hashmap.js":1003,"js-ext/extra/lightmap.js":1004,"js-ext/lib/array.js":1005,"js-ext/lib/object.js":1006,"js-ext/lib/string.js":1008,"polyfill":1019,"utils/lib/timers.js":1022}],1041:[function(require,module,exports){
+module.exports=require(76)
+},{"./partials/extend-document.js":1035,"./partials/extend-element.js":1036,"./partials/node-parser.js":1038,"js-ext/extra/hashmap.js":1003,"js-ext/lib/object.js":1006,"utils/lib/timers.js":1022}],1042:[function(require,module,exports){
+module.exports=require(7)
+},{"js-ext/extra/hashmap.js":1045,"js-ext/lib/object.js":1046,"polyfill/polyfill-base.js":1053}],1043:[function(require,module,exports){
+module.exports=require(78)
+},{"js-ext/extra/hashmap.js":1045,"js-ext/lib/promise.js":1047}],1044:[function(require,module,exports){
+module.exports=require(79)
+},{"../event-base.js":1042,"js-ext/extra/hashmap.js":1045}],1045:[function(require,module,exports){
+module.exports=require(4)
+},{}],1046:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1045,"polyfill/polyfill-base.js":1050}],1047:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1050}],1048:[function(require,module,exports){
+module.exports=require(14)
+},{}],1049:[function(require,module,exports){
+module.exports=require(15)
+},{}],1050:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1048,"./lib/window.console.js":1049}],1051:[function(require,module,exports){
+module.exports=require(14)
+},{}],1052:[function(require,module,exports){
+module.exports=require(15)
+},{}],1053:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1051,"./lib/window.console.js":1052}],1054:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1056,"js-ext/extra/hashmap.js":1055,"polyfill/polyfill-base.js":1061}],1055:[function(require,module,exports){
+module.exports=require(4)
+},{}],1056:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1055,"polyfill/polyfill-base.js":1061}],1057:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1061}],1058:[function(require,module,exports){
+module.exports=require(23)
+},{}],1059:[function(require,module,exports){
+module.exports=require(14)
+},{}],1060:[function(require,module,exports){
+module.exports=require(15)
+},{}],1061:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1059,"./lib/window.console.js":1060}],1062:[function(require,module,exports){
+module.exports=require(14)
+},{}],1063:[function(require,module,exports){
+module.exports=require(15)
+},{}],1064:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1062,"./lib/window.console.js":1063}],1065:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1068}],1066:[function(require,module,exports){
+module.exports=require(14)
+},{}],1067:[function(require,module,exports){
+module.exports=require(15)
+},{}],1068:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1066,"./lib/window.console.js":1067}],1069:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1070:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1074,"js-ext/extra/hashmap.js":1071,"polyfill/polyfill-base.js":1080}],1071:[function(require,module,exports){
+module.exports=require(4)
+},{}],1072:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":1073,"../lib/object.js":1074,"./classes.js":1070,"js-ext/extra/hashmap.js":1071,"polyfill/lib/weakmap.js":1078}],1073:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":1042,"./lib/window.console.js":1043}],1045:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1080}],1074:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1071,"polyfill/polyfill-base.js":1080}],1075:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1080}],1076:[function(require,module,exports){
+module.exports=require(23)
+},{}],1077:[function(require,module,exports){
+module.exports=require(14)
+},{}],1078:[function(require,module,exports){
+module.exports=require(45)
+},{}],1079:[function(require,module,exports){
+module.exports=require(15)
+},{}],1080:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1077,"./lib/window.console.js":1079}],1081:[function(require,module,exports){
+module.exports=require(48)
+},{}],1082:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":1081}],1083:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":1081}],1084:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":1081}],1085:[function(require,module,exports){
+module.exports=require(14)
+},{}],1086:[function(require,module,exports){
+module.exports=require(15)
+},{}],1087:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1085,"./lib/window.console.js":1086}],1088:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1089,"./lib/timers.js":1090}],1089:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1071,"polyfill/polyfill-base.js":1093}],1090:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1093}],1091:[function(require,module,exports){
+module.exports=require(14)
+},{}],1092:[function(require,module,exports){
+module.exports=require(15)
+},{}],1093:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1091,"./lib/window.console.js":1092}],1094:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":1095}],1095:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":1096,"js-ext/lib/object.js":1097}],1096:[function(require,module,exports){
+module.exports=require(4)
+},{}],1097:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1096,"polyfill/polyfill-base.js":1100}],1098:[function(require,module,exports){
+module.exports=require(14)
+},{}],1099:[function(require,module,exports){
+module.exports=require(15)
+},{}],1100:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1098,"./lib/window.console.js":1099}],1101:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":1071,"js-ext/lib/object.js":1074,"js-ext/lib/string.js":1076,"polyfill":1087,"polyfill/extra/transition.js":1082,"polyfill/extra/vendorCSS.js":1084}],1102:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":1071,"js-ext/lib/object.js":1074,"polyfill":1087}],1103:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":1071,"js-ext/lib/object.js":1074,"js-ext/lib/string.js":1076,"polyfill":1087}],1104:[function(require,module,exports){
+module.exports=require(71)
+},{"../css/element.css":1069,"./attribute-extractor.js":1101,"./element-array.js":1102,"./html-parser.js":1105,"./node-parser.js":1106,"./vdom-ns.js":1107,"./vnode.js":1108,"js-ext/extra/hashmap.js":1071,"js-ext/lib/object.js":1074,"js-ext/lib/promise.js":1075,"js-ext/lib/string.js":1076,"polyfill":1087,"polyfill/extra/transition.js":1082,"polyfill/extra/transitionend.js":1083,"polyfill/extra/vendorCSS.js":1084,"utils":1088,"window-ext":1094}],1105:[function(require,module,exports){
+module.exports=require(72)
+},{"./attribute-extractor.js":1101,"./vdom-ns.js":1107,"js-ext/extra/hashmap.js":1071,"js-ext/lib/object.js":1074,"polyfill":1087}],1106:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":1101,"./vdom-ns.js":1107,"./vnode.js":1108,"js-ext/extra/hashmap.js":1071,"js-ext/lib/object.js":1074,"polyfill":1087}],1107:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":1071,"js-ext/lib/object.js":1074,"polyfill":1087}],1108:[function(require,module,exports){
+module.exports=require(75)
+},{"./attribute-extractor.js":1101,"./html-parser.js":1105,"./vdom-ns.js":1107,"js-ext/extra/hashmap.js":1071,"js-ext/extra/lightmap.js":1072,"js-ext/lib/array.js":1073,"js-ext/lib/object.js":1074,"js-ext/lib/string.js":1076,"polyfill":1087,"utils/lib/timers.js":1090}],1109:[function(require,module,exports){
+module.exports=require(76)
+},{"./partials/extend-document.js":1103,"./partials/extend-element.js":1104,"./partials/node-parser.js":1106,"js-ext/extra/hashmap.js":1071,"js-ext/lib/object.js":1074,"utils/lib/timers.js":1090}],1110:[function(require,module,exports){
+module.exports=require(14)
+},{}],1111:[function(require,module,exports){
+module.exports=require(15)
+},{}],1112:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1110,"./lib/window.console.js":1111}],1113:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1114,"./lib/timers.js":1115}],1114:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":965,"polyfill/polyfill-base.js":1118}],1115:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1118}],1116:[function(require,module,exports){
+module.exports=require(14)
+},{}],1117:[function(require,module,exports){
+module.exports=require(15)
+},{}],1118:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1116,"./lib/window.console.js":1117}],1119:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":1120}],1120:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":1121,"js-ext/lib/object.js":1122}],1121:[function(require,module,exports){
+module.exports=require(4)
+},{}],1122:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1121,"polyfill/polyfill-base.js":1125}],1123:[function(require,module,exports){
+module.exports=require(14)
+},{}],1124:[function(require,module,exports){
+module.exports=require(15)
+},{}],1125:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1123,"./lib/window.console.js":1124}],1126:[function(require,module,exports){
 
 "use strict";
 
@@ -24065,7 +23978,7 @@ module.exports = function (window) {
     return IO;
 };
 
-},{"../io.js":1049,"js-ext/extra/hashmap.js":1050,"js-ext/lib/object.js":1055,"xmldom":1332}],1046:[function(require,module,exports){
+},{"../io.js":1130,"js-ext/extra/hashmap.js":1131,"js-ext/lib/object.js":1136,"xmldom":1911}],1127:[function(require,module,exports){
 "use strict";
 
 require('js-ext/lib/object.js');
@@ -24192,7 +24105,7 @@ module.exports = function (window) {
 
     return IO;
 };
-},{"../io.js":1049,"js-ext/extra/hashmap.js":1050,"js-ext/lib/object.js":1055}],1047:[function(require,module,exports){
+},{"../io.js":1130,"js-ext/extra/hashmap.js":1131,"js-ext/lib/object.js":1136}],1128:[function(require,module,exports){
 "use strict";
 
 /**
@@ -24662,7 +24575,7 @@ module.exports = function (window) {
 
     return IO;
 };
-},{"../io.js":1049,"js-ext/extra/hashmap.js":1050,"js-ext/lib/object.js":1055,"js-ext/lib/string.js":1057,"polyfill/polyfill-base.js":1063}],1048:[function(require,module,exports){
+},{"../io.js":1130,"js-ext/extra/hashmap.js":1131,"js-ext/lib/object.js":1136,"js-ext/lib/string.js":1138,"polyfill/polyfill-base.js":1144}],1129:[function(require,module,exports){
 "use strict";
 
 /**
@@ -24814,55 +24727,415 @@ module.exports = function (window) {
 
     return IO;
 };
-},{"../io.js":1049,"js-ext":1051,"js-ext/extra/hashmap.js":1050}],1049:[function(require,module,exports){
-module.exports=require(177)
-},{"js-ext":1051,"js-ext/extra/hashmap.js":1050,"polyfill/polyfill-base.js":1063,"utils":1064}],1050:[function(require,module,exports){
-module.exports=require(17)
-},{}],1051:[function(require,module,exports){
-module.exports=require(83)
-},{"./lib/array.js":1052,"./lib/function.js":1053,"./lib/json.js":1054,"./lib/object.js":1055,"./lib/promise.js":1056,"./lib/string.js":1057}],1052:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":1060}],1053:[function(require,module,exports){
-module.exports=require(85)
-},{"polyfill/polyfill-base.js":1060}],1054:[function(require,module,exports){
-module.exports=require(86)
-},{"polyfill/polyfill-base.js":1060}],1055:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":1050,"polyfill/polyfill-base.js":1060}],1056:[function(require,module,exports){
-module.exports=require(47)
-},{"polyfill":1060}],1057:[function(require,module,exports){
-module.exports=require(28)
-},{}],1058:[function(require,module,exports){
-module.exports=require(19)
-},{}],1059:[function(require,module,exports){
-module.exports=require(20)
-},{}],1060:[function(require,module,exports){
+},{"../io.js":1130,"js-ext":1132,"js-ext/extra/hashmap.js":1131}],1130:[function(require,module,exports){
+(function (global){
+/**
+ * Provides core IO-functionality.
+ *
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ * @module io
+ * @class IO
+*/
+
+"use strict";
+
+require('polyfill/polyfill-base.js');
+require('js-ext');
+
+var NAME = '[io]: ',
+    GET = 'GET',
+    createHashMap = require('js-ext/extra/hashmap.js').createMap,
+    asyncSilent = require('utils').asyncSilent,
+    DEF_REQ_TIMEOUT = 300000, // don't create an ever-lasting request: always quit after 5 minutes
+    BODY_METHODS = createHashMap({
+        POST: 1,
+        PUT: 1
+    }),
+    CONTENT_TYPE = 'Content-Type',
+    MIME_JSON = 'application/json',
+    DEF_CONTENT_TYPE_POST = 'application/x-www-form-urlencoded; charset=UTF-8',
+    ERROR_NO_XHR = 'no valid xhr transport-mechanism available',
+    REQUEST_TIMEOUT = 'Request-timeout',
+    UNKNOW_ERROR = 'Unknown response-error',
+    XHR_ERROR = 'XHR Error',
+    ABORTED = 'Request aborted',
+    NO_XHR = 'No valid xhr found on this browser';
+
+module.exports = function (window) {
+
+    // to prevent multiple IO instances
+    // (which might happen: http://nodejs.org/docs/latest/api/modules.html#modules_module_caching_caveats)
+    // we make sure IO is defined only once. Therefore we bind it to `window` and return it if created before
+    // We need a singleton IO, because submodules might merge in. You can't have them merging
+    // into some other IO-instance than which is used.
+    var Glob = (typeof global !== 'undefined' ? global : /* istanbul ignore next */ this);
+
+    Glob._ITSAmodules || Object.protectedProp(Glob, '_ITSAmodules', createHashMap());
+
+    if (Glob._ITSAmodules.IO) {
+        return Glob._ITSAmodules.IO;
+    }
+
+    var ENCODE_URI_COMPONENT = encodeURIComponent,
+        IO;
+
+    IO = {
+        config: {},
+
+        //===============================================================================================
+        // private methods:
+        //===============================================================================================
+
+        _xhrList: [],
+
+        /**
+         * Initializes the xhr-instance, based on the config-params.
+         * This method is the standard way of doing xhr-requests without processing streams.
+         *
+         * @method _initXHR
+         * @param xhr {Object} xhr-instance
+         * @param options {Object}
+         *    @param [options.url] {String} The url to which the request is sent.
+         *    @param [options.method='GET'] {String} The HTTP method to use.
+         *    can be ignored, even if streams are used --> the returned Promise will always hold all data
+         *    @param [options.sync=false] {boolean} By default, all requests are sent asynchronously. To send synchronous requests, set to true.
+         *           This feature only works in the browser: nodejs will always perform asynchronous requests.
+         *    @param [options.data] {Object} Data to be sent to the server, either to be used by `query-params` or `body`.
+         *    @param [options.headers] {Object} HTTP request headers.
+         *    @param [options.responseType] {String} Force the response type.
+         *    @param [options.timeout=3000] {number} to timeout the request, leading into a rejected Promise.
+         *    @param [options.withCredentials=false] {boolean} Whether or not to send credentials on the request.
+         * @param fulfill {Function} reference to xhr-promise's fulfill-function
+         * @param reject {Function} reference to xhr-promise's reject-function
+         * @param promise {Promise} the xhr-promise which will be extended with the `abort()`-method
+         * @private
+        */
+        _initXHR: function (xhr, options, promise) {
+            console.log(NAME, '_initXHR');
+            var instance = this,
+                url = options.url,
+                method = options.method || GET,
+                headers = options.headers || {}, // all request will get some headers
+                async = !options.sync,
+                data = options.data,
+                reject = promise.reject;
+            // xhr will be null in case of a CORS-request when no CORS is possible
+            if (!xhr) {
+                console.error(NAME, '_initXHR fails: '+ERROR_NO_XHR);
+                reject(new Error(ERROR_NO_XHR));
+                return;
+            }
+            console.log(NAME, '_initXHR succesfully created '+(xhr._isXHR2 ? 'XMLHttpRequest2' : (xhr._isXDR ? 'XDomainRequest' : 'XMLHttpRequest1'))+'-instance');
+
+            // method-name should be in uppercase:
+            method = method.toUpperCase();
+
+            // in case of BODY-method: eliminate any data behind querystring:
+            // else: append data-object behind querystring
+            if (BODY_METHODS[method]) {
+                url = url.split('?'); // now url is an array
+                url = url[0]; // now url is a String again
+            }
+            else if (data) {
+                url += ((url.indexOf('?') > 0) ? '&' : '?') + instance._toQueryString(data);
+            }
+
+            xhr.open(method, url, async);
+            // xhr.responseType = options.responseType || 'text';
+            options.withCredentials && (xhr.withCredentials=true);
+
+
+            // more initialisation might be needed by extended modules:
+            instance._xhrInitList.each(
+                function(fn) {
+                    fn(xhr, promise, headers, method);
+                }
+            );
+
+            // send the request:
+            xhr.send((BODY_METHODS[method] && data) ? (((headers[CONTENT_TYPE]===MIME_JSON) || xhr._isXDR) ? JSON.stringify(data) : instance._toQueryString(data)) : null);
+
+            console.log(NAME, 'xhr send to '+url+' with method '+method);
+
+            // now add xhr.abort() to the promise, so we can call from within the returned promise-instance
+            promise.abort = function() {
+                console.log(NAME, 'xhr aborted');
+                reject(new Error(ABORTED));
+                xhr._aborted = true; // must be set: IE9 won't allow to read anything on xhr after being aborted
+                xhr.abort();
+            };
+
+            // in case synchronous transfer: force an xhr.onreadystatechange:
+            async || xhr.onreadystatechange();
+        },
+
+        /**
+         * Adds the `headers`-object to `xhr`-headers.
+         *
+         * @method _setHeaders
+         * @param xhr {Object} containing the xhr-instance
+         * @param headers {Object} containing all headers
+         * @param method {String} the request-method used
+         * @private
+        */
+        _setHeaders: function(xhr, promise, headers, method) {
+            // XDR cannot set requestheaders, only XHR:
+            if (!xhr._isXDR) {
+                console.log(NAME, '_setHeaders');
+                var name;
+                if ((method!=='POST') && (method!=='PUT')) {
+                    // force GET-request to make a request instead of using cache (like IE does):
+                    headers['If-Modified-Since'] = 'Wed, 15 Nov 1995 01:00:00 GMT';
+                    // header 'Content-Type' should only be set with POST or PUT requests:
+                    delete headers[CONTENT_TYPE];
+                }
+                // set all headers
+                for (name in headers) {
+                    xhr.setRequestHeader(name, headers[name]);
+                }
+
+                // in case of POST or PUT method: always make sure 'Content-Type' is specified
+                ((method!=='POST') && (method!=='PUT')) || (headers && (CONTENT_TYPE in headers)) || xhr.setRequestHeader(CONTENT_TYPE, DEF_CONTENT_TYPE_POST);
+            }
+        },
+
+        /**
+         * Adds 2 methods on the xhr-instance which are used by xhr when events occur:
+         *
+         * xhr.onreadystatechange()
+         * xhr.ontimeout()  // only XMLHttpRequest2
+         *
+         * These events are responsible for making the Promise resolve.
+         * @method _setReadyHandle
+         * @param xhr {Object} containing the xhr-instance
+         * @param fulfill {Function} reference to the Promise fulfill-function
+         * @param reject {Function} reference to the Promise reject-function
+         * @private
+        */
+        _setReadyHandle: function(xhr, promise) {
+            console.log(NAME, '_setReadyHandle');
+            // for XDomainRequest, we need 'onload' instead of 'onreadystatechange'
+            xhr.onreadystatechange = function() {
+                // CANNOT console xhr.responseText here! IE9 will throw an error:
+                // you can only acces it after (xhr.readyState===4)
+                // also check xhr._aborted --> IE9 comes here after aborted and will throw an error when reading xhr's native properties
+                if (!xhr._aborted && (xhr.readyState===4)) {
+                    clearTimeout(xhr._timer);
+                    if ((xhr.status>=200) && (xhr.status<300)) {
+                        console.log(NAME, 'xhr.onreadystatechange will fulfill xhr-instance: '+xhr.responseText);
+                        // In case streamback function is set, but when no intermediate stream-data was send
+                        // (or in case of XDR: below 2kb it doesn't call onprogress)
+                        // --> we might need to call onprogress ourselve.
+                        if (xhr._isStream && !xhr._gotstreamed) {
+                            xhr.onprogress(xhr.responseText);
+                        }
+                        promise.fulfill(xhr);
+                    }
+                    else {
+                        console.warn(NAME, 'xhr.onreadystatechange will reject xhr-instance: '+xhr.statusText);
+                        promise.reject(new Error(xhr.statusText || UNKNOW_ERROR+' '+xhr.status));
+                    }
+                }
+            };
+            xhr.onerror = function() {
+                clearTimeout(xhr._timer);
+                promise.reject(new Error(XHR_ERROR));
+            };
+        },
+
+        /**
+         * Stringifies an object into one string with every pair separated by `&`
+         *
+         * @method _toQueryString
+         * @param data {Object} containing key-value pairs
+         * @return {String} stringified presentation of the object, with every pair separated by `&`
+         * @private
+        */
+        _toQueryString: function(data) {
+            var paramArray = [],
+                key, value;
+        // TODO: use `object` module
+            for (key in data) {
+                value = data[key];
+                key = ENCODE_URI_COMPONENT(key);
+                paramArray.push((value === null) ? key : (key + '=' + ENCODE_URI_COMPONENT(value)));
+            }
+            console.log(NAME, '_toQueryString --> '+paramArray.join('&'));
+            return paramArray.join('&');
+        },
+
+        /**
+         * Sends a HTTP request to the server and returns a Promise with an additional .abort() method to cancel the request.
+         * This method is the standard way of doing xhr-requests without processing streams.
+         *
+         * @method request
+         * @param options {Object}
+         *    @param [options.url] {String} The url to which the request is sent.
+         *    @param [options.method='GET'] {String} The HTTP method to use.
+         *    can be ignored, even if streams are used --> the returned Promise will always hold all data
+         *    @param [options.sync=false] {boolean} By default, all requests are sent asynchronously. To send synchronous requests, set to true.
+         *    @param [options.data] {Object} Data to be sent to the server, either to be used by `query-params` or `body`.
+         *    @param [options.headers] {Object} HTTP request headers.
+         *    @param [options.responseType] {String} Force the response type.
+         *    @param [options.timeout=3000] {number} to timeout the request, leading into a rejected Promise.
+         *    @param [options.withCredentials=false] {boolean} Whether or not to send credentials on the request.
+         *    @param [options.streamback] {Function} callbackfunction in case you want to process streams (needs io-stream module).
+         * @return {Promise} Promise holding the request. Has an additional .abort() method to cancel the request.
+         * <ul>
+         *     <li>on success: xhr {XMLHttpRequest1|XMLHttpRequest2} xhr-response</li>
+         *     <li>on failure: reason {Error}</li>
+         * </ul>
+        */
+        request: function(options) {
+            console.log(NAME, 'request');
+            var instance = this,
+                props = {},
+                xhr, promise;
+            options || (options={});
+            promise = Promise.manage(options.streamback);
+
+            xhr = new window.XMLHttpRequest();
+            props._isXHR2 = ('withCredentials' in xhr) || (window.navigator.userAgent==='fake');
+            // it could be other modules like io-cors or io-stream have subscribed
+            // xhr might be changed, also private properties might be extended
+            instance._xhrList.each(
+                function(fn) {
+                    xhr = fn(xhr, props, options, promise);
+                }
+            );
+            if (!xhr) {
+                return Promise.reject(NO_XHR);
+            }
+            xhr.merge(props);
+            console.log(NAME, 'request creating xhr of type: '+ (props._isXHR2 ? 'XMLHttpRequest2' : (props._isXDR ? 'XDomainRequest' : 'XMLHttpRequest1')));
+            console.log(NAME, 'CORS-IE: '+ props._CORS_IE + ', canStream: '+props._canStream);
+
+            // Don't use xhr.timeout --> IE<10 throws an error when set xhr.timeout
+            // We use a timer that aborts the request
+            Object.defineProperty(xhr, '_timer', {
+                configurable: false,
+                enumerable: false,
+                writable: false,
+                value: setTimeout(function() {
+                           promise.reject(new Error(REQUEST_TIMEOUT));
+                           xhr._aborted = true; // must be set: IE9 won't allow to read anything on xhr after being aborted
+                           xhr.abort();
+                       }, options.timeout || instance.config.timeout || DEF_REQ_TIMEOUT)
+            });
+
+            instance._initXHR(xhr, options, promise);
+
+            // to make any routine informed for the end of xhr.
+            // to make sure they get informed after aother routines have handled the response,
+            // we go async
+            promise.then(function() {
+                asyncSilent(function() {
+                    instance._final.forEach(function(finallySubscriber) {
+                        finallySubscriber(xhr);
+                    });
+                });
+            });
+
+            return promise;
+        },
+
+        /**
+         * Adds a subscriber to the finalization-cycle, which happens after the xhr finishes.
+         * Only gets invoked on fulfilled io.
+         *
+         * @method finalize
+         * @param finallySubscriber {Function} callback to be invoked
+         *        Function recieves `xhr` as its only argument
+         * @return {Object} handler with a `detach()`-method which can be used to detach the subscriber
+         * @since 0.0.1
+         */
+        finalize: function (finallySubscriber) {
+            console.log(NAME, 'finalize');
+            var finalHash = this._final;
+            finalHash.push(finallySubscriber);
+            return {
+                detach: function() {
+                    console.log(NAME, 'detach finalizer');
+                    var index = finalHash.indexOf(finallySubscriber);
+                    (index===-1) || finalHash.splice(index, 1);
+                }
+            };
+        }
+
+    };
+
+    /**
+     * Internal list of finalize-subscribers which are invoked at the end of a successful xhr,
+     * Is an array of function-references.
+     *
+     * @property _final
+     * @default []
+     * @type Array
+     * @private
+     * @since 0.0.1
+    */
+    Object.protectedProp(IO, '_final', []);
+
+    IO._xhrInitList = [
+        IO._setReadyHandle,
+        IO._setHeaders
+    ];
+
+    Glob._ITSAmodules.IO = IO;
+
+    return IO;
+};
+}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"js-ext":1132,"js-ext/extra/hashmap.js":1131,"polyfill/polyfill-base.js":1144,"utils":1145}],1131:[function(require,module,exports){
+module.exports=require(4)
+},{}],1132:[function(require,module,exports){
+module.exports=require(225)
+},{"./lib/array.js":1133,"./lib/function.js":1134,"./lib/json.js":1135,"./lib/object.js":1136,"./lib/promise.js":1137,"./lib/string.js":1138}],1133:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":1058,"./lib/window.console.js":1059}],1061:[function(require,module,exports){
-module.exports=require(19)
-},{}],1062:[function(require,module,exports){
-module.exports=require(20)
-},{}],1063:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":1061,"./lib/window.console.js":1062}],1064:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":1065,"./lib/timers.js":1066}],1065:[function(require,module,exports){
-module.exports=require(36)
-},{"js-ext/extra/hashmap.js":1050,"polyfill/polyfill-base.js":1069}],1066:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":1069}],1067:[function(require,module,exports){
-module.exports=require(19)
-},{}],1068:[function(require,module,exports){
-module.exports=require(20)
-},{}],1069:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":1067,"./lib/window.console.js":1068}],1070:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1141}],1134:[function(require,module,exports){
+module.exports=require(227)
+},{"polyfill/polyfill-base.js":1141}],1135:[function(require,module,exports){
+module.exports=require(228)
+},{"polyfill/polyfill-base.js":1141}],1136:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1131,"polyfill/polyfill-base.js":1141}],1137:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1141}],1138:[function(require,module,exports){
+module.exports=require(23)
+},{}],1139:[function(require,module,exports){
+module.exports=require(14)
+},{}],1140:[function(require,module,exports){
+module.exports=require(15)
+},{}],1141:[function(require,module,exports){
 module.exports=require(16)
-},{"../lib/object.js":1078,"js-ext/extra/hashmap.js":1071,"polyfill/polyfill-base.js":1084}],1071:[function(require,module,exports){
-module.exports=require(17)
-},{}],1072:[function(require,module,exports){
-module.exports=require(44)
-},{"../lib/array.js":1075,"../lib/object.js":1078,"./classes.js":1070,"js-ext/extra/hashmap.js":1071,"polyfill/lib/weakmap.js":1082}],1073:[function(require,module,exports){
+},{"./lib/matchesselector.js":1139,"./lib/window.console.js":1140}],1142:[function(require,module,exports){
+module.exports=require(14)
+},{}],1143:[function(require,module,exports){
+module.exports=require(15)
+},{}],1144:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1142,"./lib/window.console.js":1143}],1145:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1146,"./lib/timers.js":1147}],1146:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1131,"polyfill/polyfill-base.js":1150}],1147:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1150}],1148:[function(require,module,exports){
+module.exports=require(14)
+},{}],1149:[function(require,module,exports){
+module.exports=require(15)
+},{}],1150:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1148,"./lib/window.console.js":1149}],1151:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1159,"js-ext/extra/hashmap.js":1152,"polyfill/polyfill-base.js":1165}],1152:[function(require,module,exports){
+module.exports=require(4)
+},{}],1153:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":1156,"../lib/object.js":1159,"./classes.js":1151,"js-ext/extra/hashmap.js":1152,"polyfill/lib/weakmap.js":1163}],1154:[function(require,module,exports){
 "use strict";
 
 var createHashMap = require('./hashmap.js').createMap;
@@ -24935,7 +25208,7 @@ module.exports = createHashMap({
     'with': true,
     'yield': true
 });
-},{"./hashmap.js":1071}],1074:[function(require,module,exports){
+},{"./hashmap.js":1152}],1155:[function(require,module,exports){
 "use strict";
 
 require('./lib/function.js');
@@ -24950,349 +25223,307 @@ module.exports = {
     Classes: require('./extra/classes.js'),
     LightMap: require('./extra/lightmap.js')
 };
-},{"./extra/classes.js":1070,"./extra/hashmap.js":1071,"./extra/lightmap.js":1072,"./lib/array.js":1075,"./lib/function.js":1076,"./lib/json.js":1077,"./lib/object.js":1078,"./lib/promise.js":1079,"./lib/string.js":1080}],1075:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":1084}],1076:[function(require,module,exports){
-module.exports=require(85)
-},{"polyfill/polyfill-base.js":1084}],1077:[function(require,module,exports){
-module.exports=require(86)
-},{"polyfill/polyfill-base.js":1084}],1078:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":1071,"polyfill/polyfill-base.js":1084}],1079:[function(require,module,exports){
-module.exports=require(47)
-},{"polyfill":1084}],1080:[function(require,module,exports){
-module.exports=require(28)
-},{}],1081:[function(require,module,exports){
-module.exports=require(19)
-},{}],1082:[function(require,module,exports){
-module.exports=require(50)
-},{}],1083:[function(require,module,exports){
-module.exports=require(20)
-},{}],1084:[function(require,module,exports){
+},{"./extra/classes.js":1151,"./extra/hashmap.js":1152,"./extra/lightmap.js":1153,"./lib/array.js":1156,"./lib/function.js":1157,"./lib/json.js":1158,"./lib/object.js":1159,"./lib/promise.js":1160,"./lib/string.js":1161}],1156:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":1081,"./lib/window.console.js":1083}],1085:[function(require,module,exports){
-module.exports=require(93)
-},{"./lib/constrain.js":1086,"./lib/element-plugin.js":1087}],1086:[function(require,module,exports){
-module.exports=require(94)
-},{"./element-plugin.js":1087,"js-ext/extra/hashmap.js":1191}],1087:[function(require,module,exports){
-module.exports=require(95)
-},{"event-dom":1088,"event/extra/timer-finalize.js":1160,"io":1169,"js-ext/extra/classes.js":1190,"js-ext/extra/hashmap.js":1191,"js-ext/lib/object.js":1192,"js-ext/lib/promise.js":1193,"js-ext/lib/string.js":1194,"polyfill":1200,"utils/lib/timers.js":1201,"vdom":1245}],1088:[function(require,module,exports){
-module.exports=require(11)
-},{"event":1092,"js-ext/extra/hashmap.js":1102,"js-ext/lib/array.js":1103,"js-ext/lib/object.js":1104,"js-ext/lib/string.js":1105,"polyfill/polyfill-base.js":1111,"utils":1112,"vdom":1158}],1089:[function(require,module,exports){
-module.exports=require(12)
-},{"js-ext/extra/hashmap.js":1094,"js-ext/lib/object.js":1095,"polyfill/polyfill-base.js":1101}],1090:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1165}],1157:[function(require,module,exports){
+module.exports=require(227)
+},{"polyfill/polyfill-base.js":1165}],1158:[function(require,module,exports){
+module.exports=require(228)
+},{"polyfill/polyfill-base.js":1165}],1159:[function(require,module,exports){
 module.exports=require(13)
-},{"./event-base.js":1089}],1091:[function(require,module,exports){
-module.exports=require(14)
-},{"./event-base.js":1089,"js-ext/extra/classes.js":1093,"js-ext/lib/object.js":1095}],1092:[function(require,module,exports){
-module.exports=require(15)
-},{"./event-base.js":1089,"./event-emitter.js":1090,"./event-listener.js":1091}],1093:[function(require,module,exports){
-module.exports=require(16)
-},{"../lib/object.js":1095,"js-ext/extra/hashmap.js":1094,"polyfill/polyfill-base.js":1098}],1094:[function(require,module,exports){
-module.exports=require(17)
-},{}],1095:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":1094,"polyfill/polyfill-base.js":1098}],1096:[function(require,module,exports){
-module.exports=require(19)
-},{}],1097:[function(require,module,exports){
-module.exports=require(20)
-},{}],1098:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":1096,"./lib/window.console.js":1097}],1099:[function(require,module,exports){
-module.exports=require(19)
-},{}],1100:[function(require,module,exports){
-module.exports=require(20)
-},{}],1101:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":1099,"./lib/window.console.js":1100}],1102:[function(require,module,exports){
-module.exports=require(17)
-},{}],1103:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":1108}],1104:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":1102,"polyfill/polyfill-base.js":1108}],1105:[function(require,module,exports){
-module.exports=require(28)
-},{}],1106:[function(require,module,exports){
-module.exports=require(19)
-},{}],1107:[function(require,module,exports){
-module.exports=require(20)
-},{}],1108:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":1106,"./lib/window.console.js":1107}],1109:[function(require,module,exports){
-module.exports=require(19)
-},{}],1110:[function(require,module,exports){
-module.exports=require(20)
-},{}],1111:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":1109,"./lib/window.console.js":1110}],1112:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":1113,"./lib/timers.js":1114}],1113:[function(require,module,exports){
-module.exports=require(36)
-},{"js-ext/extra/hashmap.js":1102,"polyfill/polyfill-base.js":1117}],1114:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":1117}],1115:[function(require,module,exports){
-module.exports=require(19)
-},{}],1116:[function(require,module,exports){
-module.exports=require(20)
-},{}],1117:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":1115,"./lib/window.console.js":1116}],1118:[function(require,module,exports){
-module.exports=require(41)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1119:[function(require,module,exports){
-module.exports=require(16)
-},{"../lib/object.js":1123,"js-ext/extra/hashmap.js":1120,"polyfill/polyfill-base.js":1129}],1120:[function(require,module,exports){
-module.exports=require(17)
-},{}],1121:[function(require,module,exports){
-module.exports=require(44)
-},{"../lib/array.js":1122,"../lib/object.js":1123,"./classes.js":1119,"js-ext/extra/hashmap.js":1120,"polyfill/lib/weakmap.js":1127}],1122:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":1129}],1123:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":1120,"polyfill/polyfill-base.js":1129}],1124:[function(require,module,exports){
-module.exports=require(47)
-},{"polyfill":1129}],1125:[function(require,module,exports){
-module.exports=require(28)
-},{}],1126:[function(require,module,exports){
-module.exports=require(19)
-},{}],1127:[function(require,module,exports){
-module.exports=require(50)
-},{}],1128:[function(require,module,exports){
-module.exports=require(20)
-},{}],1129:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":1126,"./lib/window.console.js":1128}],1130:[function(require,module,exports){
-module.exports=require(53)
-},{}],1131:[function(require,module,exports){
-module.exports=require(54)
-},{"../bin/local-hashmap.js":1130}],1132:[function(require,module,exports){
-module.exports=require(55)
-},{"../bin/local-hashmap.js":1130}],1133:[function(require,module,exports){
-module.exports=require(56)
-},{"../bin/local-hashmap.js":1130}],1134:[function(require,module,exports){
-module.exports=require(19)
-},{}],1135:[function(require,module,exports){
-module.exports=require(20)
-},{}],1136:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":1134,"./lib/window.console.js":1135}],1137:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":1138,"./lib/timers.js":1139}],1138:[function(require,module,exports){
-module.exports=require(36)
-},{"js-ext/extra/hashmap.js":1120,"polyfill/polyfill-base.js":1142}],1139:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":1142}],1140:[function(require,module,exports){
-module.exports=require(19)
-},{}],1141:[function(require,module,exports){
-module.exports=require(20)
-},{}],1142:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":1140,"./lib/window.console.js":1141}],1143:[function(require,module,exports){
-module.exports=require(66)
-},{"./lib/sizes.js":1144}],1144:[function(require,module,exports){
-module.exports=require(67)
-},{"js-ext/extra/hashmap.js":1145,"js-ext/lib/object.js":1146}],1145:[function(require,module,exports){
-module.exports=require(17)
-},{}],1146:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":1145,"polyfill/polyfill-base.js":1149}],1147:[function(require,module,exports){
-module.exports=require(19)
-},{}],1148:[function(require,module,exports){
-module.exports=require(20)
-},{}],1149:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":1147,"./lib/window.console.js":1148}],1150:[function(require,module,exports){
-module.exports=require(73)
-},{"js-ext/extra/hashmap.js":1120,"js-ext/lib/object.js":1123,"js-ext/lib/string.js":1125,"polyfill":1136,"polyfill/extra/transition.js":1131,"polyfill/extra/vendorCSS.js":1133}],1151:[function(require,module,exports){
-module.exports=require(74)
-},{"js-ext/extra/hashmap.js":1120,"js-ext/lib/object.js":1123,"polyfill":1136}],1152:[function(require,module,exports){
-module.exports=require(75)
-},{"js-ext/extra/hashmap.js":1120,"js-ext/lib/object.js":1123,"js-ext/lib/string.js":1125,"polyfill":1136}],1153:[function(require,module,exports){
-module.exports=require(76)
-},{"../css/element.css":1118,"./attribute-extractor.js":1150,"./element-array.js":1151,"./html-parser.js":1154,"./node-parser.js":1155,"./vdom-ns.js":1156,"./vnode.js":1157,"js-ext/extra/hashmap.js":1120,"js-ext/lib/object.js":1123,"js-ext/lib/promise.js":1124,"js-ext/lib/string.js":1125,"polyfill":1136,"polyfill/extra/transition.js":1131,"polyfill/extra/transitionend.js":1132,"polyfill/extra/vendorCSS.js":1133,"utils":1137,"window-ext":1143}],1154:[function(require,module,exports){
-module.exports=require(77)
-},{"./attribute-extractor.js":1150,"./vdom-ns.js":1156,"js-ext/extra/hashmap.js":1120,"js-ext/lib/object.js":1123,"polyfill":1136}],1155:[function(require,module,exports){
-module.exports=require(78)
-},{"./attribute-extractor.js":1150,"./vdom-ns.js":1156,"./vnode.js":1157,"js-ext/extra/hashmap.js":1120,"js-ext/lib/object.js":1123,"polyfill":1136}],1156:[function(require,module,exports){
-module.exports=require(79)
-},{"js-ext/extra/hashmap.js":1120,"js-ext/lib/object.js":1123,"polyfill":1136}],1157:[function(require,module,exports){
-module.exports=require(80)
-},{"./attribute-extractor.js":1150,"./html-parser.js":1154,"./vdom-ns.js":1156,"js-ext/extra/hashmap.js":1120,"js-ext/extra/lightmap.js":1121,"js-ext/lib/array.js":1122,"js-ext/lib/object.js":1123,"js-ext/lib/string.js":1125,"polyfill":1136,"utils/lib/timers.js":1139}],1158:[function(require,module,exports){
-module.exports=require(81)
-},{"./partials/extend-document.js":1152,"./partials/extend-element.js":1153,"./partials/node-parser.js":1155,"js-ext/extra/hashmap.js":1120,"js-ext/lib/object.js":1123,"utils/lib/timers.js":1139}],1159:[function(require,module,exports){
-module.exports=require(12)
-},{"js-ext/extra/hashmap.js":1161,"js-ext/lib/object.js":1162,"polyfill/polyfill-base.js":1168}],1160:[function(require,module,exports){
-module.exports=require(168)
-},{"../event-base.js":1159,"js-ext/extra/hashmap.js":1161}],1161:[function(require,module,exports){
-module.exports=require(17)
+},{"js-ext/extra/hashmap.js":1152,"polyfill/polyfill-base.js":1165}],1160:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1165}],1161:[function(require,module,exports){
+module.exports=require(23)
 },{}],1162:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":1161,"polyfill/polyfill-base.js":1165}],1163:[function(require,module,exports){
-module.exports=require(19)
+module.exports=require(14)
+},{}],1163:[function(require,module,exports){
+module.exports=require(45)
 },{}],1164:[function(require,module,exports){
-module.exports=require(20)
+module.exports=require(15)
 },{}],1165:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":1163,"./lib/window.console.js":1164}],1166:[function(require,module,exports){
-module.exports=require(19)
-},{}],1167:[function(require,module,exports){
-module.exports=require(20)
-},{}],1168:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":1166,"./lib/window.console.js":1167}],1169:[function(require,module,exports){
-module.exports=require(177)
-},{"js-ext":1171,"js-ext/extra/hashmap.js":1170,"polyfill/polyfill-base.js":1183,"utils":1184}],1170:[function(require,module,exports){
-module.exports=require(17)
-},{}],1171:[function(require,module,exports){
-module.exports=require(83)
-},{"./lib/array.js":1172,"./lib/function.js":1173,"./lib/json.js":1174,"./lib/object.js":1175,"./lib/promise.js":1176,"./lib/string.js":1177}],1172:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":1180}],1173:[function(require,module,exports){
-module.exports=require(85)
-},{"polyfill/polyfill-base.js":1180}],1174:[function(require,module,exports){
-module.exports=require(86)
-},{"polyfill/polyfill-base.js":1180}],1175:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":1170,"polyfill/polyfill-base.js":1180}],1176:[function(require,module,exports){
-module.exports=require(47)
-},{"polyfill":1180}],1177:[function(require,module,exports){
-module.exports=require(28)
-},{}],1178:[function(require,module,exports){
-module.exports=require(19)
+module.exports=require(16)
+},{"./lib/matchesselector.js":1162,"./lib/window.console.js":1164}],1166:[function(require,module,exports){
+module.exports=require(5)
+},{"event-dom":1167,"event/extra/promise-finalize.js":1239,"event/extra/timer-finalize.js":1240,"js-ext/extra/classes.js":1250,"js-ext/extra/hashmap.js":1251,"js-ext/lib/object.js":1252,"js-ext/lib/promise.js":1253,"js-ext/lib/string.js":1254,"polyfill":1260,"utils/lib/timers.js":1261,"vdom":1305}],1167:[function(require,module,exports){
+module.exports=require(6)
+},{"event":1171,"js-ext/extra/hashmap.js":1181,"js-ext/lib/array.js":1182,"js-ext/lib/object.js":1183,"js-ext/lib/string.js":1184,"polyfill/polyfill-base.js":1190,"utils":1191,"vdom":1237}],1168:[function(require,module,exports){
+module.exports=require(7)
+},{"js-ext/extra/hashmap.js":1173,"js-ext/lib/object.js":1174,"polyfill/polyfill-base.js":1180}],1169:[function(require,module,exports){
+module.exports=require(8)
+},{"./event-base.js":1168}],1170:[function(require,module,exports){
+module.exports=require(9)
+},{"./event-base.js":1168,"js-ext/extra/classes.js":1172,"js-ext/lib/object.js":1174}],1171:[function(require,module,exports){
+module.exports=require(10)
+},{"./event-base.js":1168,"./event-emitter.js":1169,"./event-listener.js":1170}],1172:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1174,"js-ext/extra/hashmap.js":1173,"polyfill/polyfill-base.js":1177}],1173:[function(require,module,exports){
+module.exports=require(4)
+},{}],1174:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1173,"polyfill/polyfill-base.js":1177}],1175:[function(require,module,exports){
+module.exports=require(14)
+},{}],1176:[function(require,module,exports){
+module.exports=require(15)
+},{}],1177:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1175,"./lib/window.console.js":1176}],1178:[function(require,module,exports){
+module.exports=require(14)
 },{}],1179:[function(require,module,exports){
-module.exports=require(20)
+module.exports=require(15)
 },{}],1180:[function(require,module,exports){
-module.exports=require(21)
+module.exports=require(16)
 },{"./lib/matchesselector.js":1178,"./lib/window.console.js":1179}],1181:[function(require,module,exports){
-module.exports=require(19)
+module.exports=require(4)
 },{}],1182:[function(require,module,exports){
-module.exports=require(20)
-},{}],1183:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":1181,"./lib/window.console.js":1182}],1184:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":1185,"./lib/timers.js":1186}],1185:[function(require,module,exports){
-module.exports=require(36)
-},{"js-ext/extra/hashmap.js":1170,"polyfill/polyfill-base.js":1189}],1186:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":1189}],1187:[function(require,module,exports){
-module.exports=require(19)
-},{}],1188:[function(require,module,exports){
-module.exports=require(20)
+},{"polyfill/polyfill-base.js":1187}],1183:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1181,"polyfill/polyfill-base.js":1187}],1184:[function(require,module,exports){
+module.exports=require(23)
+},{}],1185:[function(require,module,exports){
+module.exports=require(14)
+},{}],1186:[function(require,module,exports){
+module.exports=require(15)
+},{}],1187:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1185,"./lib/window.console.js":1186}],1188:[function(require,module,exports){
+module.exports=require(14)
 },{}],1189:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":1187,"./lib/window.console.js":1188}],1190:[function(require,module,exports){
+module.exports=require(15)
+},{}],1190:[function(require,module,exports){
 module.exports=require(16)
-},{"../lib/object.js":1192,"js-ext/extra/hashmap.js":1191,"polyfill/polyfill-base.js":1197}],1191:[function(require,module,exports){
-module.exports=require(17)
-},{}],1192:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":1191,"polyfill/polyfill-base.js":1197}],1193:[function(require,module,exports){
-module.exports=require(47)
-},{"polyfill":1197}],1194:[function(require,module,exports){
-module.exports=require(28)
+},{"./lib/matchesselector.js":1188,"./lib/window.console.js":1189}],1191:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1192,"./lib/timers.js":1193}],1192:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1181,"polyfill/polyfill-base.js":1196}],1193:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1196}],1194:[function(require,module,exports){
+module.exports=require(14)
 },{}],1195:[function(require,module,exports){
-module.exports=require(19)
+module.exports=require(15)
 },{}],1196:[function(require,module,exports){
-module.exports=require(20)
-},{}],1197:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":1195,"./lib/window.console.js":1196}],1198:[function(require,module,exports){
-module.exports=require(19)
-},{}],1199:[function(require,module,exports){
-module.exports=require(20)
-},{}],1200:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":1198,"./lib/window.console.js":1199}],1201:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":1204}],1202:[function(require,module,exports){
-module.exports=require(19)
-},{}],1203:[function(require,module,exports){
-module.exports=require(20)
-},{}],1204:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":1202,"./lib/window.console.js":1203}],1205:[function(require,module,exports){
-module.exports=require(41)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1206:[function(require,module,exports){
 module.exports=require(16)
-},{"../lib/object.js":1210,"js-ext/extra/hashmap.js":1207,"polyfill/polyfill-base.js":1216}],1207:[function(require,module,exports){
-module.exports=require(17)
-},{}],1208:[function(require,module,exports){
-module.exports=require(44)
-},{"../lib/array.js":1209,"../lib/object.js":1210,"./classes.js":1206,"js-ext/extra/hashmap.js":1207,"polyfill/lib/weakmap.js":1214}],1209:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":1216}],1210:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":1207,"polyfill/polyfill-base.js":1216}],1211:[function(require,module,exports){
-module.exports=require(47)
-},{"polyfill":1216}],1212:[function(require,module,exports){
-module.exports=require(28)
-},{}],1213:[function(require,module,exports){
-module.exports=require(19)
-},{}],1214:[function(require,module,exports){
-module.exports=require(50)
-},{}],1215:[function(require,module,exports){
-module.exports=require(20)
-},{}],1216:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":1213,"./lib/window.console.js":1215}],1217:[function(require,module,exports){
-module.exports=require(53)
-},{}],1218:[function(require,module,exports){
-module.exports=require(54)
-},{"../bin/local-hashmap.js":1217}],1219:[function(require,module,exports){
-module.exports=require(55)
-},{"../bin/local-hashmap.js":1217}],1220:[function(require,module,exports){
-module.exports=require(56)
-},{"../bin/local-hashmap.js":1217}],1221:[function(require,module,exports){
-module.exports=require(19)
-},{}],1222:[function(require,module,exports){
-module.exports=require(20)
-},{}],1223:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":1221,"./lib/window.console.js":1222}],1224:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":1225,"./lib/timers.js":1226}],1225:[function(require,module,exports){
+},{"./lib/matchesselector.js":1194,"./lib/window.console.js":1195}],1197:[function(require,module,exports){
 module.exports=require(36)
-},{"js-ext/extra/hashmap.js":1207,"polyfill/polyfill-base.js":1229}],1226:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":1229}],1227:[function(require,module,exports){
-module.exports=require(19)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1198:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1202,"js-ext/extra/hashmap.js":1199,"polyfill/polyfill-base.js":1208}],1199:[function(require,module,exports){
+module.exports=require(4)
+},{}],1200:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":1201,"../lib/object.js":1202,"./classes.js":1198,"js-ext/extra/hashmap.js":1199,"polyfill/lib/weakmap.js":1206}],1201:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":1208}],1202:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1199,"polyfill/polyfill-base.js":1208}],1203:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1208}],1204:[function(require,module,exports){
+module.exports=require(23)
+},{}],1205:[function(require,module,exports){
+module.exports=require(14)
+},{}],1206:[function(require,module,exports){
+module.exports=require(45)
+},{}],1207:[function(require,module,exports){
+module.exports=require(15)
+},{}],1208:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1205,"./lib/window.console.js":1207}],1209:[function(require,module,exports){
+module.exports=require(48)
+},{}],1210:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":1209}],1211:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":1209}],1212:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":1209}],1213:[function(require,module,exports){
+module.exports=require(14)
+},{}],1214:[function(require,module,exports){
+module.exports=require(15)
+},{}],1215:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1213,"./lib/window.console.js":1214}],1216:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1217,"./lib/timers.js":1218}],1217:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1199,"polyfill/polyfill-base.js":1221}],1218:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1221}],1219:[function(require,module,exports){
+module.exports=require(14)
+},{}],1220:[function(require,module,exports){
+module.exports=require(15)
+},{}],1221:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1219,"./lib/window.console.js":1220}],1222:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":1223}],1223:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":1224,"js-ext/lib/object.js":1225}],1224:[function(require,module,exports){
+module.exports=require(4)
+},{}],1225:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1224,"polyfill/polyfill-base.js":1228}],1226:[function(require,module,exports){
+module.exports=require(14)
+},{}],1227:[function(require,module,exports){
+module.exports=require(15)
 },{}],1228:[function(require,module,exports){
-module.exports=require(20)
-},{}],1229:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":1227,"./lib/window.console.js":1228}],1230:[function(require,module,exports){
-module.exports=require(66)
-},{"./lib/sizes.js":1231}],1231:[function(require,module,exports){
-module.exports=require(67)
-},{"js-ext/extra/hashmap.js":1232,"js-ext/lib/object.js":1233}],1232:[function(require,module,exports){
-module.exports=require(17)
-},{}],1233:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":1232,"polyfill/polyfill-base.js":1236}],1234:[function(require,module,exports){
-module.exports=require(19)
-},{}],1235:[function(require,module,exports){
-module.exports=require(20)
-},{}],1236:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":1234,"./lib/window.console.js":1235}],1237:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1226,"./lib/window.console.js":1227}],1229:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":1199,"js-ext/lib/object.js":1202,"js-ext/lib/string.js":1204,"polyfill":1215,"polyfill/extra/transition.js":1210,"polyfill/extra/vendorCSS.js":1212}],1230:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":1199,"js-ext/lib/object.js":1202,"polyfill":1215}],1231:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":1199,"js-ext/lib/object.js":1202,"js-ext/lib/string.js":1204,"polyfill":1215}],1232:[function(require,module,exports){
+module.exports=require(71)
+},{"../css/element.css":1197,"./attribute-extractor.js":1229,"./element-array.js":1230,"./html-parser.js":1233,"./node-parser.js":1234,"./vdom-ns.js":1235,"./vnode.js":1236,"js-ext/extra/hashmap.js":1199,"js-ext/lib/object.js":1202,"js-ext/lib/promise.js":1203,"js-ext/lib/string.js":1204,"polyfill":1215,"polyfill/extra/transition.js":1210,"polyfill/extra/transitionend.js":1211,"polyfill/extra/vendorCSS.js":1212,"utils":1216,"window-ext":1222}],1233:[function(require,module,exports){
+module.exports=require(72)
+},{"./attribute-extractor.js":1229,"./vdom-ns.js":1235,"js-ext/extra/hashmap.js":1199,"js-ext/lib/object.js":1202,"polyfill":1215}],1234:[function(require,module,exports){
 module.exports=require(73)
-},{"js-ext/extra/hashmap.js":1207,"js-ext/lib/object.js":1210,"js-ext/lib/string.js":1212,"polyfill":1223,"polyfill/extra/transition.js":1218,"polyfill/extra/vendorCSS.js":1220}],1238:[function(require,module,exports){
+},{"./attribute-extractor.js":1229,"./vdom-ns.js":1235,"./vnode.js":1236,"js-ext/extra/hashmap.js":1199,"js-ext/lib/object.js":1202,"polyfill":1215}],1235:[function(require,module,exports){
 module.exports=require(74)
-},{"js-ext/extra/hashmap.js":1207,"js-ext/lib/object.js":1210,"polyfill":1223}],1239:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1199,"js-ext/lib/object.js":1202,"polyfill":1215}],1236:[function(require,module,exports){
 module.exports=require(75)
-},{"js-ext/extra/hashmap.js":1207,"js-ext/lib/object.js":1210,"js-ext/lib/string.js":1212,"polyfill":1223}],1240:[function(require,module,exports){
+},{"./attribute-extractor.js":1229,"./html-parser.js":1233,"./vdom-ns.js":1235,"js-ext/extra/hashmap.js":1199,"js-ext/extra/lightmap.js":1200,"js-ext/lib/array.js":1201,"js-ext/lib/object.js":1202,"js-ext/lib/string.js":1204,"polyfill":1215,"utils/lib/timers.js":1218}],1237:[function(require,module,exports){
 module.exports=require(76)
-},{"../css/element.css":1205,"./attribute-extractor.js":1237,"./element-array.js":1238,"./html-parser.js":1241,"./node-parser.js":1242,"./vdom-ns.js":1243,"./vnode.js":1244,"js-ext/extra/hashmap.js":1207,"js-ext/lib/object.js":1210,"js-ext/lib/promise.js":1211,"js-ext/lib/string.js":1212,"polyfill":1223,"polyfill/extra/transition.js":1218,"polyfill/extra/transitionend.js":1219,"polyfill/extra/vendorCSS.js":1220,"utils":1224,"window-ext":1230}],1241:[function(require,module,exports){
-module.exports=require(77)
-},{"./attribute-extractor.js":1237,"./vdom-ns.js":1243,"js-ext/extra/hashmap.js":1207,"js-ext/lib/object.js":1210,"polyfill":1223}],1242:[function(require,module,exports){
+},{"./partials/extend-document.js":1231,"./partials/extend-element.js":1232,"./partials/node-parser.js":1234,"js-ext/extra/hashmap.js":1199,"js-ext/lib/object.js":1202,"utils/lib/timers.js":1218}],1238:[function(require,module,exports){
+module.exports=require(7)
+},{"js-ext/extra/hashmap.js":1241,"js-ext/lib/object.js":1242,"polyfill/polyfill-base.js":1249}],1239:[function(require,module,exports){
 module.exports=require(78)
-},{"./attribute-extractor.js":1237,"./vdom-ns.js":1243,"./vnode.js":1244,"js-ext/extra/hashmap.js":1207,"js-ext/lib/object.js":1210,"polyfill":1223}],1243:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1241,"js-ext/lib/promise.js":1243}],1240:[function(require,module,exports){
 module.exports=require(79)
-},{"js-ext/extra/hashmap.js":1207,"js-ext/lib/object.js":1210,"polyfill":1223}],1244:[function(require,module,exports){
-module.exports=require(80)
-},{"./attribute-extractor.js":1237,"./html-parser.js":1241,"./vdom-ns.js":1243,"js-ext/extra/hashmap.js":1207,"js-ext/extra/lightmap.js":1208,"js-ext/lib/array.js":1209,"js-ext/lib/object.js":1210,"js-ext/lib/string.js":1212,"polyfill":1223,"utils/lib/timers.js":1226}],1245:[function(require,module,exports){
-module.exports=require(81)
-},{"./partials/extend-document.js":1239,"./partials/extend-element.js":1240,"./partials/node-parser.js":1242,"js-ext/extra/hashmap.js":1207,"js-ext/lib/object.js":1210,"utils/lib/timers.js":1226}],1246:[function(require,module,exports){
+},{"../event-base.js":1238,"js-ext/extra/hashmap.js":1241}],1241:[function(require,module,exports){
+module.exports=require(4)
+},{}],1242:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1241,"polyfill/polyfill-base.js":1246}],1243:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1246}],1244:[function(require,module,exports){
+module.exports=require(14)
+},{}],1245:[function(require,module,exports){
+module.exports=require(15)
+},{}],1246:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1244,"./lib/window.console.js":1245}],1247:[function(require,module,exports){
+module.exports=require(14)
+},{}],1248:[function(require,module,exports){
+module.exports=require(15)
+},{}],1249:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1247,"./lib/window.console.js":1248}],1250:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1252,"js-ext/extra/hashmap.js":1251,"polyfill/polyfill-base.js":1257}],1251:[function(require,module,exports){
+module.exports=require(4)
+},{}],1252:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1251,"polyfill/polyfill-base.js":1257}],1253:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1257}],1254:[function(require,module,exports){
+module.exports=require(23)
+},{}],1255:[function(require,module,exports){
+module.exports=require(14)
+},{}],1256:[function(require,module,exports){
+module.exports=require(15)
+},{}],1257:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1255,"./lib/window.console.js":1256}],1258:[function(require,module,exports){
+module.exports=require(14)
+},{}],1259:[function(require,module,exports){
+module.exports=require(15)
+},{}],1260:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1258,"./lib/window.console.js":1259}],1261:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1264}],1262:[function(require,module,exports){
+module.exports=require(14)
+},{}],1263:[function(require,module,exports){
+module.exports=require(15)
+},{}],1264:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1262,"./lib/window.console.js":1263}],1265:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1266:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1270,"js-ext/extra/hashmap.js":1267,"polyfill/polyfill-base.js":1276}],1267:[function(require,module,exports){
+module.exports=require(4)
+},{}],1268:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":1269,"../lib/object.js":1270,"./classes.js":1266,"js-ext/extra/hashmap.js":1267,"polyfill/lib/weakmap.js":1274}],1269:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":1276}],1270:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1267,"polyfill/polyfill-base.js":1276}],1271:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1276}],1272:[function(require,module,exports){
+module.exports=require(23)
+},{}],1273:[function(require,module,exports){
+module.exports=require(14)
+},{}],1274:[function(require,module,exports){
+module.exports=require(45)
+},{}],1275:[function(require,module,exports){
+module.exports=require(15)
+},{}],1276:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1273,"./lib/window.console.js":1275}],1277:[function(require,module,exports){
+module.exports=require(48)
+},{}],1278:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":1277}],1279:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":1277}],1280:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":1277}],1281:[function(require,module,exports){
+module.exports=require(14)
+},{}],1282:[function(require,module,exports){
+module.exports=require(15)
+},{}],1283:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1281,"./lib/window.console.js":1282}],1284:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1285,"./lib/timers.js":1286}],1285:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1267,"polyfill/polyfill-base.js":1289}],1286:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1289}],1287:[function(require,module,exports){
+module.exports=require(14)
+},{}],1288:[function(require,module,exports){
+module.exports=require(15)
+},{}],1289:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1287,"./lib/window.console.js":1288}],1290:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":1291}],1291:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":1292,"js-ext/lib/object.js":1293}],1292:[function(require,module,exports){
+module.exports=require(4)
+},{}],1293:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1292,"polyfill/polyfill-base.js":1296}],1294:[function(require,module,exports){
+module.exports=require(14)
+},{}],1295:[function(require,module,exports){
+module.exports=require(15)
+},{}],1296:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1294,"./lib/window.console.js":1295}],1297:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":1267,"js-ext/lib/object.js":1270,"js-ext/lib/string.js":1272,"polyfill":1283,"polyfill/extra/transition.js":1278,"polyfill/extra/vendorCSS.js":1280}],1298:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":1267,"js-ext/lib/object.js":1270,"polyfill":1283}],1299:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":1267,"js-ext/lib/object.js":1270,"js-ext/lib/string.js":1272,"polyfill":1283}],1300:[function(require,module,exports){
+module.exports=require(71)
+},{"../css/element.css":1265,"./attribute-extractor.js":1297,"./element-array.js":1298,"./html-parser.js":1301,"./node-parser.js":1302,"./vdom-ns.js":1303,"./vnode.js":1304,"js-ext/extra/hashmap.js":1267,"js-ext/lib/object.js":1270,"js-ext/lib/promise.js":1271,"js-ext/lib/string.js":1272,"polyfill":1283,"polyfill/extra/transition.js":1278,"polyfill/extra/transitionend.js":1279,"polyfill/extra/vendorCSS.js":1280,"utils":1284,"window-ext":1290}],1301:[function(require,module,exports){
+module.exports=require(72)
+},{"./attribute-extractor.js":1297,"./vdom-ns.js":1303,"js-ext/extra/hashmap.js":1267,"js-ext/lib/object.js":1270,"polyfill":1283}],1302:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":1297,"./vdom-ns.js":1303,"./vnode.js":1304,"js-ext/extra/hashmap.js":1267,"js-ext/lib/object.js":1270,"polyfill":1283}],1303:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":1267,"js-ext/lib/object.js":1270,"polyfill":1283}],1304:[function(require,module,exports){
+module.exports=require(75)
+},{"./attribute-extractor.js":1297,"./html-parser.js":1301,"./vdom-ns.js":1303,"js-ext/extra/hashmap.js":1267,"js-ext/extra/lightmap.js":1268,"js-ext/lib/array.js":1269,"js-ext/lib/object.js":1270,"js-ext/lib/string.js":1272,"polyfill":1283,"utils/lib/timers.js":1286}],1305:[function(require,module,exports){
+module.exports=require(76)
+},{"./partials/extend-document.js":1299,"./partials/extend-element.js":1300,"./partials/node-parser.js":1302,"js-ext/extra/hashmap.js":1267,"js-ext/lib/object.js":1270,"utils/lib/timers.js":1286}],1306:[function(require,module,exports){
 (function (process,Buffer){
 "use strict";
 
@@ -25907,7 +26138,7 @@ exports.XMLHttpRequest = function() {
 };
 
 }).call(this,require('_process'),require("buffer").Buffer)
-},{"_process":1365,"buffer":1354,"child_process":1353,"fs":1353,"http":1358,"https":1362,"url":1383,"xmldom":1332}],1247:[function(require,module,exports){
+},{"_process":1944,"buffer":1933,"child_process":1932,"fs":1932,"http":1937,"https":1941,"url":1962,"xmldom":1911}],1307:[function(require,module,exports){
 "use strict";
 
 /**
@@ -26120,21 +26351,21 @@ reset = function () {
 reset();
 
 module.exports = win;
-},{"./lib/XMLHttpRequest.js":1246,"js-ext/extra/hashmap.js":1248,"js-ext/lib/array.js":1249,"polyfill/lib/window.console.js":1253,"url":1383,"xmldom":1332}],1248:[function(require,module,exports){
-module.exports=require(17)
-},{}],1249:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":1252}],1250:[function(require,module,exports){
-module.exports=require(19)
-},{}],1251:[function(require,module,exports){
-module.exports=require(20)
-},{}],1252:[function(require,module,exports){
+},{"./lib/XMLHttpRequest.js":1306,"js-ext/extra/hashmap.js":1308,"js-ext/lib/array.js":1309,"polyfill/lib/window.console.js":1313,"url":1962,"xmldom":1911}],1308:[function(require,module,exports){
+module.exports=require(4)
+},{}],1309:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":1250,"./lib/window.console.js":1251}],1253:[function(require,module,exports){
-module.exports=require(20)
-},{}],1254:[function(require,module,exports){
-module.exports=require(19)
-},{}],1255:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1312}],1310:[function(require,module,exports){
+module.exports=require(14)
+},{}],1311:[function(require,module,exports){
+module.exports=require(15)
+},{}],1312:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1310,"./lib/window.console.js":1311}],1313:[function(require,module,exports){
+module.exports=require(15)
+},{}],1314:[function(require,module,exports){
+module.exports=require(14)
+},{}],1315:[function(require,module,exports){
 (function (global){
 /*
  * Copyright 2012 The Polymer Authors. All rights reserved.
@@ -26720,162 +26951,1405 @@ module.exports=require(19)
 
 }(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],1256:[function(require,module,exports){
+},{}],1316:[function(require,module,exports){
 require('ypromise');
-},{"ypromise":1335}],1257:[function(require,module,exports){
-module.exports=require(50)
-},{}],1258:[function(require,module,exports){
-module.exports=require(20)
-},{}],1259:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":1254,"./lib/window.console.js":1258}],1260:[function(require,module,exports){
+},{"ypromise":1914}],1317:[function(require,module,exports){
+module.exports=require(45)
+},{}],1318:[function(require,module,exports){
+module.exports=require(15)
+},{}],1319:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1314,"./lib/window.console.js":1318}],1320:[function(require,module,exports){
 require('./polyfill-base.js');
 require('./lib/promise.js');
 require('./lib/weakmap.js');
 require('./lib/mutationobserver.js'); // needs weakmap
-},{"./lib/mutationobserver.js":1255,"./lib/promise.js":1256,"./lib/weakmap.js":1257,"./polyfill-base.js":1259}],1261:[function(require,module,exports){
-module.exports=require(17)
-},{}],1262:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":1261,"polyfill/polyfill-base.js":1265}],1263:[function(require,module,exports){
-module.exports=require(19)
-},{}],1264:[function(require,module,exports){
-module.exports=require(20)
-},{}],1265:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":1263,"./lib/window.console.js":1264}],1266:[function(require,module,exports){
-module.exports=require(19)
-},{}],1267:[function(require,module,exports){
-module.exports=require(20)
-},{}],1268:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":1266,"./lib/window.console.js":1267}],1269:[function(require,module,exports){
-module.exports=require(265)
-},{"js-ext/extra/hashmap.js":1261,"js-ext/lib/object.js":1262,"polyfill":1268}],1270:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":1271,"./lib/timers.js":1272}],1271:[function(require,module,exports){
-module.exports=require(36)
-},{"js-ext/extra/hashmap.js":1071,"polyfill/polyfill-base.js":1275}],1272:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":1275}],1273:[function(require,module,exports){
-module.exports=require(19)
-},{}],1274:[function(require,module,exports){
-module.exports=require(20)
-},{}],1275:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":1273,"./lib/window.console.js":1274}],1276:[function(require,module,exports){
-module.exports=require(41)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1277:[function(require,module,exports){
+},{"./lib/mutationobserver.js":1315,"./lib/promise.js":1316,"./lib/weakmap.js":1317,"./polyfill-base.js":1319}],1321:[function(require,module,exports){
+var css = "[plugin-scroll=\"true\"] {\n    overflow: hidden !important;\n}\n\n[plugin-scroll=\"true\"] >span.itsa-vscroll-cont,\n[plugin-scroll=\"true\"] >span.itsa-hscroll-cont {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    position: absolute;\n    display: block;\n    left: -9999px;\n    top: -9999px;\n    opacity: 0;\n}\n\n[plugin-scroll=\"true\"]:not(.disabled) >span.itsa-vscroll-cont.itsa-visible {\n    opacity: 1;\n    width: 0.8em;\n    height: 100%;\n    right: 0;\n    top: 0;\n    left: auto;\n}\n\n[plugin-scroll=\"true\"]:not(.disabled) >span.itsa-hscroll-cont.itsa-visible {\n    opacity: 1;\n    height: 0.8em;\n    width: 100%;\n    left: 0;\n    bottom: 0;\n    top: auto;\n}\n\n[plugin-scroll=\"true\"] >span.itsa-vscroll-cont span {\n    position: relative;\n    display: block;\n    width: 100%;\n    min-height: 0.5em;\n    background-color: rgba(0, 0, 0, 0.5);\n    border-radius: 0.3em;\n}\n\n[plugin-scroll=\"true\"] >span.itsa-hscroll-cont span {\n    position: relative;\n    display: block;\n    height: 100%;\n    min-width: 0.5em;\n    background-color: rgba(0, 0, 0, 0.5);\n    border-radius: 0.3em;\n}\n\n[plugin-scroll=\"true\"][scroll-light=\"true\"] >span.itsa-vscroll-cont span,\n[plugin-scroll=\"true\"][scroll-light=\"true\"] >span.itsa-hscroll-cont span {\n    background-color: rgba(255, 255, 255, 0.5);\n}\n\n[plugin-scroll=\"true\"] >span span.dd-dragging {\n    cursor: default;\n}\n"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1322:[function(require,module,exports){
+module.exports=require(149)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1323:[function(require,module,exports){
+module.exports=require(152)
+},{"./css/drag.css":1322,"event-dom":1324,"js-ext":1396,"js-ext/extra/hashmap.js":1395,"node-plugin":1406,"polyfill":1548,"useragent":1557,"vdom":1598,"window-ext":1599}],1324:[function(require,module,exports){
+module.exports=require(6)
+},{"event":1328,"js-ext/extra/hashmap.js":1338,"js-ext/lib/array.js":1339,"js-ext/lib/object.js":1340,"js-ext/lib/string.js":1341,"polyfill/polyfill-base.js":1347,"utils":1348,"vdom":1394}],1325:[function(require,module,exports){
+module.exports=require(7)
+},{"js-ext/extra/hashmap.js":1330,"js-ext/lib/object.js":1331,"polyfill/polyfill-base.js":1337}],1326:[function(require,module,exports){
+module.exports=require(8)
+},{"./event-base.js":1325}],1327:[function(require,module,exports){
+module.exports=require(9)
+},{"./event-base.js":1325,"js-ext/extra/classes.js":1329,"js-ext/lib/object.js":1331}],1328:[function(require,module,exports){
+module.exports=require(10)
+},{"./event-base.js":1325,"./event-emitter.js":1326,"./event-listener.js":1327}],1329:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1331,"js-ext/extra/hashmap.js":1330,"polyfill/polyfill-base.js":1334}],1330:[function(require,module,exports){
+module.exports=require(4)
+},{}],1331:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1330,"polyfill/polyfill-base.js":1334}],1332:[function(require,module,exports){
+module.exports=require(14)
+},{}],1333:[function(require,module,exports){
+module.exports=require(15)
+},{}],1334:[function(require,module,exports){
 module.exports=require(16)
-},{"../lib/object.js":1281,"js-ext/extra/hashmap.js":1278,"polyfill/polyfill-base.js":1287}],1278:[function(require,module,exports){
-module.exports=require(17)
-},{}],1279:[function(require,module,exports){
-module.exports=require(44)
-},{"../lib/array.js":1280,"../lib/object.js":1281,"./classes.js":1277,"js-ext/extra/hashmap.js":1278,"polyfill/lib/weakmap.js":1285}],1280:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":1287}],1281:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":1278,"polyfill/polyfill-base.js":1287}],1282:[function(require,module,exports){
-module.exports=require(47)
-},{"polyfill":1287}],1283:[function(require,module,exports){
-module.exports=require(28)
-},{}],1284:[function(require,module,exports){
-module.exports=require(19)
-},{}],1285:[function(require,module,exports){
-module.exports=require(50)
-},{}],1286:[function(require,module,exports){
-module.exports=require(20)
-},{}],1287:[function(require,module,exports){
+},{"./lib/matchesselector.js":1332,"./lib/window.console.js":1333}],1335:[function(require,module,exports){
+module.exports=require(14)
+},{}],1336:[function(require,module,exports){
+module.exports=require(15)
+},{}],1337:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1335,"./lib/window.console.js":1336}],1338:[function(require,module,exports){
+module.exports=require(4)
+},{}],1339:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":1284,"./lib/window.console.js":1286}],1288:[function(require,module,exports){
-module.exports=require(53)
-},{}],1289:[function(require,module,exports){
-module.exports=require(54)
-},{"../bin/local-hashmap.js":1288}],1290:[function(require,module,exports){
-module.exports=require(55)
-},{"../bin/local-hashmap.js":1288}],1291:[function(require,module,exports){
-module.exports=require(56)
-},{"../bin/local-hashmap.js":1288}],1292:[function(require,module,exports){
-module.exports=require(19)
-},{}],1293:[function(require,module,exports){
-module.exports=require(20)
-},{}],1294:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":1292,"./lib/window.console.js":1293}],1295:[function(require,module,exports){
-module.exports=require(35)
-},{"./lib/idgenerator.js":1296,"./lib/timers.js":1297}],1296:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1344}],1340:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1338,"polyfill/polyfill-base.js":1344}],1341:[function(require,module,exports){
+module.exports=require(23)
+},{}],1342:[function(require,module,exports){
+module.exports=require(14)
+},{}],1343:[function(require,module,exports){
+module.exports=require(15)
+},{}],1344:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1342,"./lib/window.console.js":1343}],1345:[function(require,module,exports){
+module.exports=require(14)
+},{}],1346:[function(require,module,exports){
+module.exports=require(15)
+},{}],1347:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1345,"./lib/window.console.js":1346}],1348:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1349,"./lib/timers.js":1350}],1349:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1338,"polyfill/polyfill-base.js":1353}],1350:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1353}],1351:[function(require,module,exports){
+module.exports=require(14)
+},{}],1352:[function(require,module,exports){
+module.exports=require(15)
+},{}],1353:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1351,"./lib/window.console.js":1352}],1354:[function(require,module,exports){
 module.exports=require(36)
-},{"js-ext/extra/hashmap.js":1278,"polyfill/polyfill-base.js":1300}],1297:[function(require,module,exports){
-module.exports=require(37)
-},{"polyfill/polyfill-base.js":1300}],1298:[function(require,module,exports){
-module.exports=require(19)
-},{}],1299:[function(require,module,exports){
-module.exports=require(20)
-},{}],1300:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1355:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1359,"js-ext/extra/hashmap.js":1356,"polyfill/polyfill-base.js":1365}],1356:[function(require,module,exports){
+module.exports=require(4)
+},{}],1357:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":1358,"../lib/object.js":1359,"./classes.js":1355,"js-ext/extra/hashmap.js":1356,"polyfill/lib/weakmap.js":1363}],1358:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":1298,"./lib/window.console.js":1299}],1301:[function(require,module,exports){
-module.exports=require(66)
-},{"./lib/sizes.js":1302}],1302:[function(require,module,exports){
-module.exports=require(67)
-},{"js-ext/extra/hashmap.js":1303,"js-ext/lib/object.js":1304}],1303:[function(require,module,exports){
-module.exports=require(17)
-},{}],1304:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":1303,"polyfill/polyfill-base.js":1307}],1305:[function(require,module,exports){
-module.exports=require(19)
-},{}],1306:[function(require,module,exports){
-module.exports=require(20)
-},{}],1307:[function(require,module,exports){
-module.exports=require(21)
-},{"./lib/matchesselector.js":1305,"./lib/window.console.js":1306}],1308:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1365}],1359:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1356,"polyfill/polyfill-base.js":1365}],1360:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1365}],1361:[function(require,module,exports){
+module.exports=require(23)
+},{}],1362:[function(require,module,exports){
+module.exports=require(14)
+},{}],1363:[function(require,module,exports){
+module.exports=require(45)
+},{}],1364:[function(require,module,exports){
+module.exports=require(15)
+},{}],1365:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1362,"./lib/window.console.js":1364}],1366:[function(require,module,exports){
+module.exports=require(48)
+},{}],1367:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":1366}],1368:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":1366}],1369:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":1366}],1370:[function(require,module,exports){
+module.exports=require(14)
+},{}],1371:[function(require,module,exports){
+module.exports=require(15)
+},{}],1372:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1370,"./lib/window.console.js":1371}],1373:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1374,"./lib/timers.js":1375}],1374:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1356,"polyfill/polyfill-base.js":1378}],1375:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1378}],1376:[function(require,module,exports){
+module.exports=require(14)
+},{}],1377:[function(require,module,exports){
+module.exports=require(15)
+},{}],1378:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1376,"./lib/window.console.js":1377}],1379:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":1380}],1380:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":1381,"js-ext/lib/object.js":1382}],1381:[function(require,module,exports){
+module.exports=require(4)
+},{}],1382:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1381,"polyfill/polyfill-base.js":1385}],1383:[function(require,module,exports){
+module.exports=require(14)
+},{}],1384:[function(require,module,exports){
+module.exports=require(15)
+},{}],1385:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1383,"./lib/window.console.js":1384}],1386:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":1356,"js-ext/lib/object.js":1359,"js-ext/lib/string.js":1361,"polyfill":1372,"polyfill/extra/transition.js":1367,"polyfill/extra/vendorCSS.js":1369}],1387:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":1356,"js-ext/lib/object.js":1359,"polyfill":1372}],1388:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":1356,"js-ext/lib/object.js":1359,"js-ext/lib/string.js":1361,"polyfill":1372}],1389:[function(require,module,exports){
+module.exports=require(71)
+},{"../css/element.css":1354,"./attribute-extractor.js":1386,"./element-array.js":1387,"./html-parser.js":1390,"./node-parser.js":1391,"./vdom-ns.js":1392,"./vnode.js":1393,"js-ext/extra/hashmap.js":1356,"js-ext/lib/object.js":1359,"js-ext/lib/promise.js":1360,"js-ext/lib/string.js":1361,"polyfill":1372,"polyfill/extra/transition.js":1367,"polyfill/extra/transitionend.js":1368,"polyfill/extra/vendorCSS.js":1369,"utils":1373,"window-ext":1379}],1390:[function(require,module,exports){
+module.exports=require(72)
+},{"./attribute-extractor.js":1386,"./vdom-ns.js":1392,"js-ext/extra/hashmap.js":1356,"js-ext/lib/object.js":1359,"polyfill":1372}],1391:[function(require,module,exports){
 module.exports=require(73)
-},{"js-ext/extra/hashmap.js":1278,"js-ext/lib/object.js":1281,"js-ext/lib/string.js":1283,"polyfill":1294,"polyfill/extra/transition.js":1289,"polyfill/extra/vendorCSS.js":1291}],1309:[function(require,module,exports){
+},{"./attribute-extractor.js":1386,"./vdom-ns.js":1392,"./vnode.js":1393,"js-ext/extra/hashmap.js":1356,"js-ext/lib/object.js":1359,"polyfill":1372}],1392:[function(require,module,exports){
 module.exports=require(74)
-},{"js-ext/extra/hashmap.js":1278,"js-ext/lib/object.js":1281,"polyfill":1294}],1310:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1356,"js-ext/lib/object.js":1359,"polyfill":1372}],1393:[function(require,module,exports){
 module.exports=require(75)
-},{"js-ext/extra/hashmap.js":1278,"js-ext/lib/object.js":1281,"js-ext/lib/string.js":1283,"polyfill":1294}],1311:[function(require,module,exports){
+},{"./attribute-extractor.js":1386,"./html-parser.js":1390,"./vdom-ns.js":1392,"js-ext/extra/hashmap.js":1356,"js-ext/extra/lightmap.js":1357,"js-ext/lib/array.js":1358,"js-ext/lib/object.js":1359,"js-ext/lib/string.js":1361,"polyfill":1372,"utils/lib/timers.js":1375}],1394:[function(require,module,exports){
 module.exports=require(76)
-},{"../css/element.css":1276,"./attribute-extractor.js":1308,"./element-array.js":1309,"./html-parser.js":1312,"./node-parser.js":1313,"./vdom-ns.js":1314,"./vnode.js":1315,"js-ext/extra/hashmap.js":1278,"js-ext/lib/object.js":1281,"js-ext/lib/promise.js":1282,"js-ext/lib/string.js":1283,"polyfill":1294,"polyfill/extra/transition.js":1289,"polyfill/extra/transitionend.js":1290,"polyfill/extra/vendorCSS.js":1291,"utils":1295,"window-ext":1301}],1312:[function(require,module,exports){
-module.exports=require(77)
-},{"./attribute-extractor.js":1308,"./vdom-ns.js":1314,"js-ext/extra/hashmap.js":1278,"js-ext/lib/object.js":1281,"polyfill":1294}],1313:[function(require,module,exports){
+},{"./partials/extend-document.js":1388,"./partials/extend-element.js":1389,"./partials/node-parser.js":1391,"js-ext/extra/hashmap.js":1356,"js-ext/lib/object.js":1359,"utils/lib/timers.js":1375}],1395:[function(require,module,exports){
+module.exports=require(4)
+},{}],1396:[function(require,module,exports){
+module.exports=require(225)
+},{"./lib/array.js":1397,"./lib/function.js":1398,"./lib/json.js":1399,"./lib/object.js":1400,"./lib/promise.js":1401,"./lib/string.js":1402}],1397:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":1405}],1398:[function(require,module,exports){
+module.exports=require(227)
+},{"polyfill/polyfill-base.js":1405}],1399:[function(require,module,exports){
+module.exports=require(228)
+},{"polyfill/polyfill-base.js":1405}],1400:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1395,"polyfill/polyfill-base.js":1405}],1401:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1405}],1402:[function(require,module,exports){
+module.exports=require(23)
+},{}],1403:[function(require,module,exports){
+module.exports=require(14)
+},{}],1404:[function(require,module,exports){
+module.exports=require(15)
+},{}],1405:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1403,"./lib/window.console.js":1404}],1406:[function(require,module,exports){
+module.exports=require(5)
+},{"event-dom":1407,"event/extra/promise-finalize.js":1479,"event/extra/timer-finalize.js":1480,"js-ext/extra/classes.js":1490,"js-ext/extra/hashmap.js":1491,"js-ext/lib/object.js":1492,"js-ext/lib/promise.js":1493,"js-ext/lib/string.js":1494,"polyfill":1500,"utils/lib/timers.js":1501,"vdom":1545}],1407:[function(require,module,exports){
+module.exports=require(6)
+},{"event":1411,"js-ext/extra/hashmap.js":1421,"js-ext/lib/array.js":1422,"js-ext/lib/object.js":1423,"js-ext/lib/string.js":1424,"polyfill/polyfill-base.js":1430,"utils":1431,"vdom":1477}],1408:[function(require,module,exports){
+module.exports=require(7)
+},{"js-ext/extra/hashmap.js":1413,"js-ext/lib/object.js":1414,"polyfill/polyfill-base.js":1420}],1409:[function(require,module,exports){
+module.exports=require(8)
+},{"./event-base.js":1408}],1410:[function(require,module,exports){
+module.exports=require(9)
+},{"./event-base.js":1408,"js-ext/extra/classes.js":1412,"js-ext/lib/object.js":1414}],1411:[function(require,module,exports){
+module.exports=require(10)
+},{"./event-base.js":1408,"./event-emitter.js":1409,"./event-listener.js":1410}],1412:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1414,"js-ext/extra/hashmap.js":1413,"polyfill/polyfill-base.js":1417}],1413:[function(require,module,exports){
+module.exports=require(4)
+},{}],1414:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1413,"polyfill/polyfill-base.js":1417}],1415:[function(require,module,exports){
+module.exports=require(14)
+},{}],1416:[function(require,module,exports){
+module.exports=require(15)
+},{}],1417:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1415,"./lib/window.console.js":1416}],1418:[function(require,module,exports){
+module.exports=require(14)
+},{}],1419:[function(require,module,exports){
+module.exports=require(15)
+},{}],1420:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1418,"./lib/window.console.js":1419}],1421:[function(require,module,exports){
+module.exports=require(4)
+},{}],1422:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":1427}],1423:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1421,"polyfill/polyfill-base.js":1427}],1424:[function(require,module,exports){
+module.exports=require(23)
+},{}],1425:[function(require,module,exports){
+module.exports=require(14)
+},{}],1426:[function(require,module,exports){
+module.exports=require(15)
+},{}],1427:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1425,"./lib/window.console.js":1426}],1428:[function(require,module,exports){
+module.exports=require(14)
+},{}],1429:[function(require,module,exports){
+module.exports=require(15)
+},{}],1430:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1428,"./lib/window.console.js":1429}],1431:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1432,"./lib/timers.js":1433}],1432:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1421,"polyfill/polyfill-base.js":1436}],1433:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1436}],1434:[function(require,module,exports){
+module.exports=require(14)
+},{}],1435:[function(require,module,exports){
+module.exports=require(15)
+},{}],1436:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1434,"./lib/window.console.js":1435}],1437:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1438:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1442,"js-ext/extra/hashmap.js":1439,"polyfill/polyfill-base.js":1448}],1439:[function(require,module,exports){
+module.exports=require(4)
+},{}],1440:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":1441,"../lib/object.js":1442,"./classes.js":1438,"js-ext/extra/hashmap.js":1439,"polyfill/lib/weakmap.js":1446}],1441:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":1448}],1442:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1439,"polyfill/polyfill-base.js":1448}],1443:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1448}],1444:[function(require,module,exports){
+module.exports=require(23)
+},{}],1445:[function(require,module,exports){
+module.exports=require(14)
+},{}],1446:[function(require,module,exports){
+module.exports=require(45)
+},{}],1447:[function(require,module,exports){
+module.exports=require(15)
+},{}],1448:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1445,"./lib/window.console.js":1447}],1449:[function(require,module,exports){
+module.exports=require(48)
+},{}],1450:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":1449}],1451:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":1449}],1452:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":1449}],1453:[function(require,module,exports){
+module.exports=require(14)
+},{}],1454:[function(require,module,exports){
+module.exports=require(15)
+},{}],1455:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1453,"./lib/window.console.js":1454}],1456:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1457,"./lib/timers.js":1458}],1457:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1439,"polyfill/polyfill-base.js":1461}],1458:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1461}],1459:[function(require,module,exports){
+module.exports=require(14)
+},{}],1460:[function(require,module,exports){
+module.exports=require(15)
+},{}],1461:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1459,"./lib/window.console.js":1460}],1462:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":1463}],1463:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":1464,"js-ext/lib/object.js":1465}],1464:[function(require,module,exports){
+module.exports=require(4)
+},{}],1465:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1464,"polyfill/polyfill-base.js":1468}],1466:[function(require,module,exports){
+module.exports=require(14)
+},{}],1467:[function(require,module,exports){
+module.exports=require(15)
+},{}],1468:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1466,"./lib/window.console.js":1467}],1469:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":1439,"js-ext/lib/object.js":1442,"js-ext/lib/string.js":1444,"polyfill":1455,"polyfill/extra/transition.js":1450,"polyfill/extra/vendorCSS.js":1452}],1470:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":1439,"js-ext/lib/object.js":1442,"polyfill":1455}],1471:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":1439,"js-ext/lib/object.js":1442,"js-ext/lib/string.js":1444,"polyfill":1455}],1472:[function(require,module,exports){
+module.exports=require(71)
+},{"../css/element.css":1437,"./attribute-extractor.js":1469,"./element-array.js":1470,"./html-parser.js":1473,"./node-parser.js":1474,"./vdom-ns.js":1475,"./vnode.js":1476,"js-ext/extra/hashmap.js":1439,"js-ext/lib/object.js":1442,"js-ext/lib/promise.js":1443,"js-ext/lib/string.js":1444,"polyfill":1455,"polyfill/extra/transition.js":1450,"polyfill/extra/transitionend.js":1451,"polyfill/extra/vendorCSS.js":1452,"utils":1456,"window-ext":1462}],1473:[function(require,module,exports){
+module.exports=require(72)
+},{"./attribute-extractor.js":1469,"./vdom-ns.js":1475,"js-ext/extra/hashmap.js":1439,"js-ext/lib/object.js":1442,"polyfill":1455}],1474:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":1469,"./vdom-ns.js":1475,"./vnode.js":1476,"js-ext/extra/hashmap.js":1439,"js-ext/lib/object.js":1442,"polyfill":1455}],1475:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":1439,"js-ext/lib/object.js":1442,"polyfill":1455}],1476:[function(require,module,exports){
+module.exports=require(75)
+},{"./attribute-extractor.js":1469,"./html-parser.js":1473,"./vdom-ns.js":1475,"js-ext/extra/hashmap.js":1439,"js-ext/extra/lightmap.js":1440,"js-ext/lib/array.js":1441,"js-ext/lib/object.js":1442,"js-ext/lib/string.js":1444,"polyfill":1455,"utils/lib/timers.js":1458}],1477:[function(require,module,exports){
+module.exports=require(76)
+},{"./partials/extend-document.js":1471,"./partials/extend-element.js":1472,"./partials/node-parser.js":1474,"js-ext/extra/hashmap.js":1439,"js-ext/lib/object.js":1442,"utils/lib/timers.js":1458}],1478:[function(require,module,exports){
+module.exports=require(7)
+},{"js-ext/extra/hashmap.js":1481,"js-ext/lib/object.js":1482,"polyfill/polyfill-base.js":1489}],1479:[function(require,module,exports){
 module.exports=require(78)
-},{"./attribute-extractor.js":1308,"./vdom-ns.js":1314,"./vnode.js":1315,"js-ext/extra/hashmap.js":1278,"js-ext/lib/object.js":1281,"polyfill":1294}],1314:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1481,"js-ext/lib/promise.js":1483}],1480:[function(require,module,exports){
 module.exports=require(79)
-},{"js-ext/extra/hashmap.js":1278,"js-ext/lib/object.js":1281,"polyfill":1294}],1315:[function(require,module,exports){
-module.exports=require(80)
-},{"./attribute-extractor.js":1308,"./html-parser.js":1312,"./vdom-ns.js":1314,"js-ext/extra/hashmap.js":1278,"js-ext/extra/lightmap.js":1279,"js-ext/lib/array.js":1280,"js-ext/lib/object.js":1281,"js-ext/lib/string.js":1283,"polyfill":1294,"utils/lib/timers.js":1297}],1316:[function(require,module,exports){
-module.exports=require(81)
-},{"./partials/extend-document.js":1310,"./partials/extend-element.js":1311,"./partials/node-parser.js":1313,"js-ext/extra/hashmap.js":1278,"js-ext/lib/object.js":1281,"utils/lib/timers.js":1297}],1317:[function(require,module,exports){
-module.exports=require(66)
-},{"./lib/sizes.js":1318}],1318:[function(require,module,exports){
-module.exports=require(67)
-},{"js-ext/extra/hashmap.js":1319,"js-ext/lib/object.js":1320}],1319:[function(require,module,exports){
-module.exports=require(17)
-},{}],1320:[function(require,module,exports){
-module.exports=require(18)
-},{"js-ext/extra/hashmap.js":1319,"polyfill/polyfill-base.js":1323}],1321:[function(require,module,exports){
-module.exports=require(19)
-},{}],1322:[function(require,module,exports){
-module.exports=require(20)
-},{}],1323:[function(require,module,exports){
+},{"../event-base.js":1478,"js-ext/extra/hashmap.js":1481}],1481:[function(require,module,exports){
+module.exports=require(4)
+},{}],1482:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1481,"polyfill/polyfill-base.js":1486}],1483:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1486}],1484:[function(require,module,exports){
+module.exports=require(14)
+},{}],1485:[function(require,module,exports){
+module.exports=require(15)
+},{}],1486:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1484,"./lib/window.console.js":1485}],1487:[function(require,module,exports){
+module.exports=require(14)
+},{}],1488:[function(require,module,exports){
+module.exports=require(15)
+},{}],1489:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1487,"./lib/window.console.js":1488}],1490:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1492,"js-ext/extra/hashmap.js":1491,"polyfill/polyfill-base.js":1497}],1491:[function(require,module,exports){
+module.exports=require(4)
+},{}],1492:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1491,"polyfill/polyfill-base.js":1497}],1493:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1497}],1494:[function(require,module,exports){
+module.exports=require(23)
+},{}],1495:[function(require,module,exports){
+module.exports=require(14)
+},{}],1496:[function(require,module,exports){
+module.exports=require(15)
+},{}],1497:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1495,"./lib/window.console.js":1496}],1498:[function(require,module,exports){
+module.exports=require(14)
+},{}],1499:[function(require,module,exports){
+module.exports=require(15)
+},{}],1500:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1498,"./lib/window.console.js":1499}],1501:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1504}],1502:[function(require,module,exports){
+module.exports=require(14)
+},{}],1503:[function(require,module,exports){
+module.exports=require(15)
+},{}],1504:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1502,"./lib/window.console.js":1503}],1505:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1506:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1510,"js-ext/extra/hashmap.js":1507,"polyfill/polyfill-base.js":1516}],1507:[function(require,module,exports){
+module.exports=require(4)
+},{}],1508:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":1509,"../lib/object.js":1510,"./classes.js":1506,"js-ext/extra/hashmap.js":1507,"polyfill/lib/weakmap.js":1514}],1509:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":1321,"./lib/window.console.js":1322}],1324:[function(require,module,exports){
-module.exports=require(1246)
-},{"_process":1365,"buffer":1354,"child_process":1353,"fs":1353,"http":1358,"https":1362,"url":1383,"xmldom":1332}],1325:[function(require,module,exports){
-module.exports=require(1247)
-},{"./lib/XMLHttpRequest.js":1324,"js-ext/extra/hashmap.js":1326,"js-ext/lib/array.js":1327,"polyfill/lib/window.console.js":1331,"url":1383,"xmldom":1332}],1326:[function(require,module,exports){
-module.exports=require(17)
-},{}],1327:[function(require,module,exports){
-module.exports=require(26)
-},{"polyfill/polyfill-base.js":1330}],1328:[function(require,module,exports){
-module.exports=require(19)
-},{}],1329:[function(require,module,exports){
-module.exports=require(20)
-},{}],1330:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1516}],1510:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1507,"polyfill/polyfill-base.js":1516}],1511:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1516}],1512:[function(require,module,exports){
+module.exports=require(23)
+},{}],1513:[function(require,module,exports){
+module.exports=require(14)
+},{}],1514:[function(require,module,exports){
+module.exports=require(45)
+},{}],1515:[function(require,module,exports){
+module.exports=require(15)
+},{}],1516:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1513,"./lib/window.console.js":1515}],1517:[function(require,module,exports){
+module.exports=require(48)
+},{}],1518:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":1517}],1519:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":1517}],1520:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":1517}],1521:[function(require,module,exports){
+module.exports=require(14)
+},{}],1522:[function(require,module,exports){
+module.exports=require(15)
+},{}],1523:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1521,"./lib/window.console.js":1522}],1524:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1525,"./lib/timers.js":1526}],1525:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1507,"polyfill/polyfill-base.js":1529}],1526:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1529}],1527:[function(require,module,exports){
+module.exports=require(14)
+},{}],1528:[function(require,module,exports){
+module.exports=require(15)
+},{}],1529:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1527,"./lib/window.console.js":1528}],1530:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":1531}],1531:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":1532,"js-ext/lib/object.js":1533}],1532:[function(require,module,exports){
+module.exports=require(4)
+},{}],1533:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1532,"polyfill/polyfill-base.js":1536}],1534:[function(require,module,exports){
+module.exports=require(14)
+},{}],1535:[function(require,module,exports){
+module.exports=require(15)
+},{}],1536:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1534,"./lib/window.console.js":1535}],1537:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":1507,"js-ext/lib/object.js":1510,"js-ext/lib/string.js":1512,"polyfill":1523,"polyfill/extra/transition.js":1518,"polyfill/extra/vendorCSS.js":1520}],1538:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":1507,"js-ext/lib/object.js":1510,"polyfill":1523}],1539:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":1507,"js-ext/lib/object.js":1510,"js-ext/lib/string.js":1512,"polyfill":1523}],1540:[function(require,module,exports){
+module.exports=require(71)
+},{"../css/element.css":1505,"./attribute-extractor.js":1537,"./element-array.js":1538,"./html-parser.js":1541,"./node-parser.js":1542,"./vdom-ns.js":1543,"./vnode.js":1544,"js-ext/extra/hashmap.js":1507,"js-ext/lib/object.js":1510,"js-ext/lib/promise.js":1511,"js-ext/lib/string.js":1512,"polyfill":1523,"polyfill/extra/transition.js":1518,"polyfill/extra/transitionend.js":1519,"polyfill/extra/vendorCSS.js":1520,"utils":1524,"window-ext":1530}],1541:[function(require,module,exports){
+module.exports=require(72)
+},{"./attribute-extractor.js":1537,"./vdom-ns.js":1543,"js-ext/extra/hashmap.js":1507,"js-ext/lib/object.js":1510,"polyfill":1523}],1542:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":1537,"./vdom-ns.js":1543,"./vnode.js":1544,"js-ext/extra/hashmap.js":1507,"js-ext/lib/object.js":1510,"polyfill":1523}],1543:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":1507,"js-ext/lib/object.js":1510,"polyfill":1523}],1544:[function(require,module,exports){
+module.exports=require(75)
+},{"./attribute-extractor.js":1537,"./html-parser.js":1541,"./vdom-ns.js":1543,"js-ext/extra/hashmap.js":1507,"js-ext/extra/lightmap.js":1508,"js-ext/lib/array.js":1509,"js-ext/lib/object.js":1510,"js-ext/lib/string.js":1512,"polyfill":1523,"utils/lib/timers.js":1526}],1545:[function(require,module,exports){
+module.exports=require(76)
+},{"./partials/extend-document.js":1539,"./partials/extend-element.js":1540,"./partials/node-parser.js":1542,"js-ext/extra/hashmap.js":1507,"js-ext/lib/object.js":1510,"utils/lib/timers.js":1526}],1546:[function(require,module,exports){
+module.exports=require(14)
+},{}],1547:[function(require,module,exports){
+module.exports=require(15)
+},{}],1548:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1546,"./lib/window.console.js":1547}],1549:[function(require,module,exports){
+module.exports=require(4)
+},{}],1550:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1549,"polyfill/polyfill-base.js":1553}],1551:[function(require,module,exports){
+module.exports=require(14)
+},{}],1552:[function(require,module,exports){
+module.exports=require(15)
+},{}],1553:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1551,"./lib/window.console.js":1552}],1554:[function(require,module,exports){
+module.exports=require(14)
+},{}],1555:[function(require,module,exports){
+module.exports=require(15)
+},{}],1556:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1554,"./lib/window.console.js":1555}],1557:[function(require,module,exports){
+module.exports=require(386)
+},{"js-ext/extra/hashmap.js":1549,"js-ext/lib/object.js":1550,"polyfill":1556}],1558:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1559:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1563,"js-ext/extra/hashmap.js":1560,"polyfill/polyfill-base.js":1569}],1560:[function(require,module,exports){
+module.exports=require(4)
+},{}],1561:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":1562,"../lib/object.js":1563,"./classes.js":1559,"js-ext/extra/hashmap.js":1560,"polyfill/lib/weakmap.js":1567}],1562:[function(require,module,exports){
 module.exports=require(21)
-},{"./lib/matchesselector.js":1328,"./lib/window.console.js":1329}],1331:[function(require,module,exports){
-module.exports=require(20)
-},{}],1332:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1569}],1563:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1560,"polyfill/polyfill-base.js":1569}],1564:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1569}],1565:[function(require,module,exports){
+module.exports=require(23)
+},{}],1566:[function(require,module,exports){
+module.exports=require(14)
+},{}],1567:[function(require,module,exports){
+module.exports=require(45)
+},{}],1568:[function(require,module,exports){
+module.exports=require(15)
+},{}],1569:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1566,"./lib/window.console.js":1568}],1570:[function(require,module,exports){
+module.exports=require(48)
+},{}],1571:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":1570}],1572:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":1570}],1573:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":1570}],1574:[function(require,module,exports){
+module.exports=require(14)
+},{}],1575:[function(require,module,exports){
+module.exports=require(15)
+},{}],1576:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1574,"./lib/window.console.js":1575}],1577:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1578,"./lib/timers.js":1579}],1578:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1560,"polyfill/polyfill-base.js":1582}],1579:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1582}],1580:[function(require,module,exports){
+module.exports=require(14)
+},{}],1581:[function(require,module,exports){
+module.exports=require(15)
+},{}],1582:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1580,"./lib/window.console.js":1581}],1583:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":1584}],1584:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":1585,"js-ext/lib/object.js":1586}],1585:[function(require,module,exports){
+module.exports=require(4)
+},{}],1586:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1585,"polyfill/polyfill-base.js":1589}],1587:[function(require,module,exports){
+module.exports=require(14)
+},{}],1588:[function(require,module,exports){
+module.exports=require(15)
+},{}],1589:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1587,"./lib/window.console.js":1588}],1590:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":1560,"js-ext/lib/object.js":1563,"js-ext/lib/string.js":1565,"polyfill":1576,"polyfill/extra/transition.js":1571,"polyfill/extra/vendorCSS.js":1573}],1591:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":1560,"js-ext/lib/object.js":1563,"polyfill":1576}],1592:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":1560,"js-ext/lib/object.js":1563,"js-ext/lib/string.js":1565,"polyfill":1576}],1593:[function(require,module,exports){
+module.exports=require(71)
+},{"../css/element.css":1558,"./attribute-extractor.js":1590,"./element-array.js":1591,"./html-parser.js":1594,"./node-parser.js":1595,"./vdom-ns.js":1596,"./vnode.js":1597,"js-ext/extra/hashmap.js":1560,"js-ext/lib/object.js":1563,"js-ext/lib/promise.js":1564,"js-ext/lib/string.js":1565,"polyfill":1576,"polyfill/extra/transition.js":1571,"polyfill/extra/transitionend.js":1572,"polyfill/extra/vendorCSS.js":1573,"utils":1577,"window-ext":1583}],1594:[function(require,module,exports){
+module.exports=require(72)
+},{"./attribute-extractor.js":1590,"./vdom-ns.js":1596,"js-ext/extra/hashmap.js":1560,"js-ext/lib/object.js":1563,"polyfill":1576}],1595:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":1590,"./vdom-ns.js":1596,"./vnode.js":1597,"js-ext/extra/hashmap.js":1560,"js-ext/lib/object.js":1563,"polyfill":1576}],1596:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":1560,"js-ext/lib/object.js":1563,"polyfill":1576}],1597:[function(require,module,exports){
+module.exports=require(75)
+},{"./attribute-extractor.js":1590,"./html-parser.js":1594,"./vdom-ns.js":1596,"js-ext/extra/hashmap.js":1560,"js-ext/extra/lightmap.js":1561,"js-ext/lib/array.js":1562,"js-ext/lib/object.js":1563,"js-ext/lib/string.js":1565,"polyfill":1576,"utils/lib/timers.js":1579}],1598:[function(require,module,exports){
+module.exports=require(76)
+},{"./partials/extend-document.js":1592,"./partials/extend-element.js":1593,"./partials/node-parser.js":1595,"js-ext/extra/hashmap.js":1560,"js-ext/lib/object.js":1563,"utils/lib/timers.js":1579}],1599:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":1600}],1600:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":1601,"js-ext/lib/object.js":1602}],1601:[function(require,module,exports){
+module.exports=require(4)
+},{}],1602:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1601,"polyfill/polyfill-base.js":1605}],1603:[function(require,module,exports){
+module.exports=require(14)
+},{}],1604:[function(require,module,exports){
+module.exports=require(15)
+},{}],1605:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1603,"./lib/window.console.js":1604}],1606:[function(require,module,exports){
+module.exports=require(783)
+},{"./lib/hammer-2.0.4.js":1607,"event-dom":1608}],1607:[function(require,module,exports){
+module.exports=require(784)
+},{"utils":1679}],1608:[function(require,module,exports){
+module.exports=require(6)
+},{"event":1612,"js-ext/extra/hashmap.js":1622,"js-ext/lib/array.js":1623,"js-ext/lib/object.js":1624,"js-ext/lib/string.js":1625,"polyfill/polyfill-base.js":1631,"utils":1632,"vdom":1678}],1609:[function(require,module,exports){
+module.exports=require(7)
+},{"js-ext/extra/hashmap.js":1614,"js-ext/lib/object.js":1615,"polyfill/polyfill-base.js":1621}],1610:[function(require,module,exports){
+module.exports=require(8)
+},{"./event-base.js":1609}],1611:[function(require,module,exports){
+module.exports=require(9)
+},{"./event-base.js":1609,"js-ext/extra/classes.js":1613,"js-ext/lib/object.js":1615}],1612:[function(require,module,exports){
+module.exports=require(10)
+},{"./event-base.js":1609,"./event-emitter.js":1610,"./event-listener.js":1611}],1613:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1615,"js-ext/extra/hashmap.js":1614,"polyfill/polyfill-base.js":1618}],1614:[function(require,module,exports){
+module.exports=require(4)
+},{}],1615:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1614,"polyfill/polyfill-base.js":1618}],1616:[function(require,module,exports){
+module.exports=require(14)
+},{}],1617:[function(require,module,exports){
+module.exports=require(15)
+},{}],1618:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1616,"./lib/window.console.js":1617}],1619:[function(require,module,exports){
+module.exports=require(14)
+},{}],1620:[function(require,module,exports){
+module.exports=require(15)
+},{}],1621:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1619,"./lib/window.console.js":1620}],1622:[function(require,module,exports){
+module.exports=require(4)
+},{}],1623:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":1628}],1624:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1622,"polyfill/polyfill-base.js":1628}],1625:[function(require,module,exports){
+module.exports=require(23)
+},{}],1626:[function(require,module,exports){
+module.exports=require(14)
+},{}],1627:[function(require,module,exports){
+module.exports=require(15)
+},{}],1628:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1626,"./lib/window.console.js":1627}],1629:[function(require,module,exports){
+module.exports=require(14)
+},{}],1630:[function(require,module,exports){
+module.exports=require(15)
+},{}],1631:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1629,"./lib/window.console.js":1630}],1632:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1633,"./lib/timers.js":1634}],1633:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1622,"polyfill/polyfill-base.js":1637}],1634:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1637}],1635:[function(require,module,exports){
+module.exports=require(14)
+},{}],1636:[function(require,module,exports){
+module.exports=require(15)
+},{}],1637:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1635,"./lib/window.console.js":1636}],1638:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1639:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1643,"js-ext/extra/hashmap.js":1640,"polyfill/polyfill-base.js":1649}],1640:[function(require,module,exports){
+module.exports=require(4)
+},{}],1641:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":1642,"../lib/object.js":1643,"./classes.js":1639,"js-ext/extra/hashmap.js":1640,"polyfill/lib/weakmap.js":1647}],1642:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":1649}],1643:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1640,"polyfill/polyfill-base.js":1649}],1644:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1649}],1645:[function(require,module,exports){
+module.exports=require(23)
+},{}],1646:[function(require,module,exports){
+module.exports=require(14)
+},{}],1647:[function(require,module,exports){
+module.exports=require(45)
+},{}],1648:[function(require,module,exports){
+module.exports=require(15)
+},{}],1649:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1646,"./lib/window.console.js":1648}],1650:[function(require,module,exports){
+module.exports=require(48)
+},{}],1651:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":1650}],1652:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":1650}],1653:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":1650}],1654:[function(require,module,exports){
+module.exports=require(14)
+},{}],1655:[function(require,module,exports){
+module.exports=require(15)
+},{}],1656:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1654,"./lib/window.console.js":1655}],1657:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1658,"./lib/timers.js":1659}],1658:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1640,"polyfill/polyfill-base.js":1662}],1659:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1662}],1660:[function(require,module,exports){
+module.exports=require(14)
+},{}],1661:[function(require,module,exports){
+module.exports=require(15)
+},{}],1662:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1660,"./lib/window.console.js":1661}],1663:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":1664}],1664:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":1665,"js-ext/lib/object.js":1666}],1665:[function(require,module,exports){
+module.exports=require(4)
+},{}],1666:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1665,"polyfill/polyfill-base.js":1669}],1667:[function(require,module,exports){
+module.exports=require(14)
+},{}],1668:[function(require,module,exports){
+module.exports=require(15)
+},{}],1669:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1667,"./lib/window.console.js":1668}],1670:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":1640,"js-ext/lib/object.js":1643,"js-ext/lib/string.js":1645,"polyfill":1656,"polyfill/extra/transition.js":1651,"polyfill/extra/vendorCSS.js":1653}],1671:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":1640,"js-ext/lib/object.js":1643,"polyfill":1656}],1672:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":1640,"js-ext/lib/object.js":1643,"js-ext/lib/string.js":1645,"polyfill":1656}],1673:[function(require,module,exports){
+module.exports=require(71)
+},{"../css/element.css":1638,"./attribute-extractor.js":1670,"./element-array.js":1671,"./html-parser.js":1674,"./node-parser.js":1675,"./vdom-ns.js":1676,"./vnode.js":1677,"js-ext/extra/hashmap.js":1640,"js-ext/lib/object.js":1643,"js-ext/lib/promise.js":1644,"js-ext/lib/string.js":1645,"polyfill":1656,"polyfill/extra/transition.js":1651,"polyfill/extra/transitionend.js":1652,"polyfill/extra/vendorCSS.js":1653,"utils":1657,"window-ext":1663}],1674:[function(require,module,exports){
+module.exports=require(72)
+},{"./attribute-extractor.js":1670,"./vdom-ns.js":1676,"js-ext/extra/hashmap.js":1640,"js-ext/lib/object.js":1643,"polyfill":1656}],1675:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":1670,"./vdom-ns.js":1676,"./vnode.js":1677,"js-ext/extra/hashmap.js":1640,"js-ext/lib/object.js":1643,"polyfill":1656}],1676:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":1640,"js-ext/lib/object.js":1643,"polyfill":1656}],1677:[function(require,module,exports){
+module.exports=require(75)
+},{"./attribute-extractor.js":1670,"./html-parser.js":1674,"./vdom-ns.js":1676,"js-ext/extra/hashmap.js":1640,"js-ext/extra/lightmap.js":1641,"js-ext/lib/array.js":1642,"js-ext/lib/object.js":1643,"js-ext/lib/string.js":1645,"polyfill":1656,"utils/lib/timers.js":1659}],1678:[function(require,module,exports){
+module.exports=require(76)
+},{"./partials/extend-document.js":1672,"./partials/extend-element.js":1673,"./partials/node-parser.js":1675,"js-ext/extra/hashmap.js":1640,"js-ext/lib/object.js":1643,"utils/lib/timers.js":1659}],1679:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1680,"./lib/timers.js":1681}],1680:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1685,"polyfill/polyfill-base.js":1684}],1681:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1684}],1682:[function(require,module,exports){
+module.exports=require(14)
+},{}],1683:[function(require,module,exports){
+module.exports=require(15)
+},{}],1684:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1682,"./lib/window.console.js":1683}],1685:[function(require,module,exports){
+module.exports=require(4)
+},{}],1686:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1685,"polyfill/polyfill-base.js":1689}],1687:[function(require,module,exports){
+module.exports=require(14)
+},{}],1688:[function(require,module,exports){
+module.exports=require(15)
+},{}],1689:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1687,"./lib/window.console.js":1688}],1690:[function(require,module,exports){
+module.exports=require(5)
+},{"event-dom":1691,"event/extra/promise-finalize.js":1763,"event/extra/timer-finalize.js":1764,"js-ext/extra/classes.js":1774,"js-ext/extra/hashmap.js":1775,"js-ext/lib/object.js":1776,"js-ext/lib/promise.js":1777,"js-ext/lib/string.js":1778,"polyfill":1784,"utils/lib/timers.js":1785,"vdom":1829}],1691:[function(require,module,exports){
+module.exports=require(6)
+},{"event":1695,"js-ext/extra/hashmap.js":1705,"js-ext/lib/array.js":1706,"js-ext/lib/object.js":1707,"js-ext/lib/string.js":1708,"polyfill/polyfill-base.js":1714,"utils":1715,"vdom":1761}],1692:[function(require,module,exports){
+module.exports=require(7)
+},{"js-ext/extra/hashmap.js":1697,"js-ext/lib/object.js":1698,"polyfill/polyfill-base.js":1704}],1693:[function(require,module,exports){
+module.exports=require(8)
+},{"./event-base.js":1692}],1694:[function(require,module,exports){
+module.exports=require(9)
+},{"./event-base.js":1692,"js-ext/extra/classes.js":1696,"js-ext/lib/object.js":1698}],1695:[function(require,module,exports){
+module.exports=require(10)
+},{"./event-base.js":1692,"./event-emitter.js":1693,"./event-listener.js":1694}],1696:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1698,"js-ext/extra/hashmap.js":1697,"polyfill/polyfill-base.js":1701}],1697:[function(require,module,exports){
+module.exports=require(4)
+},{}],1698:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1697,"polyfill/polyfill-base.js":1701}],1699:[function(require,module,exports){
+module.exports=require(14)
+},{}],1700:[function(require,module,exports){
+module.exports=require(15)
+},{}],1701:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1699,"./lib/window.console.js":1700}],1702:[function(require,module,exports){
+module.exports=require(14)
+},{}],1703:[function(require,module,exports){
+module.exports=require(15)
+},{}],1704:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1702,"./lib/window.console.js":1703}],1705:[function(require,module,exports){
+module.exports=require(4)
+},{}],1706:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":1711}],1707:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1705,"polyfill/polyfill-base.js":1711}],1708:[function(require,module,exports){
+module.exports=require(23)
+},{}],1709:[function(require,module,exports){
+module.exports=require(14)
+},{}],1710:[function(require,module,exports){
+module.exports=require(15)
+},{}],1711:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1709,"./lib/window.console.js":1710}],1712:[function(require,module,exports){
+module.exports=require(14)
+},{}],1713:[function(require,module,exports){
+module.exports=require(15)
+},{}],1714:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1712,"./lib/window.console.js":1713}],1715:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1716,"./lib/timers.js":1717}],1716:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1705,"polyfill/polyfill-base.js":1720}],1717:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1720}],1718:[function(require,module,exports){
+module.exports=require(14)
+},{}],1719:[function(require,module,exports){
+module.exports=require(15)
+},{}],1720:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1718,"./lib/window.console.js":1719}],1721:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1722:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1726,"js-ext/extra/hashmap.js":1723,"polyfill/polyfill-base.js":1732}],1723:[function(require,module,exports){
+module.exports=require(4)
+},{}],1724:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":1725,"../lib/object.js":1726,"./classes.js":1722,"js-ext/extra/hashmap.js":1723,"polyfill/lib/weakmap.js":1730}],1725:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":1732}],1726:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1723,"polyfill/polyfill-base.js":1732}],1727:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1732}],1728:[function(require,module,exports){
+module.exports=require(23)
+},{}],1729:[function(require,module,exports){
+module.exports=require(14)
+},{}],1730:[function(require,module,exports){
+module.exports=require(45)
+},{}],1731:[function(require,module,exports){
+module.exports=require(15)
+},{}],1732:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1729,"./lib/window.console.js":1731}],1733:[function(require,module,exports){
+module.exports=require(48)
+},{}],1734:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":1733}],1735:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":1733}],1736:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":1733}],1737:[function(require,module,exports){
+module.exports=require(14)
+},{}],1738:[function(require,module,exports){
+module.exports=require(15)
+},{}],1739:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1737,"./lib/window.console.js":1738}],1740:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1741,"./lib/timers.js":1742}],1741:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1723,"polyfill/polyfill-base.js":1745}],1742:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1745}],1743:[function(require,module,exports){
+module.exports=require(14)
+},{}],1744:[function(require,module,exports){
+module.exports=require(15)
+},{}],1745:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1743,"./lib/window.console.js":1744}],1746:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":1747}],1747:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":1748,"js-ext/lib/object.js":1749}],1748:[function(require,module,exports){
+module.exports=require(4)
+},{}],1749:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1748,"polyfill/polyfill-base.js":1752}],1750:[function(require,module,exports){
+module.exports=require(14)
+},{}],1751:[function(require,module,exports){
+module.exports=require(15)
+},{}],1752:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1750,"./lib/window.console.js":1751}],1753:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":1723,"js-ext/lib/object.js":1726,"js-ext/lib/string.js":1728,"polyfill":1739,"polyfill/extra/transition.js":1734,"polyfill/extra/vendorCSS.js":1736}],1754:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":1723,"js-ext/lib/object.js":1726,"polyfill":1739}],1755:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":1723,"js-ext/lib/object.js":1726,"js-ext/lib/string.js":1728,"polyfill":1739}],1756:[function(require,module,exports){
+module.exports=require(71)
+},{"../css/element.css":1721,"./attribute-extractor.js":1753,"./element-array.js":1754,"./html-parser.js":1757,"./node-parser.js":1758,"./vdom-ns.js":1759,"./vnode.js":1760,"js-ext/extra/hashmap.js":1723,"js-ext/lib/object.js":1726,"js-ext/lib/promise.js":1727,"js-ext/lib/string.js":1728,"polyfill":1739,"polyfill/extra/transition.js":1734,"polyfill/extra/transitionend.js":1735,"polyfill/extra/vendorCSS.js":1736,"utils":1740,"window-ext":1746}],1757:[function(require,module,exports){
+module.exports=require(72)
+},{"./attribute-extractor.js":1753,"./vdom-ns.js":1759,"js-ext/extra/hashmap.js":1723,"js-ext/lib/object.js":1726,"polyfill":1739}],1758:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":1753,"./vdom-ns.js":1759,"./vnode.js":1760,"js-ext/extra/hashmap.js":1723,"js-ext/lib/object.js":1726,"polyfill":1739}],1759:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":1723,"js-ext/lib/object.js":1726,"polyfill":1739}],1760:[function(require,module,exports){
+module.exports=require(75)
+},{"./attribute-extractor.js":1753,"./html-parser.js":1757,"./vdom-ns.js":1759,"js-ext/extra/hashmap.js":1723,"js-ext/extra/lightmap.js":1724,"js-ext/lib/array.js":1725,"js-ext/lib/object.js":1726,"js-ext/lib/string.js":1728,"polyfill":1739,"utils/lib/timers.js":1742}],1761:[function(require,module,exports){
+module.exports=require(76)
+},{"./partials/extend-document.js":1755,"./partials/extend-element.js":1756,"./partials/node-parser.js":1758,"js-ext/extra/hashmap.js":1723,"js-ext/lib/object.js":1726,"utils/lib/timers.js":1742}],1762:[function(require,module,exports){
+module.exports=require(7)
+},{"js-ext/extra/hashmap.js":1765,"js-ext/lib/object.js":1766,"polyfill/polyfill-base.js":1773}],1763:[function(require,module,exports){
+module.exports=require(78)
+},{"js-ext/extra/hashmap.js":1765,"js-ext/lib/promise.js":1767}],1764:[function(require,module,exports){
+module.exports=require(79)
+},{"../event-base.js":1762,"js-ext/extra/hashmap.js":1765}],1765:[function(require,module,exports){
+module.exports=require(4)
+},{}],1766:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1765,"polyfill/polyfill-base.js":1770}],1767:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1770}],1768:[function(require,module,exports){
+module.exports=require(14)
+},{}],1769:[function(require,module,exports){
+module.exports=require(15)
+},{}],1770:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1768,"./lib/window.console.js":1769}],1771:[function(require,module,exports){
+module.exports=require(14)
+},{}],1772:[function(require,module,exports){
+module.exports=require(15)
+},{}],1773:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1771,"./lib/window.console.js":1772}],1774:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1776,"js-ext/extra/hashmap.js":1775,"polyfill/polyfill-base.js":1781}],1775:[function(require,module,exports){
+module.exports=require(4)
+},{}],1776:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1775,"polyfill/polyfill-base.js":1781}],1777:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1781}],1778:[function(require,module,exports){
+module.exports=require(23)
+},{}],1779:[function(require,module,exports){
+module.exports=require(14)
+},{}],1780:[function(require,module,exports){
+module.exports=require(15)
+},{}],1781:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1779,"./lib/window.console.js":1780}],1782:[function(require,module,exports){
+module.exports=require(14)
+},{}],1783:[function(require,module,exports){
+module.exports=require(15)
+},{}],1784:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1782,"./lib/window.console.js":1783}],1785:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1788}],1786:[function(require,module,exports){
+module.exports=require(14)
+},{}],1787:[function(require,module,exports){
+module.exports=require(15)
+},{}],1788:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1786,"./lib/window.console.js":1787}],1789:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1790:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1794,"js-ext/extra/hashmap.js":1791,"polyfill/polyfill-base.js":1800}],1791:[function(require,module,exports){
+module.exports=require(4)
+},{}],1792:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":1793,"../lib/object.js":1794,"./classes.js":1790,"js-ext/extra/hashmap.js":1791,"polyfill/lib/weakmap.js":1798}],1793:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":1800}],1794:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1791,"polyfill/polyfill-base.js":1800}],1795:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1800}],1796:[function(require,module,exports){
+module.exports=require(23)
+},{}],1797:[function(require,module,exports){
+module.exports=require(14)
+},{}],1798:[function(require,module,exports){
+module.exports=require(45)
+},{}],1799:[function(require,module,exports){
+module.exports=require(15)
+},{}],1800:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1797,"./lib/window.console.js":1799}],1801:[function(require,module,exports){
+module.exports=require(48)
+},{}],1802:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":1801}],1803:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":1801}],1804:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":1801}],1805:[function(require,module,exports){
+module.exports=require(14)
+},{}],1806:[function(require,module,exports){
+module.exports=require(15)
+},{}],1807:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1805,"./lib/window.console.js":1806}],1808:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1809,"./lib/timers.js":1810}],1809:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1791,"polyfill/polyfill-base.js":1813}],1810:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1813}],1811:[function(require,module,exports){
+module.exports=require(14)
+},{}],1812:[function(require,module,exports){
+module.exports=require(15)
+},{}],1813:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1811,"./lib/window.console.js":1812}],1814:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":1815}],1815:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":1816,"js-ext/lib/object.js":1817}],1816:[function(require,module,exports){
+module.exports=require(4)
+},{}],1817:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1816,"polyfill/polyfill-base.js":1820}],1818:[function(require,module,exports){
+module.exports=require(14)
+},{}],1819:[function(require,module,exports){
+module.exports=require(15)
+},{}],1820:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1818,"./lib/window.console.js":1819}],1821:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":1791,"js-ext/lib/object.js":1794,"js-ext/lib/string.js":1796,"polyfill":1807,"polyfill/extra/transition.js":1802,"polyfill/extra/vendorCSS.js":1804}],1822:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":1791,"js-ext/lib/object.js":1794,"polyfill":1807}],1823:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":1791,"js-ext/lib/object.js":1794,"js-ext/lib/string.js":1796,"polyfill":1807}],1824:[function(require,module,exports){
+module.exports=require(71)
+},{"../css/element.css":1789,"./attribute-extractor.js":1821,"./element-array.js":1822,"./html-parser.js":1825,"./node-parser.js":1826,"./vdom-ns.js":1827,"./vnode.js":1828,"js-ext/extra/hashmap.js":1791,"js-ext/lib/object.js":1794,"js-ext/lib/promise.js":1795,"js-ext/lib/string.js":1796,"polyfill":1807,"polyfill/extra/transition.js":1802,"polyfill/extra/transitionend.js":1803,"polyfill/extra/vendorCSS.js":1804,"utils":1808,"window-ext":1814}],1825:[function(require,module,exports){
+module.exports=require(72)
+},{"./attribute-extractor.js":1821,"./vdom-ns.js":1827,"js-ext/extra/hashmap.js":1791,"js-ext/lib/object.js":1794,"polyfill":1807}],1826:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":1821,"./vdom-ns.js":1827,"./vnode.js":1828,"js-ext/extra/hashmap.js":1791,"js-ext/lib/object.js":1794,"polyfill":1807}],1827:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":1791,"js-ext/lib/object.js":1794,"polyfill":1807}],1828:[function(require,module,exports){
+module.exports=require(75)
+},{"./attribute-extractor.js":1821,"./html-parser.js":1825,"./vdom-ns.js":1827,"js-ext/extra/hashmap.js":1791,"js-ext/extra/lightmap.js":1792,"js-ext/lib/array.js":1793,"js-ext/lib/object.js":1794,"js-ext/lib/string.js":1796,"polyfill":1807,"utils/lib/timers.js":1810}],1829:[function(require,module,exports){
+module.exports=require(76)
+},{"./partials/extend-document.js":1823,"./partials/extend-element.js":1824,"./partials/node-parser.js":1826,"js-ext/extra/hashmap.js":1791,"js-ext/lib/object.js":1794,"utils/lib/timers.js":1810}],1830:[function(require,module,exports){
+module.exports=require(14)
+},{}],1831:[function(require,module,exports){
+module.exports=require(15)
+},{}],1832:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1830,"./lib/window.console.js":1831}],1833:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1834,"./lib/timers.js":1835}],1834:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1685,"polyfill/polyfill-base.js":1838}],1835:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1838}],1836:[function(require,module,exports){
+module.exports=require(14)
+},{}],1837:[function(require,module,exports){
+module.exports=require(15)
+},{}],1838:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1836,"./lib/window.console.js":1837}],1839:[function(require,module,exports){
+"use strict";
+
+require('js-ext/lib/object.js');
+require('polyfill');
+require('./css/scrollable.css');
+
+/**
+ *
+ *
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ * @module focusmanager
+ * @class FocusManager
+ * @since 0.0.1
+*/
+
+var NAME = '[scrollable]: ',
+    POSITION = 'position',
+    OVERFLOW = 'overflow',
+    SYNC_TIMER = 1000,
+    SCROLL_HANDLE = '<span plugin-dd="true" plugin-constrain="true" constrain-selector="span"></span>',
+    VERTICAL_CONT = '<span class="itsa-vscroll-cont">'+SCROLL_HANDLE+'</span>',
+    HORIZONTAL_CONT = '<span class="itsa-hscroll-cont">'+SCROLL_HANDLE+'</span>',
+    createHashMap = require('js-ext/extra/hashmap.js').createMap;
+
+module.exports = function (window) {
+
+    var DOCUMENT = window.document,
+        laterSilent = require('utils').laterSilent,
+        Scrollable, Event, setupEvents, DD;
+
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
+
+/*jshint boss:true */
+    if (Scrollable=window._ITSAmodules.Scrollable) {
+/*jshint boss:false */
+        return Scrollable; // Scrollable was already created
+    }
+
+    require('window-ext')(window);
+    require('node-plugin')(window);
+
+    Event = require('event-mobile')(window);
+    DD = require('drag')(window);
+    DD.init(); // ITSA combines the Drag-module with drag-drop into ITSA.DD
+
+    setupEvents = function() {
+        Event.after('UI:dd-drag', function(e) {
+            var dragNode = e.target,
+                dragContainer = dragNode.getParent(),
+                top = dragNode.top - dragContainer.top,
+                height = dragNode.height,
+                heightContainer = dragContainer.height,
+                effectiveRegion = heightContainer - height,
+                percentedMoved = top/effectiveRegion,
+                host = dragContainer.getParent(),
+                hostScrollHeight = host.scrollHeight,
+                hostHeight = host.height,
+                model = host._plugin.scroll.model;
+            model.top = Math.round(percentedMoved*(hostScrollHeight-hostHeight));
+        }, '[plugin-scroll="true"] >span.itsa-vscroll-cont span');
+
+        Event.after('UI:dd-drag', function(e) {
+            var dragNode = e.target,
+                dragContainer = dragNode.getParent(),
+                left = parseInt(dragNode.getInlineStyle('left'), 10),
+                width = dragNode.width,
+                widthContainer = dragContainer.width,
+                effectiveRegion = widthContainer - width,
+                percentedMoved = left/effectiveRegion,
+                host = dragContainer.getParent(),
+                hostScrollWidth = host.scrollWidth,
+                hostWidth = host.width,
+                model = host._plugin.scroll.model;
+            model.left = Math.round(percentedMoved*(hostScrollWidth-hostWidth));
+        }, '[plugin-scroll="true"] >span.itsa-hscroll-cont span');
+
+        Event.after('UI:nodecontentchange', function(e) {
+            var node = e.target;
+            node._plugin && node._plugin.scroll && node._plugin.scroll.sync();
+        }, '[plugin-scroll="true"][scroll-ready="true"]');
+
+    };
+
+    setupEvents();
+
+    window._ITSAmodules.Scrollable = Scrollable = DOCUMENT.definePlugin('scroll',
+        function() {
+            // initializer
+            // because we cannot predict if the size of the container are goiig to change (fe by ancestor-classes)
+            // we need to sync by timer as well:
+            var instance = this;
+            instance._syncTimer = laterSilent(instance.sync.bind(instance), SYNC_TIMER);
+        }, {
+        attrs: {
+            x: 'boolean',
+            y: 'boolean',
+            left: 'number',
+            top: 'number',
+            light: 'boolean',
+            autohide: 'boolean',
+            disabled: 'boolean'
+        },
+        defaults: {
+            x: true,
+            y: true,
+            left: 0,
+            top: 0,
+        },
+        render: function() {
+            var instance = this,
+                host = instance.host,
+                inlinePosition, globalPosition;
+
+            // default position to relative: check first inlinestyle because this goes quicker
+            instance._inlinePosition = inlinePosition = host.getInlineStyle(POSITION);
+            inlinePosition || (globalPosition=host.getStyle(POSITION));
+            if ((inlinePosition==='static') || (inlinePosition==='fixed') || (globalPosition==='static') || (globalPosition==='fixed')) {
+                inlinePosition = 'relative';
+                host.setInlineStyle(POSITION, inlinePosition);
+            }
+            instance._inlineOverflow = host.getInlineStyle(OVERFLOW);
+            instance._inlineOverflow && host.removeInlineStyle(OVERFLOW);
+            host.addSystemElement(VERTICAL_CONT, false, false); // don't want silent insert --> need to render the plugins
+            host.addSystemElement(HORIZONTAL_CONT, false, false);
+        },
+        sync: function() {
+            var instance = this,
+                host = instance.host,
+                model = instance.model,
+                scrollHeight = host.scrollHeight,
+                scrollWidth = host.scrollWidth,
+                height = host.height,
+                width = host.width,
+                scrollLeft = model.left,
+                scrollTop = model.top,
+                vScrollerVisible = (scrollHeight>height),
+                hScrollerVisible = (scrollWidth>width),
+                vscroller = host.getElement('span.itsa-vscroll-cont', true),
+                hscroller = host.getElement('span.itsa-hscroll-cont', true),
+                sizeHandle, effectiveRegion, maxScrollAmount, scrollAmount, handleNode;
+
+            vscroller.toggleClass('itsa-visible', vScrollerVisible);
+            hscroller.toggleClass('itsa-visible', hScrollerVisible);
+
+            host.scrollTop = scrollTop;
+            host.scrollLeft = scrollLeft;
+            // because scrollTop and scrollLeft have their restrictions, we need to reset them into the model (in case a corrcetion has taken place)
+            model.top = scrollTop = host.scrollTop;
+            model.left = scrollLeft = host.scrollLeft;
+
+            if (vScrollerVisible) {
+                handleNode = vscroller.getElement('span');
+                if (!handleNode.hasClass('dd-dragging')) {
+                    sizeHandle = Math.round(height*(height/scrollHeight));
+                    effectiveRegion = height - sizeHandle;
+                    maxScrollAmount = scrollHeight - height;
+                    scrollAmount = effectiveRegion * Math.max(0, Math.min(1, (scrollTop/maxScrollAmount)));
+                    handleNode.setInlineStyle('top', scrollAmount+'px')
+                              .setInlineStyle('height', sizeHandle+'px');
+                }
+                vscroller.setInlineStyle('top', scrollTop+'px')
+                         .setInlineStyle('right', -scrollLeft+'px');
+            }
+            if (hScrollerVisible) {
+                handleNode = hscroller.getElement('span');
+                if (!handleNode.hasClass('dd-dragging')) {
+                    sizeHandle = Math.round(width*(width/scrollWidth));
+                    effectiveRegion = width - sizeHandle;
+                    maxScrollAmount = scrollWidth - width;
+                    scrollAmount = effectiveRegion * Math.max(0, Math.min(1, (scrollLeft/maxScrollAmount)));
+                    handleNode.setInlineStyle('left', scrollAmount+'px')
+                              .setInlineStyle('width', sizeHandle+'px');
+                }
+                hscroller.setInlineStyle('bottom', -scrollTop+'px')
+                         .setInlineStyle('left', scrollLeft+'px');
+            }
+        },
+        destroy: function() {
+            var instance = this,
+                host = instance.host,
+                inlinePosition, inlineOverflow;
+            instance._syncTimer.cancel();
+/*jshint boss:true */
+            if (inlinePosition=instance._inlinePosition) {
+/*jshint boss:false */
+                host.setInlineStyle(POSITION, inlinePosition);
+            }
+            else {
+                host.removeInlineStyle(POSITION);
+            }
+/*jshint boss:true */
+            if (inlineOverflow=instance._inlineOverflow) {
+/*jshint boss:false */
+                host.setInlineStyle(OVERFLOW, inlineOverflow);
+            }
+            else {
+                host.removeInlineStyle(OVERFLOW);
+            }
+        }
+    });
+
+    return Scrollable;
+};
+},{"./css/scrollable.css":1321,"drag":1323,"event-mobile":1606,"js-ext/extra/hashmap.js":1685,"js-ext/lib/object.js":1686,"node-plugin":1690,"polyfill":1832,"utils":1833,"window-ext":1896}],1840:[function(require,module,exports){
+module.exports=require(4)
+},{}],1841:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1840,"polyfill/polyfill-base.js":1844}],1842:[function(require,module,exports){
+module.exports=require(14)
+},{}],1843:[function(require,module,exports){
+module.exports=require(15)
+},{}],1844:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1842,"./lib/window.console.js":1843}],1845:[function(require,module,exports){
+module.exports=require(14)
+},{}],1846:[function(require,module,exports){
+module.exports=require(15)
+},{}],1847:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1845,"./lib/window.console.js":1846}],1848:[function(require,module,exports){
+module.exports=require(386)
+},{"js-ext/extra/hashmap.js":1840,"js-ext/lib/object.js":1841,"polyfill":1847}],1849:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1850,"./lib/timers.js":1851}],1850:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1152,"polyfill/polyfill-base.js":1854}],1851:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1854}],1852:[function(require,module,exports){
+module.exports=require(14)
+},{}],1853:[function(require,module,exports){
+module.exports=require(15)
+},{}],1854:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1852,"./lib/window.console.js":1853}],1855:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1856:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1860,"js-ext/extra/hashmap.js":1857,"polyfill/polyfill-base.js":1866}],1857:[function(require,module,exports){
+module.exports=require(4)
+},{}],1858:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":1859,"../lib/object.js":1860,"./classes.js":1856,"js-ext/extra/hashmap.js":1857,"polyfill/lib/weakmap.js":1864}],1859:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":1866}],1860:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1857,"polyfill/polyfill-base.js":1866}],1861:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1866}],1862:[function(require,module,exports){
+module.exports=require(23)
+},{}],1863:[function(require,module,exports){
+module.exports=require(14)
+},{}],1864:[function(require,module,exports){
+module.exports=require(45)
+},{}],1865:[function(require,module,exports){
+module.exports=require(15)
+},{}],1866:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1863,"./lib/window.console.js":1865}],1867:[function(require,module,exports){
+module.exports=require(48)
+},{}],1868:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":1867}],1869:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":1867}],1870:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":1867}],1871:[function(require,module,exports){
+module.exports=require(14)
+},{}],1872:[function(require,module,exports){
+module.exports=require(15)
+},{}],1873:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1871,"./lib/window.console.js":1872}],1874:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1875,"./lib/timers.js":1876}],1875:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1857,"polyfill/polyfill-base.js":1879}],1876:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1879}],1877:[function(require,module,exports){
+module.exports=require(14)
+},{}],1878:[function(require,module,exports){
+module.exports=require(15)
+},{}],1879:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1877,"./lib/window.console.js":1878}],1880:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":1881}],1881:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":1882,"js-ext/lib/object.js":1883}],1882:[function(require,module,exports){
+module.exports=require(4)
+},{}],1883:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1882,"polyfill/polyfill-base.js":1886}],1884:[function(require,module,exports){
+module.exports=require(14)
+},{}],1885:[function(require,module,exports){
+module.exports=require(15)
+},{}],1886:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1884,"./lib/window.console.js":1885}],1887:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":1857,"js-ext/lib/object.js":1860,"js-ext/lib/string.js":1862,"polyfill":1873,"polyfill/extra/transition.js":1868,"polyfill/extra/vendorCSS.js":1870}],1888:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":1857,"js-ext/lib/object.js":1860,"polyfill":1873}],1889:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":1857,"js-ext/lib/object.js":1860,"js-ext/lib/string.js":1862,"polyfill":1873}],1890:[function(require,module,exports){
+module.exports=require(71)
+},{"../css/element.css":1855,"./attribute-extractor.js":1887,"./element-array.js":1888,"./html-parser.js":1891,"./node-parser.js":1892,"./vdom-ns.js":1893,"./vnode.js":1894,"js-ext/extra/hashmap.js":1857,"js-ext/lib/object.js":1860,"js-ext/lib/promise.js":1861,"js-ext/lib/string.js":1862,"polyfill":1873,"polyfill/extra/transition.js":1868,"polyfill/extra/transitionend.js":1869,"polyfill/extra/vendorCSS.js":1870,"utils":1874,"window-ext":1880}],1891:[function(require,module,exports){
+module.exports=require(72)
+},{"./attribute-extractor.js":1887,"./vdom-ns.js":1893,"js-ext/extra/hashmap.js":1857,"js-ext/lib/object.js":1860,"polyfill":1873}],1892:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":1887,"./vdom-ns.js":1893,"./vnode.js":1894,"js-ext/extra/hashmap.js":1857,"js-ext/lib/object.js":1860,"polyfill":1873}],1893:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":1857,"js-ext/lib/object.js":1860,"polyfill":1873}],1894:[function(require,module,exports){
+module.exports=require(75)
+},{"./attribute-extractor.js":1887,"./html-parser.js":1891,"./vdom-ns.js":1893,"js-ext/extra/hashmap.js":1857,"js-ext/extra/lightmap.js":1858,"js-ext/lib/array.js":1859,"js-ext/lib/object.js":1860,"js-ext/lib/string.js":1862,"polyfill":1873,"utils/lib/timers.js":1876}],1895:[function(require,module,exports){
+module.exports=require(76)
+},{"./partials/extend-document.js":1889,"./partials/extend-element.js":1890,"./partials/node-parser.js":1892,"js-ext/extra/hashmap.js":1857,"js-ext/lib/object.js":1860,"utils/lib/timers.js":1876}],1896:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":1897}],1897:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":1898,"js-ext/lib/object.js":1899}],1898:[function(require,module,exports){
+module.exports=require(4)
+},{}],1899:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1898,"polyfill/polyfill-base.js":1902}],1900:[function(require,module,exports){
+module.exports=require(14)
+},{}],1901:[function(require,module,exports){
+module.exports=require(15)
+},{}],1902:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1900,"./lib/window.console.js":1901}],1903:[function(require,module,exports){
+module.exports=require(1306)
+},{"_process":1944,"buffer":1933,"child_process":1932,"fs":1932,"http":1937,"https":1941,"url":1962,"xmldom":1911}],1904:[function(require,module,exports){
+module.exports=require(1307)
+},{"./lib/XMLHttpRequest.js":1903,"js-ext/extra/hashmap.js":1905,"js-ext/lib/array.js":1906,"polyfill/lib/window.console.js":1910,"url":1962,"xmldom":1911}],1905:[function(require,module,exports){
+module.exports=require(4)
+},{}],1906:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":1909}],1907:[function(require,module,exports){
+module.exports=require(14)
+},{}],1908:[function(require,module,exports){
+module.exports=require(15)
+},{}],1909:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1907,"./lib/window.console.js":1908}],1910:[function(require,module,exports){
+module.exports=require(15)
+},{}],1911:[function(require,module,exports){
 function DOMParser(options){
 	this.options = options ||{locator:{}};
 	
@@ -27132,7 +28606,7 @@ if(typeof require == 'function'){
 	exports.DOMParser = DOMParser;
 }
 
-},{"./dom":1333,"./sax":1334}],1333:[function(require,module,exports){
+},{"./dom":1912,"./sax":1913}],1912:[function(require,module,exports){
 /*
  * DOM Level 2
  * Object DOMException
@@ -28272,7 +29746,7 @@ if(typeof require == 'function'){
 	exports.XMLSerializer = XMLSerializer;
 }
 
-},{}],1334:[function(require,module,exports){
+},{}],1913:[function(require,module,exports){
 //[4]   	NameStartChar	   ::=   	":" | [A-Z] | "_" | [a-z] | [#xC0-#xD6] | [#xD8-#xF6] | [#xF8-#x2FF] | [#x370-#x37D] | [#x37F-#x1FFF] | [#x200C-#x200D] | [#x2070-#x218F] | [#x2C00-#x2FEF] | [#x3001-#xD7FF] | [#xF900-#xFDCF] | [#xFDF0-#xFFFD] | [#x10000-#xEFFFF]
 //[4a]   	NameChar	   ::=   	NameStartChar | "-" | "." | [0-9] | #xB7 | [#x0300-#x036F] | [#x203F-#x2040]
 //[5]   	Name	   ::=   	NameStartChar (NameChar)*
@@ -28858,7 +30332,7 @@ if(typeof require == 'function'){
 }
 
 
-},{}],1335:[function(require,module,exports){
+},{}],1914:[function(require,module,exports){
 (function (process,global){
 /*
 Copyright 2013 Yahoo! Inc. All rights reserved.
@@ -29474,9 +30948,9 @@ http://yuilibrary.com/license/
 
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":1365}],1336:[function(require,module,exports){
+},{"_process":1944}],1915:[function(require,module,exports){
 var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-button;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-button:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-button:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\ni-button {\n    margin: 0;\n    display: inline-block;\n    *display: inline; /*IE 6/7*/\n    zoom: 1;\n    position: relative;\n    vertical-align: middle;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-button.i-primary >button,\ni-button.i-focussed >button {\n    background-color: rgb(0, 120, 231);\n    color: #fff;\n}\n\n/*csslint outline-none:false*/\n\ni-button >button {\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    -khtml-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    position: relative;\n    padding: 0.5em 1em;\n    color: inherit; /* 1 */\n    font: inherit; /* 2 */\n    margin: 0; /* 3 */\n    overflow: visible;\n    text-transform: none;\n    -webkit-appearance: button; /* 2 */\n    line-height: normal;\n    white-space: nowrap;\n    vertical-align: baseline;\n    text-align: center;\n    cursor: pointer;\n    -webkit-user-drag: none;\n    -webkit-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    font-family: inherit;\n    font-size: 100%;\n    color: #444; /* rgba not supported (IE 8) */\n    color: rgba(0, 0, 0, 0.80); /* rgba supported */\n    border: 1px solid #999;  /*IE 6/7/8*/\n    border: none rgba(0, 0, 0, 0);  /*IE9 + everything else*/\n    background-color: #E6E6E6;\n    text-decoration: none;\n    border-radius: 2px;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n}\n\n\ni-button.i-hover >button,\ni-button >button:hover,\ni-button >button:focus {\n    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#00000000', endColorstr='#1a000000',GradientType=0);\n    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(transparent), color-stop(40%, rgba(0,0,0, 0.05)), to(rgba(0,0,0, 0.10)));\n    background-image: -webkit-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: -moz-linear-gradient(top, rgba(0,0,0, 0.05) 0%, rgba(0,0,0, 0.10));\n    background-image: -o-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n}\n\ni-button >button:focus {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.6) inset;\n}\n\ni-button.i-hover >button,\ni-button >button:hover,\ni-button.i-hover >button:focus,\ni-button >button:hover:focus {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.7) inset;\n}\n\ni-button >button:focus {\n    outline: 0;\n}\n\ni-button.i-active.i-hover >button,\ni-button.i-active >button:hover,\ni-button.i-active.i-hover >button:focus,\ni-button.i-active >button:hover:focus,\ni-button.i-hover >button.pure-button-active,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-button >button.pure-button-active:hover,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-button.i-hover >button.pure-button-active:focus,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-button >button.pure-button-active:hover:focus,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-button >button.pure-button-active,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-button >button.pure-button-active:focus,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-button.i-hover >button:active,\ni-button >button:hover:active,\ni-button.i-hover >button:focus:active,\ni-button >button:hover:focus:active {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.8) inset, 0 0 6px rgba(0,0,0, 0.4) inset;\n}\n\ni-button.i-disabled >button,\ni-button[disabled=\"true\"] >button,\ni-button.i-disabled >button:active,\ni-button[disabled=\"true\"] >button:active,\ni-button.i-disabled >button.pure-button-active, /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-button[disabled=\"true\"] >button.pure-button-active,\ni-button.i-disabled.i-active >button,\ni-button.i-active[disabled=\"true\"] >button,\ni-button.i-disabled >button:focus,\ni-button[disabled=\"true\"] >button:focus,\ni-button.i-disabled.focussed >button,\ni-button.focussed[disabled=\"true\"] >button,\ni-button.i-disabled >button:hover,\ni-button[disabled=\"true\"] >button:hover {\n    border: none;\n    background-image: none;\n    filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);\n    filter: alpha(opacity=60);\n    -khtml-opacity: 0.60;\n    -moz-opacity: 0.60;\n    opacity: 0.60;\n    cursor: not-allowed;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n    cursor: default;\n}\n\ni-button.i-rounded >button {\n    border-radius: 0.3em;\n}\n\ni-button.i-heavyrounded >button {\n    border-radius: 0.5em;\n}\n\ni-button.i-oval >button {\n    border-radius: 50%;\n}\n\ni-button.i-halfoval >button {\n    border-radius: 25%;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1337:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1916:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 
@@ -29567,9 +31041,9 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 };
 
-},{"./css/i-button.css":1336,"i-formelement":1342,"itags.core":1352}],1338:[function(require,module,exports){
-var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-checkbox;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-checkbox:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-checkbox:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\ni-checkbox {\n    font-size: 0.9em;\n    margin: 0;\n    padding: 0;\n    display: inline-block;\n    position: relative;\n    vertical-align: middle;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    width: 4.5em;\n    height: 1.9em;\n}\n\ni-checkbox span {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-checkbox >span,\ni-checkbox >span >span,\ni-checkbox >span >span >span,\ni-checkbox >span >span >span >span {\n    display: block;\n}\n\n/* the first span is the focussable span */\ni-checkbox >span {\n    z-index: 1;\n    overflow: hidden;\n    border: 1px solid #CCC;\n    width: 100%;\n    height: 100%;\n}\n\ni-checkbox >span:focus .i-on,\ni-checkbox >span:focus .i-off {\n    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#00000000', endColorstr='#1a000000',GradientType=0);\n    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(transparent), color-stop(40%, rgba(0,0,0, 0.05)), to(rgba(0,0,0, 0.10)));\n    background-image: -webkit-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: -moz-linear-gradient(top, rgba(0,0,0, 0.05) 0%, rgba(0,0,0, 0.10));\n    background-image: -o-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.3) inset;\n}\n\ni-checkbox >span:focus .i-btn {\n    border: solid 1px #888;\n    box-shadow: inset 0 0.17em 0.5em rgba(0, 0, 0, 0.06);\n}\n\ni-checkbox .i-constrain {\n    height: 100%;\n    padding: 0;\n    margin: 0;\n    position: relative;\n    top: 0; /* left will be calculated by i-checkbox */\n}\n\ni-checkbox .i-container {\n    position: relative;\n    cursor: pointer;\n    padding: 0;\n    margin: 0;\n    height: 100%;\n    left: 0;\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    -khtml-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    -webkit-transition: left 0.25s;\n    -moz-transition: left 0.25s;\n    -ms-transition: left 0.25s;\n    -o-transition: left 0.25s;\n    transition: left 0.25s;\n}\n\ni-checkbox .i-on {\n    height: 100%;\n    background-color: #0078E7;\n    color: #FFF;\n    position: static;\n    text-align: center;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    padding-top: 2px;\n    float: left;\n    box-shadow: inset 0 0.3em 0.5em rgba(0, 0, 0, 0.18);\n}\n\ni-checkbox .i-off {\n    height: 100%;\n    background-color: #FFF;\n    color: #444;\n    position: static;\n    text-align: center;\n    padding-top: 2px;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    white-space: nowrap;\n    float: left;\n    box-shadow: inset 0 0.3em 0.5em rgba(0, 0, 0, 0.18);\n}\n\ni-checkbox .i-btn {\n    position: relative;\n    z-index: 1;\n    border-radius: 100%;\n    float: left;\n    box-shadow: inset 0 0.17em 0.5em rgba(0, 0, 0, 0.18);\n    background-color: #fff;\n    border: solid 1px #AAA;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1339:[function(require,module,exports){
+},{"./css/i-button.css":1915,"i-formelement":1921,"itags.core":1931}],1917:[function(require,module,exports){
+var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-checkbox;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-checkbox:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-checkbox:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\ni-checkbox {\n    font-size: 0.9em;\n    margin: 0;\n    padding: 0;\n    display: inline-block;\n    position: relative;\n    vertical-align: middle;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    width: 4.5em;\n    height: 1.9em;\n}\n\ni-checkbox span {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-checkbox >span,\ni-checkbox >span >span,\ni-checkbox >span >span >span,\ni-checkbox >span >span >span >span {\n    display: block;\n}\n\n/* the first span is the focussable span */\ni-checkbox >span {\n    z-index: 1;\n    overflow: hidden;\n    border: 1px solid #CCC;\n    width: 100%;\n    height: 100%;\n}\n\ni-checkbox >span:focus .i-on,\ni-checkbox >span:focus .i-off {\n    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#00000000', endColorstr='#1a000000',GradientType=0);\n    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(transparent), color-stop(40%, rgba(0,0,0, 0.05)), to(rgba(0,0,0, 0.10)));\n    background-image: -webkit-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: -moz-linear-gradient(top, rgba(0,0,0, 0.05) 0%, rgba(0,0,0, 0.10));\n    background-image: -o-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.3) inset;\n}\n\ni-checkbox >span:focus .i-btn {\n    border: solid 1px #888;\n    box-shadow: inset 0 0.17em 0.5em rgba(0, 0, 0, 0.06);\n}\n\ni-checkbox >span:focus .i-btn.dd-dragging {\n    cursor: default;\n}\n\ni-checkbox .i-constrain {\n    height: 100%;\n    padding: 0;\n    margin: 0;\n    position: relative;\n    top: 0; /* left will be calculated by i-checkbox */\n}\n\ni-checkbox .i-container {\n    position: relative;\n    cursor: pointer;\n    padding: 0;\n    margin: 0;\n    height: 100%;\n    left: 0;\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    -khtml-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    -webkit-transition: left 0.25s;\n    -moz-transition: left 0.25s;\n    -ms-transition: left 0.25s;\n    -o-transition: left 0.25s;\n    transition: left 0.25s;\n}\n\ni-checkbox .i-on {\n    height: 100%;\n    background-color: #0078E7;\n    color: #FFF;\n    position: static;\n    text-align: center;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    padding-top: 2px;\n    float: left;\n    box-shadow: inset 0 0.3em 0.5em rgba(0, 0, 0, 0.18);\n}\n\ni-checkbox .i-off {\n    height: 100%;\n    background-color: #FFF;\n    color: #444;\n    position: static;\n    text-align: center;\n    padding-top: 2px;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    white-space: nowrap;\n    float: left;\n    box-shadow: inset 0 0.3em 0.5em rgba(0, 0, 0, 0.18);\n}\n\ni-checkbox .i-btn {\n    position: relative;\n    z-index: 1;\n    border-radius: 100%;\n    float: left;\n    box-shadow: inset 0 0.17em 0.5em rgba(0, 0, 0, 0.18);\n    background-color: #fff;\n    border: solid 1px #AAA;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1918:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 
@@ -29806,9 +31280,9 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 };
 
-},{"./css/i-checkbox.css":1338,"i-formelement":1342,"itags.core":1352}],1340:[function(require,module,exports){
+},{"./css/i-checkbox.css":1917,"i-formelement":1921,"itags.core":1931}],1919:[function(require,module,exports){
 var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-select;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* =================================== */\n/* set invisiblity when not rendered   */\n/* =================================== */\ni-form.hide-children,\ni-form:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n/* ================================= */\n\n/*!\n * Most styles are from Pure v0.5.0\n * Licensed under the BSD License.\n*/\n\ni-form {\n    margin: 0;\n    padding: 0.25em 0.5em;\n    display: block;\n}\n\ni-form[active-labels=\"true\"] i-label {\n    cursor: default;\n}\n\ni-form fieldset {\n    margin: 0 0 0.8em;\n    padding: 0.75em 0;\n    border: 1px solid #C0C0C0;\n    border-radius: 2px;\n    background-color: rgba(0, 0, 0, 0.03);\n    width: 100%;\n    display: block;\n}\n\ni-form fieldset i-button {\n    margin-top: 0.75em;\n    margin-right: 0.25em;\n}\n\ni-form legend {\n    display: block;\n    width: 100%;\n    padding: 0.3em 0;\n    margin-bottom: 1em;\n    color: #333;\n    border-bottom: 1px solid #e5e5e5;\n}\n\ni-form div.i-formrow {\n    margin: 0;\n    padding: 0;\n    display: inline-block;\n}\n\n/* ======================================================== */\n/* Grouped Inputs */\ni-form.i-group:not(.i-aligned) i-label,\ni-form:not(.i-aligned) .i-group i-label {\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\ni-form.i-group [itag-formelement=\"true\"]:not(i-button),\ni-form .i-group [itag-formelement=\"true\"]:not(i-button) {\n    display: block;\n}\ni-form.i-group i-input input,\ni-form .i-group i-input input {\n    border-radius: 0;\n    position: relative;\n    top: -1px;\n}\ni-form.i-group div.i-formrow:first-child i-input input,\ni-form .i-group div.i-formrow:first-child i-input input {\n    top: 1px;\n    border-radius: 4px 4px 0 0;\n}\ni-form.i-group div.i-formrow:last-child i-input input,\ni-form .i-group div.i-formrow:last-child i-input input {\n    top: -2px;\n    border-radius: 0 0 4px 4px;\n}\ni-form.i-group div.i-formrow:first-child i-label,\ni-form .i-group div.i-formrow:first-child i-label {\n    margin-top: 1px;\n}\ni-form.i-group div.i-formrow:last-child i-label,\ni-form .i-group div.i-formrow:last-child i-label {\n    margin-top: -1px; /* not -2px: that would disturb appearance too much */;\n}\ni-form.i-group i-input input:focus,\ni-form .i-group i-input input:focus {\n    z-index: 2;\n}\ni-form.i-group i-button,\ni-form.i-group i-select,\ni-form .i-group i-button,\ni-form .i-group i-select {\n    margin: 0.35em 0;\n}\n/* ======================================================== */\n\n\n\n/* ======================================================== */\n/* Stacked */\ni-form.i-stacked div.i-formrow {\n    display: block;\n}\ni-form.i-stacked div.i-formrow.itag-noblock i-label {\n    display: inline-block;\n    margin-right: 1em;\n}\ni-form.i-stacked [itag-formelement=\"true\"]:not(i-button) {\n    display: block;\n    margin: 0.25em 0;\n}\ni-form.i-stacked div.i-formrow.itag-noblock [itag-formelement=\"true\"]:not(i-button) {\n    display: inline-block;\n    margin: 0;\n}\ni-form.i-stacked i-label {\n    display: block;\n    margin: 1em 0 0.4em 0.15em;\n}\ni-form.i-stacked fieldset div.i-formrow:first-child i-label {\n    margin-top: 0;\n}\ni-form.i-stacked .i-group i-input,\ni-form.i-aligned .i-group i-input,\ni-form .i-stacked .i-group i-input,\ni-form .i-aligned .i-group i-input {\n    margin: 0;\n}\n/* ======================================================== */\n\n\n\n/* ======================================================== */\n/* Aligned */\ni-form.i-aligned div.i-formrow {\n    display: block;\n}\ni-form.i-aligned i-label,\ni-form.i-aligned i-button,\ni-form.i-aligned [itag-formelement=\"true\"]:not(i-button) {\n    display: inline-block;\n    *display: inline;\n    *zoom: 1;\n    vertical-align: middle;\n}\ni-form.i-aligned div.i-formrow {\n    margin-bottom: 1em;\n}\ni-form.i-aligned .i-group div.i-formrow,\ni-form .i-aligned .i-group div.i-formrow {\n    margin-bottom: 0;\n}\ni-form.i-aligned div.i-formrow:last-child {\n    margin-bottom: 0;\n}\ni-form.i-aligned i-label {\n    text-align: right;\n    display: inline-block;\n    vertical-align: middle;\n    width: 10em;\n    margin: 0 1em 0 0;\n}\ni-form.i-aligned i-textarea {\n    vertical-align: top;\n}\ni-form.i-aligned.i-group,\ni-form.i-aligned .i-group {\n    margin-bottom: 0.8em;\n}\ni-form.i-aligned.i-group i-label label,\ni-form.i-aligned .i-group i-label label {\n    text-align: right;\n}\ni-form.i-aligned fieldset i-button:first-child {\n    margin-left: 11em;\n}\n/* ======================================================== */\n\n\n\n/* ======================================================== */\n/* Inline help for forms */\ni-form .message-inline {\n    display: inline-block;\n    padding-left: 0.3em;\n    color: #666;\n    vertical-align: middle;\n    font-size: 0.875em;\n}\n\n/* Block help for forms */\ni-form .message {\n    display: block;\n    color: #666;\n    font-size: 0.875em;\n}\n/* ======================================================== */\n\n\n\n@media only screen and (max-width : 480px) {\n    i-form {\n        display: block;\n        width: 100%;\n    }\n\n    i-form i-label,\n    i-form.i-aligned i-label {\n        display: block;\n        text-align: left;\n        margin: 1em 0 0.4em 3px; /* 3px as lect-padding --> needs to fit .itag-noblock labels  */\n    }\n\n    i-form fieldset div.i-formrow:first-child i-label,\n    i-form.i-aligned fieldset div.i-formrow:first-child i-label {\n        margin-top: 0;\n    }\n\n    i-form.i-aligned div.i-formrow.itag-noblock i-label {\n        display: inline-block;\n        width: 100%;\n        padding-left: 85px;  /* 82 + 3 extra pixels  */\n        margin-left: -82px;\n        margin-bottom: 0;\n    }\n\n    i-form.i-aligned div.i-formrow.itag-noblock i-checkbox {\n        margin-right: 12px;\n        width: 70px !important;\n    }\n\n    i-form.i-aligned div.i-formrow.itag-noblock {\n        text-align: right;\n    }\n\n    i-form.i-group i-label,\n    i-form .i-group i-label {\n        opacity: 0 !important;\n        position: absolute !important;\n        left: -9999px !important;\n        top: -9999px !important;\n        z-index: -1;\n    }\n\n    i-form i-input {\n        display: block;\n        text-align: left;\n        margin-bottom: 0.3em;\n    }\n\n    i-form.i-group i-input,\n    i-form .i-group i-input {\n        margin-bottom: 0em;\n    }\n\n    i-form.i-aligned .control {\n        margin: 1.5em 0 0 0;\n    }\n\n    i-form i-button,\n    i-form i-select {\n        display: block;\n        width: 100%;\n    }\n\n    i-form fieldset i-button {\n        margin-right: 0;\n        margin-top: 0;\n    }\n\n    i-form.i-aligned fieldset i-button:first-child {\n        margin-left: 0;\n    }\n\n    i-form i-button button,\n    i-form i-select >button,\n    i-form i-select >div >div {\n        width: 100%;\n    }\n\n    i-form i-select >button {\n        max-width: inherit;\n    }\n\n    i-form i-select > button div.btntext {\n        margin: 0;\n        max-width: inherit;\n        width: 100%;\n        text-align: center;\n    }\n\n    i-form i-select li {\n        text-align: center;\n    }\n\n    i-form i-button:last-child {\n        margin: 1em 0 0;\n    }\n\n    i-form .message-inline,\n    i-form .message {\n        display: block;\n        font-size: 0.75em;\n        /* Increased bottom padding to make it group with its related input element. */\n        padding: 0.2em 0 0.8em;\n    }\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1341:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1920:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 
@@ -30036,7 +31510,7 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 };
 
-},{"./css/i-form.css":1340,"itags.core":1352}],1342:[function(require,module,exports){
+},{"./css/i-form.css":1919,"itags.core":1931}],1921:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 
@@ -30060,9 +31534,9 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 };
 
-},{"itags.core":1352}],1343:[function(require,module,exports){
+},{"itags.core":1931}],1922:[function(require,module,exports){
 var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-input;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-input:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-input:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\ni-input {\n    margin: 0;\n    display: inline-block;\n    width: 12em;\n    position: relative;\n    vertical-align: middle;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-input > input {\n    color: inherit;\n    font: inherit;\n    margin: 0;\n    padding: 0.5em 0.6em;\n    display: inline-block;\n    border: 1px solid #ccc;\n    box-shadow: inset 0 1px 3px #ddd;\n    border-radius: 4px;\n    line-height: normal;\n    width: 100%; /* within the i-input always 100% */\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\nhtml i-input[disabled] > input {\n    cursor: not-allowed;\n    background-color: #eaeded;\n    color: #cad2d3;\n}\n\ni-input > input::-moz-focus-inner {\n  border: 0;\n  padding: 0;\n}\n\n\ni-input > input:focus,\ni-input.focussed > input {\n    outline: 0;\n    outline: thin dotted \\9; /* IE6-9 */\n    border-color: #129FEA;\n}\n\ni-input[readonly=\"true\"] > input {\n    background: #eee; /* menu hover bg color */\n    color: #777; /* menu text color */\n    border-color: #ccc;\n}\n\ni-input > input:focus:invalid {\n    color: #b94a48;\n    border-color: #ee5f5b;\n}\n\ni-input > input:focus:invalid:focus {\n    border-color: #e9322d;\n}\n\ni-input.i-rounded > input {\n    border-radius: 2em;\n    padding: 0.5em 1em;\n}\n\ni-input.i-input-1 {\n    width: 100%;\n}\ni-input.i-input-2-3 {\n    width: 66%;\n}\ni-input.i-input-1-2 {\n    width: 50%;\n}\ni-input.i-input-1-3 {\n    width: 33%;\n}\ni-input.i-input-1-4 {\n    width: 25%;\n}\n\n@media only screen and (max-width : 480px) {\n    i-input {\n        margin-bottom: 0.3em;\n        display: block;\n    }\n}\n\n"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1344:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1923:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 
@@ -30173,7 +31647,7 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 };
 
-},{"./css/i-input.css":1343,"i-formelement":1342,"itags.core":1352}],1345:[function(require,module,exports){
+},{"./css/i-input.css":1922,"i-formelement":1921,"itags.core":1931}],1924:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 
@@ -30286,7 +31760,7 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 };
 
-},{"itags.core":1352}],1346:[function(require,module,exports){
+},{"itags.core":1931}],1925:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 
@@ -30324,9 +31798,9 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 };
 
-},{"i-button":1337,"itags.core":1352}],1347:[function(require,module,exports){
+},{"i-button":1916,"itags.core":1931}],1926:[function(require,module,exports){
 var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-select;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-select:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-select:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\ni-select {\n    margin: 0;\n    display: inline-block;\n    *display: inline; /*IE 6/7*/\n    zoom: 1;\n    position: relative;\n    vertical-align: middle;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-select >span {\n    position: relative;\n    z-index: 2;\n    -webkit-transition: opacity 0.1s;\n    -moz-transition: opacity 0.1s;\n    -ms-transition: opacity 0.1s;\n    -o-transition: opacity 0.1s;\n    transition: opacity 0.1s;\n    opacity: 0;\n}\n\ni-select >span.i-select-show {\n    -webkit-transition: opacity 0.2s;\n    -moz-transition: opacity 0.2s;\n    -ms-transition: opacity 0.2s;\n    -o-transition: opacity 0.2s;\n    transition: opacity 0.2s;\n    opacity: 1;\n}\n\ni-select >button >span,\ni-select >span,\ni-select >span >span,\ni-select >span >span >span {\n    display: block;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-select.i-primary >button,\ni-select.i-focussed >button {\n    background-color: rgb(0, 120, 231);\n    color: #fff;\n}\n\n/*csslint outline-none:false*/\n\ni-select >button {\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    -khtml-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    position: relative;\n    padding: 0.5em 0;\n    max-width: 8em;\n    color: inherit; /* 1 */\n    font: inherit; /* 2 */\n    margin: 0; /* 3 */\n    overflow: visible;\n    text-transform: none;\n    -webkit-appearance: button; /* 2 */\n    line-height: normal;\n    white-space: nowrap;\n    vertical-align: baseline;\n    text-align: center;\n    cursor: pointer;\n    -webkit-user-drag: none;\n    -webkit-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    font-family: inherit;\n    font-size: 100%;\n    color: #444; /* rgba not supported (IE 8) */\n    color: rgba(0, 0, 0, 0.80); /* rgba supported */\n    border: 1px solid #999;  /*IE 6/7/8*/\n    border: none rgba(0, 0, 0, 0);  /*IE9 + everything else*/\n    background-color: #E6E6E6;\n    text-decoration: none;\n    border-radius: 2px;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n}\n\n/* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select.i-hover >button,\ni-select >button:hover,\ni-select >button:focus {\n    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#00000000', endColorstr='#1a000000',GradientType=0);\n    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(transparent), color-stop(40%, rgba(0,0,0, 0.05)), to(rgba(0,0,0, 0.10)));\n    background-image: -webkit-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: -moz-linear-gradient(top, rgba(0,0,0, 0.05) 0%, rgba(0,0,0, 0.10));\n    background-image: -o-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n}\ni-select >button:focus {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.6) inset;\n    outline: 0;\n}\ni-select.i-active.i-hover >button,\ni-select.i-active >button:hover,\ni-select.i-active.i-hover >button:focus,\ni-select.i-active >button:hover:focus,\ni-select.i-hover >button.pure-button-active,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select >button.pure-button-active:hover,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select.i-hover >button.pure-button-active:focus,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select >button.pure-button-active:hover:focus,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select >button.pure-button-active,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select >button.pure-button-active:focus,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select.i-hover >button:active,\ni-select >button:hover:active,\ni-select.i-hover >button:focus:active,\ni-select >button:hover:focus:active {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.8) inset, 0 0 6px rgba(0,0,0, 0.4) inset;\n}\n\ni-select.i-disabled >button,\ni-select[disabled=\"true\"] >button,\ni-select.i-disabled >button:active,\ni-select[disabled=\"true\"] >button:active,\ni-select.i-disabled >button.pure-button-active, /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select[disabled=\"true\"] >button.pure-button-active,\ni-select.i-disabled.i-active >button,\ni-select.i-active[disabled=\"true\"] >button,\ni-select.i-disabled >button:focus,\ni-select[disabled=\"true\"] >button:focus,\ni-select.i-disabled.focussed >button,\ni-select.focussed[disabled=\"true\"] >button,\ni-select.i-disabled >button:hover,\ni-select[disabled=\"true\"] >button:hover {\n    border: none;\n    background-image: none;\n    filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);\n    filter: alpha(opacity=60);\n    -khtml-opacity: 0.60;\n    -moz-opacity: 0.60;\n    opacity: 0.60;\n    cursor: not-allowed;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n    cursor: default;\n}\n\ni-select.i-rounded >button {\n    border-radius: 0.3em;\n}\n\ni-select.i-heavyrounded >button {\n    border-radius: 0.5em;\n}\n\ni-select.i-oval >button {\n    border-radius: 50%;\n}\n\ni-select.i-halfoval >button {\n    border-radius: 25%;\n}\n\ni-select.i-hidden {\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -9;\n}\n\ni-select >button::-moz-focus-inner {\n  border: 0;\n  padding: 0;\n}\n\ni-select >button >span.btntext {\n    margin: 0 1.25em 0 1em;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 8em;\n    display: block;\n}\n\ni-select >button >span.pointer {\n    border-left: 0.4em solid rgba(0, 0, 0, 0);\n    border-right: 0.4em solid rgba(0, 0, 0, 0);\n    border-top: 0.5em solid #000;\n    right: 0.25em;\n    position: absolute;\n    bottom: 0.2em;\n}\n\ni-select >button.i-nonexpandable span.btntext {\n    margin: 0 1em;\n}\n\ni-select >button.i-nonexpandable span.pointer {\n    visibility: hidden;\n}\n\ni-select >span >span {\n    position: absolute;\n    left: 0;\n    top: 0;\n    cursor: pointer;\n    border-style: solid;\n    border-width: 0.1em;\n    -webkit-border-radius: 0 0 0.3em 0.3em;\n    -moz-border-radius: 0 0 0.3em 0.3em;\n    border-radius: 0 0 0.3em 0.3em;\n    -webkit-box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n    -moz-box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n    box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n}\n\ni-select >span >span >span {\n    font-size: 1.2em;\n    padding: 0 0 0.3em;\n    list-style: none;\n    margin: 0;\n}\n\ni-select option {\n    padding: 0.25em 0.7em;\n    white-space: nowrap;\n}\n\ni-select option.focussed {\n    background-color: #B3D4FF;\n}\n\ni-select option.selected:before {\n    content: '*';\n    margin-left: -0.7em;\n    padding-right: 0.25em;\n}\n\ni-select option:before,\ni-select option:after {\n    content: '';\n    padding: 0;\n    margin: 0;\n}\n\n/* color specification:; */\n\ni-select >span >span {\n    background-color: #FFF;\n    border-color: #000;\n}\n\ni-select option:hover {\n    background-color: #B3D4FF;\n}\n\ni-select.i-focused > button span.pointer,\ni-select.i-primary > button span.pointer {\n    border-top: 0.5em solid #FEFEFE;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1348:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1927:[function(require,module,exports){
 /**
  * Provides several methods that override native Element-methods to work with the vdom.
  *
@@ -30708,9 +32182,9 @@ module.exports = function (window) {
 
     return window.ITAGS[itagName];
 };
-},{"./css/i-select.css":1347,"i-formelement":1342,"itags.core":1352}],1349:[function(require,module,exports){
+},{"./css/i-select.css":1926,"i-formelement":1921,"itags.core":1931}],1928:[function(require,module,exports){
 var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-tabpane;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-tabpane:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-tabpane:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\ni-tabpane {\n    /* make it accept width and height by swith from :inline\" to \"inline-block\"*/\n    display: inline-block;\n    *display: block;\n    *zoom: 1;\n}\n\ni-tabpane >ul {\n    margin:0;\n    padding:0;\n    list-style:none;\n    height: 1.9em;\n    overflow: hidden;\n}\n\ni-tabpane >ul li div {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    opacity: 0.6;\n    margin: 0;\n    padding: 0;\n    border: none;\n}\n\ni-tabpane >ul li:hover div {\n    opacity: 0.8;\n}\n\ni-tabpane >ul li.pure-button-active div,\ni-tabpane >ul li:active div {\n    opacity: 1;\n}\n\ni-tabpane >ul li {\n    display: inline-block;\n    *display: inline; /* IE */\n    *zoom: 1; /* IE */\n    margin-right: 0.25em;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n}\n\ni-tabpane >ul li.pure-button {\n    display: inline-block;\n    *display: inline; /* IE */\n    *zoom: 1; /* IE */\n    margin-right: 0.2em;\n    border-radius: 2px 2px 0 0;\n    border-bottom: none;\n}\n\ni-tabpane >div {\n    height: 100%;\n    margin-top: -2.18em;\n    padding-top: 2.18em;\n}\n\ni-tabpane >div >div.container {\n    border: 1px solid #2647a0;\n    border-top: 5px solid #2647a0;\n    padding: 0.25em 0.5em;\n    height: 100%;\n    width: 100%;\n    overflow: scroll;\n}\n"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1350:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1929:[function(require,module,exports){
 /*
 * attributes:
 * value, expanded, primary-button
@@ -30918,9 +32392,9 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 
 };
-},{"./css/i-tabpane.css":1349,"itags.core":1352}],1351:[function(require,module,exports){
+},{"./css/i-tabpane.css":1928,"itags.core":1931}],1930:[function(require,module,exports){
 var css = "span.itag-data {\n    display: none !important;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1352:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1931:[function(require,module,exports){
 (function (global){
 /*jshint proto:true */
 
@@ -30948,7 +32422,6 @@ var NAME = '[itags.core]: ',
     asyncSilent = ITSA.asyncSilent,
     laterSilent = ITSA.laterSilent,
     Event = ITSA.Event,
-    IO = ITSA.IO,
     Classes = ITSA.Classes,
     CLASS_ITAG_RENDERED = 'itag-rendered',
     DEFAULT_CHAIN_INIT = true,
@@ -31957,11 +33430,6 @@ module.exports = function (window) {
                         }
                     }
                 });
-
-                IO.finalize(function() {
-                    console.info('IO-finalizer will refresh itags');
-                    allowedToRefreshItags && DOCUMENT.refreshItags();
-                });
             }
 
             if (PROTO_SUPPORTED) {
@@ -32792,9 +34260,9 @@ module.exports = function (window) {
     return itagCore;
 };
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./css/itags.core.css":1351,"itsa":2}],1353:[function(require,module,exports){
+},{"./css/itags.core.css":1930,"itsa":2}],1932:[function(require,module,exports){
 
-},{}],1354:[function(require,module,exports){
+},{}],1933:[function(require,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -33965,7 +35433,7 @@ function assert (test, message) {
   if (!test) throw new Error(message || 'Failed assertion')
 }
 
-},{"base64-js":1355,"ieee754":1356}],1355:[function(require,module,exports){
+},{"base64-js":1934,"ieee754":1935}],1934:[function(require,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
@@ -34087,7 +35555,7 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	exports.fromByteArray = uint8ToBase64
 }(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
 
-},{}],1356:[function(require,module,exports){
+},{}],1935:[function(require,module,exports){
 exports.read = function(buffer, offset, isLE, mLen, nBytes) {
   var e, m,
       eLen = nBytes * 8 - mLen - 1,
@@ -34173,7 +35641,7 @@ exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128;
 };
 
-},{}],1357:[function(require,module,exports){
+},{}],1936:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -34478,7 +35946,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],1358:[function(require,module,exports){
+},{}],1937:[function(require,module,exports){
 var http = module.exports;
 var EventEmitter = require('events').EventEmitter;
 var Request = require('./lib/request');
@@ -34617,7 +36085,7 @@ http.STATUS_CODES = {
     510 : 'Not Extended',               // RFC 2774
     511 : 'Network Authentication Required' // RFC 6585
 };
-},{"./lib/request":1359,"events":1357,"url":1383}],1359:[function(require,module,exports){
+},{"./lib/request":1938,"events":1936,"url":1962}],1938:[function(require,module,exports){
 var Stream = require('stream');
 var Response = require('./response');
 var Base64 = require('Base64');
@@ -34811,7 +36279,7 @@ var indexOf = function (xs, x) {
     return -1;
 };
 
-},{"./response":1360,"Base64":1361,"inherits":1363,"stream":1382}],1360:[function(require,module,exports){
+},{"./response":1939,"Base64":1940,"inherits":1942,"stream":1961}],1939:[function(require,module,exports){
 var Stream = require('stream');
 var util = require('util');
 
@@ -34933,7 +36401,7 @@ var isArray = Array.isArray || function (xs) {
     return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{"stream":1382,"util":1385}],1361:[function(require,module,exports){
+},{"stream":1961,"util":1964}],1940:[function(require,module,exports){
 ;(function () {
 
   var object = typeof exports != 'undefined' ? exports : this; // #8: web workers
@@ -34995,7 +36463,7 @@ var isArray = Array.isArray || function (xs) {
 
 }());
 
-},{}],1362:[function(require,module,exports){
+},{}],1941:[function(require,module,exports){
 var http = require('http');
 
 var https = module.exports;
@@ -35010,7 +36478,7 @@ https.request = function (params, cb) {
     return http.request.call(this, params, cb);
 }
 
-},{"http":1358}],1363:[function(require,module,exports){
+},{"http":1937}],1942:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -35035,12 +36503,12 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],1364:[function(require,module,exports){
+},{}],1943:[function(require,module,exports){
 module.exports = Array.isArray || function (arr) {
   return Object.prototype.toString.call(arr) == '[object Array]';
 };
 
-},{}],1365:[function(require,module,exports){
+},{}],1944:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -35105,7 +36573,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],1366:[function(require,module,exports){
+},{}],1945:[function(require,module,exports){
 (function (global){
 /*! http://mths.be/punycode v1.2.4 by @mathias */
 ;(function(root) {
@@ -35616,7 +37084,7 @@ process.chdir = function (dir) {
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],1367:[function(require,module,exports){
+},{}],1946:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -35702,7 +37170,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],1368:[function(require,module,exports){
+},{}],1947:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -35789,16 +37257,16 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],1369:[function(require,module,exports){
+},{}],1948:[function(require,module,exports){
 'use strict';
 
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
-},{"./decode":1367,"./encode":1368}],1370:[function(require,module,exports){
+},{"./decode":1946,"./encode":1947}],1949:[function(require,module,exports){
 module.exports = require("./lib/_stream_duplex.js")
 
-},{"./lib/_stream_duplex.js":1371}],1371:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":1950}],1950:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -35891,7 +37359,7 @@ function forEach (xs, f) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_readable":1373,"./_stream_writable":1375,"_process":1365,"core-util-is":1376,"inherits":1363}],1372:[function(require,module,exports){
+},{"./_stream_readable":1952,"./_stream_writable":1954,"_process":1944,"core-util-is":1955,"inherits":1942}],1951:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -35939,7 +37407,7 @@ PassThrough.prototype._transform = function(chunk, encoding, cb) {
   cb(null, chunk);
 };
 
-},{"./_stream_transform":1374,"core-util-is":1376,"inherits":1363}],1373:[function(require,module,exports){
+},{"./_stream_transform":1953,"core-util-is":1955,"inherits":1942}],1952:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -36902,7 +38370,7 @@ function indexOf (xs, x) {
 }
 
 }).call(this,require('_process'))
-},{"_process":1365,"buffer":1354,"core-util-is":1376,"events":1357,"inherits":1363,"isarray":1364,"stream":1382,"string_decoder/":1377}],1374:[function(require,module,exports){
+},{"_process":1944,"buffer":1933,"core-util-is":1955,"events":1936,"inherits":1942,"isarray":1943,"stream":1961,"string_decoder/":1956}],1953:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -37114,7 +38582,7 @@ function done(stream, er) {
   return stream.push(null);
 }
 
-},{"./_stream_duplex":1371,"core-util-is":1376,"inherits":1363}],1375:[function(require,module,exports){
+},{"./_stream_duplex":1950,"core-util-is":1955,"inherits":1942}],1954:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -37505,7 +38973,7 @@ function endWritable(stream, state, cb) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_duplex":1371,"_process":1365,"buffer":1354,"core-util-is":1376,"inherits":1363,"stream":1382}],1376:[function(require,module,exports){
+},{"./_stream_duplex":1950,"_process":1944,"buffer":1933,"core-util-is":1955,"inherits":1942,"stream":1961}],1955:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -37615,7 +39083,7 @@ function objectToString(o) {
   return Object.prototype.toString.call(o);
 }
 }).call(this,require("buffer").Buffer)
-},{"buffer":1354}],1377:[function(require,module,exports){
+},{"buffer":1933}],1956:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -37817,10 +39285,10 @@ function base64DetectIncompleteChar(buffer) {
   return incomplete;
 }
 
-},{"buffer":1354}],1378:[function(require,module,exports){
+},{"buffer":1933}],1957:[function(require,module,exports){
 module.exports = require("./lib/_stream_passthrough.js")
 
-},{"./lib/_stream_passthrough.js":1372}],1379:[function(require,module,exports){
+},{"./lib/_stream_passthrough.js":1951}],1958:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Readable = exports;
 exports.Writable = require('./lib/_stream_writable.js');
@@ -37828,13 +39296,13 @@ exports.Duplex = require('./lib/_stream_duplex.js');
 exports.Transform = require('./lib/_stream_transform.js');
 exports.PassThrough = require('./lib/_stream_passthrough.js');
 
-},{"./lib/_stream_duplex.js":1371,"./lib/_stream_passthrough.js":1372,"./lib/_stream_readable.js":1373,"./lib/_stream_transform.js":1374,"./lib/_stream_writable.js":1375}],1380:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":1950,"./lib/_stream_passthrough.js":1951,"./lib/_stream_readable.js":1952,"./lib/_stream_transform.js":1953,"./lib/_stream_writable.js":1954}],1959:[function(require,module,exports){
 module.exports = require("./lib/_stream_transform.js")
 
-},{"./lib/_stream_transform.js":1374}],1381:[function(require,module,exports){
+},{"./lib/_stream_transform.js":1953}],1960:[function(require,module,exports){
 module.exports = require("./lib/_stream_writable.js")
 
-},{"./lib/_stream_writable.js":1375}],1382:[function(require,module,exports){
+},{"./lib/_stream_writable.js":1954}],1961:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -37963,7 +39431,7 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"events":1357,"inherits":1363,"readable-stream/duplex.js":1370,"readable-stream/passthrough.js":1378,"readable-stream/readable.js":1379,"readable-stream/transform.js":1380,"readable-stream/writable.js":1381}],1383:[function(require,module,exports){
+},{"events":1936,"inherits":1942,"readable-stream/duplex.js":1949,"readable-stream/passthrough.js":1957,"readable-stream/readable.js":1958,"readable-stream/transform.js":1959,"readable-stream/writable.js":1960}],1962:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -38672,14 +40140,14 @@ function isNullOrUndefined(arg) {
   return  arg == null;
 }
 
-},{"punycode":1366,"querystring":1369}],1384:[function(require,module,exports){
+},{"punycode":1945,"querystring":1948}],1963:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],1385:[function(require,module,exports){
+},{}],1964:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -39269,7 +40737,7 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":1384,"_process":1365,"inherits":1363}],"itags":[function(require,module,exports){
+},{"./support/isBuffer":1963,"_process":1944,"inherits":1942}],"itags":[function(require,module,exports){
 (function (global){
 /**
  * The ITSA module is an aggregator for all the individual modules that the library uses.
@@ -39301,4 +40769,4 @@ function hasOwnProperty(obj, prop) {
 
 })(global.window || require('node-win'));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"i-button":1337,"i-checkbox":1339,"i-form":1341,"i-input":1344,"i-label":1345,"i-reset":1346,"i-select":1348,"i-tabpane":1350,"node-win":1325}]},{},[]);
+},{"i-button":1916,"i-checkbox":1918,"i-form":1920,"i-input":1923,"i-label":1924,"i-reset":1925,"i-select":1927,"i-tabpane":1929,"node-win":1904}]},{},[]);

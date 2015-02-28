@@ -55,7 +55,6 @@ YUI.add("yuidoc-meta", function(Y) {
         "io-cors",
         "io-transfer",
         "io-xml",
-        "io-xml",
         "itags.core",
         "itsa.build",
         "js-ext",

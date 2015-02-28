@@ -242,7 +242,6 @@ var NAME = &#x27;[itags.core]: &#x27;,
     asyncSilent = ITSA.asyncSilent,
     laterSilent = ITSA.laterSilent,
     Event = ITSA.Event,
-    IO = ITSA.IO,
     Classes = ITSA.Classes,
     CLASS_ITAG_RENDERED = &#x27;itag-rendered&#x27;,
     DEFAULT_CHAIN_INIT = true,
@@ -1250,11 +1249,6 @@ module.exports = function (window) {
                             }
                         }
                     }
-                });
-
-                IO.finalize(function() {
-                    console.info(&#x27;IO-finalizer will refresh itags&#x27;);
-                    allowedToRefreshItags &amp;&amp; DOCUMENT.refreshItags();
                 });
             }
 
