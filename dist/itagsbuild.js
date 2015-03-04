@@ -180,6 +180,7 @@ module.exports.byUrl = function(url) {
     */
     require('node-plugin')(window);
     require('constrain')(window);
+    require('panel')(window);
 
     ITSA.merge(require('utils'));
     ITSA.RESERVED_WORDS = require('js-ext/extra/reserved-words.js');
@@ -231,7 +232,7 @@ module.exports.byUrl = function(url) {
 })(global.window || require('node-win'));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"constrain":3,"css":148,"drag-drop":150,"event":868,"event-dom/extra/blurnode.js":709,"event-dom/extra/focusnode.js":710,"event-dom/extra/hover.js":711,"event-dom/extra/valuechange.js":712,"event-mobile":783,"event/extra/objectobserve.js":865,"focusmanager":885,"io/extra/io-cors-ie9.js":1126,"io/extra/io-stream.js":1127,"io/extra/io-transfer.js":1128,"io/extra/io-xml.js":1129,"js-ext/extra/reserved-words.js":1154,"js-ext/js-ext.js":1155,"node-plugin":1166,"node-win":1307,"polyfill/polyfill.js":1320,"scrollable":1839,"useragent":1848,"utils":1849,"vdom":1895,"window-ext":1896}],3:[function(require,module,exports){
+},{"constrain":3,"css":148,"drag-drop":150,"event":865,"event-dom/extra/blurnode.js":709,"event-dom/extra/focusnode.js":710,"event-dom/extra/hover.js":711,"event-dom/extra/valuechange.js":712,"event-mobile":783,"event/extra/objectobserve.js":862,"focusmanager":883,"io/extra/io-cors-ie9.js":1124,"io/extra/io-stream.js":1125,"io/extra/io-transfer.js":1126,"io/extra/io-xml.js":1127,"js-ext/extra/reserved-words.js":1152,"js-ext/js-ext.js":1153,"node-plugin":1164,"node-win":1305,"panel":2078,"polyfill/polyfill.js":2085,"scrollable":2604,"useragent":2613,"utils":2614,"vdom":2660,"window-ext":2661}],3:[function(require,module,exports){
 "use strict";
 module.exports = function (window) {
     require('node-plugin')(window);
@@ -286,17 +287,15 @@ module.exports = {
 "use strict";
 
 /**
- * Integrates DOM-events to event. more about DOM-events:
- * http://www.smashingmagazine.com/2013/11/12/an-introduction-to-dom-events/
+ * Basic NodePlugin Class for plugin's on HTMLElements.
  *
  *
  * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
  * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
  *
  *
- * @module vdom
- * @submodule element-plugin
- * @class Plugins
+ * @module node-plugin
+ * @class NodePlugin
  * @since 0.0.1
 */
 
@@ -402,6 +401,14 @@ module.exports = function (window) {
         scroll: true
     };
 
+    /*
+     * Inspects the DOM for Elements that have the plugin defined by their html and plugs the Plugin-Class.
+     *
+     * @method pluginDOM
+     * @param NewClass {Class} the class to be inspected
+     * @protected
+     * @since 0.0.1
+     */
     pluginDOM = function(NewClass) {
         // asynchroniously we check all current elements and render when needed:
         var ns = NewClass.prototype.$ns;
@@ -416,11 +423,19 @@ module.exports = function (window) {
         });
     };
 
+    /*
+     * Inspects the DOM for Elements that have the plugin defined and and initialized. Then it will resyncs the plugin.
+     *
+     * @method pluginDOMresync
+     * @param NewClass {Class} the class to be inspected
+     * @protected
+     * @since 0.0.1
+     */
     pluginDOMresync = function(NewClass) {
         // asynchroniously we check all current elements and render when needed:
         var ns = NewClass.prototype.$ns;
         asyncSilent(function() {
-            var elements = DOCUMENT.getAll('[plugin-'+ns+'="true"]', true),
+            var elements = DOCUMENT.getAll('[plugin-'+ns+'="true"]['+ns+'-ready="true"]', true),
                 len = elements.length,
                 element, i;
             for (i=0; i<len; i++) {
@@ -430,6 +445,15 @@ module.exports = function (window) {
         });
     };
 
+    /*
+     * Sets the config (first) and then the attribute-values into the plugin's model.
+     *
+     * @method attrsToModel
+     * @param plugin {Object} the plugin-instance
+     * @param config {Object} config
+     * @protected
+     * @since 0.0.1
+     */
     attrsToModel = function(plugin, config) {
         var host = plugin.host,
             attrs = plugin.attrs,
@@ -476,6 +500,14 @@ module.exports = function (window) {
         });
     };
 
+    /*
+     * Sets the plugin.model properties into the attributes. Only those properties that are specified by `attrs` are set.
+     *
+     * @method modelToAttrs
+     * @param plugin {Object} the plugin-instance
+     * @protected
+     * @since 0.0.1
+     */
     modelToAttrs = function(plugin) {
         console.log(NAME+'modelToAttrs');
         var attrs = plugin.attrs,
@@ -491,6 +523,15 @@ module.exports = function (window) {
         }
     };
 
+    /*
+     * Syncs the plugin: both sets the attributes as well invoking `sync`.
+     *
+     * @method syncPlugin
+     * @param plugin {Object} the plugin-instance
+     * @param compareWithPrevData {Boolean} whether to sync "no matter what" or only when pervious modeldata was changed.
+     * @protected
+     * @since 0.0.1
+     */
     syncPlugin = function(plugin, compareWithPrevData) {
         var stringifiedModel;
         if (compareWithPrevData) {
@@ -516,6 +557,15 @@ module.exports = function (window) {
         plugin.sync();
     };
 
+    /*
+     * In case `object.observe` is not present, will setup automaticly refresing the plugin on model-changes.
+     * Does not do anything when `object.observe` is present, because the object-observer takes care of this.
+     *
+     * @method autoRefreshPlugin
+     * @param plugin {Object} the plugin-instance
+     * @protected
+     * @since 0.0.1
+     */
     autoRefreshPlugin = function(plugin) {
         if (!NATIVE_OBJECT_OBSERVE) {
             plugin._EventFinalizer = Event.finalize(function(e) {
@@ -546,6 +596,7 @@ module.exports = function (window) {
        /**
         * Checks whether the plugin is plugged in at the HtmlElement. Checks whether all its attributes are set.
         *
+        * @for HTMLElement
         * @method isPlugged
         * @param plugin {String} The name of the plugin that should be plugged. Needs to be the Class, not an instance!
         * @return {Boolean} whether the plugin is plugged in
@@ -578,29 +629,29 @@ module.exports = function (window) {
         * @param plugin {String} The name of the plugin that should be plugged.
         * @param [config] {Object} any config that should be passed through when the class is instantiated.
         * @param [model] {Object} model to used as `ns.model`
-        * @chainable
+        * @return {Object|undefined} the plugin's instance, or undefined in case of an unregistered plugin
         * @since 0.0.1
         */
         HTMLElementPrototype.plug = function(plugin, config, model) {
             var instance = this,
                 Plugin;
             if (typeof plugin==='string') {
-                Plugin = window._ITSAPlugins[plugin];
-                if (Plugin) {
-                    if (!instance.isPlugged(Plugin)) {
+                if (window._ITSAPlugins[plugin]) {
+                    if (!instance._plugin || !instance._plugin[plugin]) {
                         instance._plugin || Object.protectedProp(instance, '_plugin', {});
+                        Plugin = window._ITSAPlugins[plugin];
                         instance._plugin[plugin] = new Plugin(instance, config, model);
                     }
                     else {
                         console.info('ElementPlugin '+plugin+' already plugged in');
                         model && instance._plugin[plugin].bindModel(model);
                     }
+                    return instance._plugin[plugin];
                 }
                 else {
                     console.warn('Plugin '+plugin+' is not registered');
                 }
             }
-            return instance;
         };
 
        /**
@@ -630,7 +681,7 @@ module.exports = function (window) {
         */
         HTMLElementPrototype.unplug = function(plugin) {
             var instance = this;
-            if (instance.isPlugged(plugin)) {
+            if (instance._plugin && instance._plugin[plugin]) {
                 instance._plugin[plugin].destroy();
             }
             return instance;
@@ -648,8 +699,57 @@ module.exports = function (window) {
             modelToAttrs(instance);
         },
         {
+            /*
+             * Internal hash containing the events which have a delayed Event-finalize synchronisation
+             * on browsers that don't support object.observe.
+             * Members of this object can be removed by calling `setDirectEventResponse`
+             *
+             * @property _DELAYED_FINALIZE_EVENTS
+             * @default {
+             *    mousedown: true,
+             *    mouseup: true,
+             *    mousemove: true,
+             *    panmove: true,
+             *    panstart: true,
+             *    panleft: true,
+             *    panright: true,
+             *    panup: true,
+             *    pandown: true,
+             *    pinchmove: true,
+             *    rotatemove: true,
+             *    focus: true,
+             *    manualfocus: true,
+             *    keydown: true,
+             *    keyup: true,
+             *    keypress: true,
+             *    blur: true,
+             *    resize: true,
+             *    scroll: true
+             * }
+             * @type Object
+             * @private
+             * @since 0.0.1
+            */
             _DELAYED_FINALIZE_EVENTS: DEFAULT_DELAYED_FINALIZE_EVENTS.shallowClone(),
+            /*
+             * Definition of all attributes: these attributes will be read during initalization and updated during `sync`
+             * In the dom, the attributenames are prepended with `pluginName-`. The property-values should be the property-types
+             * that belong to the property, this way the attributes get right casted into model.
+             *
+             * @property attrs
+             * @default {}
+             * @type Object
+             * @since 0.0.1
+            */
             attrs: {},
+            /*
+             * Any default values for attributes specified by `attrs`.
+             *
+             * @property defaults
+             * @default {}
+             * @type Object
+             * @since 0.0.1
+            */
             defaults: {},
            /**
             * Binds a model to the plugin, making plugin.model equals the bound model.
@@ -666,9 +766,10 @@ module.exports = function (window) {
             bindModel: function(model, mergeCurrent) {
                 console.log(NAME+'bindModel');
                 var instance = this,
+                    host = instance.host,
                     observer;
                 if (Object.isObject(model) && (instance.model!==model)) {
-                    instance.host.removeAttr('bound-model');
+                    host.removeAttr('bound-model');
                     if (NATIVE_OBJECT_OBSERVE) {
                         observer = instance._observer;
                         observer && Object.unobserve(instance.model, observer);
@@ -682,18 +783,24 @@ module.exports = function (window) {
                         Object.observe(instance.model, observer);
                         instance._observer = observer;
                     }
-                    syncPlugin(instance);
+                    (host.getAttr(instance.$ns+'-ready')==='true') && syncPlugin(instance);
                 }
             },
+            /*
+             * Gets invoked after the complete initialization of all constructors in the chain.
+             * This method assures it will happen as last stage of the initialisation.
+             * This method also will invoke `render` (unless render was already done on the server)
+             *
+             * @method afterInit
+             * @since 0.0.1
+             */
             afterInit: function() {
                 var instance = this,
                     ns = instance.$ns,
                     host = instance.host;
-                if (host.getAttr(ns+'-ready')!=='true') {
-                    instance.render();
-                    host.setAttr(ns+'-ready', 'true', true);
-                }
+                (host.getAttr(ns+'-ready')==='true') || instance.render();
                 syncPlugin(instance);
+                host.setAttr(ns+'-ready', 'true', true);
                 autoRefreshPlugin(instance);
                 host._pluginReadyInfo || (host._pluginReadyInfo={});
                 host._pluginReadyInfo[ns] || (host._pluginReadyInfo[ns]=window.Promise.manage());
@@ -754,12 +861,48 @@ module.exports = function (window) {
                     });
                 }
             },
+            /*
+             * Renders the plugin. This method is invoked only once: at the end of initialization.
+             * It should be used to render any nodes inside the host. Not all plugins need this.
+             * Defaults to NOOP.
+             *
+             * @method render
+             * @since 0.0.1
+             */
             render: function() {
                 // defaults to NOOP
             },
+            /*
+             * Syncs plugin.model's data with the host. Not its attributes: they will be synced automaticly.
+             * Is invoked after every change of plugin.model's data.
+             *
+             * @method sync
+             * @since 0.0.1
+             */
             sync: function() {
                 // defaults to NOOP
             },
+           /**
+            * Defines the `key`-property on element.model, but only when is hasn't been defined before.
+            *
+            * @method defineWhenUndefined
+            * @param key {String} plugin.model's property
+            * @param value {any} its value to be set
+            * @chainable
+            * @since 0.0.1
+            */
+            defineWhenUndefined: function(key, value) {
+                var instance = this,
+                    model = this.model;
+                model[key] || (model[key]=value);
+                return instance;
+            },
+            /*
+             * Cleansup the plugin. Is invoked whenever a plugin gets unplugged or its host gets removed from the dom.
+             *
+             * @method destroy
+             * @since 0.0.1
+             */
             destroy: function () {
                 var instance = this,
                     host = instance.host,
@@ -1079,7 +1222,7 @@ module.exports = function (window) {
     /*
      * Transforms the selector to a valid function
      *
-     * @method _evCallback
+     * @method _selToFunc
      * @param customEvent {String} the customEvent that is transported to the eventsystem
      * @param subscriber {Object} subscriber
      * @param subscriber.o {Object} context
@@ -5387,7 +5530,7 @@ module.exports=require(15)
 },{}],35:[function(require,module,exports){
 module.exports=require(16)
 },{"./lib/matchesselector.js":33,"./lib/window.console.js":34}],36:[function(require,module,exports){
-var css = ".itsa-notrans, .itsa-notrans2,\n.itsa-notrans:before, .itsa-notrans2:before,\n.itsa-notrans:after, .itsa-notrans2:after {\n    -webkit-transition: none !important;\n    -moz-transition: none !important;\n    -ms-transition: none !important;\n    -o-transition: all 0s !important; /* opera doesn't support none */\n    transition: none !important;\n}\n\n.itsa-no-overflow {\n    overflow: hidden !important;\n}\n\n.itsa-invisible {\n    position: absolute !important;\n}\n\n.itsa-invisible-relative {\n    position: relative !important;\n}\n\n/* don't set visibility to hidden --> you cannot set a focus on those items */\n.itsa-invisible,\n.itsa-invisible *,\n.itsa-invisible-relative,\n.itsa-invisible-relative * {\n    opacity: 0 !important;\n}\n\n/* don't set visibility to hidden --> you cannot set a focus on those items */\n.itsa-invisible-unfocusable,\n.itsa-invisible-unfocusable * {\n    visibility: hidden !important;\n}\n\n.itsa-transparent {\n    opacity: 0;\n}\n\n/* don't set visibility to hidden --> you cannot set a focus on those items */\n.itsa-hidden {\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -9;\n}\n\n.itsa-hidden * {\n    opacity: 0 !important;\n}\n\n.itsa-block {\n    display: block !important;\n}\n\n.itsa-borderbox {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+var css = ".itsa-notrans, .itsa-notrans2,\n.itsa-notrans:before, .itsa-notrans2:before,\n.itsa-notrans:after, .itsa-notrans2:after {\n    -webkit-transition: none !important;\n    -moz-transition: none !important;\n    -ms-transition: none !important;\n    -o-transition: all 0s !important; /* opera doesn't support none */\n    transition: none !important;\n}\n\n.itsa-no-overflow {\n    overflow: hidden !important;\n}\n\n.itsa-invisible {\n    position: absolute !important;\n}\n\n.itsa-invisible-relative {\n    position: relative !important;\n}\n\n/* don't set visibility to hidden --> you cannot set a focus on those items */\n.itsa-invisible,\n.itsa-invisible *,\n.itsa-invisible-relative,\n.itsa-invisible-relative * {\n    opacity: 0 !important;\n}\n\n/* don't set visibility to hidden --> you cannot set a focus on those items */\n.itsa-invisible-unfocusable,\n.itsa-invisible-unfocusable * {\n    visibility: hidden !important;\n}\n\n.itsa-transparent {\n    opacity: 0;\n}\n\n/* don't set visibility to hidden --> you cannot set a focus on those items */\n.itsa-hidden {\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -9;\n}\n\n.itsa-hidden * {\n    opacity: 0 !important;\n}\n\n.itsa-no-display {\n    display: none; !important;\n}\n\n.itsa-block {\n    display: block !important;\n}\n\n.itsa-borderbox {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
 },{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],37:[function(require,module,exports){
 module.exports=require(11)
 },{"../lib/object.js":41,"js-ext/extra/hashmap.js":38,"polyfill/polyfill-base.js":47}],38:[function(require,module,exports){
@@ -10103,6 +10246,9 @@ module.exports = function (window) {
                             if (vChildNode._systemNode || (vChildNode.isItag && vChildNode.domNode.contentHidden)) {
                                 noDeep = true;
                             }
+                            else {
+                                noDeep = false;
+                            }
                         }
                         else {
                             noDeep = false;
@@ -10158,6 +10304,9 @@ module.exports = function (window) {
                     if (!inspectProtectedNodes) {
                         if (vChildNode._systemNode || (vChildNode.isItag && vChildNode.domNode.contentHidden)) {
                             noDeep = true;
+                        }
+                        else {
+                            noDeep = false;
                         }
                     }
                     else {
@@ -16215,7 +16364,7 @@ require('./css/default.css');
 require('./css/purecss-0.5.0.css');
 require('./css/pure-finetuned.css');
 },{"./css/default.css":145,"./css/pure-finetuned.css":146,"./css/purecss-0.5.0.css":147}],149:[function(require,module,exports){
-var css = "[dd-draggable] {\n    -moz-user-select: none;\n    -khtml-user-select: none;\n    -webkit-user-select: none;\n    user-select: none;\n    float: left;\n    position: relative;\n}\n.dd-hidden-source {\n    visibility: hidden !important;\n}\n.dd-dragging {\n    cursor: move;\n}\n.dd-transition {\n    -webkit-transition: top 0.25s ease-out, left 0.25s ease-out;\n    -moz-transition: top 0.25s ease-out, left 0.25s ease-out;\n    -ms-transition: top 0.25s ease-out, left 0.25s ease-out;\n    -o-transition: top 0.25s ease-out, left 0.25s ease-out;\n    transition: top 0.25s ease-out, left 0.25s ease-out;\n}\n.dd-high-z {\n    z-index: 999 !important;\n}\n.dd-opacity {\n    opacity: 0.6;\n    filter: alpha(opacity=60); /* For IE8 and earlier */\n}\n[dropzone] {\n    position: relative; /* otherwise we cannot place absolute positioned items */\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+var css = "[dropzone] {\n    position: relative; /* otherwise we cannot place absolute positioned items */\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
 },{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],150:[function(require,module,exports){
 "use strict";
 
@@ -17310,8 +17459,8 @@ module.exports = function (window) {
     return DragModule;
 
 };
-},{"./css/drag-drop.css":149,"drag":152,"event-dom":435,"js-ext":507,"js-ext/extra/hashmap.js":506,"node-plugin":517,"polyfill/polyfill-base.js":659,"useragent":1848,"vdom":700,"window-ext":701}],151:[function(require,module,exports){
-module.exports=require(149)
+},{"./css/drag-drop.css":149,"drag":152,"event-dom":435,"js-ext":507,"js-ext/extra/hashmap.js":506,"node-plugin":517,"polyfill/polyfill-base.js":659,"useragent":2613,"vdom":700,"window-ext":701}],151:[function(require,module,exports){
+var css = "[dd-draggable] {\n    -moz-user-select: none;\n    -ms-user-select: none;\n    -khtml-user-select: none;\n    -webkit-user-select: none;\n    user-select: none;\n    float: left;\n    position: relative;\n}\n.dd-hidden-source {\n    visibility: hidden !important;\n}\n.dd-dragging {\n    cursor: move;\n}\n.dd-transition {\n    -webkit-transition: top 0.25s ease-out, left 0.25s ease-out;\n    -moz-transition: top 0.25s ease-out, left 0.25s ease-out;\n    -ms-transition: top 0.25s ease-out, left 0.25s ease-out;\n    -o-transition: top 0.25s ease-out, left 0.25s ease-out;\n    transition: top 0.25s ease-out, left 0.25s ease-out;\n}\n.dd-high-z {\n    z-index: 3001 !important;\n}\n.dd-opacity {\n    opacity: 0.6;\n    filter: alpha(opacity=60); /* For IE8 and earlier */\n}\n[dropzone] {\n    position: relative; /* otherwise we cannot place absolute positioned items */\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
 },{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],152:[function(require,module,exports){
 "use strict";
 
@@ -22430,11 +22579,11 @@ module.exports = function (window) {
 
 };
 
-},{"utils":856}],785:[function(require,module,exports){
+},{"utils":853}],785:[function(require,module,exports){
 module.exports=require(6)
-},{"event":789,"js-ext/extra/hashmap.js":799,"js-ext/lib/array.js":800,"js-ext/lib/object.js":801,"js-ext/lib/string.js":802,"polyfill/polyfill-base.js":808,"utils":809,"vdom":855}],786:[function(require,module,exports){
+},{"event":789,"js-ext/extra/hashmap.js":796,"js-ext/lib/array.js":797,"js-ext/lib/object.js":798,"js-ext/lib/string.js":799,"polyfill/polyfill-base.js":805,"utils":806,"vdom":852}],786:[function(require,module,exports){
 module.exports=require(7)
-},{"js-ext/extra/hashmap.js":791,"js-ext/lib/object.js":792,"polyfill/polyfill-base.js":798}],787:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":791,"js-ext/lib/object.js":792,"polyfill/polyfill-base.js":795}],787:[function(require,module,exports){
 module.exports=require(8)
 },{"./event-base.js":786}],788:[function(require,module,exports){
 module.exports=require(9)
@@ -22453,144 +22602,138 @@ module.exports=require(15)
 },{}],795:[function(require,module,exports){
 module.exports=require(16)
 },{"./lib/matchesselector.js":793,"./lib/window.console.js":794}],796:[function(require,module,exports){
-module.exports=require(14)
-},{}],797:[function(require,module,exports){
-module.exports=require(15)
-},{}],798:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":796,"./lib/window.console.js":797}],799:[function(require,module,exports){
 module.exports=require(4)
-},{}],800:[function(require,module,exports){
+},{}],797:[function(require,module,exports){
 module.exports=require(21)
-},{"polyfill/polyfill-base.js":805}],801:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":802}],798:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":799,"polyfill/polyfill-base.js":805}],802:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":796,"polyfill/polyfill-base.js":802}],799:[function(require,module,exports){
 module.exports=require(23)
-},{}],803:[function(require,module,exports){
+},{}],800:[function(require,module,exports){
+module.exports=require(14)
+},{}],801:[function(require,module,exports){
+module.exports=require(15)
+},{}],802:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":800,"./lib/window.console.js":801}],803:[function(require,module,exports){
 module.exports=require(14)
 },{}],804:[function(require,module,exports){
 module.exports=require(15)
 },{}],805:[function(require,module,exports){
 module.exports=require(16)
 },{"./lib/matchesselector.js":803,"./lib/window.console.js":804}],806:[function(require,module,exports){
-module.exports=require(14)
-},{}],807:[function(require,module,exports){
-module.exports=require(15)
-},{}],808:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":806,"./lib/window.console.js":807}],809:[function(require,module,exports){
 module.exports=require(30)
-},{"./lib/idgenerator.js":810,"./lib/timers.js":811}],810:[function(require,module,exports){
+},{"./lib/idgenerator.js":807,"./lib/timers.js":808}],807:[function(require,module,exports){
 module.exports=require(31)
-},{"js-ext/extra/hashmap.js":799,"polyfill/polyfill-base.js":814}],811:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":796,"polyfill/polyfill-base.js":811}],808:[function(require,module,exports){
 module.exports=require(32)
-},{"polyfill/polyfill-base.js":814}],812:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":811}],809:[function(require,module,exports){
 module.exports=require(14)
-},{}],813:[function(require,module,exports){
+},{}],810:[function(require,module,exports){
 module.exports=require(15)
-},{}],814:[function(require,module,exports){
+},{}],811:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":812,"./lib/window.console.js":813}],815:[function(require,module,exports){
+},{"./lib/matchesselector.js":809,"./lib/window.console.js":810}],812:[function(require,module,exports){
 module.exports=require(36)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],816:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],813:[function(require,module,exports){
 module.exports=require(11)
-},{"../lib/object.js":820,"js-ext/extra/hashmap.js":817,"polyfill/polyfill-base.js":826}],817:[function(require,module,exports){
+},{"../lib/object.js":817,"js-ext/extra/hashmap.js":814,"polyfill/polyfill-base.js":823}],814:[function(require,module,exports){
 module.exports=require(4)
-},{}],818:[function(require,module,exports){
+},{}],815:[function(require,module,exports){
 module.exports=require(39)
-},{"../lib/array.js":819,"../lib/object.js":820,"./classes.js":816,"js-ext/extra/hashmap.js":817,"polyfill/lib/weakmap.js":824}],819:[function(require,module,exports){
+},{"../lib/array.js":816,"../lib/object.js":817,"./classes.js":813,"js-ext/extra/hashmap.js":814,"polyfill/lib/weakmap.js":821}],816:[function(require,module,exports){
 module.exports=require(21)
-},{"polyfill/polyfill-base.js":826}],820:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":823}],817:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":817,"polyfill/polyfill-base.js":826}],821:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":814,"polyfill/polyfill-base.js":823}],818:[function(require,module,exports){
 module.exports=require(42)
-},{"polyfill":826}],822:[function(require,module,exports){
+},{"polyfill":823}],819:[function(require,module,exports){
 module.exports=require(23)
-},{}],823:[function(require,module,exports){
+},{}],820:[function(require,module,exports){
 module.exports=require(14)
-},{}],824:[function(require,module,exports){
+},{}],821:[function(require,module,exports){
 module.exports=require(45)
-},{}],825:[function(require,module,exports){
+},{}],822:[function(require,module,exports){
 module.exports=require(15)
-},{}],826:[function(require,module,exports){
+},{}],823:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":823,"./lib/window.console.js":825}],827:[function(require,module,exports){
+},{"./lib/matchesselector.js":820,"./lib/window.console.js":822}],824:[function(require,module,exports){
 module.exports=require(48)
-},{}],828:[function(require,module,exports){
+},{}],825:[function(require,module,exports){
 module.exports=require(49)
-},{"../bin/local-hashmap.js":827}],829:[function(require,module,exports){
+},{"../bin/local-hashmap.js":824}],826:[function(require,module,exports){
 module.exports=require(50)
-},{"../bin/local-hashmap.js":827}],830:[function(require,module,exports){
+},{"../bin/local-hashmap.js":824}],827:[function(require,module,exports){
 module.exports=require(51)
-},{"../bin/local-hashmap.js":827}],831:[function(require,module,exports){
+},{"../bin/local-hashmap.js":824}],828:[function(require,module,exports){
 module.exports=require(14)
-},{}],832:[function(require,module,exports){
+},{}],829:[function(require,module,exports){
 module.exports=require(15)
-},{}],833:[function(require,module,exports){
+},{}],830:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":831,"./lib/window.console.js":832}],834:[function(require,module,exports){
+},{"./lib/matchesselector.js":828,"./lib/window.console.js":829}],831:[function(require,module,exports){
 module.exports=require(30)
-},{"./lib/idgenerator.js":835,"./lib/timers.js":836}],835:[function(require,module,exports){
+},{"./lib/idgenerator.js":832,"./lib/timers.js":833}],832:[function(require,module,exports){
 module.exports=require(31)
-},{"js-ext/extra/hashmap.js":817,"polyfill/polyfill-base.js":839}],836:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":814,"polyfill/polyfill-base.js":836}],833:[function(require,module,exports){
 module.exports=require(32)
-},{"polyfill/polyfill-base.js":839}],837:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":836}],834:[function(require,module,exports){
 module.exports=require(14)
-},{}],838:[function(require,module,exports){
+},{}],835:[function(require,module,exports){
 module.exports=require(15)
-},{}],839:[function(require,module,exports){
+},{}],836:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":837,"./lib/window.console.js":838}],840:[function(require,module,exports){
+},{"./lib/matchesselector.js":834,"./lib/window.console.js":835}],837:[function(require,module,exports){
 module.exports=require(61)
-},{"./lib/sizes.js":841}],841:[function(require,module,exports){
+},{"./lib/sizes.js":838}],838:[function(require,module,exports){
 module.exports=require(62)
-},{"js-ext/extra/hashmap.js":842,"js-ext/lib/object.js":843}],842:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":839,"js-ext/lib/object.js":840}],839:[function(require,module,exports){
 module.exports=require(4)
-},{}],843:[function(require,module,exports){
+},{}],840:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":842,"polyfill/polyfill-base.js":846}],844:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":839,"polyfill/polyfill-base.js":843}],841:[function(require,module,exports){
 module.exports=require(14)
-},{}],845:[function(require,module,exports){
+},{}],842:[function(require,module,exports){
 module.exports=require(15)
-},{}],846:[function(require,module,exports){
+},{}],843:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":844,"./lib/window.console.js":845}],847:[function(require,module,exports){
+},{"./lib/matchesselector.js":841,"./lib/window.console.js":842}],844:[function(require,module,exports){
 module.exports=require(68)
-},{"js-ext/extra/hashmap.js":817,"js-ext/lib/object.js":820,"js-ext/lib/string.js":822,"polyfill":833,"polyfill/extra/transition.js":828,"polyfill/extra/vendorCSS.js":830}],848:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":814,"js-ext/lib/object.js":817,"js-ext/lib/string.js":819,"polyfill":830,"polyfill/extra/transition.js":825,"polyfill/extra/vendorCSS.js":827}],845:[function(require,module,exports){
 module.exports=require(69)
-},{"js-ext/extra/hashmap.js":817,"js-ext/lib/object.js":820,"polyfill":833}],849:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":814,"js-ext/lib/object.js":817,"polyfill":830}],846:[function(require,module,exports){
 module.exports=require(70)
-},{"js-ext/extra/hashmap.js":817,"js-ext/lib/object.js":820,"js-ext/lib/string.js":822,"polyfill":833}],850:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":814,"js-ext/lib/object.js":817,"js-ext/lib/string.js":819,"polyfill":830}],847:[function(require,module,exports){
 module.exports=require(71)
-},{"../css/element.css":815,"./attribute-extractor.js":847,"./element-array.js":848,"./html-parser.js":851,"./node-parser.js":852,"./vdom-ns.js":853,"./vnode.js":854,"js-ext/extra/hashmap.js":817,"js-ext/lib/object.js":820,"js-ext/lib/promise.js":821,"js-ext/lib/string.js":822,"polyfill":833,"polyfill/extra/transition.js":828,"polyfill/extra/transitionend.js":829,"polyfill/extra/vendorCSS.js":830,"utils":834,"window-ext":840}],851:[function(require,module,exports){
+},{"../css/element.css":812,"./attribute-extractor.js":844,"./element-array.js":845,"./html-parser.js":848,"./node-parser.js":849,"./vdom-ns.js":850,"./vnode.js":851,"js-ext/extra/hashmap.js":814,"js-ext/lib/object.js":817,"js-ext/lib/promise.js":818,"js-ext/lib/string.js":819,"polyfill":830,"polyfill/extra/transition.js":825,"polyfill/extra/transitionend.js":826,"polyfill/extra/vendorCSS.js":827,"utils":831,"window-ext":837}],848:[function(require,module,exports){
 module.exports=require(72)
-},{"./attribute-extractor.js":847,"./vdom-ns.js":853,"js-ext/extra/hashmap.js":817,"js-ext/lib/object.js":820,"polyfill":833}],852:[function(require,module,exports){
+},{"./attribute-extractor.js":844,"./vdom-ns.js":850,"js-ext/extra/hashmap.js":814,"js-ext/lib/object.js":817,"polyfill":830}],849:[function(require,module,exports){
 module.exports=require(73)
-},{"./attribute-extractor.js":847,"./vdom-ns.js":853,"./vnode.js":854,"js-ext/extra/hashmap.js":817,"js-ext/lib/object.js":820,"polyfill":833}],853:[function(require,module,exports){
+},{"./attribute-extractor.js":844,"./vdom-ns.js":850,"./vnode.js":851,"js-ext/extra/hashmap.js":814,"js-ext/lib/object.js":817,"polyfill":830}],850:[function(require,module,exports){
 module.exports=require(74)
-},{"js-ext/extra/hashmap.js":817,"js-ext/lib/object.js":820,"polyfill":833}],854:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":814,"js-ext/lib/object.js":817,"polyfill":830}],851:[function(require,module,exports){
 module.exports=require(75)
-},{"./attribute-extractor.js":847,"./html-parser.js":851,"./vdom-ns.js":853,"js-ext/extra/hashmap.js":817,"js-ext/extra/lightmap.js":818,"js-ext/lib/array.js":819,"js-ext/lib/object.js":820,"js-ext/lib/string.js":822,"polyfill":833,"utils/lib/timers.js":836}],855:[function(require,module,exports){
+},{"./attribute-extractor.js":844,"./html-parser.js":848,"./vdom-ns.js":850,"js-ext/extra/hashmap.js":814,"js-ext/extra/lightmap.js":815,"js-ext/lib/array.js":816,"js-ext/lib/object.js":817,"js-ext/lib/string.js":819,"polyfill":830,"utils/lib/timers.js":833}],852:[function(require,module,exports){
 module.exports=require(76)
-},{"./partials/extend-document.js":849,"./partials/extend-element.js":850,"./partials/node-parser.js":852,"js-ext/extra/hashmap.js":817,"js-ext/lib/object.js":820,"utils/lib/timers.js":836}],856:[function(require,module,exports){
+},{"./partials/extend-document.js":846,"./partials/extend-element.js":847,"./partials/node-parser.js":849,"js-ext/extra/hashmap.js":814,"js-ext/lib/object.js":817,"utils/lib/timers.js":833}],853:[function(require,module,exports){
 module.exports=require(30)
-},{"./lib/idgenerator.js":857,"./lib/timers.js":858}],857:[function(require,module,exports){
+},{"./lib/idgenerator.js":854,"./lib/timers.js":855}],854:[function(require,module,exports){
 module.exports=require(31)
-},{"js-ext/extra/hashmap.js":1152,"polyfill/polyfill-base.js":861}],858:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1150,"polyfill/polyfill-base.js":858}],855:[function(require,module,exports){
 module.exports=require(32)
-},{"polyfill/polyfill-base.js":861}],859:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":858}],856:[function(require,module,exports){
 module.exports=require(14)
-},{}],860:[function(require,module,exports){
+},{}],857:[function(require,module,exports){
 module.exports=require(15)
-},{}],861:[function(require,module,exports){
+},{}],858:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":859,"./lib/window.console.js":860}],862:[function(require,module,exports){
+},{"./lib/matchesselector.js":856,"./lib/window.console.js":857}],859:[function(require,module,exports){
 module.exports=require(7)
-},{"js-ext/extra/hashmap.js":870,"js-ext/lib/object.js":871,"polyfill/polyfill-base.js":878}],863:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":867,"js-ext/lib/object.js":868,"polyfill/polyfill-base.js":875}],860:[function(require,module,exports){
 module.exports=require(8)
-},{"./event-base.js":862}],864:[function(require,module,exports){
+},{"./event-base.js":859}],861:[function(require,module,exports){
 module.exports=require(9)
-},{"./event-base.js":862,"js-ext/extra/classes.js":869,"js-ext/lib/object.js":871}],865:[function(require,module,exports){
+},{"./event-base.js":859,"js-ext/extra/classes.js":866,"js-ext/lib/object.js":868}],862:[function(require,module,exports){
 "use strict";
 
 /**
@@ -22837,49 +22980,52 @@ module.exports = function (window) {
     module.exports = Event;
 
 };
-},{"../event-base.js":862,"./promise-finalize.js":866,"./timer-finalize.js":867,"io":1130,"js-ext/lib/object.js":871,"utils":879}],866:[function(require,module,exports){
+},{"../event-base.js":859,"./promise-finalize.js":863,"./timer-finalize.js":864,"io":1128,"js-ext/lib/object.js":868,"utils":876}],863:[function(require,module,exports){
 module.exports=require(78)
-},{"js-ext/extra/hashmap.js":870,"js-ext/lib/promise.js":872}],867:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":867,"js-ext/lib/promise.js":869}],864:[function(require,module,exports){
 module.exports=require(79)
-},{"../event-base.js":862,"js-ext/extra/hashmap.js":870}],868:[function(require,module,exports){
+},{"../event-base.js":859,"js-ext/extra/hashmap.js":867}],865:[function(require,module,exports){
 module.exports=require(10)
-},{"./event-base.js":862,"./event-emitter.js":863,"./event-listener.js":864}],869:[function(require,module,exports){
+},{"./event-base.js":859,"./event-emitter.js":860,"./event-listener.js":861}],866:[function(require,module,exports){
 module.exports=require(11)
-},{"../lib/object.js":871,"js-ext/extra/hashmap.js":870,"polyfill/polyfill-base.js":875}],870:[function(require,module,exports){
+},{"../lib/object.js":868,"js-ext/extra/hashmap.js":867,"polyfill/polyfill-base.js":872}],867:[function(require,module,exports){
 module.exports=require(4)
-},{}],871:[function(require,module,exports){
+},{}],868:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":870,"polyfill/polyfill-base.js":875}],872:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":867,"polyfill/polyfill-base.js":872}],869:[function(require,module,exports){
 module.exports=require(42)
-},{"polyfill":875}],873:[function(require,module,exports){
+},{"polyfill":872}],870:[function(require,module,exports){
+module.exports=require(14)
+},{}],871:[function(require,module,exports){
+module.exports=require(15)
+},{}],872:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":870,"./lib/window.console.js":871}],873:[function(require,module,exports){
 module.exports=require(14)
 },{}],874:[function(require,module,exports){
 module.exports=require(15)
 },{}],875:[function(require,module,exports){
 module.exports=require(16)
 },{"./lib/matchesselector.js":873,"./lib/window.console.js":874}],876:[function(require,module,exports){
-module.exports=require(14)
-},{}],877:[function(require,module,exports){
-module.exports=require(15)
-},{}],878:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":876,"./lib/window.console.js":877}],879:[function(require,module,exports){
 module.exports=require(30)
-},{"./lib/idgenerator.js":880,"./lib/timers.js":881}],880:[function(require,module,exports){
+},{"./lib/idgenerator.js":877,"./lib/timers.js":878}],877:[function(require,module,exports){
 module.exports=require(31)
-},{"js-ext/extra/hashmap.js":870,"polyfill/polyfill-base.js":884}],881:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":867,"polyfill/polyfill-base.js":881}],878:[function(require,module,exports){
 module.exports=require(32)
-},{"polyfill/polyfill-base.js":884}],882:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":881}],879:[function(require,module,exports){
 module.exports=require(14)
-},{}],883:[function(require,module,exports){
+},{}],880:[function(require,module,exports){
 module.exports=require(15)
-},{}],884:[function(require,module,exports){
+},{}],881:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":882,"./lib/window.console.js":883}],885:[function(require,module,exports){
+},{"./lib/matchesselector.js":879,"./lib/window.console.js":880}],882:[function(require,module,exports){
+var css = "[plugin-fm=\"true\"] {\n    /* NEVER can we select the text: when the focusmanager is active it will refocus on the active item */\n    -moz-user-select: none;\n    -khtml-user-select: none;\n    -webkit-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    cursor: default;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],883:[function(require,module,exports){
 "use strict";
 
 require('js-ext/lib/object.js');
 require('polyfill');
+require('./css/focusmanager.css');
 
 /**
  *
@@ -22991,10 +23137,32 @@ module.exports = function (window) {
             // in case sourceNode is an innernode of a selector, we need to start from the selector:
             sourceNode.matches(selector) || (sourceNode=sourceNode.inside(selector));
             if (downwards) {
-                nodeHit = sourceNode.next(selector, focusContainerNode) || (noloop ? sourceNode.last(selector, focusContainerNode) : sourceNode.first(selector, focusContainerNode));
+                nodeHit = sourceNode;
+/*jshint noempty:true */
+                while ((nodeHit=nodeHit.next(selector, focusContainerNode)) && (nodeHit.getStyle('display')==='none')) {}
+/*jshint noempty:false */
+                if (!nodeHit) {
+                    nodeHit = noloop ? sourceNode.last(selector, focusContainerNode) : sourceNode.first(selector, focusContainerNode);
+                    if (nodeHit.getStyle('display')==='none') {
+/*jshint noempty:true */
+                        while ((nodeHit=nodeHit[noloop ? 'previous' : 'next'](selector, focusContainerNode)) && (nodeHit.getStyle('display')==='none')) {}
+/*jshint noempty:false */
+                    }
+                }
             }
             else {
-                nodeHit = sourceNode.previous(selector, focusContainerNode) || (noloop ? sourceNode.first(selector, focusContainerNode) : sourceNode.last(selector, focusContainerNode));
+                nodeHit = sourceNode;
+/*jshint noempty:true */
+                while ((nodeHit=nodeHit.previous(selector, focusContainerNode)) && (nodeHit.getStyle('display')==='none')) {}
+/*jshint noempty:false */
+                if (!nodeHit) {
+                    nodeHit = noloop ? sourceNode.first(selector, focusContainerNode) : sourceNode.last(selector, focusContainerNode);
+                    if (nodeHit.getStyle('display')==='none') {
+/*jshint noempty:true */
+                        while ((nodeHit=nodeHit[noloop ? 'next' : 'previous'](selector, focusContainerNode)) && (nodeHit.getStyle('display')==='none')) {}
+/*jshint noempty:false */
+                    }
+                }
             }
             if (nodeHit===sourceNode) {
                 // cannot found another, return itself, BUT return `initialSourceNode` if it is available
@@ -23121,7 +23289,7 @@ module.exports = function (window) {
                 if (!focusNode) {
                     // check for keyenter, but only when e.target equals a focusmanager:
                     if (sourceNode.matches('[plugin-fm="true"]')) {
-                        actionkey = focusContainerNode._plugin.fm.model.keyenter;
+                        actionkey = sourceNode._plugin.fm.model.keyenter;
                         if (actionkey) {
                             keys = actionkey.split('+');
                             len = keys.length;
@@ -23370,487 +23538,487 @@ module.exports = function (window) {
 
     return FocusManager;
 };
-},{"event-mobile":886,"js-ext/extra/hashmap.js":965,"js-ext/lib/object.js":966,"node-plugin":970,"polyfill":1112,"utils":1113,"window-ext":1119}],886:[function(require,module,exports){
+},{"./css/focusmanager.css":882,"event-mobile":884,"js-ext/extra/hashmap.js":963,"js-ext/lib/object.js":964,"node-plugin":968,"polyfill":1110,"utils":1111,"window-ext":1117}],884:[function(require,module,exports){
 module.exports=require(783)
-},{"./lib/hammer-2.0.4.js":887,"event-dom":888}],887:[function(require,module,exports){
+},{"./lib/hammer-2.0.4.js":885,"event-dom":886}],885:[function(require,module,exports){
 module.exports=require(784)
-},{"utils":959}],888:[function(require,module,exports){
+},{"utils":957}],886:[function(require,module,exports){
 module.exports=require(6)
-},{"event":892,"js-ext/extra/hashmap.js":902,"js-ext/lib/array.js":903,"js-ext/lib/object.js":904,"js-ext/lib/string.js":905,"polyfill/polyfill-base.js":911,"utils":912,"vdom":958}],889:[function(require,module,exports){
+},{"event":890,"js-ext/extra/hashmap.js":900,"js-ext/lib/array.js":901,"js-ext/lib/object.js":902,"js-ext/lib/string.js":903,"polyfill/polyfill-base.js":909,"utils":910,"vdom":956}],887:[function(require,module,exports){
 module.exports=require(7)
-},{"js-ext/extra/hashmap.js":894,"js-ext/lib/object.js":895,"polyfill/polyfill-base.js":901}],890:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":892,"js-ext/lib/object.js":893,"polyfill/polyfill-base.js":899}],888:[function(require,module,exports){
 module.exports=require(8)
-},{"./event-base.js":889}],891:[function(require,module,exports){
+},{"./event-base.js":887}],889:[function(require,module,exports){
 module.exports=require(9)
-},{"./event-base.js":889,"js-ext/extra/classes.js":893,"js-ext/lib/object.js":895}],892:[function(require,module,exports){
+},{"./event-base.js":887,"js-ext/extra/classes.js":891,"js-ext/lib/object.js":893}],890:[function(require,module,exports){
 module.exports=require(10)
-},{"./event-base.js":889,"./event-emitter.js":890,"./event-listener.js":891}],893:[function(require,module,exports){
+},{"./event-base.js":887,"./event-emitter.js":888,"./event-listener.js":889}],891:[function(require,module,exports){
 module.exports=require(11)
-},{"../lib/object.js":895,"js-ext/extra/hashmap.js":894,"polyfill/polyfill-base.js":898}],894:[function(require,module,exports){
+},{"../lib/object.js":893,"js-ext/extra/hashmap.js":892,"polyfill/polyfill-base.js":896}],892:[function(require,module,exports){
 module.exports=require(4)
+},{}],893:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":892,"polyfill/polyfill-base.js":896}],894:[function(require,module,exports){
+module.exports=require(14)
 },{}],895:[function(require,module,exports){
-module.exports=require(13)
-},{"js-ext/extra/hashmap.js":894,"polyfill/polyfill-base.js":898}],896:[function(require,module,exports){
-module.exports=require(14)
-},{}],897:[function(require,module,exports){
 module.exports=require(15)
+},{}],896:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":894,"./lib/window.console.js":895}],897:[function(require,module,exports){
+module.exports=require(14)
 },{}],898:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":896,"./lib/window.console.js":897}],899:[function(require,module,exports){
-module.exports=require(14)
-},{}],900:[function(require,module,exports){
 module.exports=require(15)
+},{}],899:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":897,"./lib/window.console.js":898}],900:[function(require,module,exports){
+module.exports=require(4)
 },{}],901:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":899,"./lib/window.console.js":900}],902:[function(require,module,exports){
-module.exports=require(4)
-},{}],903:[function(require,module,exports){
 module.exports=require(21)
-},{"polyfill/polyfill-base.js":908}],904:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":906}],902:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":902,"polyfill/polyfill-base.js":908}],905:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":900,"polyfill/polyfill-base.js":906}],903:[function(require,module,exports){
 module.exports=require(23)
+},{}],904:[function(require,module,exports){
+module.exports=require(14)
+},{}],905:[function(require,module,exports){
+module.exports=require(15)
 },{}],906:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":904,"./lib/window.console.js":905}],907:[function(require,module,exports){
 module.exports=require(14)
-},{}],907:[function(require,module,exports){
-module.exports=require(15)
 },{}],908:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":906,"./lib/window.console.js":907}],909:[function(require,module,exports){
-module.exports=require(14)
-},{}],910:[function(require,module,exports){
 module.exports=require(15)
-},{}],911:[function(require,module,exports){
+},{}],909:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":909,"./lib/window.console.js":910}],912:[function(require,module,exports){
+},{"./lib/matchesselector.js":907,"./lib/window.console.js":908}],910:[function(require,module,exports){
 module.exports=require(30)
-},{"./lib/idgenerator.js":913,"./lib/timers.js":914}],913:[function(require,module,exports){
+},{"./lib/idgenerator.js":911,"./lib/timers.js":912}],911:[function(require,module,exports){
 module.exports=require(31)
-},{"js-ext/extra/hashmap.js":902,"polyfill/polyfill-base.js":917}],914:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":900,"polyfill/polyfill-base.js":915}],912:[function(require,module,exports){
 module.exports=require(32)
-},{"polyfill/polyfill-base.js":917}],915:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":915}],913:[function(require,module,exports){
 module.exports=require(14)
-},{}],916:[function(require,module,exports){
+},{}],914:[function(require,module,exports){
 module.exports=require(15)
-},{}],917:[function(require,module,exports){
+},{}],915:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":915,"./lib/window.console.js":916}],918:[function(require,module,exports){
+},{"./lib/matchesselector.js":913,"./lib/window.console.js":914}],916:[function(require,module,exports){
 module.exports=require(36)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],919:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],917:[function(require,module,exports){
 module.exports=require(11)
-},{"../lib/object.js":923,"js-ext/extra/hashmap.js":920,"polyfill/polyfill-base.js":929}],920:[function(require,module,exports){
+},{"../lib/object.js":921,"js-ext/extra/hashmap.js":918,"polyfill/polyfill-base.js":927}],918:[function(require,module,exports){
 module.exports=require(4)
-},{}],921:[function(require,module,exports){
+},{}],919:[function(require,module,exports){
 module.exports=require(39)
-},{"../lib/array.js":922,"../lib/object.js":923,"./classes.js":919,"js-ext/extra/hashmap.js":920,"polyfill/lib/weakmap.js":927}],922:[function(require,module,exports){
+},{"../lib/array.js":920,"../lib/object.js":921,"./classes.js":917,"js-ext/extra/hashmap.js":918,"polyfill/lib/weakmap.js":925}],920:[function(require,module,exports){
 module.exports=require(21)
-},{"polyfill/polyfill-base.js":929}],923:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":927}],921:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":920,"polyfill/polyfill-base.js":929}],924:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":918,"polyfill/polyfill-base.js":927}],922:[function(require,module,exports){
 module.exports=require(42)
-},{"polyfill":929}],925:[function(require,module,exports){
+},{"polyfill":927}],923:[function(require,module,exports){
 module.exports=require(23)
+},{}],924:[function(require,module,exports){
+module.exports=require(14)
+},{}],925:[function(require,module,exports){
+module.exports=require(45)
 },{}],926:[function(require,module,exports){
-module.exports=require(14)
+module.exports=require(15)
 },{}],927:[function(require,module,exports){
-module.exports=require(45)
-},{}],928:[function(require,module,exports){
-module.exports=require(15)
+module.exports=require(16)
+},{"./lib/matchesselector.js":924,"./lib/window.console.js":926}],928:[function(require,module,exports){
+module.exports=require(48)
 },{}],929:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":926,"./lib/window.console.js":928}],930:[function(require,module,exports){
-module.exports=require(48)
-},{}],931:[function(require,module,exports){
 module.exports=require(49)
-},{"../bin/local-hashmap.js":930}],932:[function(require,module,exports){
+},{"../bin/local-hashmap.js":928}],930:[function(require,module,exports){
 module.exports=require(50)
-},{"../bin/local-hashmap.js":930}],933:[function(require,module,exports){
+},{"../bin/local-hashmap.js":928}],931:[function(require,module,exports){
 module.exports=require(51)
-},{"../bin/local-hashmap.js":930}],934:[function(require,module,exports){
+},{"../bin/local-hashmap.js":928}],932:[function(require,module,exports){
 module.exports=require(14)
-},{}],935:[function(require,module,exports){
+},{}],933:[function(require,module,exports){
 module.exports=require(15)
-},{}],936:[function(require,module,exports){
+},{}],934:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":934,"./lib/window.console.js":935}],937:[function(require,module,exports){
+},{"./lib/matchesselector.js":932,"./lib/window.console.js":933}],935:[function(require,module,exports){
 module.exports=require(30)
-},{"./lib/idgenerator.js":938,"./lib/timers.js":939}],938:[function(require,module,exports){
+},{"./lib/idgenerator.js":936,"./lib/timers.js":937}],936:[function(require,module,exports){
 module.exports=require(31)
-},{"js-ext/extra/hashmap.js":920,"polyfill/polyfill-base.js":942}],939:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":918,"polyfill/polyfill-base.js":940}],937:[function(require,module,exports){
 module.exports=require(32)
-},{"polyfill/polyfill-base.js":942}],940:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":940}],938:[function(require,module,exports){
 module.exports=require(14)
-},{}],941:[function(require,module,exports){
+},{}],939:[function(require,module,exports){
 module.exports=require(15)
-},{}],942:[function(require,module,exports){
+},{}],940:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":940,"./lib/window.console.js":941}],943:[function(require,module,exports){
+},{"./lib/matchesselector.js":938,"./lib/window.console.js":939}],941:[function(require,module,exports){
 module.exports=require(61)
-},{"./lib/sizes.js":944}],944:[function(require,module,exports){
+},{"./lib/sizes.js":942}],942:[function(require,module,exports){
 module.exports=require(62)
-},{"js-ext/extra/hashmap.js":945,"js-ext/lib/object.js":946}],945:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":943,"js-ext/lib/object.js":944}],943:[function(require,module,exports){
 module.exports=require(4)
+},{}],944:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":943,"polyfill/polyfill-base.js":947}],945:[function(require,module,exports){
+module.exports=require(14)
 },{}],946:[function(require,module,exports){
-module.exports=require(13)
-},{"js-ext/extra/hashmap.js":945,"polyfill/polyfill-base.js":949}],947:[function(require,module,exports){
-module.exports=require(14)
-},{}],948:[function(require,module,exports){
 module.exports=require(15)
-},{}],949:[function(require,module,exports){
+},{}],947:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":947,"./lib/window.console.js":948}],950:[function(require,module,exports){
+},{"./lib/matchesselector.js":945,"./lib/window.console.js":946}],948:[function(require,module,exports){
 module.exports=require(68)
-},{"js-ext/extra/hashmap.js":920,"js-ext/lib/object.js":923,"js-ext/lib/string.js":925,"polyfill":936,"polyfill/extra/transition.js":931,"polyfill/extra/vendorCSS.js":933}],951:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":918,"js-ext/lib/object.js":921,"js-ext/lib/string.js":923,"polyfill":934,"polyfill/extra/transition.js":929,"polyfill/extra/vendorCSS.js":931}],949:[function(require,module,exports){
 module.exports=require(69)
-},{"js-ext/extra/hashmap.js":920,"js-ext/lib/object.js":923,"polyfill":936}],952:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":918,"js-ext/lib/object.js":921,"polyfill":934}],950:[function(require,module,exports){
 module.exports=require(70)
-},{"js-ext/extra/hashmap.js":920,"js-ext/lib/object.js":923,"js-ext/lib/string.js":925,"polyfill":936}],953:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":918,"js-ext/lib/object.js":921,"js-ext/lib/string.js":923,"polyfill":934}],951:[function(require,module,exports){
 module.exports=require(71)
-},{"../css/element.css":918,"./attribute-extractor.js":950,"./element-array.js":951,"./html-parser.js":954,"./node-parser.js":955,"./vdom-ns.js":956,"./vnode.js":957,"js-ext/extra/hashmap.js":920,"js-ext/lib/object.js":923,"js-ext/lib/promise.js":924,"js-ext/lib/string.js":925,"polyfill":936,"polyfill/extra/transition.js":931,"polyfill/extra/transitionend.js":932,"polyfill/extra/vendorCSS.js":933,"utils":937,"window-ext":943}],954:[function(require,module,exports){
+},{"../css/element.css":916,"./attribute-extractor.js":948,"./element-array.js":949,"./html-parser.js":952,"./node-parser.js":953,"./vdom-ns.js":954,"./vnode.js":955,"js-ext/extra/hashmap.js":918,"js-ext/lib/object.js":921,"js-ext/lib/promise.js":922,"js-ext/lib/string.js":923,"polyfill":934,"polyfill/extra/transition.js":929,"polyfill/extra/transitionend.js":930,"polyfill/extra/vendorCSS.js":931,"utils":935,"window-ext":941}],952:[function(require,module,exports){
 module.exports=require(72)
-},{"./attribute-extractor.js":950,"./vdom-ns.js":956,"js-ext/extra/hashmap.js":920,"js-ext/lib/object.js":923,"polyfill":936}],955:[function(require,module,exports){
+},{"./attribute-extractor.js":948,"./vdom-ns.js":954,"js-ext/extra/hashmap.js":918,"js-ext/lib/object.js":921,"polyfill":934}],953:[function(require,module,exports){
 module.exports=require(73)
-},{"./attribute-extractor.js":950,"./vdom-ns.js":956,"./vnode.js":957,"js-ext/extra/hashmap.js":920,"js-ext/lib/object.js":923,"polyfill":936}],956:[function(require,module,exports){
+},{"./attribute-extractor.js":948,"./vdom-ns.js":954,"./vnode.js":955,"js-ext/extra/hashmap.js":918,"js-ext/lib/object.js":921,"polyfill":934}],954:[function(require,module,exports){
 module.exports=require(74)
-},{"js-ext/extra/hashmap.js":920,"js-ext/lib/object.js":923,"polyfill":936}],957:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":918,"js-ext/lib/object.js":921,"polyfill":934}],955:[function(require,module,exports){
 module.exports=require(75)
-},{"./attribute-extractor.js":950,"./html-parser.js":954,"./vdom-ns.js":956,"js-ext/extra/hashmap.js":920,"js-ext/extra/lightmap.js":921,"js-ext/lib/array.js":922,"js-ext/lib/object.js":923,"js-ext/lib/string.js":925,"polyfill":936,"utils/lib/timers.js":939}],958:[function(require,module,exports){
+},{"./attribute-extractor.js":948,"./html-parser.js":952,"./vdom-ns.js":954,"js-ext/extra/hashmap.js":918,"js-ext/extra/lightmap.js":919,"js-ext/lib/array.js":920,"js-ext/lib/object.js":921,"js-ext/lib/string.js":923,"polyfill":934,"utils/lib/timers.js":937}],956:[function(require,module,exports){
 module.exports=require(76)
-},{"./partials/extend-document.js":952,"./partials/extend-element.js":953,"./partials/node-parser.js":955,"js-ext/extra/hashmap.js":920,"js-ext/lib/object.js":923,"utils/lib/timers.js":939}],959:[function(require,module,exports){
+},{"./partials/extend-document.js":950,"./partials/extend-element.js":951,"./partials/node-parser.js":953,"js-ext/extra/hashmap.js":918,"js-ext/lib/object.js":921,"utils/lib/timers.js":937}],957:[function(require,module,exports){
 module.exports=require(30)
-},{"./lib/idgenerator.js":960,"./lib/timers.js":961}],960:[function(require,module,exports){
+},{"./lib/idgenerator.js":958,"./lib/timers.js":959}],958:[function(require,module,exports){
 module.exports=require(31)
-},{"js-ext/extra/hashmap.js":965,"polyfill/polyfill-base.js":964}],961:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":963,"polyfill/polyfill-base.js":962}],959:[function(require,module,exports){
 module.exports=require(32)
-},{"polyfill/polyfill-base.js":964}],962:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":962}],960:[function(require,module,exports){
 module.exports=require(14)
-},{}],963:[function(require,module,exports){
+},{}],961:[function(require,module,exports){
 module.exports=require(15)
+},{}],962:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":960,"./lib/window.console.js":961}],963:[function(require,module,exports){
+module.exports=require(4)
 },{}],964:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":962,"./lib/window.console.js":963}],965:[function(require,module,exports){
-module.exports=require(4)
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":963,"polyfill/polyfill-base.js":967}],965:[function(require,module,exports){
+module.exports=require(14)
 },{}],966:[function(require,module,exports){
-module.exports=require(13)
-},{"js-ext/extra/hashmap.js":965,"polyfill/polyfill-base.js":969}],967:[function(require,module,exports){
-module.exports=require(14)
-},{}],968:[function(require,module,exports){
 module.exports=require(15)
-},{}],969:[function(require,module,exports){
+},{}],967:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":967,"./lib/window.console.js":968}],970:[function(require,module,exports){
+},{"./lib/matchesselector.js":965,"./lib/window.console.js":966}],968:[function(require,module,exports){
 module.exports=require(5)
-},{"event-dom":971,"event/extra/promise-finalize.js":1043,"event/extra/timer-finalize.js":1044,"js-ext/extra/classes.js":1054,"js-ext/extra/hashmap.js":1055,"js-ext/lib/object.js":1056,"js-ext/lib/promise.js":1057,"js-ext/lib/string.js":1058,"polyfill":1064,"utils/lib/timers.js":1065,"vdom":1109}],971:[function(require,module,exports){
+},{"event-dom":969,"event/extra/promise-finalize.js":1041,"event/extra/timer-finalize.js":1042,"js-ext/extra/classes.js":1052,"js-ext/extra/hashmap.js":1053,"js-ext/lib/object.js":1054,"js-ext/lib/promise.js":1055,"js-ext/lib/string.js":1056,"polyfill":1062,"utils/lib/timers.js":1063,"vdom":1107}],969:[function(require,module,exports){
 module.exports=require(6)
-},{"event":975,"js-ext/extra/hashmap.js":985,"js-ext/lib/array.js":986,"js-ext/lib/object.js":987,"js-ext/lib/string.js":988,"polyfill/polyfill-base.js":994,"utils":995,"vdom":1041}],972:[function(require,module,exports){
+},{"event":973,"js-ext/extra/hashmap.js":983,"js-ext/lib/array.js":984,"js-ext/lib/object.js":985,"js-ext/lib/string.js":986,"polyfill/polyfill-base.js":992,"utils":993,"vdom":1039}],970:[function(require,module,exports){
 module.exports=require(7)
-},{"js-ext/extra/hashmap.js":977,"js-ext/lib/object.js":978,"polyfill/polyfill-base.js":984}],973:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":975,"js-ext/lib/object.js":976,"polyfill/polyfill-base.js":982}],971:[function(require,module,exports){
 module.exports=require(8)
-},{"./event-base.js":972}],974:[function(require,module,exports){
+},{"./event-base.js":970}],972:[function(require,module,exports){
 module.exports=require(9)
-},{"./event-base.js":972,"js-ext/extra/classes.js":976,"js-ext/lib/object.js":978}],975:[function(require,module,exports){
+},{"./event-base.js":970,"js-ext/extra/classes.js":974,"js-ext/lib/object.js":976}],973:[function(require,module,exports){
 module.exports=require(10)
-},{"./event-base.js":972,"./event-emitter.js":973,"./event-listener.js":974}],976:[function(require,module,exports){
+},{"./event-base.js":970,"./event-emitter.js":971,"./event-listener.js":972}],974:[function(require,module,exports){
 module.exports=require(11)
-},{"../lib/object.js":978,"js-ext/extra/hashmap.js":977,"polyfill/polyfill-base.js":981}],977:[function(require,module,exports){
+},{"../lib/object.js":976,"js-ext/extra/hashmap.js":975,"polyfill/polyfill-base.js":979}],975:[function(require,module,exports){
 module.exports=require(4)
+},{}],976:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":975,"polyfill/polyfill-base.js":979}],977:[function(require,module,exports){
+module.exports=require(14)
 },{}],978:[function(require,module,exports){
-module.exports=require(13)
-},{"js-ext/extra/hashmap.js":977,"polyfill/polyfill-base.js":981}],979:[function(require,module,exports){
-module.exports=require(14)
-},{}],980:[function(require,module,exports){
 module.exports=require(15)
+},{}],979:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":977,"./lib/window.console.js":978}],980:[function(require,module,exports){
+module.exports=require(14)
 },{}],981:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":979,"./lib/window.console.js":980}],982:[function(require,module,exports){
-module.exports=require(14)
-},{}],983:[function(require,module,exports){
 module.exports=require(15)
+},{}],982:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":980,"./lib/window.console.js":981}],983:[function(require,module,exports){
+module.exports=require(4)
 },{}],984:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":982,"./lib/window.console.js":983}],985:[function(require,module,exports){
-module.exports=require(4)
-},{}],986:[function(require,module,exports){
 module.exports=require(21)
-},{"polyfill/polyfill-base.js":991}],987:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":989}],985:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":985,"polyfill/polyfill-base.js":991}],988:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":983,"polyfill/polyfill-base.js":989}],986:[function(require,module,exports){
 module.exports=require(23)
+},{}],987:[function(require,module,exports){
+module.exports=require(14)
+},{}],988:[function(require,module,exports){
+module.exports=require(15)
 },{}],989:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":987,"./lib/window.console.js":988}],990:[function(require,module,exports){
 module.exports=require(14)
-},{}],990:[function(require,module,exports){
-module.exports=require(15)
 },{}],991:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":989,"./lib/window.console.js":990}],992:[function(require,module,exports){
-module.exports=require(14)
-},{}],993:[function(require,module,exports){
 module.exports=require(15)
-},{}],994:[function(require,module,exports){
+},{}],992:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":992,"./lib/window.console.js":993}],995:[function(require,module,exports){
+},{"./lib/matchesselector.js":990,"./lib/window.console.js":991}],993:[function(require,module,exports){
 module.exports=require(30)
-},{"./lib/idgenerator.js":996,"./lib/timers.js":997}],996:[function(require,module,exports){
+},{"./lib/idgenerator.js":994,"./lib/timers.js":995}],994:[function(require,module,exports){
 module.exports=require(31)
-},{"js-ext/extra/hashmap.js":985,"polyfill/polyfill-base.js":1000}],997:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":983,"polyfill/polyfill-base.js":998}],995:[function(require,module,exports){
 module.exports=require(32)
-},{"polyfill/polyfill-base.js":1000}],998:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":998}],996:[function(require,module,exports){
 module.exports=require(14)
-},{}],999:[function(require,module,exports){
+},{}],997:[function(require,module,exports){
 module.exports=require(15)
-},{}],1000:[function(require,module,exports){
+},{}],998:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":998,"./lib/window.console.js":999}],1001:[function(require,module,exports){
+},{"./lib/matchesselector.js":996,"./lib/window.console.js":997}],999:[function(require,module,exports){
 module.exports=require(36)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1002:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1000:[function(require,module,exports){
 module.exports=require(11)
-},{"../lib/object.js":1006,"js-ext/extra/hashmap.js":1003,"polyfill/polyfill-base.js":1012}],1003:[function(require,module,exports){
+},{"../lib/object.js":1004,"js-ext/extra/hashmap.js":1001,"polyfill/polyfill-base.js":1010}],1001:[function(require,module,exports){
 module.exports=require(4)
-},{}],1004:[function(require,module,exports){
+},{}],1002:[function(require,module,exports){
 module.exports=require(39)
-},{"../lib/array.js":1005,"../lib/object.js":1006,"./classes.js":1002,"js-ext/extra/hashmap.js":1003,"polyfill/lib/weakmap.js":1010}],1005:[function(require,module,exports){
+},{"../lib/array.js":1003,"../lib/object.js":1004,"./classes.js":1000,"js-ext/extra/hashmap.js":1001,"polyfill/lib/weakmap.js":1008}],1003:[function(require,module,exports){
 module.exports=require(21)
-},{"polyfill/polyfill-base.js":1012}],1006:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1010}],1004:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1003,"polyfill/polyfill-base.js":1012}],1007:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1001,"polyfill/polyfill-base.js":1010}],1005:[function(require,module,exports){
 module.exports=require(42)
-},{"polyfill":1012}],1008:[function(require,module,exports){
+},{"polyfill":1010}],1006:[function(require,module,exports){
 module.exports=require(23)
+},{}],1007:[function(require,module,exports){
+module.exports=require(14)
+},{}],1008:[function(require,module,exports){
+module.exports=require(45)
 },{}],1009:[function(require,module,exports){
-module.exports=require(14)
+module.exports=require(15)
 },{}],1010:[function(require,module,exports){
-module.exports=require(45)
-},{}],1011:[function(require,module,exports){
-module.exports=require(15)
+module.exports=require(16)
+},{"./lib/matchesselector.js":1007,"./lib/window.console.js":1009}],1011:[function(require,module,exports){
+module.exports=require(48)
 },{}],1012:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":1009,"./lib/window.console.js":1011}],1013:[function(require,module,exports){
-module.exports=require(48)
-},{}],1014:[function(require,module,exports){
 module.exports=require(49)
-},{"../bin/local-hashmap.js":1013}],1015:[function(require,module,exports){
+},{"../bin/local-hashmap.js":1011}],1013:[function(require,module,exports){
 module.exports=require(50)
-},{"../bin/local-hashmap.js":1013}],1016:[function(require,module,exports){
+},{"../bin/local-hashmap.js":1011}],1014:[function(require,module,exports){
 module.exports=require(51)
-},{"../bin/local-hashmap.js":1013}],1017:[function(require,module,exports){
+},{"../bin/local-hashmap.js":1011}],1015:[function(require,module,exports){
 module.exports=require(14)
-},{}],1018:[function(require,module,exports){
+},{}],1016:[function(require,module,exports){
 module.exports=require(15)
-},{}],1019:[function(require,module,exports){
+},{}],1017:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1017,"./lib/window.console.js":1018}],1020:[function(require,module,exports){
+},{"./lib/matchesselector.js":1015,"./lib/window.console.js":1016}],1018:[function(require,module,exports){
 module.exports=require(30)
-},{"./lib/idgenerator.js":1021,"./lib/timers.js":1022}],1021:[function(require,module,exports){
+},{"./lib/idgenerator.js":1019,"./lib/timers.js":1020}],1019:[function(require,module,exports){
 module.exports=require(31)
-},{"js-ext/extra/hashmap.js":1003,"polyfill/polyfill-base.js":1025}],1022:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1001,"polyfill/polyfill-base.js":1023}],1020:[function(require,module,exports){
 module.exports=require(32)
-},{"polyfill/polyfill-base.js":1025}],1023:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1023}],1021:[function(require,module,exports){
 module.exports=require(14)
-},{}],1024:[function(require,module,exports){
+},{}],1022:[function(require,module,exports){
 module.exports=require(15)
-},{}],1025:[function(require,module,exports){
+},{}],1023:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1023,"./lib/window.console.js":1024}],1026:[function(require,module,exports){
+},{"./lib/matchesselector.js":1021,"./lib/window.console.js":1022}],1024:[function(require,module,exports){
 module.exports=require(61)
-},{"./lib/sizes.js":1027}],1027:[function(require,module,exports){
+},{"./lib/sizes.js":1025}],1025:[function(require,module,exports){
 module.exports=require(62)
-},{"js-ext/extra/hashmap.js":1028,"js-ext/lib/object.js":1029}],1028:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1026,"js-ext/lib/object.js":1027}],1026:[function(require,module,exports){
 module.exports=require(4)
+},{}],1027:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1026,"polyfill/polyfill-base.js":1030}],1028:[function(require,module,exports){
+module.exports=require(14)
 },{}],1029:[function(require,module,exports){
-module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1028,"polyfill/polyfill-base.js":1032}],1030:[function(require,module,exports){
-module.exports=require(14)
-},{}],1031:[function(require,module,exports){
 module.exports=require(15)
-},{}],1032:[function(require,module,exports){
+},{}],1030:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1030,"./lib/window.console.js":1031}],1033:[function(require,module,exports){
+},{"./lib/matchesselector.js":1028,"./lib/window.console.js":1029}],1031:[function(require,module,exports){
 module.exports=require(68)
-},{"js-ext/extra/hashmap.js":1003,"js-ext/lib/object.js":1006,"js-ext/lib/string.js":1008,"polyfill":1019,"polyfill/extra/transition.js":1014,"polyfill/extra/vendorCSS.js":1016}],1034:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1001,"js-ext/lib/object.js":1004,"js-ext/lib/string.js":1006,"polyfill":1017,"polyfill/extra/transition.js":1012,"polyfill/extra/vendorCSS.js":1014}],1032:[function(require,module,exports){
 module.exports=require(69)
-},{"js-ext/extra/hashmap.js":1003,"js-ext/lib/object.js":1006,"polyfill":1019}],1035:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1001,"js-ext/lib/object.js":1004,"polyfill":1017}],1033:[function(require,module,exports){
 module.exports=require(70)
-},{"js-ext/extra/hashmap.js":1003,"js-ext/lib/object.js":1006,"js-ext/lib/string.js":1008,"polyfill":1019}],1036:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1001,"js-ext/lib/object.js":1004,"js-ext/lib/string.js":1006,"polyfill":1017}],1034:[function(require,module,exports){
 module.exports=require(71)
-},{"../css/element.css":1001,"./attribute-extractor.js":1033,"./element-array.js":1034,"./html-parser.js":1037,"./node-parser.js":1038,"./vdom-ns.js":1039,"./vnode.js":1040,"js-ext/extra/hashmap.js":1003,"js-ext/lib/object.js":1006,"js-ext/lib/promise.js":1007,"js-ext/lib/string.js":1008,"polyfill":1019,"polyfill/extra/transition.js":1014,"polyfill/extra/transitionend.js":1015,"polyfill/extra/vendorCSS.js":1016,"utils":1020,"window-ext":1026}],1037:[function(require,module,exports){
+},{"../css/element.css":999,"./attribute-extractor.js":1031,"./element-array.js":1032,"./html-parser.js":1035,"./node-parser.js":1036,"./vdom-ns.js":1037,"./vnode.js":1038,"js-ext/extra/hashmap.js":1001,"js-ext/lib/object.js":1004,"js-ext/lib/promise.js":1005,"js-ext/lib/string.js":1006,"polyfill":1017,"polyfill/extra/transition.js":1012,"polyfill/extra/transitionend.js":1013,"polyfill/extra/vendorCSS.js":1014,"utils":1018,"window-ext":1024}],1035:[function(require,module,exports){
 module.exports=require(72)
-},{"./attribute-extractor.js":1033,"./vdom-ns.js":1039,"js-ext/extra/hashmap.js":1003,"js-ext/lib/object.js":1006,"polyfill":1019}],1038:[function(require,module,exports){
+},{"./attribute-extractor.js":1031,"./vdom-ns.js":1037,"js-ext/extra/hashmap.js":1001,"js-ext/lib/object.js":1004,"polyfill":1017}],1036:[function(require,module,exports){
 module.exports=require(73)
-},{"./attribute-extractor.js":1033,"./vdom-ns.js":1039,"./vnode.js":1040,"js-ext/extra/hashmap.js":1003,"js-ext/lib/object.js":1006,"polyfill":1019}],1039:[function(require,module,exports){
+},{"./attribute-extractor.js":1031,"./vdom-ns.js":1037,"./vnode.js":1038,"js-ext/extra/hashmap.js":1001,"js-ext/lib/object.js":1004,"polyfill":1017}],1037:[function(require,module,exports){
 module.exports=require(74)
-},{"js-ext/extra/hashmap.js":1003,"js-ext/lib/object.js":1006,"polyfill":1019}],1040:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1001,"js-ext/lib/object.js":1004,"polyfill":1017}],1038:[function(require,module,exports){
 module.exports=require(75)
-},{"./attribute-extractor.js":1033,"./html-parser.js":1037,"./vdom-ns.js":1039,"js-ext/extra/hashmap.js":1003,"js-ext/extra/lightmap.js":1004,"js-ext/lib/array.js":1005,"js-ext/lib/object.js":1006,"js-ext/lib/string.js":1008,"polyfill":1019,"utils/lib/timers.js":1022}],1041:[function(require,module,exports){
+},{"./attribute-extractor.js":1031,"./html-parser.js":1035,"./vdom-ns.js":1037,"js-ext/extra/hashmap.js":1001,"js-ext/extra/lightmap.js":1002,"js-ext/lib/array.js":1003,"js-ext/lib/object.js":1004,"js-ext/lib/string.js":1006,"polyfill":1017,"utils/lib/timers.js":1020}],1039:[function(require,module,exports){
 module.exports=require(76)
-},{"./partials/extend-document.js":1035,"./partials/extend-element.js":1036,"./partials/node-parser.js":1038,"js-ext/extra/hashmap.js":1003,"js-ext/lib/object.js":1006,"utils/lib/timers.js":1022}],1042:[function(require,module,exports){
+},{"./partials/extend-document.js":1033,"./partials/extend-element.js":1034,"./partials/node-parser.js":1036,"js-ext/extra/hashmap.js":1001,"js-ext/lib/object.js":1004,"utils/lib/timers.js":1020}],1040:[function(require,module,exports){
 module.exports=require(7)
-},{"js-ext/extra/hashmap.js":1045,"js-ext/lib/object.js":1046,"polyfill/polyfill-base.js":1053}],1043:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1043,"js-ext/lib/object.js":1044,"polyfill/polyfill-base.js":1051}],1041:[function(require,module,exports){
 module.exports=require(78)
-},{"js-ext/extra/hashmap.js":1045,"js-ext/lib/promise.js":1047}],1044:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1043,"js-ext/lib/promise.js":1045}],1042:[function(require,module,exports){
 module.exports=require(79)
-},{"../event-base.js":1042,"js-ext/extra/hashmap.js":1045}],1045:[function(require,module,exports){
+},{"../event-base.js":1040,"js-ext/extra/hashmap.js":1043}],1043:[function(require,module,exports){
 module.exports=require(4)
-},{}],1046:[function(require,module,exports){
+},{}],1044:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1045,"polyfill/polyfill-base.js":1050}],1047:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1043,"polyfill/polyfill-base.js":1048}],1045:[function(require,module,exports){
 module.exports=require(42)
-},{"polyfill":1050}],1048:[function(require,module,exports){
+},{"polyfill":1048}],1046:[function(require,module,exports){
 module.exports=require(14)
-},{}],1049:[function(require,module,exports){
+},{}],1047:[function(require,module,exports){
 module.exports=require(15)
+},{}],1048:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1046,"./lib/window.console.js":1047}],1049:[function(require,module,exports){
+module.exports=require(14)
 },{}],1050:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":1048,"./lib/window.console.js":1049}],1051:[function(require,module,exports){
-module.exports=require(14)
-},{}],1052:[function(require,module,exports){
 module.exports=require(15)
-},{}],1053:[function(require,module,exports){
+},{}],1051:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1051,"./lib/window.console.js":1052}],1054:[function(require,module,exports){
+},{"./lib/matchesselector.js":1049,"./lib/window.console.js":1050}],1052:[function(require,module,exports){
 module.exports=require(11)
-},{"../lib/object.js":1056,"js-ext/extra/hashmap.js":1055,"polyfill/polyfill-base.js":1061}],1055:[function(require,module,exports){
+},{"../lib/object.js":1054,"js-ext/extra/hashmap.js":1053,"polyfill/polyfill-base.js":1059}],1053:[function(require,module,exports){
 module.exports=require(4)
-},{}],1056:[function(require,module,exports){
+},{}],1054:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1055,"polyfill/polyfill-base.js":1061}],1057:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1053,"polyfill/polyfill-base.js":1059}],1055:[function(require,module,exports){
 module.exports=require(42)
-},{"polyfill":1061}],1058:[function(require,module,exports){
+},{"polyfill":1059}],1056:[function(require,module,exports){
 module.exports=require(23)
+},{}],1057:[function(require,module,exports){
+module.exports=require(14)
+},{}],1058:[function(require,module,exports){
+module.exports=require(15)
 },{}],1059:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1057,"./lib/window.console.js":1058}],1060:[function(require,module,exports){
 module.exports=require(14)
-},{}],1060:[function(require,module,exports){
-module.exports=require(15)
 },{}],1061:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":1059,"./lib/window.console.js":1060}],1062:[function(require,module,exports){
-module.exports=require(14)
-},{}],1063:[function(require,module,exports){
 module.exports=require(15)
-},{}],1064:[function(require,module,exports){
+},{}],1062:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1062,"./lib/window.console.js":1063}],1065:[function(require,module,exports){
+},{"./lib/matchesselector.js":1060,"./lib/window.console.js":1061}],1063:[function(require,module,exports){
 module.exports=require(32)
-},{"polyfill/polyfill-base.js":1068}],1066:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1066}],1064:[function(require,module,exports){
 module.exports=require(14)
-},{}],1067:[function(require,module,exports){
+},{}],1065:[function(require,module,exports){
 module.exports=require(15)
-},{}],1068:[function(require,module,exports){
+},{}],1066:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1066,"./lib/window.console.js":1067}],1069:[function(require,module,exports){
+},{"./lib/matchesselector.js":1064,"./lib/window.console.js":1065}],1067:[function(require,module,exports){
 module.exports=require(36)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1070:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1068:[function(require,module,exports){
 module.exports=require(11)
-},{"../lib/object.js":1074,"js-ext/extra/hashmap.js":1071,"polyfill/polyfill-base.js":1080}],1071:[function(require,module,exports){
+},{"../lib/object.js":1072,"js-ext/extra/hashmap.js":1069,"polyfill/polyfill-base.js":1078}],1069:[function(require,module,exports){
 module.exports=require(4)
-},{}],1072:[function(require,module,exports){
+},{}],1070:[function(require,module,exports){
 module.exports=require(39)
-},{"../lib/array.js":1073,"../lib/object.js":1074,"./classes.js":1070,"js-ext/extra/hashmap.js":1071,"polyfill/lib/weakmap.js":1078}],1073:[function(require,module,exports){
+},{"../lib/array.js":1071,"../lib/object.js":1072,"./classes.js":1068,"js-ext/extra/hashmap.js":1069,"polyfill/lib/weakmap.js":1076}],1071:[function(require,module,exports){
 module.exports=require(21)
-},{"polyfill/polyfill-base.js":1080}],1074:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1078}],1072:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1071,"polyfill/polyfill-base.js":1080}],1075:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1069,"polyfill/polyfill-base.js":1078}],1073:[function(require,module,exports){
 module.exports=require(42)
-},{"polyfill":1080}],1076:[function(require,module,exports){
+},{"polyfill":1078}],1074:[function(require,module,exports){
 module.exports=require(23)
-},{}],1077:[function(require,module,exports){
+},{}],1075:[function(require,module,exports){
 module.exports=require(14)
-},{}],1078:[function(require,module,exports){
+},{}],1076:[function(require,module,exports){
 module.exports=require(45)
-},{}],1079:[function(require,module,exports){
+},{}],1077:[function(require,module,exports){
 module.exports=require(15)
-},{}],1080:[function(require,module,exports){
+},{}],1078:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1077,"./lib/window.console.js":1079}],1081:[function(require,module,exports){
+},{"./lib/matchesselector.js":1075,"./lib/window.console.js":1077}],1079:[function(require,module,exports){
 module.exports=require(48)
-},{}],1082:[function(require,module,exports){
+},{}],1080:[function(require,module,exports){
 module.exports=require(49)
-},{"../bin/local-hashmap.js":1081}],1083:[function(require,module,exports){
+},{"../bin/local-hashmap.js":1079}],1081:[function(require,module,exports){
 module.exports=require(50)
-},{"../bin/local-hashmap.js":1081}],1084:[function(require,module,exports){
+},{"../bin/local-hashmap.js":1079}],1082:[function(require,module,exports){
 module.exports=require(51)
-},{"../bin/local-hashmap.js":1081}],1085:[function(require,module,exports){
+},{"../bin/local-hashmap.js":1079}],1083:[function(require,module,exports){
 module.exports=require(14)
-},{}],1086:[function(require,module,exports){
+},{}],1084:[function(require,module,exports){
 module.exports=require(15)
-},{}],1087:[function(require,module,exports){
+},{}],1085:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1085,"./lib/window.console.js":1086}],1088:[function(require,module,exports){
+},{"./lib/matchesselector.js":1083,"./lib/window.console.js":1084}],1086:[function(require,module,exports){
 module.exports=require(30)
-},{"./lib/idgenerator.js":1089,"./lib/timers.js":1090}],1089:[function(require,module,exports){
+},{"./lib/idgenerator.js":1087,"./lib/timers.js":1088}],1087:[function(require,module,exports){
 module.exports=require(31)
-},{"js-ext/extra/hashmap.js":1071,"polyfill/polyfill-base.js":1093}],1090:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1069,"polyfill/polyfill-base.js":1091}],1088:[function(require,module,exports){
 module.exports=require(32)
-},{"polyfill/polyfill-base.js":1093}],1091:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1091}],1089:[function(require,module,exports){
 module.exports=require(14)
-},{}],1092:[function(require,module,exports){
+},{}],1090:[function(require,module,exports){
 module.exports=require(15)
-},{}],1093:[function(require,module,exports){
+},{}],1091:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1091,"./lib/window.console.js":1092}],1094:[function(require,module,exports){
+},{"./lib/matchesselector.js":1089,"./lib/window.console.js":1090}],1092:[function(require,module,exports){
 module.exports=require(61)
-},{"./lib/sizes.js":1095}],1095:[function(require,module,exports){
+},{"./lib/sizes.js":1093}],1093:[function(require,module,exports){
 module.exports=require(62)
-},{"js-ext/extra/hashmap.js":1096,"js-ext/lib/object.js":1097}],1096:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1094,"js-ext/lib/object.js":1095}],1094:[function(require,module,exports){
 module.exports=require(4)
+},{}],1095:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1094,"polyfill/polyfill-base.js":1098}],1096:[function(require,module,exports){
+module.exports=require(14)
 },{}],1097:[function(require,module,exports){
-module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1096,"polyfill/polyfill-base.js":1100}],1098:[function(require,module,exports){
-module.exports=require(14)
-},{}],1099:[function(require,module,exports){
 module.exports=require(15)
-},{}],1100:[function(require,module,exports){
+},{}],1098:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1098,"./lib/window.console.js":1099}],1101:[function(require,module,exports){
+},{"./lib/matchesselector.js":1096,"./lib/window.console.js":1097}],1099:[function(require,module,exports){
 module.exports=require(68)
-},{"js-ext/extra/hashmap.js":1071,"js-ext/lib/object.js":1074,"js-ext/lib/string.js":1076,"polyfill":1087,"polyfill/extra/transition.js":1082,"polyfill/extra/vendorCSS.js":1084}],1102:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1069,"js-ext/lib/object.js":1072,"js-ext/lib/string.js":1074,"polyfill":1085,"polyfill/extra/transition.js":1080,"polyfill/extra/vendorCSS.js":1082}],1100:[function(require,module,exports){
 module.exports=require(69)
-},{"js-ext/extra/hashmap.js":1071,"js-ext/lib/object.js":1074,"polyfill":1087}],1103:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1069,"js-ext/lib/object.js":1072,"polyfill":1085}],1101:[function(require,module,exports){
 module.exports=require(70)
-},{"js-ext/extra/hashmap.js":1071,"js-ext/lib/object.js":1074,"js-ext/lib/string.js":1076,"polyfill":1087}],1104:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1069,"js-ext/lib/object.js":1072,"js-ext/lib/string.js":1074,"polyfill":1085}],1102:[function(require,module,exports){
 module.exports=require(71)
-},{"../css/element.css":1069,"./attribute-extractor.js":1101,"./element-array.js":1102,"./html-parser.js":1105,"./node-parser.js":1106,"./vdom-ns.js":1107,"./vnode.js":1108,"js-ext/extra/hashmap.js":1071,"js-ext/lib/object.js":1074,"js-ext/lib/promise.js":1075,"js-ext/lib/string.js":1076,"polyfill":1087,"polyfill/extra/transition.js":1082,"polyfill/extra/transitionend.js":1083,"polyfill/extra/vendorCSS.js":1084,"utils":1088,"window-ext":1094}],1105:[function(require,module,exports){
+},{"../css/element.css":1067,"./attribute-extractor.js":1099,"./element-array.js":1100,"./html-parser.js":1103,"./node-parser.js":1104,"./vdom-ns.js":1105,"./vnode.js":1106,"js-ext/extra/hashmap.js":1069,"js-ext/lib/object.js":1072,"js-ext/lib/promise.js":1073,"js-ext/lib/string.js":1074,"polyfill":1085,"polyfill/extra/transition.js":1080,"polyfill/extra/transitionend.js":1081,"polyfill/extra/vendorCSS.js":1082,"utils":1086,"window-ext":1092}],1103:[function(require,module,exports){
 module.exports=require(72)
-},{"./attribute-extractor.js":1101,"./vdom-ns.js":1107,"js-ext/extra/hashmap.js":1071,"js-ext/lib/object.js":1074,"polyfill":1087}],1106:[function(require,module,exports){
+},{"./attribute-extractor.js":1099,"./vdom-ns.js":1105,"js-ext/extra/hashmap.js":1069,"js-ext/lib/object.js":1072,"polyfill":1085}],1104:[function(require,module,exports){
 module.exports=require(73)
-},{"./attribute-extractor.js":1101,"./vdom-ns.js":1107,"./vnode.js":1108,"js-ext/extra/hashmap.js":1071,"js-ext/lib/object.js":1074,"polyfill":1087}],1107:[function(require,module,exports){
+},{"./attribute-extractor.js":1099,"./vdom-ns.js":1105,"./vnode.js":1106,"js-ext/extra/hashmap.js":1069,"js-ext/lib/object.js":1072,"polyfill":1085}],1105:[function(require,module,exports){
 module.exports=require(74)
-},{"js-ext/extra/hashmap.js":1071,"js-ext/lib/object.js":1074,"polyfill":1087}],1108:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1069,"js-ext/lib/object.js":1072,"polyfill":1085}],1106:[function(require,module,exports){
 module.exports=require(75)
-},{"./attribute-extractor.js":1101,"./html-parser.js":1105,"./vdom-ns.js":1107,"js-ext/extra/hashmap.js":1071,"js-ext/extra/lightmap.js":1072,"js-ext/lib/array.js":1073,"js-ext/lib/object.js":1074,"js-ext/lib/string.js":1076,"polyfill":1087,"utils/lib/timers.js":1090}],1109:[function(require,module,exports){
+},{"./attribute-extractor.js":1099,"./html-parser.js":1103,"./vdom-ns.js":1105,"js-ext/extra/hashmap.js":1069,"js-ext/extra/lightmap.js":1070,"js-ext/lib/array.js":1071,"js-ext/lib/object.js":1072,"js-ext/lib/string.js":1074,"polyfill":1085,"utils/lib/timers.js":1088}],1107:[function(require,module,exports){
 module.exports=require(76)
-},{"./partials/extend-document.js":1103,"./partials/extend-element.js":1104,"./partials/node-parser.js":1106,"js-ext/extra/hashmap.js":1071,"js-ext/lib/object.js":1074,"utils/lib/timers.js":1090}],1110:[function(require,module,exports){
+},{"./partials/extend-document.js":1101,"./partials/extend-element.js":1102,"./partials/node-parser.js":1104,"js-ext/extra/hashmap.js":1069,"js-ext/lib/object.js":1072,"utils/lib/timers.js":1088}],1108:[function(require,module,exports){
 module.exports=require(14)
-},{}],1111:[function(require,module,exports){
+},{}],1109:[function(require,module,exports){
 module.exports=require(15)
-},{}],1112:[function(require,module,exports){
+},{}],1110:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1110,"./lib/window.console.js":1111}],1113:[function(require,module,exports){
+},{"./lib/matchesselector.js":1108,"./lib/window.console.js":1109}],1111:[function(require,module,exports){
 module.exports=require(30)
-},{"./lib/idgenerator.js":1114,"./lib/timers.js":1115}],1114:[function(require,module,exports){
+},{"./lib/idgenerator.js":1112,"./lib/timers.js":1113}],1112:[function(require,module,exports){
 module.exports=require(31)
-},{"js-ext/extra/hashmap.js":965,"polyfill/polyfill-base.js":1118}],1115:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":963,"polyfill/polyfill-base.js":1116}],1113:[function(require,module,exports){
 module.exports=require(32)
-},{"polyfill/polyfill-base.js":1118}],1116:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1116}],1114:[function(require,module,exports){
 module.exports=require(14)
-},{}],1117:[function(require,module,exports){
+},{}],1115:[function(require,module,exports){
 module.exports=require(15)
-},{}],1118:[function(require,module,exports){
+},{}],1116:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1116,"./lib/window.console.js":1117}],1119:[function(require,module,exports){
+},{"./lib/matchesselector.js":1114,"./lib/window.console.js":1115}],1117:[function(require,module,exports){
 module.exports=require(61)
-},{"./lib/sizes.js":1120}],1120:[function(require,module,exports){
+},{"./lib/sizes.js":1118}],1118:[function(require,module,exports){
 module.exports=require(62)
-},{"js-ext/extra/hashmap.js":1121,"js-ext/lib/object.js":1122}],1121:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1119,"js-ext/lib/object.js":1120}],1119:[function(require,module,exports){
 module.exports=require(4)
-},{}],1122:[function(require,module,exports){
+},{}],1120:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1121,"polyfill/polyfill-base.js":1125}],1123:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1119,"polyfill/polyfill-base.js":1123}],1121:[function(require,module,exports){
 module.exports=require(14)
-},{}],1124:[function(require,module,exports){
+},{}],1122:[function(require,module,exports){
 module.exports=require(15)
-},{}],1125:[function(require,module,exports){
+},{}],1123:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1123,"./lib/window.console.js":1124}],1126:[function(require,module,exports){
+},{"./lib/matchesselector.js":1121,"./lib/window.console.js":1122}],1124:[function(require,module,exports){
 
 "use strict";
 
@@ -23978,7 +24146,7 @@ module.exports = function (window) {
     return IO;
 };
 
-},{"../io.js":1130,"js-ext/extra/hashmap.js":1131,"js-ext/lib/object.js":1136,"xmldom":1911}],1127:[function(require,module,exports){
+},{"../io.js":1128,"js-ext/extra/hashmap.js":1129,"js-ext/lib/object.js":1134,"xmldom":2676}],1125:[function(require,module,exports){
 "use strict";
 
 require('js-ext/lib/object.js');
@@ -24105,7 +24273,7 @@ module.exports = function (window) {
 
     return IO;
 };
-},{"../io.js":1130,"js-ext/extra/hashmap.js":1131,"js-ext/lib/object.js":1136}],1128:[function(require,module,exports){
+},{"../io.js":1128,"js-ext/extra/hashmap.js":1129,"js-ext/lib/object.js":1134}],1126:[function(require,module,exports){
 "use strict";
 
 /**
@@ -24575,7 +24743,7 @@ module.exports = function (window) {
 
     return IO;
 };
-},{"../io.js":1130,"js-ext/extra/hashmap.js":1131,"js-ext/lib/object.js":1136,"js-ext/lib/string.js":1138,"polyfill/polyfill-base.js":1144}],1129:[function(require,module,exports){
+},{"../io.js":1128,"js-ext/extra/hashmap.js":1129,"js-ext/lib/object.js":1134,"js-ext/lib/string.js":1136,"polyfill/polyfill-base.js":1142}],1127:[function(require,module,exports){
 "use strict";
 
 /**
@@ -24727,7 +24895,7 @@ module.exports = function (window) {
 
     return IO;
 };
-},{"../io.js":1130,"js-ext":1132,"js-ext/extra/hashmap.js":1131}],1130:[function(require,module,exports){
+},{"../io.js":1128,"js-ext":1130,"js-ext/extra/hashmap.js":1129}],1128:[function(require,module,exports){
 (function (global){
 /**
  * Provides core IO-functionality.
@@ -25089,53 +25257,53 @@ module.exports = function (window) {
     return IO;
 };
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"js-ext":1132,"js-ext/extra/hashmap.js":1131,"polyfill/polyfill-base.js":1144,"utils":1145}],1131:[function(require,module,exports){
+},{"js-ext":1130,"js-ext/extra/hashmap.js":1129,"polyfill/polyfill-base.js":1142,"utils":1143}],1129:[function(require,module,exports){
 module.exports=require(4)
-},{}],1132:[function(require,module,exports){
+},{}],1130:[function(require,module,exports){
 module.exports=require(225)
-},{"./lib/array.js":1133,"./lib/function.js":1134,"./lib/json.js":1135,"./lib/object.js":1136,"./lib/promise.js":1137,"./lib/string.js":1138}],1133:[function(require,module,exports){
+},{"./lib/array.js":1131,"./lib/function.js":1132,"./lib/json.js":1133,"./lib/object.js":1134,"./lib/promise.js":1135,"./lib/string.js":1136}],1131:[function(require,module,exports){
 module.exports=require(21)
-},{"polyfill/polyfill-base.js":1141}],1134:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1139}],1132:[function(require,module,exports){
 module.exports=require(227)
-},{"polyfill/polyfill-base.js":1141}],1135:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1139}],1133:[function(require,module,exports){
 module.exports=require(228)
-},{"polyfill/polyfill-base.js":1141}],1136:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1139}],1134:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1131,"polyfill/polyfill-base.js":1141}],1137:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1129,"polyfill/polyfill-base.js":1139}],1135:[function(require,module,exports){
 module.exports=require(42)
-},{"polyfill":1141}],1138:[function(require,module,exports){
+},{"polyfill":1139}],1136:[function(require,module,exports){
 module.exports=require(23)
+},{}],1137:[function(require,module,exports){
+module.exports=require(14)
+},{}],1138:[function(require,module,exports){
+module.exports=require(15)
 },{}],1139:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1137,"./lib/window.console.js":1138}],1140:[function(require,module,exports){
 module.exports=require(14)
-},{}],1140:[function(require,module,exports){
-module.exports=require(15)
 },{}],1141:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":1139,"./lib/window.console.js":1140}],1142:[function(require,module,exports){
-module.exports=require(14)
-},{}],1143:[function(require,module,exports){
 module.exports=require(15)
-},{}],1144:[function(require,module,exports){
+},{}],1142:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1142,"./lib/window.console.js":1143}],1145:[function(require,module,exports){
+},{"./lib/matchesselector.js":1140,"./lib/window.console.js":1141}],1143:[function(require,module,exports){
 module.exports=require(30)
-},{"./lib/idgenerator.js":1146,"./lib/timers.js":1147}],1146:[function(require,module,exports){
+},{"./lib/idgenerator.js":1144,"./lib/timers.js":1145}],1144:[function(require,module,exports){
 module.exports=require(31)
-},{"js-ext/extra/hashmap.js":1131,"polyfill/polyfill-base.js":1150}],1147:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1129,"polyfill/polyfill-base.js":1148}],1145:[function(require,module,exports){
 module.exports=require(32)
-},{"polyfill/polyfill-base.js":1150}],1148:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1148}],1146:[function(require,module,exports){
 module.exports=require(14)
-},{}],1149:[function(require,module,exports){
+},{}],1147:[function(require,module,exports){
 module.exports=require(15)
-},{}],1150:[function(require,module,exports){
+},{}],1148:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1148,"./lib/window.console.js":1149}],1151:[function(require,module,exports){
+},{"./lib/matchesselector.js":1146,"./lib/window.console.js":1147}],1149:[function(require,module,exports){
 module.exports=require(11)
-},{"../lib/object.js":1159,"js-ext/extra/hashmap.js":1152,"polyfill/polyfill-base.js":1165}],1152:[function(require,module,exports){
+},{"../lib/object.js":1157,"js-ext/extra/hashmap.js":1150,"polyfill/polyfill-base.js":1163}],1150:[function(require,module,exports){
 module.exports=require(4)
-},{}],1153:[function(require,module,exports){
+},{}],1151:[function(require,module,exports){
 module.exports=require(39)
-},{"../lib/array.js":1156,"../lib/object.js":1159,"./classes.js":1151,"js-ext/extra/hashmap.js":1152,"polyfill/lib/weakmap.js":1163}],1154:[function(require,module,exports){
+},{"../lib/array.js":1154,"../lib/object.js":1157,"./classes.js":1149,"js-ext/extra/hashmap.js":1150,"polyfill/lib/weakmap.js":1161}],1152:[function(require,module,exports){
 "use strict";
 
 var createHashMap = require('./hashmap.js').createMap;
@@ -25208,7 +25376,7 @@ module.exports = createHashMap({
     'with': true,
     'yield': true
 });
-},{"./hashmap.js":1152}],1155:[function(require,module,exports){
+},{"./hashmap.js":1150}],1153:[function(require,module,exports){
 "use strict";
 
 require('./lib/function.js');
@@ -25223,307 +25391,307 @@ module.exports = {
     Classes: require('./extra/classes.js'),
     LightMap: require('./extra/lightmap.js')
 };
-},{"./extra/classes.js":1151,"./extra/hashmap.js":1152,"./extra/lightmap.js":1153,"./lib/array.js":1156,"./lib/function.js":1157,"./lib/json.js":1158,"./lib/object.js":1159,"./lib/promise.js":1160,"./lib/string.js":1161}],1156:[function(require,module,exports){
+},{"./extra/classes.js":1149,"./extra/hashmap.js":1150,"./extra/lightmap.js":1151,"./lib/array.js":1154,"./lib/function.js":1155,"./lib/json.js":1156,"./lib/object.js":1157,"./lib/promise.js":1158,"./lib/string.js":1159}],1154:[function(require,module,exports){
 module.exports=require(21)
-},{"polyfill/polyfill-base.js":1165}],1157:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1163}],1155:[function(require,module,exports){
 module.exports=require(227)
-},{"polyfill/polyfill-base.js":1165}],1158:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1163}],1156:[function(require,module,exports){
 module.exports=require(228)
-},{"polyfill/polyfill-base.js":1165}],1159:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1163}],1157:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1152,"polyfill/polyfill-base.js":1165}],1160:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1150,"polyfill/polyfill-base.js":1163}],1158:[function(require,module,exports){
 module.exports=require(42)
-},{"polyfill":1165}],1161:[function(require,module,exports){
+},{"polyfill":1163}],1159:[function(require,module,exports){
 module.exports=require(23)
+},{}],1160:[function(require,module,exports){
+module.exports=require(14)
+},{}],1161:[function(require,module,exports){
+module.exports=require(45)
 },{}],1162:[function(require,module,exports){
-module.exports=require(14)
+module.exports=require(15)
 },{}],1163:[function(require,module,exports){
-module.exports=require(45)
-},{}],1164:[function(require,module,exports){
-module.exports=require(15)
-},{}],1165:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1162,"./lib/window.console.js":1164}],1166:[function(require,module,exports){
+},{"./lib/matchesselector.js":1160,"./lib/window.console.js":1162}],1164:[function(require,module,exports){
 module.exports=require(5)
-},{"event-dom":1167,"event/extra/promise-finalize.js":1239,"event/extra/timer-finalize.js":1240,"js-ext/extra/classes.js":1250,"js-ext/extra/hashmap.js":1251,"js-ext/lib/object.js":1252,"js-ext/lib/promise.js":1253,"js-ext/lib/string.js":1254,"polyfill":1260,"utils/lib/timers.js":1261,"vdom":1305}],1167:[function(require,module,exports){
+},{"event-dom":1165,"event/extra/promise-finalize.js":1237,"event/extra/timer-finalize.js":1238,"js-ext/extra/classes.js":1248,"js-ext/extra/hashmap.js":1249,"js-ext/lib/object.js":1250,"js-ext/lib/promise.js":1251,"js-ext/lib/string.js":1252,"polyfill":1258,"utils/lib/timers.js":1259,"vdom":1303}],1165:[function(require,module,exports){
 module.exports=require(6)
-},{"event":1171,"js-ext/extra/hashmap.js":1181,"js-ext/lib/array.js":1182,"js-ext/lib/object.js":1183,"js-ext/lib/string.js":1184,"polyfill/polyfill-base.js":1190,"utils":1191,"vdom":1237}],1168:[function(require,module,exports){
+},{"event":1169,"js-ext/extra/hashmap.js":1179,"js-ext/lib/array.js":1180,"js-ext/lib/object.js":1181,"js-ext/lib/string.js":1182,"polyfill/polyfill-base.js":1188,"utils":1189,"vdom":1235}],1166:[function(require,module,exports){
 module.exports=require(7)
-},{"js-ext/extra/hashmap.js":1173,"js-ext/lib/object.js":1174,"polyfill/polyfill-base.js":1180}],1169:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1171,"js-ext/lib/object.js":1172,"polyfill/polyfill-base.js":1178}],1167:[function(require,module,exports){
 module.exports=require(8)
-},{"./event-base.js":1168}],1170:[function(require,module,exports){
+},{"./event-base.js":1166}],1168:[function(require,module,exports){
 module.exports=require(9)
-},{"./event-base.js":1168,"js-ext/extra/classes.js":1172,"js-ext/lib/object.js":1174}],1171:[function(require,module,exports){
+},{"./event-base.js":1166,"js-ext/extra/classes.js":1170,"js-ext/lib/object.js":1172}],1169:[function(require,module,exports){
 module.exports=require(10)
-},{"./event-base.js":1168,"./event-emitter.js":1169,"./event-listener.js":1170}],1172:[function(require,module,exports){
+},{"./event-base.js":1166,"./event-emitter.js":1167,"./event-listener.js":1168}],1170:[function(require,module,exports){
 module.exports=require(11)
-},{"../lib/object.js":1174,"js-ext/extra/hashmap.js":1173,"polyfill/polyfill-base.js":1177}],1173:[function(require,module,exports){
+},{"../lib/object.js":1172,"js-ext/extra/hashmap.js":1171,"polyfill/polyfill-base.js":1175}],1171:[function(require,module,exports){
 module.exports=require(4)
+},{}],1172:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1171,"polyfill/polyfill-base.js":1175}],1173:[function(require,module,exports){
+module.exports=require(14)
 },{}],1174:[function(require,module,exports){
-module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1173,"polyfill/polyfill-base.js":1177}],1175:[function(require,module,exports){
-module.exports=require(14)
-},{}],1176:[function(require,module,exports){
 module.exports=require(15)
+},{}],1175:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1173,"./lib/window.console.js":1174}],1176:[function(require,module,exports){
+module.exports=require(14)
 },{}],1177:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":1175,"./lib/window.console.js":1176}],1178:[function(require,module,exports){
-module.exports=require(14)
-},{}],1179:[function(require,module,exports){
 module.exports=require(15)
+},{}],1178:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1176,"./lib/window.console.js":1177}],1179:[function(require,module,exports){
+module.exports=require(4)
 },{}],1180:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":1178,"./lib/window.console.js":1179}],1181:[function(require,module,exports){
-module.exports=require(4)
-},{}],1182:[function(require,module,exports){
 module.exports=require(21)
-},{"polyfill/polyfill-base.js":1187}],1183:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1185}],1181:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1181,"polyfill/polyfill-base.js":1187}],1184:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1179,"polyfill/polyfill-base.js":1185}],1182:[function(require,module,exports){
 module.exports=require(23)
+},{}],1183:[function(require,module,exports){
+module.exports=require(14)
+},{}],1184:[function(require,module,exports){
+module.exports=require(15)
 },{}],1185:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1183,"./lib/window.console.js":1184}],1186:[function(require,module,exports){
 module.exports=require(14)
-},{}],1186:[function(require,module,exports){
-module.exports=require(15)
 },{}],1187:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":1185,"./lib/window.console.js":1186}],1188:[function(require,module,exports){
-module.exports=require(14)
-},{}],1189:[function(require,module,exports){
 module.exports=require(15)
-},{}],1190:[function(require,module,exports){
+},{}],1188:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1188,"./lib/window.console.js":1189}],1191:[function(require,module,exports){
+},{"./lib/matchesselector.js":1186,"./lib/window.console.js":1187}],1189:[function(require,module,exports){
 module.exports=require(30)
-},{"./lib/idgenerator.js":1192,"./lib/timers.js":1193}],1192:[function(require,module,exports){
+},{"./lib/idgenerator.js":1190,"./lib/timers.js":1191}],1190:[function(require,module,exports){
 module.exports=require(31)
-},{"js-ext/extra/hashmap.js":1181,"polyfill/polyfill-base.js":1196}],1193:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1179,"polyfill/polyfill-base.js":1194}],1191:[function(require,module,exports){
 module.exports=require(32)
-},{"polyfill/polyfill-base.js":1196}],1194:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1194}],1192:[function(require,module,exports){
 module.exports=require(14)
-},{}],1195:[function(require,module,exports){
+},{}],1193:[function(require,module,exports){
 module.exports=require(15)
-},{}],1196:[function(require,module,exports){
+},{}],1194:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1194,"./lib/window.console.js":1195}],1197:[function(require,module,exports){
+},{"./lib/matchesselector.js":1192,"./lib/window.console.js":1193}],1195:[function(require,module,exports){
 module.exports=require(36)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1198:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1196:[function(require,module,exports){
 module.exports=require(11)
-},{"../lib/object.js":1202,"js-ext/extra/hashmap.js":1199,"polyfill/polyfill-base.js":1208}],1199:[function(require,module,exports){
+},{"../lib/object.js":1200,"js-ext/extra/hashmap.js":1197,"polyfill/polyfill-base.js":1206}],1197:[function(require,module,exports){
 module.exports=require(4)
-},{}],1200:[function(require,module,exports){
+},{}],1198:[function(require,module,exports){
 module.exports=require(39)
-},{"../lib/array.js":1201,"../lib/object.js":1202,"./classes.js":1198,"js-ext/extra/hashmap.js":1199,"polyfill/lib/weakmap.js":1206}],1201:[function(require,module,exports){
+},{"../lib/array.js":1199,"../lib/object.js":1200,"./classes.js":1196,"js-ext/extra/hashmap.js":1197,"polyfill/lib/weakmap.js":1204}],1199:[function(require,module,exports){
 module.exports=require(21)
-},{"polyfill/polyfill-base.js":1208}],1202:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1206}],1200:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1199,"polyfill/polyfill-base.js":1208}],1203:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1197,"polyfill/polyfill-base.js":1206}],1201:[function(require,module,exports){
 module.exports=require(42)
-},{"polyfill":1208}],1204:[function(require,module,exports){
+},{"polyfill":1206}],1202:[function(require,module,exports){
 module.exports=require(23)
+},{}],1203:[function(require,module,exports){
+module.exports=require(14)
+},{}],1204:[function(require,module,exports){
+module.exports=require(45)
 },{}],1205:[function(require,module,exports){
-module.exports=require(14)
+module.exports=require(15)
 },{}],1206:[function(require,module,exports){
-module.exports=require(45)
-},{}],1207:[function(require,module,exports){
-module.exports=require(15)
+module.exports=require(16)
+},{"./lib/matchesselector.js":1203,"./lib/window.console.js":1205}],1207:[function(require,module,exports){
+module.exports=require(48)
 },{}],1208:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":1205,"./lib/window.console.js":1207}],1209:[function(require,module,exports){
-module.exports=require(48)
-},{}],1210:[function(require,module,exports){
 module.exports=require(49)
-},{"../bin/local-hashmap.js":1209}],1211:[function(require,module,exports){
+},{"../bin/local-hashmap.js":1207}],1209:[function(require,module,exports){
 module.exports=require(50)
-},{"../bin/local-hashmap.js":1209}],1212:[function(require,module,exports){
+},{"../bin/local-hashmap.js":1207}],1210:[function(require,module,exports){
 module.exports=require(51)
-},{"../bin/local-hashmap.js":1209}],1213:[function(require,module,exports){
+},{"../bin/local-hashmap.js":1207}],1211:[function(require,module,exports){
 module.exports=require(14)
-},{}],1214:[function(require,module,exports){
+},{}],1212:[function(require,module,exports){
 module.exports=require(15)
-},{}],1215:[function(require,module,exports){
+},{}],1213:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1213,"./lib/window.console.js":1214}],1216:[function(require,module,exports){
+},{"./lib/matchesselector.js":1211,"./lib/window.console.js":1212}],1214:[function(require,module,exports){
 module.exports=require(30)
-},{"./lib/idgenerator.js":1217,"./lib/timers.js":1218}],1217:[function(require,module,exports){
+},{"./lib/idgenerator.js":1215,"./lib/timers.js":1216}],1215:[function(require,module,exports){
 module.exports=require(31)
-},{"js-ext/extra/hashmap.js":1199,"polyfill/polyfill-base.js":1221}],1218:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1197,"polyfill/polyfill-base.js":1219}],1216:[function(require,module,exports){
 module.exports=require(32)
-},{"polyfill/polyfill-base.js":1221}],1219:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1219}],1217:[function(require,module,exports){
 module.exports=require(14)
-},{}],1220:[function(require,module,exports){
+},{}],1218:[function(require,module,exports){
 module.exports=require(15)
-},{}],1221:[function(require,module,exports){
+},{}],1219:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1219,"./lib/window.console.js":1220}],1222:[function(require,module,exports){
+},{"./lib/matchesselector.js":1217,"./lib/window.console.js":1218}],1220:[function(require,module,exports){
 module.exports=require(61)
-},{"./lib/sizes.js":1223}],1223:[function(require,module,exports){
+},{"./lib/sizes.js":1221}],1221:[function(require,module,exports){
 module.exports=require(62)
-},{"js-ext/extra/hashmap.js":1224,"js-ext/lib/object.js":1225}],1224:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1222,"js-ext/lib/object.js":1223}],1222:[function(require,module,exports){
 module.exports=require(4)
+},{}],1223:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1222,"polyfill/polyfill-base.js":1226}],1224:[function(require,module,exports){
+module.exports=require(14)
 },{}],1225:[function(require,module,exports){
-module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1224,"polyfill/polyfill-base.js":1228}],1226:[function(require,module,exports){
-module.exports=require(14)
-},{}],1227:[function(require,module,exports){
 module.exports=require(15)
-},{}],1228:[function(require,module,exports){
+},{}],1226:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1226,"./lib/window.console.js":1227}],1229:[function(require,module,exports){
+},{"./lib/matchesselector.js":1224,"./lib/window.console.js":1225}],1227:[function(require,module,exports){
 module.exports=require(68)
-},{"js-ext/extra/hashmap.js":1199,"js-ext/lib/object.js":1202,"js-ext/lib/string.js":1204,"polyfill":1215,"polyfill/extra/transition.js":1210,"polyfill/extra/vendorCSS.js":1212}],1230:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1197,"js-ext/lib/object.js":1200,"js-ext/lib/string.js":1202,"polyfill":1213,"polyfill/extra/transition.js":1208,"polyfill/extra/vendorCSS.js":1210}],1228:[function(require,module,exports){
 module.exports=require(69)
-},{"js-ext/extra/hashmap.js":1199,"js-ext/lib/object.js":1202,"polyfill":1215}],1231:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1197,"js-ext/lib/object.js":1200,"polyfill":1213}],1229:[function(require,module,exports){
 module.exports=require(70)
-},{"js-ext/extra/hashmap.js":1199,"js-ext/lib/object.js":1202,"js-ext/lib/string.js":1204,"polyfill":1215}],1232:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1197,"js-ext/lib/object.js":1200,"js-ext/lib/string.js":1202,"polyfill":1213}],1230:[function(require,module,exports){
 module.exports=require(71)
-},{"../css/element.css":1197,"./attribute-extractor.js":1229,"./element-array.js":1230,"./html-parser.js":1233,"./node-parser.js":1234,"./vdom-ns.js":1235,"./vnode.js":1236,"js-ext/extra/hashmap.js":1199,"js-ext/lib/object.js":1202,"js-ext/lib/promise.js":1203,"js-ext/lib/string.js":1204,"polyfill":1215,"polyfill/extra/transition.js":1210,"polyfill/extra/transitionend.js":1211,"polyfill/extra/vendorCSS.js":1212,"utils":1216,"window-ext":1222}],1233:[function(require,module,exports){
+},{"../css/element.css":1195,"./attribute-extractor.js":1227,"./element-array.js":1228,"./html-parser.js":1231,"./node-parser.js":1232,"./vdom-ns.js":1233,"./vnode.js":1234,"js-ext/extra/hashmap.js":1197,"js-ext/lib/object.js":1200,"js-ext/lib/promise.js":1201,"js-ext/lib/string.js":1202,"polyfill":1213,"polyfill/extra/transition.js":1208,"polyfill/extra/transitionend.js":1209,"polyfill/extra/vendorCSS.js":1210,"utils":1214,"window-ext":1220}],1231:[function(require,module,exports){
 module.exports=require(72)
-},{"./attribute-extractor.js":1229,"./vdom-ns.js":1235,"js-ext/extra/hashmap.js":1199,"js-ext/lib/object.js":1202,"polyfill":1215}],1234:[function(require,module,exports){
+},{"./attribute-extractor.js":1227,"./vdom-ns.js":1233,"js-ext/extra/hashmap.js":1197,"js-ext/lib/object.js":1200,"polyfill":1213}],1232:[function(require,module,exports){
 module.exports=require(73)
-},{"./attribute-extractor.js":1229,"./vdom-ns.js":1235,"./vnode.js":1236,"js-ext/extra/hashmap.js":1199,"js-ext/lib/object.js":1202,"polyfill":1215}],1235:[function(require,module,exports){
+},{"./attribute-extractor.js":1227,"./vdom-ns.js":1233,"./vnode.js":1234,"js-ext/extra/hashmap.js":1197,"js-ext/lib/object.js":1200,"polyfill":1213}],1233:[function(require,module,exports){
 module.exports=require(74)
-},{"js-ext/extra/hashmap.js":1199,"js-ext/lib/object.js":1202,"polyfill":1215}],1236:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1197,"js-ext/lib/object.js":1200,"polyfill":1213}],1234:[function(require,module,exports){
 module.exports=require(75)
-},{"./attribute-extractor.js":1229,"./html-parser.js":1233,"./vdom-ns.js":1235,"js-ext/extra/hashmap.js":1199,"js-ext/extra/lightmap.js":1200,"js-ext/lib/array.js":1201,"js-ext/lib/object.js":1202,"js-ext/lib/string.js":1204,"polyfill":1215,"utils/lib/timers.js":1218}],1237:[function(require,module,exports){
+},{"./attribute-extractor.js":1227,"./html-parser.js":1231,"./vdom-ns.js":1233,"js-ext/extra/hashmap.js":1197,"js-ext/extra/lightmap.js":1198,"js-ext/lib/array.js":1199,"js-ext/lib/object.js":1200,"js-ext/lib/string.js":1202,"polyfill":1213,"utils/lib/timers.js":1216}],1235:[function(require,module,exports){
 module.exports=require(76)
-},{"./partials/extend-document.js":1231,"./partials/extend-element.js":1232,"./partials/node-parser.js":1234,"js-ext/extra/hashmap.js":1199,"js-ext/lib/object.js":1202,"utils/lib/timers.js":1218}],1238:[function(require,module,exports){
+},{"./partials/extend-document.js":1229,"./partials/extend-element.js":1230,"./partials/node-parser.js":1232,"js-ext/extra/hashmap.js":1197,"js-ext/lib/object.js":1200,"utils/lib/timers.js":1216}],1236:[function(require,module,exports){
 module.exports=require(7)
-},{"js-ext/extra/hashmap.js":1241,"js-ext/lib/object.js":1242,"polyfill/polyfill-base.js":1249}],1239:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1239,"js-ext/lib/object.js":1240,"polyfill/polyfill-base.js":1247}],1237:[function(require,module,exports){
 module.exports=require(78)
-},{"js-ext/extra/hashmap.js":1241,"js-ext/lib/promise.js":1243}],1240:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1239,"js-ext/lib/promise.js":1241}],1238:[function(require,module,exports){
 module.exports=require(79)
-},{"../event-base.js":1238,"js-ext/extra/hashmap.js":1241}],1241:[function(require,module,exports){
+},{"../event-base.js":1236,"js-ext/extra/hashmap.js":1239}],1239:[function(require,module,exports){
 module.exports=require(4)
-},{}],1242:[function(require,module,exports){
+},{}],1240:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1241,"polyfill/polyfill-base.js":1246}],1243:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1239,"polyfill/polyfill-base.js":1244}],1241:[function(require,module,exports){
 module.exports=require(42)
-},{"polyfill":1246}],1244:[function(require,module,exports){
+},{"polyfill":1244}],1242:[function(require,module,exports){
 module.exports=require(14)
-},{}],1245:[function(require,module,exports){
+},{}],1243:[function(require,module,exports){
 module.exports=require(15)
+},{}],1244:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1242,"./lib/window.console.js":1243}],1245:[function(require,module,exports){
+module.exports=require(14)
 },{}],1246:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":1244,"./lib/window.console.js":1245}],1247:[function(require,module,exports){
-module.exports=require(14)
-},{}],1248:[function(require,module,exports){
 module.exports=require(15)
-},{}],1249:[function(require,module,exports){
+},{}],1247:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1247,"./lib/window.console.js":1248}],1250:[function(require,module,exports){
+},{"./lib/matchesselector.js":1245,"./lib/window.console.js":1246}],1248:[function(require,module,exports){
 module.exports=require(11)
-},{"../lib/object.js":1252,"js-ext/extra/hashmap.js":1251,"polyfill/polyfill-base.js":1257}],1251:[function(require,module,exports){
+},{"../lib/object.js":1250,"js-ext/extra/hashmap.js":1249,"polyfill/polyfill-base.js":1255}],1249:[function(require,module,exports){
 module.exports=require(4)
-},{}],1252:[function(require,module,exports){
+},{}],1250:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1251,"polyfill/polyfill-base.js":1257}],1253:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1249,"polyfill/polyfill-base.js":1255}],1251:[function(require,module,exports){
 module.exports=require(42)
-},{"polyfill":1257}],1254:[function(require,module,exports){
+},{"polyfill":1255}],1252:[function(require,module,exports){
 module.exports=require(23)
+},{}],1253:[function(require,module,exports){
+module.exports=require(14)
+},{}],1254:[function(require,module,exports){
+module.exports=require(15)
 },{}],1255:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1253,"./lib/window.console.js":1254}],1256:[function(require,module,exports){
 module.exports=require(14)
-},{}],1256:[function(require,module,exports){
-module.exports=require(15)
 },{}],1257:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":1255,"./lib/window.console.js":1256}],1258:[function(require,module,exports){
-module.exports=require(14)
-},{}],1259:[function(require,module,exports){
 module.exports=require(15)
-},{}],1260:[function(require,module,exports){
+},{}],1258:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1258,"./lib/window.console.js":1259}],1261:[function(require,module,exports){
+},{"./lib/matchesselector.js":1256,"./lib/window.console.js":1257}],1259:[function(require,module,exports){
 module.exports=require(32)
-},{"polyfill/polyfill-base.js":1264}],1262:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1262}],1260:[function(require,module,exports){
 module.exports=require(14)
-},{}],1263:[function(require,module,exports){
+},{}],1261:[function(require,module,exports){
 module.exports=require(15)
-},{}],1264:[function(require,module,exports){
+},{}],1262:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1262,"./lib/window.console.js":1263}],1265:[function(require,module,exports){
+},{"./lib/matchesselector.js":1260,"./lib/window.console.js":1261}],1263:[function(require,module,exports){
 module.exports=require(36)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1266:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1264:[function(require,module,exports){
 module.exports=require(11)
-},{"../lib/object.js":1270,"js-ext/extra/hashmap.js":1267,"polyfill/polyfill-base.js":1276}],1267:[function(require,module,exports){
+},{"../lib/object.js":1268,"js-ext/extra/hashmap.js":1265,"polyfill/polyfill-base.js":1274}],1265:[function(require,module,exports){
 module.exports=require(4)
-},{}],1268:[function(require,module,exports){
+},{}],1266:[function(require,module,exports){
 module.exports=require(39)
-},{"../lib/array.js":1269,"../lib/object.js":1270,"./classes.js":1266,"js-ext/extra/hashmap.js":1267,"polyfill/lib/weakmap.js":1274}],1269:[function(require,module,exports){
+},{"../lib/array.js":1267,"../lib/object.js":1268,"./classes.js":1264,"js-ext/extra/hashmap.js":1265,"polyfill/lib/weakmap.js":1272}],1267:[function(require,module,exports){
 module.exports=require(21)
-},{"polyfill/polyfill-base.js":1276}],1270:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1274}],1268:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1267,"polyfill/polyfill-base.js":1276}],1271:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1265,"polyfill/polyfill-base.js":1274}],1269:[function(require,module,exports){
 module.exports=require(42)
-},{"polyfill":1276}],1272:[function(require,module,exports){
+},{"polyfill":1274}],1270:[function(require,module,exports){
 module.exports=require(23)
-},{}],1273:[function(require,module,exports){
+},{}],1271:[function(require,module,exports){
 module.exports=require(14)
-},{}],1274:[function(require,module,exports){
+},{}],1272:[function(require,module,exports){
 module.exports=require(45)
-},{}],1275:[function(require,module,exports){
+},{}],1273:[function(require,module,exports){
 module.exports=require(15)
-},{}],1276:[function(require,module,exports){
+},{}],1274:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1273,"./lib/window.console.js":1275}],1277:[function(require,module,exports){
+},{"./lib/matchesselector.js":1271,"./lib/window.console.js":1273}],1275:[function(require,module,exports){
 module.exports=require(48)
-},{}],1278:[function(require,module,exports){
+},{}],1276:[function(require,module,exports){
 module.exports=require(49)
-},{"../bin/local-hashmap.js":1277}],1279:[function(require,module,exports){
+},{"../bin/local-hashmap.js":1275}],1277:[function(require,module,exports){
 module.exports=require(50)
-},{"../bin/local-hashmap.js":1277}],1280:[function(require,module,exports){
+},{"../bin/local-hashmap.js":1275}],1278:[function(require,module,exports){
 module.exports=require(51)
-},{"../bin/local-hashmap.js":1277}],1281:[function(require,module,exports){
+},{"../bin/local-hashmap.js":1275}],1279:[function(require,module,exports){
 module.exports=require(14)
-},{}],1282:[function(require,module,exports){
+},{}],1280:[function(require,module,exports){
 module.exports=require(15)
-},{}],1283:[function(require,module,exports){
+},{}],1281:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1281,"./lib/window.console.js":1282}],1284:[function(require,module,exports){
+},{"./lib/matchesselector.js":1279,"./lib/window.console.js":1280}],1282:[function(require,module,exports){
 module.exports=require(30)
-},{"./lib/idgenerator.js":1285,"./lib/timers.js":1286}],1285:[function(require,module,exports){
+},{"./lib/idgenerator.js":1283,"./lib/timers.js":1284}],1283:[function(require,module,exports){
 module.exports=require(31)
-},{"js-ext/extra/hashmap.js":1267,"polyfill/polyfill-base.js":1289}],1286:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1265,"polyfill/polyfill-base.js":1287}],1284:[function(require,module,exports){
 module.exports=require(32)
-},{"polyfill/polyfill-base.js":1289}],1287:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1287}],1285:[function(require,module,exports){
 module.exports=require(14)
-},{}],1288:[function(require,module,exports){
+},{}],1286:[function(require,module,exports){
 module.exports=require(15)
-},{}],1289:[function(require,module,exports){
+},{}],1287:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1287,"./lib/window.console.js":1288}],1290:[function(require,module,exports){
+},{"./lib/matchesselector.js":1285,"./lib/window.console.js":1286}],1288:[function(require,module,exports){
 module.exports=require(61)
-},{"./lib/sizes.js":1291}],1291:[function(require,module,exports){
+},{"./lib/sizes.js":1289}],1289:[function(require,module,exports){
 module.exports=require(62)
-},{"js-ext/extra/hashmap.js":1292,"js-ext/lib/object.js":1293}],1292:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1290,"js-ext/lib/object.js":1291}],1290:[function(require,module,exports){
 module.exports=require(4)
-},{}],1293:[function(require,module,exports){
+},{}],1291:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1292,"polyfill/polyfill-base.js":1296}],1294:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1290,"polyfill/polyfill-base.js":1294}],1292:[function(require,module,exports){
 module.exports=require(14)
-},{}],1295:[function(require,module,exports){
+},{}],1293:[function(require,module,exports){
 module.exports=require(15)
-},{}],1296:[function(require,module,exports){
+},{}],1294:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1294,"./lib/window.console.js":1295}],1297:[function(require,module,exports){
+},{"./lib/matchesselector.js":1292,"./lib/window.console.js":1293}],1295:[function(require,module,exports){
 module.exports=require(68)
-},{"js-ext/extra/hashmap.js":1267,"js-ext/lib/object.js":1270,"js-ext/lib/string.js":1272,"polyfill":1283,"polyfill/extra/transition.js":1278,"polyfill/extra/vendorCSS.js":1280}],1298:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1265,"js-ext/lib/object.js":1268,"js-ext/lib/string.js":1270,"polyfill":1281,"polyfill/extra/transition.js":1276,"polyfill/extra/vendorCSS.js":1278}],1296:[function(require,module,exports){
 module.exports=require(69)
-},{"js-ext/extra/hashmap.js":1267,"js-ext/lib/object.js":1270,"polyfill":1283}],1299:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1265,"js-ext/lib/object.js":1268,"polyfill":1281}],1297:[function(require,module,exports){
 module.exports=require(70)
-},{"js-ext/extra/hashmap.js":1267,"js-ext/lib/object.js":1270,"js-ext/lib/string.js":1272,"polyfill":1283}],1300:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1265,"js-ext/lib/object.js":1268,"js-ext/lib/string.js":1270,"polyfill":1281}],1298:[function(require,module,exports){
 module.exports=require(71)
-},{"../css/element.css":1265,"./attribute-extractor.js":1297,"./element-array.js":1298,"./html-parser.js":1301,"./node-parser.js":1302,"./vdom-ns.js":1303,"./vnode.js":1304,"js-ext/extra/hashmap.js":1267,"js-ext/lib/object.js":1270,"js-ext/lib/promise.js":1271,"js-ext/lib/string.js":1272,"polyfill":1283,"polyfill/extra/transition.js":1278,"polyfill/extra/transitionend.js":1279,"polyfill/extra/vendorCSS.js":1280,"utils":1284,"window-ext":1290}],1301:[function(require,module,exports){
+},{"../css/element.css":1263,"./attribute-extractor.js":1295,"./element-array.js":1296,"./html-parser.js":1299,"./node-parser.js":1300,"./vdom-ns.js":1301,"./vnode.js":1302,"js-ext/extra/hashmap.js":1265,"js-ext/lib/object.js":1268,"js-ext/lib/promise.js":1269,"js-ext/lib/string.js":1270,"polyfill":1281,"polyfill/extra/transition.js":1276,"polyfill/extra/transitionend.js":1277,"polyfill/extra/vendorCSS.js":1278,"utils":1282,"window-ext":1288}],1299:[function(require,module,exports){
 module.exports=require(72)
-},{"./attribute-extractor.js":1297,"./vdom-ns.js":1303,"js-ext/extra/hashmap.js":1267,"js-ext/lib/object.js":1270,"polyfill":1283}],1302:[function(require,module,exports){
+},{"./attribute-extractor.js":1295,"./vdom-ns.js":1301,"js-ext/extra/hashmap.js":1265,"js-ext/lib/object.js":1268,"polyfill":1281}],1300:[function(require,module,exports){
 module.exports=require(73)
-},{"./attribute-extractor.js":1297,"./vdom-ns.js":1303,"./vnode.js":1304,"js-ext/extra/hashmap.js":1267,"js-ext/lib/object.js":1270,"polyfill":1283}],1303:[function(require,module,exports){
+},{"./attribute-extractor.js":1295,"./vdom-ns.js":1301,"./vnode.js":1302,"js-ext/extra/hashmap.js":1265,"js-ext/lib/object.js":1268,"polyfill":1281}],1301:[function(require,module,exports){
 module.exports=require(74)
-},{"js-ext/extra/hashmap.js":1267,"js-ext/lib/object.js":1270,"polyfill":1283}],1304:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1265,"js-ext/lib/object.js":1268,"polyfill":1281}],1302:[function(require,module,exports){
 module.exports=require(75)
-},{"./attribute-extractor.js":1297,"./html-parser.js":1301,"./vdom-ns.js":1303,"js-ext/extra/hashmap.js":1267,"js-ext/extra/lightmap.js":1268,"js-ext/lib/array.js":1269,"js-ext/lib/object.js":1270,"js-ext/lib/string.js":1272,"polyfill":1283,"utils/lib/timers.js":1286}],1305:[function(require,module,exports){
+},{"./attribute-extractor.js":1295,"./html-parser.js":1299,"./vdom-ns.js":1301,"js-ext/extra/hashmap.js":1265,"js-ext/extra/lightmap.js":1266,"js-ext/lib/array.js":1267,"js-ext/lib/object.js":1268,"js-ext/lib/string.js":1270,"polyfill":1281,"utils/lib/timers.js":1284}],1303:[function(require,module,exports){
 module.exports=require(76)
-},{"./partials/extend-document.js":1299,"./partials/extend-element.js":1300,"./partials/node-parser.js":1302,"js-ext/extra/hashmap.js":1267,"js-ext/lib/object.js":1270,"utils/lib/timers.js":1286}],1306:[function(require,module,exports){
+},{"./partials/extend-document.js":1297,"./partials/extend-element.js":1298,"./partials/node-parser.js":1300,"js-ext/extra/hashmap.js":1265,"js-ext/lib/object.js":1268,"utils/lib/timers.js":1284}],1304:[function(require,module,exports){
 (function (process,Buffer){
 "use strict";
 
@@ -26138,7 +26306,7 @@ exports.XMLHttpRequest = function() {
 };
 
 }).call(this,require('_process'),require("buffer").Buffer)
-},{"_process":1945,"buffer":1934,"child_process":1933,"fs":1933,"http":1938,"https":1942,"url":1963,"xmldom":1911}],1307:[function(require,module,exports){
+},{"_process":2710,"buffer":2699,"child_process":2698,"fs":2698,"http":2703,"https":2707,"url":2728,"xmldom":2676}],1305:[function(require,module,exports){
 "use strict";
 
 /**
@@ -26351,21 +26519,1992 @@ reset = function () {
 reset();
 
 module.exports = win;
-},{"./lib/XMLHttpRequest.js":1306,"js-ext/extra/hashmap.js":1308,"js-ext/lib/array.js":1309,"polyfill/lib/window.console.js":1313,"url":1963,"xmldom":1911}],1308:[function(require,module,exports){
+},{"./lib/XMLHttpRequest.js":1304,"js-ext/extra/hashmap.js":1306,"js-ext/lib/array.js":1307,"polyfill/lib/window.console.js":1311,"url":2728,"xmldom":2676}],1306:[function(require,module,exports){
 module.exports=require(4)
-},{}],1309:[function(require,module,exports){
+},{}],1307:[function(require,module,exports){
 module.exports=require(21)
-},{"polyfill/polyfill-base.js":1312}],1310:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":1310}],1308:[function(require,module,exports){
 module.exports=require(14)
-},{}],1311:[function(require,module,exports){
+},{}],1309:[function(require,module,exports){
+module.exports=require(15)
+},{}],1310:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1308,"./lib/window.console.js":1309}],1311:[function(require,module,exports){
 module.exports=require(15)
 },{}],1312:[function(require,module,exports){
-module.exports=require(16)
-},{"./lib/matchesselector.js":1310,"./lib/window.console.js":1311}],1313:[function(require,module,exports){
-module.exports=require(15)
-},{}],1314:[function(require,module,exports){
+var css = "[plugin-panel=\"true\"] {\n    position: absolute !important;\n    background-color: #FFF;\n    max-width: 90%;\n    min-width: 150px;\n    min-height: 75px;\n    box-shadow: 5px 5px 6px rgba(50, 50, 50, 0.45);\n    border: solid 1px #000;\n}\n\n[plugin-panel=\"true\"],\n[plugin-panel=\"true\"] >div {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\n[plugin-panel=\"true\"] >div[is=\"header\"] {\n    vertical-align: middle;\n    background-color: rgb(0, 100, 192);\n    color: #FFF;\n    padding: 0 1.5em 0 0.7em;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    vertical-align: middle;\n    line-height: 1.75em;\n    width: 100%;\n    min-height: 1.75em;\n}\n\n[plugin-panel=\"true\"] >div[is=\"content\"] {\n    padding: 1.6em 1.2em;\n    line-height: 115%;\n}\n\n[plugin-panel=\"true\"] >div[is=\"footer\"] {\n    border-top: 1px solid #EAE6DB;\n    overflow: hidden;\n    vertical-align: middle;\n    text-align: right;\n    line-height: 1em;\n    padding: 0.5em 0.7em;\n    width: 100%;\n    min-height: 24px;\n}\n\n[plugin-panel=\"true\"] >div[is=\"footer\"] i-button + i-button,\n[plugin-panel=\"true\"] >div[is=\"footer\"] button + button {\n    margin-left: 0.5em;\n}\n\n[plugin-panel=\"true\"].itsa-full-draggable {\n    cursor: default;\n}\n\n[plugin-panel=\"true\"] >button {\n    padding: 0 0.4em 0.1em;\n    position: absolute;\n    right: 0.2em;\n    top: 0.2em;\n    z-index: 1;\n}\n\nbody >div[is=\"system-node\"].itsa-modal-layer {\n    position: fixed !important;\n    top: 0 !important;\n    left: 0 !important;\n    width: 100% !important;\n    height: 100% !important;\n    -webkit-box-sizing: border-box !important;\n    -moz-box-sizing: border-box !important;\n    box-sizing: border-box !important;\n    z-index: 1000 !important;\n    background-color: #000 !important;\n    opacity: 0.2 !important;\n}\n\n[plugin-panel=\"true\"][expand-buttons=\"true\"] >div[is=\"footer\"] i-button + i-button,\n[plugin-panel=\"true\"][expand-buttons=\"true\"] >div[is=\"footer\"] button + button {\n    margin-left: 0;\n}\n\n[plugin-panel=\"true\"][expand-buttons=\"true\"] >div[is=\"footer\"] >i-button,\n[plugin-panel=\"true\"][expand-buttons=\"true\"] >div[is=\"footer\"] >button {\n    display: block;\n    width: 100%;\n    margin: 0 0 0.5em;\n}\n\n[plugin-panel=\"true\"][expand-buttons=\"true\"] >div[is=\"footer\"] >i-button:last-child,\n[plugin-panel=\"true\"][expand-buttons=\"true\"] >div[is=\"footer\"] >button:last-child {\n    margin-bottom: 0;\n}\n\n@media only screen and (max-width : 480px) {\n    [plugin-panel=\"true\"] {\n        width: 90%;\n        box-shadow: 0 0 6px 6px rgba(50, 50, 50, 0.45);\n    }\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1313:[function(require,module,exports){
+module.exports=require(151)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1314:[function(require,module,exports){
+module.exports=require(152)
+},{"./css/drag.css":1313,"event-dom":1315,"js-ext":1387,"js-ext/extra/hashmap.js":1386,"node-plugin":1397,"polyfill":1539,"useragent":1548,"vdom":1589,"window-ext":1590}],1315:[function(require,module,exports){
+module.exports=require(6)
+},{"event":1319,"js-ext/extra/hashmap.js":1329,"js-ext/lib/array.js":1330,"js-ext/lib/object.js":1331,"js-ext/lib/string.js":1332,"polyfill/polyfill-base.js":1338,"utils":1339,"vdom":1385}],1316:[function(require,module,exports){
+module.exports=require(7)
+},{"js-ext/extra/hashmap.js":1321,"js-ext/lib/object.js":1322,"polyfill/polyfill-base.js":1328}],1317:[function(require,module,exports){
+module.exports=require(8)
+},{"./event-base.js":1316}],1318:[function(require,module,exports){
+module.exports=require(9)
+},{"./event-base.js":1316,"js-ext/extra/classes.js":1320,"js-ext/lib/object.js":1322}],1319:[function(require,module,exports){
+module.exports=require(10)
+},{"./event-base.js":1316,"./event-emitter.js":1317,"./event-listener.js":1318}],1320:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1322,"js-ext/extra/hashmap.js":1321,"polyfill/polyfill-base.js":1325}],1321:[function(require,module,exports){
+module.exports=require(4)
+},{}],1322:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1321,"polyfill/polyfill-base.js":1325}],1323:[function(require,module,exports){
 module.exports=require(14)
-},{}],1315:[function(require,module,exports){
+},{}],1324:[function(require,module,exports){
+module.exports=require(15)
+},{}],1325:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1323,"./lib/window.console.js":1324}],1326:[function(require,module,exports){
+module.exports=require(14)
+},{}],1327:[function(require,module,exports){
+module.exports=require(15)
+},{}],1328:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1326,"./lib/window.console.js":1327}],1329:[function(require,module,exports){
+module.exports=require(4)
+},{}],1330:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":1335}],1331:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1329,"polyfill/polyfill-base.js":1335}],1332:[function(require,module,exports){
+module.exports=require(23)
+},{}],1333:[function(require,module,exports){
+module.exports=require(14)
+},{}],1334:[function(require,module,exports){
+module.exports=require(15)
+},{}],1335:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1333,"./lib/window.console.js":1334}],1336:[function(require,module,exports){
+module.exports=require(14)
+},{}],1337:[function(require,module,exports){
+module.exports=require(15)
+},{}],1338:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1336,"./lib/window.console.js":1337}],1339:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1340,"./lib/timers.js":1341}],1340:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1329,"polyfill/polyfill-base.js":1344}],1341:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1344}],1342:[function(require,module,exports){
+module.exports=require(14)
+},{}],1343:[function(require,module,exports){
+module.exports=require(15)
+},{}],1344:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1342,"./lib/window.console.js":1343}],1345:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1346:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1350,"js-ext/extra/hashmap.js":1347,"polyfill/polyfill-base.js":1356}],1347:[function(require,module,exports){
+module.exports=require(4)
+},{}],1348:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":1349,"../lib/object.js":1350,"./classes.js":1346,"js-ext/extra/hashmap.js":1347,"polyfill/lib/weakmap.js":1354}],1349:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":1356}],1350:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1347,"polyfill/polyfill-base.js":1356}],1351:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1356}],1352:[function(require,module,exports){
+module.exports=require(23)
+},{}],1353:[function(require,module,exports){
+module.exports=require(14)
+},{}],1354:[function(require,module,exports){
+module.exports=require(45)
+},{}],1355:[function(require,module,exports){
+module.exports=require(15)
+},{}],1356:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1353,"./lib/window.console.js":1355}],1357:[function(require,module,exports){
+module.exports=require(48)
+},{}],1358:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":1357}],1359:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":1357}],1360:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":1357}],1361:[function(require,module,exports){
+module.exports=require(14)
+},{}],1362:[function(require,module,exports){
+module.exports=require(15)
+},{}],1363:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1361,"./lib/window.console.js":1362}],1364:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1365,"./lib/timers.js":1366}],1365:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1347,"polyfill/polyfill-base.js":1369}],1366:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1369}],1367:[function(require,module,exports){
+module.exports=require(14)
+},{}],1368:[function(require,module,exports){
+module.exports=require(15)
+},{}],1369:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1367,"./lib/window.console.js":1368}],1370:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":1371}],1371:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":1372,"js-ext/lib/object.js":1373}],1372:[function(require,module,exports){
+module.exports=require(4)
+},{}],1373:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1372,"polyfill/polyfill-base.js":1376}],1374:[function(require,module,exports){
+module.exports=require(14)
+},{}],1375:[function(require,module,exports){
+module.exports=require(15)
+},{}],1376:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1374,"./lib/window.console.js":1375}],1377:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":1347,"js-ext/lib/object.js":1350,"js-ext/lib/string.js":1352,"polyfill":1363,"polyfill/extra/transition.js":1358,"polyfill/extra/vendorCSS.js":1360}],1378:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":1347,"js-ext/lib/object.js":1350,"polyfill":1363}],1379:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":1347,"js-ext/lib/object.js":1350,"js-ext/lib/string.js":1352,"polyfill":1363}],1380:[function(require,module,exports){
+module.exports=require(71)
+},{"../css/element.css":1345,"./attribute-extractor.js":1377,"./element-array.js":1378,"./html-parser.js":1381,"./node-parser.js":1382,"./vdom-ns.js":1383,"./vnode.js":1384,"js-ext/extra/hashmap.js":1347,"js-ext/lib/object.js":1350,"js-ext/lib/promise.js":1351,"js-ext/lib/string.js":1352,"polyfill":1363,"polyfill/extra/transition.js":1358,"polyfill/extra/transitionend.js":1359,"polyfill/extra/vendorCSS.js":1360,"utils":1364,"window-ext":1370}],1381:[function(require,module,exports){
+module.exports=require(72)
+},{"./attribute-extractor.js":1377,"./vdom-ns.js":1383,"js-ext/extra/hashmap.js":1347,"js-ext/lib/object.js":1350,"polyfill":1363}],1382:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":1377,"./vdom-ns.js":1383,"./vnode.js":1384,"js-ext/extra/hashmap.js":1347,"js-ext/lib/object.js":1350,"polyfill":1363}],1383:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":1347,"js-ext/lib/object.js":1350,"polyfill":1363}],1384:[function(require,module,exports){
+module.exports=require(75)
+},{"./attribute-extractor.js":1377,"./html-parser.js":1381,"./vdom-ns.js":1383,"js-ext/extra/hashmap.js":1347,"js-ext/extra/lightmap.js":1348,"js-ext/lib/array.js":1349,"js-ext/lib/object.js":1350,"js-ext/lib/string.js":1352,"polyfill":1363,"utils/lib/timers.js":1366}],1385:[function(require,module,exports){
+module.exports=require(76)
+},{"./partials/extend-document.js":1379,"./partials/extend-element.js":1380,"./partials/node-parser.js":1382,"js-ext/extra/hashmap.js":1347,"js-ext/lib/object.js":1350,"utils/lib/timers.js":1366}],1386:[function(require,module,exports){
+module.exports=require(4)
+},{}],1387:[function(require,module,exports){
+module.exports=require(225)
+},{"./lib/array.js":1388,"./lib/function.js":1389,"./lib/json.js":1390,"./lib/object.js":1391,"./lib/promise.js":1392,"./lib/string.js":1393}],1388:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":1396}],1389:[function(require,module,exports){
+module.exports=require(227)
+},{"polyfill/polyfill-base.js":1396}],1390:[function(require,module,exports){
+module.exports=require(228)
+},{"polyfill/polyfill-base.js":1396}],1391:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1386,"polyfill/polyfill-base.js":1396}],1392:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1396}],1393:[function(require,module,exports){
+module.exports=require(23)
+},{}],1394:[function(require,module,exports){
+module.exports=require(14)
+},{}],1395:[function(require,module,exports){
+module.exports=require(15)
+},{}],1396:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1394,"./lib/window.console.js":1395}],1397:[function(require,module,exports){
+module.exports=require(5)
+},{"event-dom":1398,"event/extra/promise-finalize.js":1470,"event/extra/timer-finalize.js":1471,"js-ext/extra/classes.js":1481,"js-ext/extra/hashmap.js":1482,"js-ext/lib/object.js":1483,"js-ext/lib/promise.js":1484,"js-ext/lib/string.js":1485,"polyfill":1491,"utils/lib/timers.js":1492,"vdom":1536}],1398:[function(require,module,exports){
+module.exports=require(6)
+},{"event":1402,"js-ext/extra/hashmap.js":1412,"js-ext/lib/array.js":1413,"js-ext/lib/object.js":1414,"js-ext/lib/string.js":1415,"polyfill/polyfill-base.js":1421,"utils":1422,"vdom":1468}],1399:[function(require,module,exports){
+module.exports=require(7)
+},{"js-ext/extra/hashmap.js":1404,"js-ext/lib/object.js":1405,"polyfill/polyfill-base.js":1411}],1400:[function(require,module,exports){
+module.exports=require(8)
+},{"./event-base.js":1399}],1401:[function(require,module,exports){
+module.exports=require(9)
+},{"./event-base.js":1399,"js-ext/extra/classes.js":1403,"js-ext/lib/object.js":1405}],1402:[function(require,module,exports){
+module.exports=require(10)
+},{"./event-base.js":1399,"./event-emitter.js":1400,"./event-listener.js":1401}],1403:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1405,"js-ext/extra/hashmap.js":1404,"polyfill/polyfill-base.js":1408}],1404:[function(require,module,exports){
+module.exports=require(4)
+},{}],1405:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1404,"polyfill/polyfill-base.js":1408}],1406:[function(require,module,exports){
+module.exports=require(14)
+},{}],1407:[function(require,module,exports){
+module.exports=require(15)
+},{}],1408:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1406,"./lib/window.console.js":1407}],1409:[function(require,module,exports){
+module.exports=require(14)
+},{}],1410:[function(require,module,exports){
+module.exports=require(15)
+},{}],1411:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1409,"./lib/window.console.js":1410}],1412:[function(require,module,exports){
+module.exports=require(4)
+},{}],1413:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":1418}],1414:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1412,"polyfill/polyfill-base.js":1418}],1415:[function(require,module,exports){
+module.exports=require(23)
+},{}],1416:[function(require,module,exports){
+module.exports=require(14)
+},{}],1417:[function(require,module,exports){
+module.exports=require(15)
+},{}],1418:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1416,"./lib/window.console.js":1417}],1419:[function(require,module,exports){
+module.exports=require(14)
+},{}],1420:[function(require,module,exports){
+module.exports=require(15)
+},{}],1421:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1419,"./lib/window.console.js":1420}],1422:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1423,"./lib/timers.js":1424}],1423:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1412,"polyfill/polyfill-base.js":1427}],1424:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1427}],1425:[function(require,module,exports){
+module.exports=require(14)
+},{}],1426:[function(require,module,exports){
+module.exports=require(15)
+},{}],1427:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1425,"./lib/window.console.js":1426}],1428:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1429:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1433,"js-ext/extra/hashmap.js":1430,"polyfill/polyfill-base.js":1439}],1430:[function(require,module,exports){
+module.exports=require(4)
+},{}],1431:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":1432,"../lib/object.js":1433,"./classes.js":1429,"js-ext/extra/hashmap.js":1430,"polyfill/lib/weakmap.js":1437}],1432:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":1439}],1433:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1430,"polyfill/polyfill-base.js":1439}],1434:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1439}],1435:[function(require,module,exports){
+module.exports=require(23)
+},{}],1436:[function(require,module,exports){
+module.exports=require(14)
+},{}],1437:[function(require,module,exports){
+module.exports=require(45)
+},{}],1438:[function(require,module,exports){
+module.exports=require(15)
+},{}],1439:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1436,"./lib/window.console.js":1438}],1440:[function(require,module,exports){
+module.exports=require(48)
+},{}],1441:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":1440}],1442:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":1440}],1443:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":1440}],1444:[function(require,module,exports){
+module.exports=require(14)
+},{}],1445:[function(require,module,exports){
+module.exports=require(15)
+},{}],1446:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1444,"./lib/window.console.js":1445}],1447:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1448,"./lib/timers.js":1449}],1448:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1430,"polyfill/polyfill-base.js":1452}],1449:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1452}],1450:[function(require,module,exports){
+module.exports=require(14)
+},{}],1451:[function(require,module,exports){
+module.exports=require(15)
+},{}],1452:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1450,"./lib/window.console.js":1451}],1453:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":1454}],1454:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":1455,"js-ext/lib/object.js":1456}],1455:[function(require,module,exports){
+module.exports=require(4)
+},{}],1456:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1455,"polyfill/polyfill-base.js":1459}],1457:[function(require,module,exports){
+module.exports=require(14)
+},{}],1458:[function(require,module,exports){
+module.exports=require(15)
+},{}],1459:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1457,"./lib/window.console.js":1458}],1460:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":1430,"js-ext/lib/object.js":1433,"js-ext/lib/string.js":1435,"polyfill":1446,"polyfill/extra/transition.js":1441,"polyfill/extra/vendorCSS.js":1443}],1461:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":1430,"js-ext/lib/object.js":1433,"polyfill":1446}],1462:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":1430,"js-ext/lib/object.js":1433,"js-ext/lib/string.js":1435,"polyfill":1446}],1463:[function(require,module,exports){
+module.exports=require(71)
+},{"../css/element.css":1428,"./attribute-extractor.js":1460,"./element-array.js":1461,"./html-parser.js":1464,"./node-parser.js":1465,"./vdom-ns.js":1466,"./vnode.js":1467,"js-ext/extra/hashmap.js":1430,"js-ext/lib/object.js":1433,"js-ext/lib/promise.js":1434,"js-ext/lib/string.js":1435,"polyfill":1446,"polyfill/extra/transition.js":1441,"polyfill/extra/transitionend.js":1442,"polyfill/extra/vendorCSS.js":1443,"utils":1447,"window-ext":1453}],1464:[function(require,module,exports){
+module.exports=require(72)
+},{"./attribute-extractor.js":1460,"./vdom-ns.js":1466,"js-ext/extra/hashmap.js":1430,"js-ext/lib/object.js":1433,"polyfill":1446}],1465:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":1460,"./vdom-ns.js":1466,"./vnode.js":1467,"js-ext/extra/hashmap.js":1430,"js-ext/lib/object.js":1433,"polyfill":1446}],1466:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":1430,"js-ext/lib/object.js":1433,"polyfill":1446}],1467:[function(require,module,exports){
+module.exports=require(75)
+},{"./attribute-extractor.js":1460,"./html-parser.js":1464,"./vdom-ns.js":1466,"js-ext/extra/hashmap.js":1430,"js-ext/extra/lightmap.js":1431,"js-ext/lib/array.js":1432,"js-ext/lib/object.js":1433,"js-ext/lib/string.js":1435,"polyfill":1446,"utils/lib/timers.js":1449}],1468:[function(require,module,exports){
+module.exports=require(76)
+},{"./partials/extend-document.js":1462,"./partials/extend-element.js":1463,"./partials/node-parser.js":1465,"js-ext/extra/hashmap.js":1430,"js-ext/lib/object.js":1433,"utils/lib/timers.js":1449}],1469:[function(require,module,exports){
+module.exports=require(7)
+},{"js-ext/extra/hashmap.js":1472,"js-ext/lib/object.js":1473,"polyfill/polyfill-base.js":1480}],1470:[function(require,module,exports){
+module.exports=require(78)
+},{"js-ext/extra/hashmap.js":1472,"js-ext/lib/promise.js":1474}],1471:[function(require,module,exports){
+module.exports=require(79)
+},{"../event-base.js":1469,"js-ext/extra/hashmap.js":1472}],1472:[function(require,module,exports){
+module.exports=require(4)
+},{}],1473:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1472,"polyfill/polyfill-base.js":1477}],1474:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1477}],1475:[function(require,module,exports){
+module.exports=require(14)
+},{}],1476:[function(require,module,exports){
+module.exports=require(15)
+},{}],1477:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1475,"./lib/window.console.js":1476}],1478:[function(require,module,exports){
+module.exports=require(14)
+},{}],1479:[function(require,module,exports){
+module.exports=require(15)
+},{}],1480:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1478,"./lib/window.console.js":1479}],1481:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1483,"js-ext/extra/hashmap.js":1482,"polyfill/polyfill-base.js":1488}],1482:[function(require,module,exports){
+module.exports=require(4)
+},{}],1483:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1482,"polyfill/polyfill-base.js":1488}],1484:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1488}],1485:[function(require,module,exports){
+module.exports=require(23)
+},{}],1486:[function(require,module,exports){
+module.exports=require(14)
+},{}],1487:[function(require,module,exports){
+module.exports=require(15)
+},{}],1488:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1486,"./lib/window.console.js":1487}],1489:[function(require,module,exports){
+module.exports=require(14)
+},{}],1490:[function(require,module,exports){
+module.exports=require(15)
+},{}],1491:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1489,"./lib/window.console.js":1490}],1492:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1495}],1493:[function(require,module,exports){
+module.exports=require(14)
+},{}],1494:[function(require,module,exports){
+module.exports=require(15)
+},{}],1495:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1493,"./lib/window.console.js":1494}],1496:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1497:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1501,"js-ext/extra/hashmap.js":1498,"polyfill/polyfill-base.js":1507}],1498:[function(require,module,exports){
+module.exports=require(4)
+},{}],1499:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":1500,"../lib/object.js":1501,"./classes.js":1497,"js-ext/extra/hashmap.js":1498,"polyfill/lib/weakmap.js":1505}],1500:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":1507}],1501:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1498,"polyfill/polyfill-base.js":1507}],1502:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1507}],1503:[function(require,module,exports){
+module.exports=require(23)
+},{}],1504:[function(require,module,exports){
+module.exports=require(14)
+},{}],1505:[function(require,module,exports){
+module.exports=require(45)
+},{}],1506:[function(require,module,exports){
+module.exports=require(15)
+},{}],1507:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1504,"./lib/window.console.js":1506}],1508:[function(require,module,exports){
+module.exports=require(48)
+},{}],1509:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":1508}],1510:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":1508}],1511:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":1508}],1512:[function(require,module,exports){
+module.exports=require(14)
+},{}],1513:[function(require,module,exports){
+module.exports=require(15)
+},{}],1514:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1512,"./lib/window.console.js":1513}],1515:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1516,"./lib/timers.js":1517}],1516:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1498,"polyfill/polyfill-base.js":1520}],1517:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1520}],1518:[function(require,module,exports){
+module.exports=require(14)
+},{}],1519:[function(require,module,exports){
+module.exports=require(15)
+},{}],1520:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1518,"./lib/window.console.js":1519}],1521:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":1522}],1522:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":1523,"js-ext/lib/object.js":1524}],1523:[function(require,module,exports){
+module.exports=require(4)
+},{}],1524:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1523,"polyfill/polyfill-base.js":1527}],1525:[function(require,module,exports){
+module.exports=require(14)
+},{}],1526:[function(require,module,exports){
+module.exports=require(15)
+},{}],1527:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1525,"./lib/window.console.js":1526}],1528:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":1498,"js-ext/lib/object.js":1501,"js-ext/lib/string.js":1503,"polyfill":1514,"polyfill/extra/transition.js":1509,"polyfill/extra/vendorCSS.js":1511}],1529:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":1498,"js-ext/lib/object.js":1501,"polyfill":1514}],1530:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":1498,"js-ext/lib/object.js":1501,"js-ext/lib/string.js":1503,"polyfill":1514}],1531:[function(require,module,exports){
+module.exports=require(71)
+},{"../css/element.css":1496,"./attribute-extractor.js":1528,"./element-array.js":1529,"./html-parser.js":1532,"./node-parser.js":1533,"./vdom-ns.js":1534,"./vnode.js":1535,"js-ext/extra/hashmap.js":1498,"js-ext/lib/object.js":1501,"js-ext/lib/promise.js":1502,"js-ext/lib/string.js":1503,"polyfill":1514,"polyfill/extra/transition.js":1509,"polyfill/extra/transitionend.js":1510,"polyfill/extra/vendorCSS.js":1511,"utils":1515,"window-ext":1521}],1532:[function(require,module,exports){
+module.exports=require(72)
+},{"./attribute-extractor.js":1528,"./vdom-ns.js":1534,"js-ext/extra/hashmap.js":1498,"js-ext/lib/object.js":1501,"polyfill":1514}],1533:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":1528,"./vdom-ns.js":1534,"./vnode.js":1535,"js-ext/extra/hashmap.js":1498,"js-ext/lib/object.js":1501,"polyfill":1514}],1534:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":1498,"js-ext/lib/object.js":1501,"polyfill":1514}],1535:[function(require,module,exports){
+module.exports=require(75)
+},{"./attribute-extractor.js":1528,"./html-parser.js":1532,"./vdom-ns.js":1534,"js-ext/extra/hashmap.js":1498,"js-ext/extra/lightmap.js":1499,"js-ext/lib/array.js":1500,"js-ext/lib/object.js":1501,"js-ext/lib/string.js":1503,"polyfill":1514,"utils/lib/timers.js":1517}],1536:[function(require,module,exports){
+module.exports=require(76)
+},{"./partials/extend-document.js":1530,"./partials/extend-element.js":1531,"./partials/node-parser.js":1533,"js-ext/extra/hashmap.js":1498,"js-ext/lib/object.js":1501,"utils/lib/timers.js":1517}],1537:[function(require,module,exports){
+module.exports=require(14)
+},{}],1538:[function(require,module,exports){
+module.exports=require(15)
+},{}],1539:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1537,"./lib/window.console.js":1538}],1540:[function(require,module,exports){
+module.exports=require(4)
+},{}],1541:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1540,"polyfill/polyfill-base.js":1544}],1542:[function(require,module,exports){
+module.exports=require(14)
+},{}],1543:[function(require,module,exports){
+module.exports=require(15)
+},{}],1544:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1542,"./lib/window.console.js":1543}],1545:[function(require,module,exports){
+module.exports=require(14)
+},{}],1546:[function(require,module,exports){
+module.exports=require(15)
+},{}],1547:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1545,"./lib/window.console.js":1546}],1548:[function(require,module,exports){
+module.exports=require(386)
+},{"js-ext/extra/hashmap.js":1540,"js-ext/lib/object.js":1541,"polyfill":1547}],1549:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1550:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1554,"js-ext/extra/hashmap.js":1551,"polyfill/polyfill-base.js":1560}],1551:[function(require,module,exports){
+module.exports=require(4)
+},{}],1552:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":1553,"../lib/object.js":1554,"./classes.js":1550,"js-ext/extra/hashmap.js":1551,"polyfill/lib/weakmap.js":1558}],1553:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":1560}],1554:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1551,"polyfill/polyfill-base.js":1560}],1555:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1560}],1556:[function(require,module,exports){
+module.exports=require(23)
+},{}],1557:[function(require,module,exports){
+module.exports=require(14)
+},{}],1558:[function(require,module,exports){
+module.exports=require(45)
+},{}],1559:[function(require,module,exports){
+module.exports=require(15)
+},{}],1560:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1557,"./lib/window.console.js":1559}],1561:[function(require,module,exports){
+module.exports=require(48)
+},{}],1562:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":1561}],1563:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":1561}],1564:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":1561}],1565:[function(require,module,exports){
+module.exports=require(14)
+},{}],1566:[function(require,module,exports){
+module.exports=require(15)
+},{}],1567:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1565,"./lib/window.console.js":1566}],1568:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1569,"./lib/timers.js":1570}],1569:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1551,"polyfill/polyfill-base.js":1573}],1570:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1573}],1571:[function(require,module,exports){
+module.exports=require(14)
+},{}],1572:[function(require,module,exports){
+module.exports=require(15)
+},{}],1573:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1571,"./lib/window.console.js":1572}],1574:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":1575}],1575:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":1576,"js-ext/lib/object.js":1577}],1576:[function(require,module,exports){
+module.exports=require(4)
+},{}],1577:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1576,"polyfill/polyfill-base.js":1580}],1578:[function(require,module,exports){
+module.exports=require(14)
+},{}],1579:[function(require,module,exports){
+module.exports=require(15)
+},{}],1580:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1578,"./lib/window.console.js":1579}],1581:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":1551,"js-ext/lib/object.js":1554,"js-ext/lib/string.js":1556,"polyfill":1567,"polyfill/extra/transition.js":1562,"polyfill/extra/vendorCSS.js":1564}],1582:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":1551,"js-ext/lib/object.js":1554,"polyfill":1567}],1583:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":1551,"js-ext/lib/object.js":1554,"js-ext/lib/string.js":1556,"polyfill":1567}],1584:[function(require,module,exports){
+module.exports=require(71)
+},{"../css/element.css":1549,"./attribute-extractor.js":1581,"./element-array.js":1582,"./html-parser.js":1585,"./node-parser.js":1586,"./vdom-ns.js":1587,"./vnode.js":1588,"js-ext/extra/hashmap.js":1551,"js-ext/lib/object.js":1554,"js-ext/lib/promise.js":1555,"js-ext/lib/string.js":1556,"polyfill":1567,"polyfill/extra/transition.js":1562,"polyfill/extra/transitionend.js":1563,"polyfill/extra/vendorCSS.js":1564,"utils":1568,"window-ext":1574}],1585:[function(require,module,exports){
+module.exports=require(72)
+},{"./attribute-extractor.js":1581,"./vdom-ns.js":1587,"js-ext/extra/hashmap.js":1551,"js-ext/lib/object.js":1554,"polyfill":1567}],1586:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":1581,"./vdom-ns.js":1587,"./vnode.js":1588,"js-ext/extra/hashmap.js":1551,"js-ext/lib/object.js":1554,"polyfill":1567}],1587:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":1551,"js-ext/lib/object.js":1554,"polyfill":1567}],1588:[function(require,module,exports){
+module.exports=require(75)
+},{"./attribute-extractor.js":1581,"./html-parser.js":1585,"./vdom-ns.js":1587,"js-ext/extra/hashmap.js":1551,"js-ext/extra/lightmap.js":1552,"js-ext/lib/array.js":1553,"js-ext/lib/object.js":1554,"js-ext/lib/string.js":1556,"polyfill":1567,"utils/lib/timers.js":1570}],1589:[function(require,module,exports){
+module.exports=require(76)
+},{"./partials/extend-document.js":1583,"./partials/extend-element.js":1584,"./partials/node-parser.js":1586,"js-ext/extra/hashmap.js":1551,"js-ext/lib/object.js":1554,"utils/lib/timers.js":1570}],1590:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":1591}],1591:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":1592,"js-ext/lib/object.js":1593}],1592:[function(require,module,exports){
+module.exports=require(4)
+},{}],1593:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1592,"polyfill/polyfill-base.js":1596}],1594:[function(require,module,exports){
+module.exports=require(14)
+},{}],1595:[function(require,module,exports){
+module.exports=require(15)
+},{}],1596:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1594,"./lib/window.console.js":1595}],1597:[function(require,module,exports){
+module.exports=require(783)
+},{"./lib/hammer-2.0.4.js":1598,"event-dom":1599}],1598:[function(require,module,exports){
+module.exports=require(784)
+},{"utils":1670}],1599:[function(require,module,exports){
+module.exports=require(6)
+},{"event":1603,"js-ext/extra/hashmap.js":1613,"js-ext/lib/array.js":1614,"js-ext/lib/object.js":1615,"js-ext/lib/string.js":1616,"polyfill/polyfill-base.js":1622,"utils":1623,"vdom":1669}],1600:[function(require,module,exports){
+module.exports=require(7)
+},{"js-ext/extra/hashmap.js":1605,"js-ext/lib/object.js":1606,"polyfill/polyfill-base.js":1612}],1601:[function(require,module,exports){
+module.exports=require(8)
+},{"./event-base.js":1600}],1602:[function(require,module,exports){
+module.exports=require(9)
+},{"./event-base.js":1600,"js-ext/extra/classes.js":1604,"js-ext/lib/object.js":1606}],1603:[function(require,module,exports){
+module.exports=require(10)
+},{"./event-base.js":1600,"./event-emitter.js":1601,"./event-listener.js":1602}],1604:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1606,"js-ext/extra/hashmap.js":1605,"polyfill/polyfill-base.js":1609}],1605:[function(require,module,exports){
+module.exports=require(4)
+},{}],1606:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1605,"polyfill/polyfill-base.js":1609}],1607:[function(require,module,exports){
+module.exports=require(14)
+},{}],1608:[function(require,module,exports){
+module.exports=require(15)
+},{}],1609:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1607,"./lib/window.console.js":1608}],1610:[function(require,module,exports){
+module.exports=require(14)
+},{}],1611:[function(require,module,exports){
+module.exports=require(15)
+},{}],1612:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1610,"./lib/window.console.js":1611}],1613:[function(require,module,exports){
+module.exports=require(4)
+},{}],1614:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":1619}],1615:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1613,"polyfill/polyfill-base.js":1619}],1616:[function(require,module,exports){
+module.exports=require(23)
+},{}],1617:[function(require,module,exports){
+module.exports=require(14)
+},{}],1618:[function(require,module,exports){
+module.exports=require(15)
+},{}],1619:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1617,"./lib/window.console.js":1618}],1620:[function(require,module,exports){
+module.exports=require(14)
+},{}],1621:[function(require,module,exports){
+module.exports=require(15)
+},{}],1622:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1620,"./lib/window.console.js":1621}],1623:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1624,"./lib/timers.js":1625}],1624:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1613,"polyfill/polyfill-base.js":1628}],1625:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1628}],1626:[function(require,module,exports){
+module.exports=require(14)
+},{}],1627:[function(require,module,exports){
+module.exports=require(15)
+},{}],1628:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1626,"./lib/window.console.js":1627}],1629:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1630:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1634,"js-ext/extra/hashmap.js":1631,"polyfill/polyfill-base.js":1640}],1631:[function(require,module,exports){
+module.exports=require(4)
+},{}],1632:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":1633,"../lib/object.js":1634,"./classes.js":1630,"js-ext/extra/hashmap.js":1631,"polyfill/lib/weakmap.js":1638}],1633:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":1640}],1634:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1631,"polyfill/polyfill-base.js":1640}],1635:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1640}],1636:[function(require,module,exports){
+module.exports=require(23)
+},{}],1637:[function(require,module,exports){
+module.exports=require(14)
+},{}],1638:[function(require,module,exports){
+module.exports=require(45)
+},{}],1639:[function(require,module,exports){
+module.exports=require(15)
+},{}],1640:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1637,"./lib/window.console.js":1639}],1641:[function(require,module,exports){
+module.exports=require(48)
+},{}],1642:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":1641}],1643:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":1641}],1644:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":1641}],1645:[function(require,module,exports){
+module.exports=require(14)
+},{}],1646:[function(require,module,exports){
+module.exports=require(15)
+},{}],1647:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1645,"./lib/window.console.js":1646}],1648:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1649,"./lib/timers.js":1650}],1649:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1631,"polyfill/polyfill-base.js":1653}],1650:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1653}],1651:[function(require,module,exports){
+module.exports=require(14)
+},{}],1652:[function(require,module,exports){
+module.exports=require(15)
+},{}],1653:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1651,"./lib/window.console.js":1652}],1654:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":1655}],1655:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":1656,"js-ext/lib/object.js":1657}],1656:[function(require,module,exports){
+module.exports=require(4)
+},{}],1657:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1656,"polyfill/polyfill-base.js":1660}],1658:[function(require,module,exports){
+module.exports=require(14)
+},{}],1659:[function(require,module,exports){
+module.exports=require(15)
+},{}],1660:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1658,"./lib/window.console.js":1659}],1661:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":1631,"js-ext/lib/object.js":1634,"js-ext/lib/string.js":1636,"polyfill":1647,"polyfill/extra/transition.js":1642,"polyfill/extra/vendorCSS.js":1644}],1662:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":1631,"js-ext/lib/object.js":1634,"polyfill":1647}],1663:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":1631,"js-ext/lib/object.js":1634,"js-ext/lib/string.js":1636,"polyfill":1647}],1664:[function(require,module,exports){
+module.exports=require(71)
+},{"../css/element.css":1629,"./attribute-extractor.js":1661,"./element-array.js":1662,"./html-parser.js":1665,"./node-parser.js":1666,"./vdom-ns.js":1667,"./vnode.js":1668,"js-ext/extra/hashmap.js":1631,"js-ext/lib/object.js":1634,"js-ext/lib/promise.js":1635,"js-ext/lib/string.js":1636,"polyfill":1647,"polyfill/extra/transition.js":1642,"polyfill/extra/transitionend.js":1643,"polyfill/extra/vendorCSS.js":1644,"utils":1648,"window-ext":1654}],1665:[function(require,module,exports){
+module.exports=require(72)
+},{"./attribute-extractor.js":1661,"./vdom-ns.js":1667,"js-ext/extra/hashmap.js":1631,"js-ext/lib/object.js":1634,"polyfill":1647}],1666:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":1661,"./vdom-ns.js":1667,"./vnode.js":1668,"js-ext/extra/hashmap.js":1631,"js-ext/lib/object.js":1634,"polyfill":1647}],1667:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":1631,"js-ext/lib/object.js":1634,"polyfill":1647}],1668:[function(require,module,exports){
+module.exports=require(75)
+},{"./attribute-extractor.js":1661,"./html-parser.js":1665,"./vdom-ns.js":1667,"js-ext/extra/hashmap.js":1631,"js-ext/extra/lightmap.js":1632,"js-ext/lib/array.js":1633,"js-ext/lib/object.js":1634,"js-ext/lib/string.js":1636,"polyfill":1647,"utils/lib/timers.js":1650}],1669:[function(require,module,exports){
+module.exports=require(76)
+},{"./partials/extend-document.js":1663,"./partials/extend-element.js":1664,"./partials/node-parser.js":1666,"js-ext/extra/hashmap.js":1631,"js-ext/lib/object.js":1634,"utils/lib/timers.js":1650}],1670:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1671,"./lib/timers.js":1672}],1671:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1919,"polyfill/polyfill-base.js":1675}],1672:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1675}],1673:[function(require,module,exports){
+module.exports=require(14)
+},{}],1674:[function(require,module,exports){
+module.exports=require(15)
+},{}],1675:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1673,"./lib/window.console.js":1674}],1676:[function(require,module,exports){
+module.exports=require(882)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1677:[function(require,module,exports){
+module.exports=require(883)
+},{"./css/focusmanager.css":1676,"event-mobile":1678,"js-ext/extra/hashmap.js":1757,"js-ext/lib/object.js":1758,"node-plugin":1762,"polyfill":1904,"utils":1905,"window-ext":1911}],1678:[function(require,module,exports){
+module.exports=require(783)
+},{"./lib/hammer-2.0.4.js":1679,"event-dom":1680}],1679:[function(require,module,exports){
+module.exports=require(784)
+},{"utils":1751}],1680:[function(require,module,exports){
+module.exports=require(6)
+},{"event":1684,"js-ext/extra/hashmap.js":1694,"js-ext/lib/array.js":1695,"js-ext/lib/object.js":1696,"js-ext/lib/string.js":1697,"polyfill/polyfill-base.js":1703,"utils":1704,"vdom":1750}],1681:[function(require,module,exports){
+module.exports=require(7)
+},{"js-ext/extra/hashmap.js":1686,"js-ext/lib/object.js":1687,"polyfill/polyfill-base.js":1693}],1682:[function(require,module,exports){
+module.exports=require(8)
+},{"./event-base.js":1681}],1683:[function(require,module,exports){
+module.exports=require(9)
+},{"./event-base.js":1681,"js-ext/extra/classes.js":1685,"js-ext/lib/object.js":1687}],1684:[function(require,module,exports){
+module.exports=require(10)
+},{"./event-base.js":1681,"./event-emitter.js":1682,"./event-listener.js":1683}],1685:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1687,"js-ext/extra/hashmap.js":1686,"polyfill/polyfill-base.js":1690}],1686:[function(require,module,exports){
+module.exports=require(4)
+},{}],1687:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1686,"polyfill/polyfill-base.js":1690}],1688:[function(require,module,exports){
+module.exports=require(14)
+},{}],1689:[function(require,module,exports){
+module.exports=require(15)
+},{}],1690:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1688,"./lib/window.console.js":1689}],1691:[function(require,module,exports){
+module.exports=require(14)
+},{}],1692:[function(require,module,exports){
+module.exports=require(15)
+},{}],1693:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1691,"./lib/window.console.js":1692}],1694:[function(require,module,exports){
+module.exports=require(4)
+},{}],1695:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":1700}],1696:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1694,"polyfill/polyfill-base.js":1700}],1697:[function(require,module,exports){
+module.exports=require(23)
+},{}],1698:[function(require,module,exports){
+module.exports=require(14)
+},{}],1699:[function(require,module,exports){
+module.exports=require(15)
+},{}],1700:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1698,"./lib/window.console.js":1699}],1701:[function(require,module,exports){
+module.exports=require(14)
+},{}],1702:[function(require,module,exports){
+module.exports=require(15)
+},{}],1703:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1701,"./lib/window.console.js":1702}],1704:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1705,"./lib/timers.js":1706}],1705:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1694,"polyfill/polyfill-base.js":1709}],1706:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1709}],1707:[function(require,module,exports){
+module.exports=require(14)
+},{}],1708:[function(require,module,exports){
+module.exports=require(15)
+},{}],1709:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1707,"./lib/window.console.js":1708}],1710:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1711:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1715,"js-ext/extra/hashmap.js":1712,"polyfill/polyfill-base.js":1721}],1712:[function(require,module,exports){
+module.exports=require(4)
+},{}],1713:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":1714,"../lib/object.js":1715,"./classes.js":1711,"js-ext/extra/hashmap.js":1712,"polyfill/lib/weakmap.js":1719}],1714:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":1721}],1715:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1712,"polyfill/polyfill-base.js":1721}],1716:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1721}],1717:[function(require,module,exports){
+module.exports=require(23)
+},{}],1718:[function(require,module,exports){
+module.exports=require(14)
+},{}],1719:[function(require,module,exports){
+module.exports=require(45)
+},{}],1720:[function(require,module,exports){
+module.exports=require(15)
+},{}],1721:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1718,"./lib/window.console.js":1720}],1722:[function(require,module,exports){
+module.exports=require(48)
+},{}],1723:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":1722}],1724:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":1722}],1725:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":1722}],1726:[function(require,module,exports){
+module.exports=require(14)
+},{}],1727:[function(require,module,exports){
+module.exports=require(15)
+},{}],1728:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1726,"./lib/window.console.js":1727}],1729:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1730,"./lib/timers.js":1731}],1730:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1712,"polyfill/polyfill-base.js":1734}],1731:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1734}],1732:[function(require,module,exports){
+module.exports=require(14)
+},{}],1733:[function(require,module,exports){
+module.exports=require(15)
+},{}],1734:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1732,"./lib/window.console.js":1733}],1735:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":1736}],1736:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":1737,"js-ext/lib/object.js":1738}],1737:[function(require,module,exports){
+module.exports=require(4)
+},{}],1738:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1737,"polyfill/polyfill-base.js":1741}],1739:[function(require,module,exports){
+module.exports=require(14)
+},{}],1740:[function(require,module,exports){
+module.exports=require(15)
+},{}],1741:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1739,"./lib/window.console.js":1740}],1742:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":1712,"js-ext/lib/object.js":1715,"js-ext/lib/string.js":1717,"polyfill":1728,"polyfill/extra/transition.js":1723,"polyfill/extra/vendorCSS.js":1725}],1743:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":1712,"js-ext/lib/object.js":1715,"polyfill":1728}],1744:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":1712,"js-ext/lib/object.js":1715,"js-ext/lib/string.js":1717,"polyfill":1728}],1745:[function(require,module,exports){
+module.exports=require(71)
+},{"../css/element.css":1710,"./attribute-extractor.js":1742,"./element-array.js":1743,"./html-parser.js":1746,"./node-parser.js":1747,"./vdom-ns.js":1748,"./vnode.js":1749,"js-ext/extra/hashmap.js":1712,"js-ext/lib/object.js":1715,"js-ext/lib/promise.js":1716,"js-ext/lib/string.js":1717,"polyfill":1728,"polyfill/extra/transition.js":1723,"polyfill/extra/transitionend.js":1724,"polyfill/extra/vendorCSS.js":1725,"utils":1729,"window-ext":1735}],1746:[function(require,module,exports){
+module.exports=require(72)
+},{"./attribute-extractor.js":1742,"./vdom-ns.js":1748,"js-ext/extra/hashmap.js":1712,"js-ext/lib/object.js":1715,"polyfill":1728}],1747:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":1742,"./vdom-ns.js":1748,"./vnode.js":1749,"js-ext/extra/hashmap.js":1712,"js-ext/lib/object.js":1715,"polyfill":1728}],1748:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":1712,"js-ext/lib/object.js":1715,"polyfill":1728}],1749:[function(require,module,exports){
+module.exports=require(75)
+},{"./attribute-extractor.js":1742,"./html-parser.js":1746,"./vdom-ns.js":1748,"js-ext/extra/hashmap.js":1712,"js-ext/extra/lightmap.js":1713,"js-ext/lib/array.js":1714,"js-ext/lib/object.js":1715,"js-ext/lib/string.js":1717,"polyfill":1728,"utils/lib/timers.js":1731}],1750:[function(require,module,exports){
+module.exports=require(76)
+},{"./partials/extend-document.js":1744,"./partials/extend-element.js":1745,"./partials/node-parser.js":1747,"js-ext/extra/hashmap.js":1712,"js-ext/lib/object.js":1715,"utils/lib/timers.js":1731}],1751:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1752,"./lib/timers.js":1753}],1752:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1757,"polyfill/polyfill-base.js":1756}],1753:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1756}],1754:[function(require,module,exports){
+module.exports=require(14)
+},{}],1755:[function(require,module,exports){
+module.exports=require(15)
+},{}],1756:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1754,"./lib/window.console.js":1755}],1757:[function(require,module,exports){
+module.exports=require(4)
+},{}],1758:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1757,"polyfill/polyfill-base.js":1761}],1759:[function(require,module,exports){
+module.exports=require(14)
+},{}],1760:[function(require,module,exports){
+module.exports=require(15)
+},{}],1761:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1759,"./lib/window.console.js":1760}],1762:[function(require,module,exports){
+module.exports=require(5)
+},{"event-dom":1763,"event/extra/promise-finalize.js":1835,"event/extra/timer-finalize.js":1836,"js-ext/extra/classes.js":1846,"js-ext/extra/hashmap.js":1847,"js-ext/lib/object.js":1848,"js-ext/lib/promise.js":1849,"js-ext/lib/string.js":1850,"polyfill":1856,"utils/lib/timers.js":1857,"vdom":1901}],1763:[function(require,module,exports){
+module.exports=require(6)
+},{"event":1767,"js-ext/extra/hashmap.js":1777,"js-ext/lib/array.js":1778,"js-ext/lib/object.js":1779,"js-ext/lib/string.js":1780,"polyfill/polyfill-base.js":1786,"utils":1787,"vdom":1833}],1764:[function(require,module,exports){
+module.exports=require(7)
+},{"js-ext/extra/hashmap.js":1769,"js-ext/lib/object.js":1770,"polyfill/polyfill-base.js":1776}],1765:[function(require,module,exports){
+module.exports=require(8)
+},{"./event-base.js":1764}],1766:[function(require,module,exports){
+module.exports=require(9)
+},{"./event-base.js":1764,"js-ext/extra/classes.js":1768,"js-ext/lib/object.js":1770}],1767:[function(require,module,exports){
+module.exports=require(10)
+},{"./event-base.js":1764,"./event-emitter.js":1765,"./event-listener.js":1766}],1768:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1770,"js-ext/extra/hashmap.js":1769,"polyfill/polyfill-base.js":1773}],1769:[function(require,module,exports){
+module.exports=require(4)
+},{}],1770:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1769,"polyfill/polyfill-base.js":1773}],1771:[function(require,module,exports){
+module.exports=require(14)
+},{}],1772:[function(require,module,exports){
+module.exports=require(15)
+},{}],1773:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1771,"./lib/window.console.js":1772}],1774:[function(require,module,exports){
+module.exports=require(14)
+},{}],1775:[function(require,module,exports){
+module.exports=require(15)
+},{}],1776:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1774,"./lib/window.console.js":1775}],1777:[function(require,module,exports){
+module.exports=require(4)
+},{}],1778:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":1783}],1779:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1777,"polyfill/polyfill-base.js":1783}],1780:[function(require,module,exports){
+module.exports=require(23)
+},{}],1781:[function(require,module,exports){
+module.exports=require(14)
+},{}],1782:[function(require,module,exports){
+module.exports=require(15)
+},{}],1783:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1781,"./lib/window.console.js":1782}],1784:[function(require,module,exports){
+module.exports=require(14)
+},{}],1785:[function(require,module,exports){
+module.exports=require(15)
+},{}],1786:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1784,"./lib/window.console.js":1785}],1787:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1788,"./lib/timers.js":1789}],1788:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1777,"polyfill/polyfill-base.js":1792}],1789:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1792}],1790:[function(require,module,exports){
+module.exports=require(14)
+},{}],1791:[function(require,module,exports){
+module.exports=require(15)
+},{}],1792:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1790,"./lib/window.console.js":1791}],1793:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1794:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1798,"js-ext/extra/hashmap.js":1795,"polyfill/polyfill-base.js":1804}],1795:[function(require,module,exports){
+module.exports=require(4)
+},{}],1796:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":1797,"../lib/object.js":1798,"./classes.js":1794,"js-ext/extra/hashmap.js":1795,"polyfill/lib/weakmap.js":1802}],1797:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":1804}],1798:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1795,"polyfill/polyfill-base.js":1804}],1799:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1804}],1800:[function(require,module,exports){
+module.exports=require(23)
+},{}],1801:[function(require,module,exports){
+module.exports=require(14)
+},{}],1802:[function(require,module,exports){
+module.exports=require(45)
+},{}],1803:[function(require,module,exports){
+module.exports=require(15)
+},{}],1804:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1801,"./lib/window.console.js":1803}],1805:[function(require,module,exports){
+module.exports=require(48)
+},{}],1806:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":1805}],1807:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":1805}],1808:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":1805}],1809:[function(require,module,exports){
+module.exports=require(14)
+},{}],1810:[function(require,module,exports){
+module.exports=require(15)
+},{}],1811:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1809,"./lib/window.console.js":1810}],1812:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1813,"./lib/timers.js":1814}],1813:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1795,"polyfill/polyfill-base.js":1817}],1814:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1817}],1815:[function(require,module,exports){
+module.exports=require(14)
+},{}],1816:[function(require,module,exports){
+module.exports=require(15)
+},{}],1817:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1815,"./lib/window.console.js":1816}],1818:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":1819}],1819:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":1820,"js-ext/lib/object.js":1821}],1820:[function(require,module,exports){
+module.exports=require(4)
+},{}],1821:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1820,"polyfill/polyfill-base.js":1824}],1822:[function(require,module,exports){
+module.exports=require(14)
+},{}],1823:[function(require,module,exports){
+module.exports=require(15)
+},{}],1824:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1822,"./lib/window.console.js":1823}],1825:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":1795,"js-ext/lib/object.js":1798,"js-ext/lib/string.js":1800,"polyfill":1811,"polyfill/extra/transition.js":1806,"polyfill/extra/vendorCSS.js":1808}],1826:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":1795,"js-ext/lib/object.js":1798,"polyfill":1811}],1827:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":1795,"js-ext/lib/object.js":1798,"js-ext/lib/string.js":1800,"polyfill":1811}],1828:[function(require,module,exports){
+module.exports=require(71)
+},{"../css/element.css":1793,"./attribute-extractor.js":1825,"./element-array.js":1826,"./html-parser.js":1829,"./node-parser.js":1830,"./vdom-ns.js":1831,"./vnode.js":1832,"js-ext/extra/hashmap.js":1795,"js-ext/lib/object.js":1798,"js-ext/lib/promise.js":1799,"js-ext/lib/string.js":1800,"polyfill":1811,"polyfill/extra/transition.js":1806,"polyfill/extra/transitionend.js":1807,"polyfill/extra/vendorCSS.js":1808,"utils":1812,"window-ext":1818}],1829:[function(require,module,exports){
+module.exports=require(72)
+},{"./attribute-extractor.js":1825,"./vdom-ns.js":1831,"js-ext/extra/hashmap.js":1795,"js-ext/lib/object.js":1798,"polyfill":1811}],1830:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":1825,"./vdom-ns.js":1831,"./vnode.js":1832,"js-ext/extra/hashmap.js":1795,"js-ext/lib/object.js":1798,"polyfill":1811}],1831:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":1795,"js-ext/lib/object.js":1798,"polyfill":1811}],1832:[function(require,module,exports){
+module.exports=require(75)
+},{"./attribute-extractor.js":1825,"./html-parser.js":1829,"./vdom-ns.js":1831,"js-ext/extra/hashmap.js":1795,"js-ext/extra/lightmap.js":1796,"js-ext/lib/array.js":1797,"js-ext/lib/object.js":1798,"js-ext/lib/string.js":1800,"polyfill":1811,"utils/lib/timers.js":1814}],1833:[function(require,module,exports){
+module.exports=require(76)
+},{"./partials/extend-document.js":1827,"./partials/extend-element.js":1828,"./partials/node-parser.js":1830,"js-ext/extra/hashmap.js":1795,"js-ext/lib/object.js":1798,"utils/lib/timers.js":1814}],1834:[function(require,module,exports){
+module.exports=require(7)
+},{"js-ext/extra/hashmap.js":1837,"js-ext/lib/object.js":1838,"polyfill/polyfill-base.js":1845}],1835:[function(require,module,exports){
+module.exports=require(78)
+},{"js-ext/extra/hashmap.js":1837,"js-ext/lib/promise.js":1839}],1836:[function(require,module,exports){
+module.exports=require(79)
+},{"../event-base.js":1834,"js-ext/extra/hashmap.js":1837}],1837:[function(require,module,exports){
+module.exports=require(4)
+},{}],1838:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1837,"polyfill/polyfill-base.js":1842}],1839:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1842}],1840:[function(require,module,exports){
+module.exports=require(14)
+},{}],1841:[function(require,module,exports){
+module.exports=require(15)
+},{}],1842:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1840,"./lib/window.console.js":1841}],1843:[function(require,module,exports){
+module.exports=require(14)
+},{}],1844:[function(require,module,exports){
+module.exports=require(15)
+},{}],1845:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1843,"./lib/window.console.js":1844}],1846:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1848,"js-ext/extra/hashmap.js":1847,"polyfill/polyfill-base.js":1853}],1847:[function(require,module,exports){
+module.exports=require(4)
+},{}],1848:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1847,"polyfill/polyfill-base.js":1853}],1849:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1853}],1850:[function(require,module,exports){
+module.exports=require(23)
+},{}],1851:[function(require,module,exports){
+module.exports=require(14)
+},{}],1852:[function(require,module,exports){
+module.exports=require(15)
+},{}],1853:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1851,"./lib/window.console.js":1852}],1854:[function(require,module,exports){
+module.exports=require(14)
+},{}],1855:[function(require,module,exports){
+module.exports=require(15)
+},{}],1856:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1854,"./lib/window.console.js":1855}],1857:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1860}],1858:[function(require,module,exports){
+module.exports=require(14)
+},{}],1859:[function(require,module,exports){
+module.exports=require(15)
+},{}],1860:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1858,"./lib/window.console.js":1859}],1861:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1862:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1866,"js-ext/extra/hashmap.js":1863,"polyfill/polyfill-base.js":1872}],1863:[function(require,module,exports){
+module.exports=require(4)
+},{}],1864:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":1865,"../lib/object.js":1866,"./classes.js":1862,"js-ext/extra/hashmap.js":1863,"polyfill/lib/weakmap.js":1870}],1865:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":1872}],1866:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1863,"polyfill/polyfill-base.js":1872}],1867:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1872}],1868:[function(require,module,exports){
+module.exports=require(23)
+},{}],1869:[function(require,module,exports){
+module.exports=require(14)
+},{}],1870:[function(require,module,exports){
+module.exports=require(45)
+},{}],1871:[function(require,module,exports){
+module.exports=require(15)
+},{}],1872:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1869,"./lib/window.console.js":1871}],1873:[function(require,module,exports){
+module.exports=require(48)
+},{}],1874:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":1873}],1875:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":1873}],1876:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":1873}],1877:[function(require,module,exports){
+module.exports=require(14)
+},{}],1878:[function(require,module,exports){
+module.exports=require(15)
+},{}],1879:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1877,"./lib/window.console.js":1878}],1880:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1881,"./lib/timers.js":1882}],1881:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1863,"polyfill/polyfill-base.js":1885}],1882:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1885}],1883:[function(require,module,exports){
+module.exports=require(14)
+},{}],1884:[function(require,module,exports){
+module.exports=require(15)
+},{}],1885:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1883,"./lib/window.console.js":1884}],1886:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":1887}],1887:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":1888,"js-ext/lib/object.js":1889}],1888:[function(require,module,exports){
+module.exports=require(4)
+},{}],1889:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1888,"polyfill/polyfill-base.js":1892}],1890:[function(require,module,exports){
+module.exports=require(14)
+},{}],1891:[function(require,module,exports){
+module.exports=require(15)
+},{}],1892:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1890,"./lib/window.console.js":1891}],1893:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":1863,"js-ext/lib/object.js":1866,"js-ext/lib/string.js":1868,"polyfill":1879,"polyfill/extra/transition.js":1874,"polyfill/extra/vendorCSS.js":1876}],1894:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":1863,"js-ext/lib/object.js":1866,"polyfill":1879}],1895:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":1863,"js-ext/lib/object.js":1866,"js-ext/lib/string.js":1868,"polyfill":1879}],1896:[function(require,module,exports){
+module.exports=require(71)
+},{"../css/element.css":1861,"./attribute-extractor.js":1893,"./element-array.js":1894,"./html-parser.js":1897,"./node-parser.js":1898,"./vdom-ns.js":1899,"./vnode.js":1900,"js-ext/extra/hashmap.js":1863,"js-ext/lib/object.js":1866,"js-ext/lib/promise.js":1867,"js-ext/lib/string.js":1868,"polyfill":1879,"polyfill/extra/transition.js":1874,"polyfill/extra/transitionend.js":1875,"polyfill/extra/vendorCSS.js":1876,"utils":1880,"window-ext":1886}],1897:[function(require,module,exports){
+module.exports=require(72)
+},{"./attribute-extractor.js":1893,"./vdom-ns.js":1899,"js-ext/extra/hashmap.js":1863,"js-ext/lib/object.js":1866,"polyfill":1879}],1898:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":1893,"./vdom-ns.js":1899,"./vnode.js":1900,"js-ext/extra/hashmap.js":1863,"js-ext/lib/object.js":1866,"polyfill":1879}],1899:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":1863,"js-ext/lib/object.js":1866,"polyfill":1879}],1900:[function(require,module,exports){
+module.exports=require(75)
+},{"./attribute-extractor.js":1893,"./html-parser.js":1897,"./vdom-ns.js":1899,"js-ext/extra/hashmap.js":1863,"js-ext/extra/lightmap.js":1864,"js-ext/lib/array.js":1865,"js-ext/lib/object.js":1866,"js-ext/lib/string.js":1868,"polyfill":1879,"utils/lib/timers.js":1882}],1901:[function(require,module,exports){
+module.exports=require(76)
+},{"./partials/extend-document.js":1895,"./partials/extend-element.js":1896,"./partials/node-parser.js":1898,"js-ext/extra/hashmap.js":1863,"js-ext/lib/object.js":1866,"utils/lib/timers.js":1882}],1902:[function(require,module,exports){
+module.exports=require(14)
+},{}],1903:[function(require,module,exports){
+module.exports=require(15)
+},{}],1904:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1902,"./lib/window.console.js":1903}],1905:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1906,"./lib/timers.js":1907}],1906:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1757,"polyfill/polyfill-base.js":1910}],1907:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1910}],1908:[function(require,module,exports){
+module.exports=require(14)
+},{}],1909:[function(require,module,exports){
+module.exports=require(15)
+},{}],1910:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1908,"./lib/window.console.js":1909}],1911:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":1912}],1912:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":1913,"js-ext/lib/object.js":1914}],1913:[function(require,module,exports){
+module.exports=require(4)
+},{}],1914:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1913,"polyfill/polyfill-base.js":1917}],1915:[function(require,module,exports){
+module.exports=require(14)
+},{}],1916:[function(require,module,exports){
+module.exports=require(15)
+},{}],1917:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1915,"./lib/window.console.js":1916}],1918:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1922,"js-ext/extra/hashmap.js":1919,"polyfill/polyfill-base.js":1927}],1919:[function(require,module,exports){
+module.exports=require(4)
+},{}],1920:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":1921,"../lib/object.js":1922,"./classes.js":1918,"js-ext/extra/hashmap.js":1919,"polyfill/lib/weakmap.js":1925}],1921:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":1927}],1922:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1919,"polyfill/polyfill-base.js":1927}],1923:[function(require,module,exports){
+module.exports=require(23)
+},{}],1924:[function(require,module,exports){
+module.exports=require(14)
+},{}],1925:[function(require,module,exports){
+module.exports=require(45)
+},{}],1926:[function(require,module,exports){
+module.exports=require(15)
+},{}],1927:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1924,"./lib/window.console.js":1926}],1928:[function(require,module,exports){
+module.exports=require(5)
+},{"event-dom":1929,"event/extra/promise-finalize.js":2001,"event/extra/timer-finalize.js":2002,"js-ext/extra/classes.js":2012,"js-ext/extra/hashmap.js":2013,"js-ext/lib/object.js":2014,"js-ext/lib/promise.js":2015,"js-ext/lib/string.js":2016,"polyfill":2022,"utils/lib/timers.js":2023,"vdom":2067}],1929:[function(require,module,exports){
+module.exports=require(6)
+},{"event":1933,"js-ext/extra/hashmap.js":1943,"js-ext/lib/array.js":1944,"js-ext/lib/object.js":1945,"js-ext/lib/string.js":1946,"polyfill/polyfill-base.js":1952,"utils":1953,"vdom":1999}],1930:[function(require,module,exports){
+module.exports=require(7)
+},{"js-ext/extra/hashmap.js":1935,"js-ext/lib/object.js":1936,"polyfill/polyfill-base.js":1942}],1931:[function(require,module,exports){
+module.exports=require(8)
+},{"./event-base.js":1930}],1932:[function(require,module,exports){
+module.exports=require(9)
+},{"./event-base.js":1930,"js-ext/extra/classes.js":1934,"js-ext/lib/object.js":1936}],1933:[function(require,module,exports){
+module.exports=require(10)
+},{"./event-base.js":1930,"./event-emitter.js":1931,"./event-listener.js":1932}],1934:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1936,"js-ext/extra/hashmap.js":1935,"polyfill/polyfill-base.js":1939}],1935:[function(require,module,exports){
+module.exports=require(4)
+},{}],1936:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1935,"polyfill/polyfill-base.js":1939}],1937:[function(require,module,exports){
+module.exports=require(14)
+},{}],1938:[function(require,module,exports){
+module.exports=require(15)
+},{}],1939:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1937,"./lib/window.console.js":1938}],1940:[function(require,module,exports){
+module.exports=require(14)
+},{}],1941:[function(require,module,exports){
+module.exports=require(15)
+},{}],1942:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1940,"./lib/window.console.js":1941}],1943:[function(require,module,exports){
+module.exports=require(4)
+},{}],1944:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":1949}],1945:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1943,"polyfill/polyfill-base.js":1949}],1946:[function(require,module,exports){
+module.exports=require(23)
+},{}],1947:[function(require,module,exports){
+module.exports=require(14)
+},{}],1948:[function(require,module,exports){
+module.exports=require(15)
+},{}],1949:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1947,"./lib/window.console.js":1948}],1950:[function(require,module,exports){
+module.exports=require(14)
+},{}],1951:[function(require,module,exports){
+module.exports=require(15)
+},{}],1952:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1950,"./lib/window.console.js":1951}],1953:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1954,"./lib/timers.js":1955}],1954:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1943,"polyfill/polyfill-base.js":1958}],1955:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1958}],1956:[function(require,module,exports){
+module.exports=require(14)
+},{}],1957:[function(require,module,exports){
+module.exports=require(15)
+},{}],1958:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1956,"./lib/window.console.js":1957}],1959:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1960:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":1964,"js-ext/extra/hashmap.js":1961,"polyfill/polyfill-base.js":1970}],1961:[function(require,module,exports){
+module.exports=require(4)
+},{}],1962:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":1963,"../lib/object.js":1964,"./classes.js":1960,"js-ext/extra/hashmap.js":1961,"polyfill/lib/weakmap.js":1968}],1963:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":1970}],1964:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1961,"polyfill/polyfill-base.js":1970}],1965:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":1970}],1966:[function(require,module,exports){
+module.exports=require(23)
+},{}],1967:[function(require,module,exports){
+module.exports=require(14)
+},{}],1968:[function(require,module,exports){
+module.exports=require(45)
+},{}],1969:[function(require,module,exports){
+module.exports=require(15)
+},{}],1970:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1967,"./lib/window.console.js":1969}],1971:[function(require,module,exports){
+module.exports=require(48)
+},{}],1972:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":1971}],1973:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":1971}],1974:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":1971}],1975:[function(require,module,exports){
+module.exports=require(14)
+},{}],1976:[function(require,module,exports){
+module.exports=require(15)
+},{}],1977:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1975,"./lib/window.console.js":1976}],1978:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":1979,"./lib/timers.js":1980}],1979:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":1961,"polyfill/polyfill-base.js":1983}],1980:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":1983}],1981:[function(require,module,exports){
+module.exports=require(14)
+},{}],1982:[function(require,module,exports){
+module.exports=require(15)
+},{}],1983:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1981,"./lib/window.console.js":1982}],1984:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":1985}],1985:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":1986,"js-ext/lib/object.js":1987}],1986:[function(require,module,exports){
+module.exports=require(4)
+},{}],1987:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":1986,"polyfill/polyfill-base.js":1990}],1988:[function(require,module,exports){
+module.exports=require(14)
+},{}],1989:[function(require,module,exports){
+module.exports=require(15)
+},{}],1990:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":1988,"./lib/window.console.js":1989}],1991:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":1961,"js-ext/lib/object.js":1964,"js-ext/lib/string.js":1966,"polyfill":1977,"polyfill/extra/transition.js":1972,"polyfill/extra/vendorCSS.js":1974}],1992:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":1961,"js-ext/lib/object.js":1964,"polyfill":1977}],1993:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":1961,"js-ext/lib/object.js":1964,"js-ext/lib/string.js":1966,"polyfill":1977}],1994:[function(require,module,exports){
+module.exports=require(71)
+},{"../css/element.css":1959,"./attribute-extractor.js":1991,"./element-array.js":1992,"./html-parser.js":1995,"./node-parser.js":1996,"./vdom-ns.js":1997,"./vnode.js":1998,"js-ext/extra/hashmap.js":1961,"js-ext/lib/object.js":1964,"js-ext/lib/promise.js":1965,"js-ext/lib/string.js":1966,"polyfill":1977,"polyfill/extra/transition.js":1972,"polyfill/extra/transitionend.js":1973,"polyfill/extra/vendorCSS.js":1974,"utils":1978,"window-ext":1984}],1995:[function(require,module,exports){
+module.exports=require(72)
+},{"./attribute-extractor.js":1991,"./vdom-ns.js":1997,"js-ext/extra/hashmap.js":1961,"js-ext/lib/object.js":1964,"polyfill":1977}],1996:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":1991,"./vdom-ns.js":1997,"./vnode.js":1998,"js-ext/extra/hashmap.js":1961,"js-ext/lib/object.js":1964,"polyfill":1977}],1997:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":1961,"js-ext/lib/object.js":1964,"polyfill":1977}],1998:[function(require,module,exports){
+module.exports=require(75)
+},{"./attribute-extractor.js":1991,"./html-parser.js":1995,"./vdom-ns.js":1997,"js-ext/extra/hashmap.js":1961,"js-ext/extra/lightmap.js":1962,"js-ext/lib/array.js":1963,"js-ext/lib/object.js":1964,"js-ext/lib/string.js":1966,"polyfill":1977,"utils/lib/timers.js":1980}],1999:[function(require,module,exports){
+module.exports=require(76)
+},{"./partials/extend-document.js":1993,"./partials/extend-element.js":1994,"./partials/node-parser.js":1996,"js-ext/extra/hashmap.js":1961,"js-ext/lib/object.js":1964,"utils/lib/timers.js":1980}],2000:[function(require,module,exports){
+module.exports=require(7)
+},{"js-ext/extra/hashmap.js":2003,"js-ext/lib/object.js":2004,"polyfill/polyfill-base.js":2011}],2001:[function(require,module,exports){
+module.exports=require(78)
+},{"js-ext/extra/hashmap.js":2003,"js-ext/lib/promise.js":2005}],2002:[function(require,module,exports){
+module.exports=require(79)
+},{"../event-base.js":2000,"js-ext/extra/hashmap.js":2003}],2003:[function(require,module,exports){
+module.exports=require(4)
+},{}],2004:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":2003,"polyfill/polyfill-base.js":2008}],2005:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":2008}],2006:[function(require,module,exports){
+module.exports=require(14)
+},{}],2007:[function(require,module,exports){
+module.exports=require(15)
+},{}],2008:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":2006,"./lib/window.console.js":2007}],2009:[function(require,module,exports){
+module.exports=require(14)
+},{}],2010:[function(require,module,exports){
+module.exports=require(15)
+},{}],2011:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":2009,"./lib/window.console.js":2010}],2012:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":2014,"js-ext/extra/hashmap.js":2013,"polyfill/polyfill-base.js":2019}],2013:[function(require,module,exports){
+module.exports=require(4)
+},{}],2014:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":2013,"polyfill/polyfill-base.js":2019}],2015:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":2019}],2016:[function(require,module,exports){
+module.exports=require(23)
+},{}],2017:[function(require,module,exports){
+module.exports=require(14)
+},{}],2018:[function(require,module,exports){
+module.exports=require(15)
+},{}],2019:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":2017,"./lib/window.console.js":2018}],2020:[function(require,module,exports){
+module.exports=require(14)
+},{}],2021:[function(require,module,exports){
+module.exports=require(15)
+},{}],2022:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":2020,"./lib/window.console.js":2021}],2023:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":2026}],2024:[function(require,module,exports){
+module.exports=require(14)
+},{}],2025:[function(require,module,exports){
+module.exports=require(15)
+},{}],2026:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":2024,"./lib/window.console.js":2025}],2027:[function(require,module,exports){
+module.exports=require(36)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],2028:[function(require,module,exports){
+module.exports=require(11)
+},{"../lib/object.js":2032,"js-ext/extra/hashmap.js":2029,"polyfill/polyfill-base.js":2038}],2029:[function(require,module,exports){
+module.exports=require(4)
+},{}],2030:[function(require,module,exports){
+module.exports=require(39)
+},{"../lib/array.js":2031,"../lib/object.js":2032,"./classes.js":2028,"js-ext/extra/hashmap.js":2029,"polyfill/lib/weakmap.js":2036}],2031:[function(require,module,exports){
+module.exports=require(21)
+},{"polyfill/polyfill-base.js":2038}],2032:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":2029,"polyfill/polyfill-base.js":2038}],2033:[function(require,module,exports){
+module.exports=require(42)
+},{"polyfill":2038}],2034:[function(require,module,exports){
+module.exports=require(23)
+},{}],2035:[function(require,module,exports){
+module.exports=require(14)
+},{}],2036:[function(require,module,exports){
+module.exports=require(45)
+},{}],2037:[function(require,module,exports){
+module.exports=require(15)
+},{}],2038:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":2035,"./lib/window.console.js":2037}],2039:[function(require,module,exports){
+module.exports=require(48)
+},{}],2040:[function(require,module,exports){
+module.exports=require(49)
+},{"../bin/local-hashmap.js":2039}],2041:[function(require,module,exports){
+module.exports=require(50)
+},{"../bin/local-hashmap.js":2039}],2042:[function(require,module,exports){
+module.exports=require(51)
+},{"../bin/local-hashmap.js":2039}],2043:[function(require,module,exports){
+module.exports=require(14)
+},{}],2044:[function(require,module,exports){
+module.exports=require(15)
+},{}],2045:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":2043,"./lib/window.console.js":2044}],2046:[function(require,module,exports){
+module.exports=require(30)
+},{"./lib/idgenerator.js":2047,"./lib/timers.js":2048}],2047:[function(require,module,exports){
+module.exports=require(31)
+},{"js-ext/extra/hashmap.js":2029,"polyfill/polyfill-base.js":2051}],2048:[function(require,module,exports){
+module.exports=require(32)
+},{"polyfill/polyfill-base.js":2051}],2049:[function(require,module,exports){
+module.exports=require(14)
+},{}],2050:[function(require,module,exports){
+module.exports=require(15)
+},{}],2051:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":2049,"./lib/window.console.js":2050}],2052:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":2053}],2053:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":2054,"js-ext/lib/object.js":2055}],2054:[function(require,module,exports){
+module.exports=require(4)
+},{}],2055:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":2054,"polyfill/polyfill-base.js":2058}],2056:[function(require,module,exports){
+module.exports=require(14)
+},{}],2057:[function(require,module,exports){
+module.exports=require(15)
+},{}],2058:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":2056,"./lib/window.console.js":2057}],2059:[function(require,module,exports){
+module.exports=require(68)
+},{"js-ext/extra/hashmap.js":2029,"js-ext/lib/object.js":2032,"js-ext/lib/string.js":2034,"polyfill":2045,"polyfill/extra/transition.js":2040,"polyfill/extra/vendorCSS.js":2042}],2060:[function(require,module,exports){
+module.exports=require(69)
+},{"js-ext/extra/hashmap.js":2029,"js-ext/lib/object.js":2032,"polyfill":2045}],2061:[function(require,module,exports){
+module.exports=require(70)
+},{"js-ext/extra/hashmap.js":2029,"js-ext/lib/object.js":2032,"js-ext/lib/string.js":2034,"polyfill":2045}],2062:[function(require,module,exports){
+module.exports=require(71)
+},{"../css/element.css":2027,"./attribute-extractor.js":2059,"./element-array.js":2060,"./html-parser.js":2063,"./node-parser.js":2064,"./vdom-ns.js":2065,"./vnode.js":2066,"js-ext/extra/hashmap.js":2029,"js-ext/lib/object.js":2032,"js-ext/lib/promise.js":2033,"js-ext/lib/string.js":2034,"polyfill":2045,"polyfill/extra/transition.js":2040,"polyfill/extra/transitionend.js":2041,"polyfill/extra/vendorCSS.js":2042,"utils":2046,"window-ext":2052}],2063:[function(require,module,exports){
+module.exports=require(72)
+},{"./attribute-extractor.js":2059,"./vdom-ns.js":2065,"js-ext/extra/hashmap.js":2029,"js-ext/lib/object.js":2032,"polyfill":2045}],2064:[function(require,module,exports){
+module.exports=require(73)
+},{"./attribute-extractor.js":2059,"./vdom-ns.js":2065,"./vnode.js":2066,"js-ext/extra/hashmap.js":2029,"js-ext/lib/object.js":2032,"polyfill":2045}],2065:[function(require,module,exports){
+module.exports=require(74)
+},{"js-ext/extra/hashmap.js":2029,"js-ext/lib/object.js":2032,"polyfill":2045}],2066:[function(require,module,exports){
+module.exports=require(75)
+},{"./attribute-extractor.js":2059,"./html-parser.js":2063,"./vdom-ns.js":2065,"js-ext/extra/hashmap.js":2029,"js-ext/extra/lightmap.js":2030,"js-ext/lib/array.js":2031,"js-ext/lib/object.js":2032,"js-ext/lib/string.js":2034,"polyfill":2045,"utils/lib/timers.js":2048}],2067:[function(require,module,exports){
+module.exports=require(76)
+},{"./partials/extend-document.js":2061,"./partials/extend-element.js":2062,"./partials/node-parser.js":2064,"js-ext/extra/hashmap.js":2029,"js-ext/lib/object.js":2032,"utils/lib/timers.js":2048}],2068:[function(require,module,exports){
+module.exports=require(14)
+},{}],2069:[function(require,module,exports){
+module.exports=require(15)
+},{}],2070:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":2068,"./lib/window.console.js":2069}],2071:[function(require,module,exports){
+module.exports=require(61)
+},{"./lib/sizes.js":2072}],2072:[function(require,module,exports){
+module.exports=require(62)
+},{"js-ext/extra/hashmap.js":2073,"js-ext/lib/object.js":2074}],2073:[function(require,module,exports){
+module.exports=require(4)
+},{}],2074:[function(require,module,exports){
+module.exports=require(13)
+},{"js-ext/extra/hashmap.js":2073,"polyfill/polyfill-base.js":2077}],2075:[function(require,module,exports){
+module.exports=require(14)
+},{}],2076:[function(require,module,exports){
+module.exports=require(15)
+},{}],2077:[function(require,module,exports){
+module.exports=require(16)
+},{"./lib/matchesselector.js":2075,"./lib/window.console.js":2076}],2078:[function(require,module,exports){
+"use strict";
+/**
+ * Creating floating Panel-nodes which can be shown and hidden.
+ *
+ *
+ * <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ *
+ * @module panel
+ * @class Panel
+ * @since 0.0.1
+*/
+
+require('js-ext/lib/object.js');
+require('js-ext/lib/string.js');
+require('polyfill');
+require('./css/panel.css');
+
+
+var NAME = '[panel]: ',
+    PANEL_Z = 1000,
+    MODAL_Z = 2000,
+    PANEL_TOP = 999,
+    MAX_WIDTH_FULL_BUTTONS = 150,
+    createHashMap = require('js-ext/extra/hashmap.js').createMap;
+
+module.exports = function (window) {
+
+    var DOCUMENT = window.document,
+        LightMap = require('js-ext/extra/lightmap.js'),
+        Panel, Event, setupEvents, DD, stackManager, insertModalLayer;
+
+    window._ITSAmodules || Object.protectedProp(window, '_ITSAmodules', createHashMap());
+
+/*jshint boss:true */
+    if (Panel=window._ITSAmodules.Panel) {
+/*jshint boss:false */
+        return Panel; // Panel was already created
+    }
+
+    require('window-ext')(window);
+    require('node-plugin')(window);
+    require('focusmanager')(window);
+
+    Event = require('event-mobile')(window);
+    DD = require('drag')(window);
+    DD.init(); // ITSA combines the Drag-module with drag-drop into ITSA.DD
+
+    /*
+     * Generates a modal-layer.
+     *
+     * @method insertModalLayer
+     * @protected
+     * @since 0.0.1
+     */
+    insertModalLayer = function() {
+       DOCUMENT.body.addSystemElement('<div class="itsa-modal-layer itsa-no-display"></div>', null, true);
+    };
+
+    insertModalLayer();
+
+    /*
+     * Sets up all events needed for Panel's to work well.
+     *
+     * @method setupEvents
+     * @protected
+     * @since 0.0.1
+     */
+    setupEvents = function() {
+        Event.defineEvent('panel:buttonhide').defaultFn(function(e) {
+            var model = e.model;
+            model.visible = false;
+            (typeof model.callback==='function') && model.callback(e.button);
+        });
+        Event.before('panel:buttonhide', function(e) {
+            var model = e.model;
+            if (typeof model.validate==='function') {
+                model.validate(e) || e.preventDefault();
+            }
+        });
+        Event.after('tap', function(e) {
+            var buttonNode = e.target,
+                panelNode = buttonNode.inside('[plugin-panel="true"]'),
+                plugin = panelNode._plugin.panel,
+                model = plugin.model;
+            Event.emit(panelNode, 'panel:buttonhide', {button: buttonNode, plugin: plugin, model: model});
+        }, '[plugin-panel="true"] >div[is="header"] button, [plugin-panel="true"] >div[is="footer"] button, [plugin-panel="true"] >button');
+    };
+
+    setupEvents();
+
+    /*
+     * An object with several method to control stacked panels.
+     *
+     * @property stackManager
+     * @type Object
+     * @protected
+     * @since 0.0.1
+     */
+    stackManager = DOCUMENT.stackManager = {
+        elements: new LightMap(),
+        isOnTop: function(host) {
+            return (this.topElement===host);
+        },
+        setOnTop: function(host) {
+            this.topElement = host;
+        },
+        registerModal: function(host) {
+            var instance = this;
+            instance.elements.set(host, true);
+            instance.showModalLayer(true);
+        },
+        unRegisterModal: function(host) {
+            var instance = this;
+            instance.elements.delete(host);
+            instance.hasModalElements() || instance.showModalLayer(false);
+        },
+        hasModalElements: function() {
+            return (this.elements.size()>0);
+        },
+        showModalLayer: function(show) {
+            var modalLayer = DOCUMENT.getElement('body >div[is="system-node"].itsa-modal-layer', true);
+            modalLayer.toggleClass('itsa-no-display', !show);
+        }
+    };
+
+    /*
+     * Creates a new Panel-node which is prepended to body.
+     *
+     * @for document
+     * @method createPanel
+     * @param data {Object} the panel plugin's `model`-object
+     * @param [systemNode] {boolean} whether the created node should be a systemnode
+     * @return {HTMLElement} the created panelNode
+     * @since 0.0.1
+     */
+    DOCUMENT.createPanel = function(data, systemNode) {
+        var panel;
+        if (!Object.isObject(data)) {
+            console.warn('document.createPanel should be invoked with an object as first argument.');
+            return;
+        }
+        if (systemNode) {
+            panel = DOCUMENT.body.addSystemElement('<div></div>');
+        }
+        else {
+            panel = DOCUMENT.body.prepend('<div></div>');
+        }
+        panel.plug('panel', null, data);
+        return panel;
+    };
+
+    window._ITSAmodules.Panel = Panel = DOCUMENT.definePlugin('panel', function() {
+        var instance = this,
+            model = instance.model,
+            host = instance.host,
+            footer = model.footer,
+            allDivs, serverHeader, serverContent, serverFooter;
+
+        instance._previousVisible = model.visible;
+        if (host.getAttr('panel-rendered')==='true') {
+            // serverside rendered --> we might need to catch header, content and footer
+            // for they aren't set in the attributes
+            allDivs = host.getAll('>div');
+            serverHeader = allDivs[0] && allDivs[0].getHTML();
+            serverContent = allDivs[1] && allDivs[1].getHTML();
+            serverFooter = allDivs[2] && allDivs[2].getHTML();
+            serverHeader && instance.defineWhenUndefined('header', serverHeader);
+            serverContent && instance.defineWhenUndefined('content', serverContent);
+            if (serverFooter) {
+                instance.defineWhenUndefined('footer', serverFooter);
+                // need to redefine `footer`
+                footer = model.footer;
+            }
+        }
+        if (!footer || !footer.contains('button')) {
+            model.headerCloseBtn = true;
+        }
+        instance._resizeHandler = Event.after('UI:resize', function() {
+            var isMobileWidth = (window.getWidth()<=480);
+            model.center && instance.centerPanel();
+            host[((model.draggable && !isMobileWidth) ? '' : 'un')+'plug']('dd');
+            instance.setPanelWidth(isMobileWidth);
+        });
+    }, {
+        /*
+         * All panel's attributes: these attributes will be read during initalization and updated during `sync`
+         * In the dom, the attributenames are prepended with `pluginName-`. The property-values should be the property-types
+         * that belong to the property, this way the attributes get right casted into model.
+         *
+         * @property attrs
+         * @default {
+         *    visible: 'boolean',
+         *    onTopWhenShowed: 'boolean',
+         *    headerCloseBtn: 'boolean',
+         *    stack: 'number',
+         *    left: 'number',
+         *    top: 'number',
+         *    center: 'boolean',
+         *    minWidth: 'number',
+         *    maxWidth: 'number',
+         *    minHeight: 'number',
+         *    maxHeight: 'number',
+         *    modal: 'boolean',
+         *    draggable: 'boolean',
+         *    focusmanaged: 'boolean'
+         * }
+         * @type Object
+         * @since 0.0.1
+        */
+        attrs: {
+            visible: 'boolean',
+            onTopWhenShowed: 'boolean',
+            headerCloseBtn: 'boolean',
+            stack: 'number',
+            left: 'number',
+            top: 'number',
+            center: 'boolean',
+            minWidth: 'number',
+            maxWidth: 'number',
+            minHeight: 'number',
+            maxHeight: 'number',
+            modal: 'boolean',
+            draggable: 'boolean',
+            focusmanaged: 'boolean'
+        },
+        /*
+         * Any default values for attributes specified by `attrs`.
+         *
+         * @property defaults
+         * @default {
+         *    visible: false,
+         *    onTopWhenShowed: true,
+         *    stack: 1,
+         *    center: true,
+         *    modal: true,
+         *    focusmanaged: true,
+         *    headerCloseBtn: false
+         * }
+         * @type Object
+         * @since 0.0.1
+        */
+        defaults: {
+            visible: false,
+            onTopWhenShowed: true,
+            stack: 1,
+            center: true,
+            modal: true,
+            focusmanaged: true,
+            headerCloseBtn: false
+        },
+        /*
+         * Renders the plugin. This method is invoked only once: at the end of initialization.
+         * It should be used to render any nodes inside the host. Not all plugins need this.
+         *
+         * @method render
+         * @since 0.0.1
+         */
+        render: function() {
+            var instance = this,
+                host = instance.host,
+                newContent;
+            host.setClass('itsa-hidden');
+            newContent = '<div is="header"></div>'+
+                         '<div is="content"></div>'+
+                         '<div is="footer"></div>' +
+                         '<button class="panel-close pure-button">x</button>';
+            host.setHTML(newContent);
+        },
+        /*
+         * Syncs plugin.model's data with the host. Not its attributes: they will be synced automaticly.
+         * Is invoked after every change of plugin.model's data.
+         *
+         * @method sync
+         * @since 0.0.1
+         */
+        sync: function() {
+            var instance = this,
+                host = instance.host,
+                model = instance.model,
+                header = model.header,
+                content = model.content,
+                footer = model.footer,
+                stack = model.stack,
+                divs = host.getAll('>div'),
+                headerNode = divs[0],
+                contentNode = divs[1],
+                footerNode = divs[2],
+                isMobileWidth = (window.getWidth()<=480),
+                buttonCloseNode = host.getElement('>button'),
+                zIndex, isOnTop;
+            (header==='undefined') && (header=undefined);
+            (footer==='undefined') && (footer=undefined);
+            if (model.headerCloseBtn && !header) {
+                header = '';
+            }
+            (header!==undefined) && headerNode.setHTML(header || '');
+            buttonCloseNode.toggleClass('itsa-no-display', !model.headerCloseBtn);
+
+            headerNode.toggleClass('itsa-hidden', (header===undefined));
+            contentNode.setHTML(content || '');
+            contentNode.plug('scroll');
+            (footer!==undefined) && footerNode.setHTML(footer || '');
+            footerNode.toggleClass('itsa-hidden', (footer===undefined));
+
+            zIndex = (model.modal ? MODAL_Z : PANEL_Z);
+
+            if (model.visible && model.modal) {
+                stackManager.registerModal(host);
+            }
+            else {
+                stackManager.unRegisterModal(host);
+            }
+
+            if (model.onTopWhenShowed && model.visible && host.hasClass('itsa-hidden')) {
+                instance.showOnTop();
+            }
+
+            isOnTop = stackManager.isOnTop(host);
+            zIndex += isOnTop ? PANEL_TOP : stack;
+
+            host.setInlineStyle('z-index', zIndex);
+
+            model.minWidth && host.setInlineStyle('minWidth', model.minWidth);
+            model.minHeight && host.setInlineStyle('minHeight', model.minHeight);
+            model.maxHeight && host.setInlineStyle('maxHeight', model.maxHeight);
+            instance.setPanelWidth(isMobileWidth);
+
+            if (model.center && (!instance._prevCenter || !model.draggable)) {
+                instance.centerPanel();
+            }
+            else if (!model.center && !host.hasClass('dd-dragging')) {
+                host.setInlineStyles([
+                    {property: 'left', value: model.left+'px'},
+                    {property: 'top', value: model.top+'px'}
+                ]);
+            }
+            // prevent re-centering: that would be unhandy when the panel is draggable:
+            instance._prevCenter = model.center;
+            // we can plug/unplug multiple times --> node-plugin won't do anything when there are no changes
+            host[((model.draggable && !isMobileWidth) ? '' : 'un')+'plug']('dd');
+            host[(model.focusmanaged ? '' : 'un')+'plug']('fm');
+            host.toggleClass('itsa-full-draggable', model.draggable && !header);
+            if (model.draggable && header) {
+                 host.hasAttr('dd-handle') || host.setAttr('dd-handle', '>div:first-child');
+            }
+            else {
+                 host.hasAttr('dd-handle') && host.removeAttr('dd-handle');
+            }
+
+            host.toggleClass('itsa-hidden', !model.visible);
+            // if there is a change of model.visible, the fire an event:
+            if (instance._previousVisible!==model.visible) {
+                Event.emit(host, 'panel:'+ (model.visible ? 'shown' : 'hidden'), {plugin: instance, model: model});
+                instance._previousVisible = model.visible;
+            }
+            if (isOnTop && model.modal && !host.hasClass('focussed')) {
+                host.focus();
+            }
+        },
+        /*
+         * Centeres the panel on the screen.
+         *
+         * @method centerPanel
+         * @since 0.0.1
+         */
+        centerPanel: function() {
+            var instance = this,
+                host = instance.host,
+                model = instance.model;
+            model.left = Math.round((window.getWidth()-host.width)/2);
+            model.top = Math.round((window.getHeight()-host.height)/2);
+            host.setInlineStyles([
+                {property: 'left', value: model.left+'px'},
+                {property: 'top', value: model.top+'px'}
+            ]);
+        },
+        /*
+         * Sets the style `maxWidth` and the attribute `expand-buttons`. These need to be set after width-changes of either the panel or the screen.
+         *
+         * @method setPanelWidth
+         * @param isMobileWidth {Boolean} whether the current screen-width is `mobile-width`
+         * @since 0.0.1
+         */
+        setPanelWidth: function(isMobileWidth) {
+            var instance = this,
+                host = instance.host,
+                model = instance.model;
+            if (isMobileWidth) {
+                host.hasInlineStyle('maxWidth') && host.removeInlineStyle('maxWidth');
+                host.setAttr('expand-buttons', 'true');
+            }
+            else {
+                if (model.maxWidth) {
+                    host.setInlineStyle('maxWidth', model.maxWidth);
+                    if (host.width>MAX_WIDTH_FULL_BUTTONS) {
+                        host.removeAttr('expand-buttons');
+                    }
+                    else {
+                        host.setAttr('expand-buttons', 'true');
+                    }
+                }
+                else {
+                     host.removeAttr('expand-buttons');
+                }
+            }
+        },
+        /*
+         * Maes this panel as the `top`-panel of the stack.
+         *
+         * @method showOnTop
+         * @since 0.0.1
+         */
+        showOnTop: function() {
+            stackManager.setOnTop(this.host);
+        },
+        /*
+         * Cleansup the plugin. Is invoked whenever a plugin gets unplugged or its host gets removed from the dom.
+         *
+         * @method destroy
+         * @since 0.0.1
+         */
+        destroy: function() {
+            var instance = this,
+                host = instance.host;
+            instance._resizeHandler.detach();
+            host.removeInlineStyle('z-index');
+            host.unplug('dd');
+            host.unplug('fm');
+            host.removeClass(['itsa-hidden', 'itsa-full-draggable']);
+            stackManager.unRegisterModal(host);
+            host.empty();
+        }
+    });
+
+    return Panel;
+};
+},{"./css/panel.css":1312,"drag":1314,"event-mobile":1597,"focusmanager":1677,"js-ext/extra/hashmap.js":1919,"js-ext/extra/lightmap.js":1920,"js-ext/lib/object.js":1922,"js-ext/lib/string.js":1923,"node-plugin":1928,"polyfill":2070,"window-ext":2071}],2079:[function(require,module,exports){
+module.exports=require(14)
+},{}],2080:[function(require,module,exports){
 (function (global){
 /*
  * Copyright 2012 The Polymer Authors. All rights reserved.
@@ -26951,1056 +29090,1056 @@ module.exports=require(14)
 
 }(typeof global !== 'undefined' ? global : /* istanbul ignore next */ this));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],1316:[function(require,module,exports){
+},{}],2081:[function(require,module,exports){
 require('ypromise');
-},{"ypromise":1914}],1317:[function(require,module,exports){
+},{"ypromise":2679}],2082:[function(require,module,exports){
 module.exports=require(45)
-},{}],1318:[function(require,module,exports){
+},{}],2083:[function(require,module,exports){
 module.exports=require(15)
-},{}],1319:[function(require,module,exports){
+},{}],2084:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1314,"./lib/window.console.js":1318}],1320:[function(require,module,exports){
+},{"./lib/matchesselector.js":2079,"./lib/window.console.js":2083}],2085:[function(require,module,exports){
 require('./polyfill-base.js');
 require('./lib/promise.js');
 require('./lib/weakmap.js');
 require('./lib/mutationobserver.js'); // needs weakmap
-},{"./lib/mutationobserver.js":1315,"./lib/promise.js":1316,"./lib/weakmap.js":1317,"./polyfill-base.js":1319}],1321:[function(require,module,exports){
+},{"./lib/mutationobserver.js":2080,"./lib/promise.js":2081,"./lib/weakmap.js":2082,"./polyfill-base.js":2084}],2086:[function(require,module,exports){
 var css = "[plugin-scroll=\"true\"] {\n    overflow: hidden !important;\n}\n\n[plugin-scroll=\"true\"] >span.itsa-vscroll-cont,\n[plugin-scroll=\"true\"] >span.itsa-hscroll-cont {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    position: absolute;\n    display: block;\n    left: -9999px;\n    top: -9999px;\n    opacity: 0;\n}\n\n[plugin-scroll=\"true\"]:not(.disabled) >span.itsa-vscroll-cont.itsa-visible {\n    opacity: 1;\n    width: 0.8em;\n    height: 100%;\n    right: 0;\n    top: 0;\n    left: auto;\n}\n\n[plugin-scroll=\"true\"]:not(.disabled) >span.itsa-hscroll-cont.itsa-visible {\n    opacity: 1;\n    height: 0.8em;\n    width: 100%;\n    left: 0;\n    bottom: 0;\n    top: auto;\n}\n\n[plugin-scroll=\"true\"] >span.itsa-vscroll-cont span {\n    position: relative;\n    display: block;\n    width: 100%;\n    min-height: 0.5em;\n    background-color: rgba(0, 0, 0, 0.5);\n    border-radius: 0.3em;\n}\n\n[plugin-scroll=\"true\"] >span.itsa-hscroll-cont span {\n    position: relative;\n    display: block;\n    height: 100%;\n    min-width: 0.5em;\n    background-color: rgba(0, 0, 0, 0.5);\n    border-radius: 0.3em;\n}\n\n[plugin-scroll=\"true\"][scroll-light=\"true\"] >span.itsa-vscroll-cont span,\n[plugin-scroll=\"true\"][scroll-light=\"true\"] >span.itsa-hscroll-cont span {\n    background-color: rgba(255, 255, 255, 0.5);\n}\n\n[plugin-scroll=\"true\"] >span span.dd-dragging {\n    cursor: default;\n}\n"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1322:[function(require,module,exports){
-module.exports=require(149)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1323:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],2087:[function(require,module,exports){
+module.exports=require(151)
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],2088:[function(require,module,exports){
 module.exports=require(152)
-},{"./css/drag.css":1322,"event-dom":1324,"js-ext":1396,"js-ext/extra/hashmap.js":1395,"node-plugin":1406,"polyfill":1548,"useragent":1557,"vdom":1598,"window-ext":1599}],1324:[function(require,module,exports){
+},{"./css/drag.css":2087,"event-dom":2089,"js-ext":2161,"js-ext/extra/hashmap.js":2160,"node-plugin":2171,"polyfill":2313,"useragent":2322,"vdom":2363,"window-ext":2364}],2089:[function(require,module,exports){
 module.exports=require(6)
-},{"event":1328,"js-ext/extra/hashmap.js":1338,"js-ext/lib/array.js":1339,"js-ext/lib/object.js":1340,"js-ext/lib/string.js":1341,"polyfill/polyfill-base.js":1347,"utils":1348,"vdom":1394}],1325:[function(require,module,exports){
+},{"event":2093,"js-ext/extra/hashmap.js":2103,"js-ext/lib/array.js":2104,"js-ext/lib/object.js":2105,"js-ext/lib/string.js":2106,"polyfill/polyfill-base.js":2112,"utils":2113,"vdom":2159}],2090:[function(require,module,exports){
 module.exports=require(7)
-},{"js-ext/extra/hashmap.js":1330,"js-ext/lib/object.js":1331,"polyfill/polyfill-base.js":1337}],1326:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2095,"js-ext/lib/object.js":2096,"polyfill/polyfill-base.js":2102}],2091:[function(require,module,exports){
 module.exports=require(8)
-},{"./event-base.js":1325}],1327:[function(require,module,exports){
+},{"./event-base.js":2090}],2092:[function(require,module,exports){
 module.exports=require(9)
-},{"./event-base.js":1325,"js-ext/extra/classes.js":1329,"js-ext/lib/object.js":1331}],1328:[function(require,module,exports){
+},{"./event-base.js":2090,"js-ext/extra/classes.js":2094,"js-ext/lib/object.js":2096}],2093:[function(require,module,exports){
 module.exports=require(10)
-},{"./event-base.js":1325,"./event-emitter.js":1326,"./event-listener.js":1327}],1329:[function(require,module,exports){
+},{"./event-base.js":2090,"./event-emitter.js":2091,"./event-listener.js":2092}],2094:[function(require,module,exports){
 module.exports=require(11)
-},{"../lib/object.js":1331,"js-ext/extra/hashmap.js":1330,"polyfill/polyfill-base.js":1334}],1330:[function(require,module,exports){
+},{"../lib/object.js":2096,"js-ext/extra/hashmap.js":2095,"polyfill/polyfill-base.js":2099}],2095:[function(require,module,exports){
 module.exports=require(4)
-},{}],1331:[function(require,module,exports){
+},{}],2096:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1330,"polyfill/polyfill-base.js":1334}],1332:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2095,"polyfill/polyfill-base.js":2099}],2097:[function(require,module,exports){
 module.exports=require(14)
-},{}],1333:[function(require,module,exports){
+},{}],2098:[function(require,module,exports){
 module.exports=require(15)
-},{}],1334:[function(require,module,exports){
+},{}],2099:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1332,"./lib/window.console.js":1333}],1335:[function(require,module,exports){
+},{"./lib/matchesselector.js":2097,"./lib/window.console.js":2098}],2100:[function(require,module,exports){
 module.exports=require(14)
-},{}],1336:[function(require,module,exports){
+},{}],2101:[function(require,module,exports){
 module.exports=require(15)
-},{}],1337:[function(require,module,exports){
+},{}],2102:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1335,"./lib/window.console.js":1336}],1338:[function(require,module,exports){
+},{"./lib/matchesselector.js":2100,"./lib/window.console.js":2101}],2103:[function(require,module,exports){
 module.exports=require(4)
-},{}],1339:[function(require,module,exports){
+},{}],2104:[function(require,module,exports){
 module.exports=require(21)
-},{"polyfill/polyfill-base.js":1344}],1340:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":2109}],2105:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1338,"polyfill/polyfill-base.js":1344}],1341:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2103,"polyfill/polyfill-base.js":2109}],2106:[function(require,module,exports){
 module.exports=require(23)
-},{}],1342:[function(require,module,exports){
+},{}],2107:[function(require,module,exports){
 module.exports=require(14)
-},{}],1343:[function(require,module,exports){
+},{}],2108:[function(require,module,exports){
 module.exports=require(15)
-},{}],1344:[function(require,module,exports){
+},{}],2109:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1342,"./lib/window.console.js":1343}],1345:[function(require,module,exports){
+},{"./lib/matchesselector.js":2107,"./lib/window.console.js":2108}],2110:[function(require,module,exports){
 module.exports=require(14)
-},{}],1346:[function(require,module,exports){
+},{}],2111:[function(require,module,exports){
 module.exports=require(15)
-},{}],1347:[function(require,module,exports){
+},{}],2112:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1345,"./lib/window.console.js":1346}],1348:[function(require,module,exports){
+},{"./lib/matchesselector.js":2110,"./lib/window.console.js":2111}],2113:[function(require,module,exports){
 module.exports=require(30)
-},{"./lib/idgenerator.js":1349,"./lib/timers.js":1350}],1349:[function(require,module,exports){
+},{"./lib/idgenerator.js":2114,"./lib/timers.js":2115}],2114:[function(require,module,exports){
 module.exports=require(31)
-},{"js-ext/extra/hashmap.js":1338,"polyfill/polyfill-base.js":1353}],1350:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2103,"polyfill/polyfill-base.js":2118}],2115:[function(require,module,exports){
 module.exports=require(32)
-},{"polyfill/polyfill-base.js":1353}],1351:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":2118}],2116:[function(require,module,exports){
 module.exports=require(14)
-},{}],1352:[function(require,module,exports){
+},{}],2117:[function(require,module,exports){
 module.exports=require(15)
-},{}],1353:[function(require,module,exports){
+},{}],2118:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1351,"./lib/window.console.js":1352}],1354:[function(require,module,exports){
+},{"./lib/matchesselector.js":2116,"./lib/window.console.js":2117}],2119:[function(require,module,exports){
 module.exports=require(36)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1355:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],2120:[function(require,module,exports){
 module.exports=require(11)
-},{"../lib/object.js":1359,"js-ext/extra/hashmap.js":1356,"polyfill/polyfill-base.js":1365}],1356:[function(require,module,exports){
+},{"../lib/object.js":2124,"js-ext/extra/hashmap.js":2121,"polyfill/polyfill-base.js":2130}],2121:[function(require,module,exports){
 module.exports=require(4)
-},{}],1357:[function(require,module,exports){
+},{}],2122:[function(require,module,exports){
 module.exports=require(39)
-},{"../lib/array.js":1358,"../lib/object.js":1359,"./classes.js":1355,"js-ext/extra/hashmap.js":1356,"polyfill/lib/weakmap.js":1363}],1358:[function(require,module,exports){
+},{"../lib/array.js":2123,"../lib/object.js":2124,"./classes.js":2120,"js-ext/extra/hashmap.js":2121,"polyfill/lib/weakmap.js":2128}],2123:[function(require,module,exports){
 module.exports=require(21)
-},{"polyfill/polyfill-base.js":1365}],1359:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":2130}],2124:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1356,"polyfill/polyfill-base.js":1365}],1360:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2121,"polyfill/polyfill-base.js":2130}],2125:[function(require,module,exports){
 module.exports=require(42)
-},{"polyfill":1365}],1361:[function(require,module,exports){
+},{"polyfill":2130}],2126:[function(require,module,exports){
 module.exports=require(23)
-},{}],1362:[function(require,module,exports){
+},{}],2127:[function(require,module,exports){
 module.exports=require(14)
-},{}],1363:[function(require,module,exports){
+},{}],2128:[function(require,module,exports){
 module.exports=require(45)
-},{}],1364:[function(require,module,exports){
+},{}],2129:[function(require,module,exports){
 module.exports=require(15)
-},{}],1365:[function(require,module,exports){
+},{}],2130:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1362,"./lib/window.console.js":1364}],1366:[function(require,module,exports){
+},{"./lib/matchesselector.js":2127,"./lib/window.console.js":2129}],2131:[function(require,module,exports){
 module.exports=require(48)
-},{}],1367:[function(require,module,exports){
+},{}],2132:[function(require,module,exports){
 module.exports=require(49)
-},{"../bin/local-hashmap.js":1366}],1368:[function(require,module,exports){
+},{"../bin/local-hashmap.js":2131}],2133:[function(require,module,exports){
 module.exports=require(50)
-},{"../bin/local-hashmap.js":1366}],1369:[function(require,module,exports){
+},{"../bin/local-hashmap.js":2131}],2134:[function(require,module,exports){
 module.exports=require(51)
-},{"../bin/local-hashmap.js":1366}],1370:[function(require,module,exports){
+},{"../bin/local-hashmap.js":2131}],2135:[function(require,module,exports){
 module.exports=require(14)
-},{}],1371:[function(require,module,exports){
+},{}],2136:[function(require,module,exports){
 module.exports=require(15)
-},{}],1372:[function(require,module,exports){
+},{}],2137:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1370,"./lib/window.console.js":1371}],1373:[function(require,module,exports){
+},{"./lib/matchesselector.js":2135,"./lib/window.console.js":2136}],2138:[function(require,module,exports){
 module.exports=require(30)
-},{"./lib/idgenerator.js":1374,"./lib/timers.js":1375}],1374:[function(require,module,exports){
+},{"./lib/idgenerator.js":2139,"./lib/timers.js":2140}],2139:[function(require,module,exports){
 module.exports=require(31)
-},{"js-ext/extra/hashmap.js":1356,"polyfill/polyfill-base.js":1378}],1375:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2121,"polyfill/polyfill-base.js":2143}],2140:[function(require,module,exports){
 module.exports=require(32)
-},{"polyfill/polyfill-base.js":1378}],1376:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":2143}],2141:[function(require,module,exports){
 module.exports=require(14)
-},{}],1377:[function(require,module,exports){
+},{}],2142:[function(require,module,exports){
 module.exports=require(15)
-},{}],1378:[function(require,module,exports){
+},{}],2143:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1376,"./lib/window.console.js":1377}],1379:[function(require,module,exports){
+},{"./lib/matchesselector.js":2141,"./lib/window.console.js":2142}],2144:[function(require,module,exports){
 module.exports=require(61)
-},{"./lib/sizes.js":1380}],1380:[function(require,module,exports){
+},{"./lib/sizes.js":2145}],2145:[function(require,module,exports){
 module.exports=require(62)
-},{"js-ext/extra/hashmap.js":1381,"js-ext/lib/object.js":1382}],1381:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2146,"js-ext/lib/object.js":2147}],2146:[function(require,module,exports){
 module.exports=require(4)
-},{}],1382:[function(require,module,exports){
+},{}],2147:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1381,"polyfill/polyfill-base.js":1385}],1383:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2146,"polyfill/polyfill-base.js":2150}],2148:[function(require,module,exports){
 module.exports=require(14)
-},{}],1384:[function(require,module,exports){
+},{}],2149:[function(require,module,exports){
 module.exports=require(15)
-},{}],1385:[function(require,module,exports){
+},{}],2150:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1383,"./lib/window.console.js":1384}],1386:[function(require,module,exports){
+},{"./lib/matchesselector.js":2148,"./lib/window.console.js":2149}],2151:[function(require,module,exports){
 module.exports=require(68)
-},{"js-ext/extra/hashmap.js":1356,"js-ext/lib/object.js":1359,"js-ext/lib/string.js":1361,"polyfill":1372,"polyfill/extra/transition.js":1367,"polyfill/extra/vendorCSS.js":1369}],1387:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2121,"js-ext/lib/object.js":2124,"js-ext/lib/string.js":2126,"polyfill":2137,"polyfill/extra/transition.js":2132,"polyfill/extra/vendorCSS.js":2134}],2152:[function(require,module,exports){
 module.exports=require(69)
-},{"js-ext/extra/hashmap.js":1356,"js-ext/lib/object.js":1359,"polyfill":1372}],1388:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2121,"js-ext/lib/object.js":2124,"polyfill":2137}],2153:[function(require,module,exports){
 module.exports=require(70)
-},{"js-ext/extra/hashmap.js":1356,"js-ext/lib/object.js":1359,"js-ext/lib/string.js":1361,"polyfill":1372}],1389:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2121,"js-ext/lib/object.js":2124,"js-ext/lib/string.js":2126,"polyfill":2137}],2154:[function(require,module,exports){
 module.exports=require(71)
-},{"../css/element.css":1354,"./attribute-extractor.js":1386,"./element-array.js":1387,"./html-parser.js":1390,"./node-parser.js":1391,"./vdom-ns.js":1392,"./vnode.js":1393,"js-ext/extra/hashmap.js":1356,"js-ext/lib/object.js":1359,"js-ext/lib/promise.js":1360,"js-ext/lib/string.js":1361,"polyfill":1372,"polyfill/extra/transition.js":1367,"polyfill/extra/transitionend.js":1368,"polyfill/extra/vendorCSS.js":1369,"utils":1373,"window-ext":1379}],1390:[function(require,module,exports){
+},{"../css/element.css":2119,"./attribute-extractor.js":2151,"./element-array.js":2152,"./html-parser.js":2155,"./node-parser.js":2156,"./vdom-ns.js":2157,"./vnode.js":2158,"js-ext/extra/hashmap.js":2121,"js-ext/lib/object.js":2124,"js-ext/lib/promise.js":2125,"js-ext/lib/string.js":2126,"polyfill":2137,"polyfill/extra/transition.js":2132,"polyfill/extra/transitionend.js":2133,"polyfill/extra/vendorCSS.js":2134,"utils":2138,"window-ext":2144}],2155:[function(require,module,exports){
 module.exports=require(72)
-},{"./attribute-extractor.js":1386,"./vdom-ns.js":1392,"js-ext/extra/hashmap.js":1356,"js-ext/lib/object.js":1359,"polyfill":1372}],1391:[function(require,module,exports){
+},{"./attribute-extractor.js":2151,"./vdom-ns.js":2157,"js-ext/extra/hashmap.js":2121,"js-ext/lib/object.js":2124,"polyfill":2137}],2156:[function(require,module,exports){
 module.exports=require(73)
-},{"./attribute-extractor.js":1386,"./vdom-ns.js":1392,"./vnode.js":1393,"js-ext/extra/hashmap.js":1356,"js-ext/lib/object.js":1359,"polyfill":1372}],1392:[function(require,module,exports){
+},{"./attribute-extractor.js":2151,"./vdom-ns.js":2157,"./vnode.js":2158,"js-ext/extra/hashmap.js":2121,"js-ext/lib/object.js":2124,"polyfill":2137}],2157:[function(require,module,exports){
 module.exports=require(74)
-},{"js-ext/extra/hashmap.js":1356,"js-ext/lib/object.js":1359,"polyfill":1372}],1393:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2121,"js-ext/lib/object.js":2124,"polyfill":2137}],2158:[function(require,module,exports){
 module.exports=require(75)
-},{"./attribute-extractor.js":1386,"./html-parser.js":1390,"./vdom-ns.js":1392,"js-ext/extra/hashmap.js":1356,"js-ext/extra/lightmap.js":1357,"js-ext/lib/array.js":1358,"js-ext/lib/object.js":1359,"js-ext/lib/string.js":1361,"polyfill":1372,"utils/lib/timers.js":1375}],1394:[function(require,module,exports){
+},{"./attribute-extractor.js":2151,"./html-parser.js":2155,"./vdom-ns.js":2157,"js-ext/extra/hashmap.js":2121,"js-ext/extra/lightmap.js":2122,"js-ext/lib/array.js":2123,"js-ext/lib/object.js":2124,"js-ext/lib/string.js":2126,"polyfill":2137,"utils/lib/timers.js":2140}],2159:[function(require,module,exports){
 module.exports=require(76)
-},{"./partials/extend-document.js":1388,"./partials/extend-element.js":1389,"./partials/node-parser.js":1391,"js-ext/extra/hashmap.js":1356,"js-ext/lib/object.js":1359,"utils/lib/timers.js":1375}],1395:[function(require,module,exports){
+},{"./partials/extend-document.js":2153,"./partials/extend-element.js":2154,"./partials/node-parser.js":2156,"js-ext/extra/hashmap.js":2121,"js-ext/lib/object.js":2124,"utils/lib/timers.js":2140}],2160:[function(require,module,exports){
 module.exports=require(4)
-},{}],1396:[function(require,module,exports){
+},{}],2161:[function(require,module,exports){
 module.exports=require(225)
-},{"./lib/array.js":1397,"./lib/function.js":1398,"./lib/json.js":1399,"./lib/object.js":1400,"./lib/promise.js":1401,"./lib/string.js":1402}],1397:[function(require,module,exports){
+},{"./lib/array.js":2162,"./lib/function.js":2163,"./lib/json.js":2164,"./lib/object.js":2165,"./lib/promise.js":2166,"./lib/string.js":2167}],2162:[function(require,module,exports){
 module.exports=require(21)
-},{"polyfill/polyfill-base.js":1405}],1398:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":2170}],2163:[function(require,module,exports){
 module.exports=require(227)
-},{"polyfill/polyfill-base.js":1405}],1399:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":2170}],2164:[function(require,module,exports){
 module.exports=require(228)
-},{"polyfill/polyfill-base.js":1405}],1400:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":2170}],2165:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1395,"polyfill/polyfill-base.js":1405}],1401:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2160,"polyfill/polyfill-base.js":2170}],2166:[function(require,module,exports){
 module.exports=require(42)
-},{"polyfill":1405}],1402:[function(require,module,exports){
+},{"polyfill":2170}],2167:[function(require,module,exports){
 module.exports=require(23)
-},{}],1403:[function(require,module,exports){
+},{}],2168:[function(require,module,exports){
 module.exports=require(14)
-},{}],1404:[function(require,module,exports){
+},{}],2169:[function(require,module,exports){
 module.exports=require(15)
-},{}],1405:[function(require,module,exports){
+},{}],2170:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1403,"./lib/window.console.js":1404}],1406:[function(require,module,exports){
+},{"./lib/matchesselector.js":2168,"./lib/window.console.js":2169}],2171:[function(require,module,exports){
 module.exports=require(5)
-},{"event-dom":1407,"event/extra/promise-finalize.js":1479,"event/extra/timer-finalize.js":1480,"js-ext/extra/classes.js":1490,"js-ext/extra/hashmap.js":1491,"js-ext/lib/object.js":1492,"js-ext/lib/promise.js":1493,"js-ext/lib/string.js":1494,"polyfill":1500,"utils/lib/timers.js":1501,"vdom":1545}],1407:[function(require,module,exports){
+},{"event-dom":2172,"event/extra/promise-finalize.js":2244,"event/extra/timer-finalize.js":2245,"js-ext/extra/classes.js":2255,"js-ext/extra/hashmap.js":2256,"js-ext/lib/object.js":2257,"js-ext/lib/promise.js":2258,"js-ext/lib/string.js":2259,"polyfill":2265,"utils/lib/timers.js":2266,"vdom":2310}],2172:[function(require,module,exports){
 module.exports=require(6)
-},{"event":1411,"js-ext/extra/hashmap.js":1421,"js-ext/lib/array.js":1422,"js-ext/lib/object.js":1423,"js-ext/lib/string.js":1424,"polyfill/polyfill-base.js":1430,"utils":1431,"vdom":1477}],1408:[function(require,module,exports){
+},{"event":2176,"js-ext/extra/hashmap.js":2186,"js-ext/lib/array.js":2187,"js-ext/lib/object.js":2188,"js-ext/lib/string.js":2189,"polyfill/polyfill-base.js":2195,"utils":2196,"vdom":2242}],2173:[function(require,module,exports){
 module.exports=require(7)
-},{"js-ext/extra/hashmap.js":1413,"js-ext/lib/object.js":1414,"polyfill/polyfill-base.js":1420}],1409:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2178,"js-ext/lib/object.js":2179,"polyfill/polyfill-base.js":2185}],2174:[function(require,module,exports){
 module.exports=require(8)
-},{"./event-base.js":1408}],1410:[function(require,module,exports){
+},{"./event-base.js":2173}],2175:[function(require,module,exports){
 module.exports=require(9)
-},{"./event-base.js":1408,"js-ext/extra/classes.js":1412,"js-ext/lib/object.js":1414}],1411:[function(require,module,exports){
+},{"./event-base.js":2173,"js-ext/extra/classes.js":2177,"js-ext/lib/object.js":2179}],2176:[function(require,module,exports){
 module.exports=require(10)
-},{"./event-base.js":1408,"./event-emitter.js":1409,"./event-listener.js":1410}],1412:[function(require,module,exports){
+},{"./event-base.js":2173,"./event-emitter.js":2174,"./event-listener.js":2175}],2177:[function(require,module,exports){
 module.exports=require(11)
-},{"../lib/object.js":1414,"js-ext/extra/hashmap.js":1413,"polyfill/polyfill-base.js":1417}],1413:[function(require,module,exports){
+},{"../lib/object.js":2179,"js-ext/extra/hashmap.js":2178,"polyfill/polyfill-base.js":2182}],2178:[function(require,module,exports){
 module.exports=require(4)
-},{}],1414:[function(require,module,exports){
+},{}],2179:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1413,"polyfill/polyfill-base.js":1417}],1415:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2178,"polyfill/polyfill-base.js":2182}],2180:[function(require,module,exports){
 module.exports=require(14)
-},{}],1416:[function(require,module,exports){
+},{}],2181:[function(require,module,exports){
 module.exports=require(15)
-},{}],1417:[function(require,module,exports){
+},{}],2182:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1415,"./lib/window.console.js":1416}],1418:[function(require,module,exports){
+},{"./lib/matchesselector.js":2180,"./lib/window.console.js":2181}],2183:[function(require,module,exports){
 module.exports=require(14)
-},{}],1419:[function(require,module,exports){
+},{}],2184:[function(require,module,exports){
 module.exports=require(15)
-},{}],1420:[function(require,module,exports){
+},{}],2185:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1418,"./lib/window.console.js":1419}],1421:[function(require,module,exports){
+},{"./lib/matchesselector.js":2183,"./lib/window.console.js":2184}],2186:[function(require,module,exports){
 module.exports=require(4)
-},{}],1422:[function(require,module,exports){
+},{}],2187:[function(require,module,exports){
 module.exports=require(21)
-},{"polyfill/polyfill-base.js":1427}],1423:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":2192}],2188:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1421,"polyfill/polyfill-base.js":1427}],1424:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2186,"polyfill/polyfill-base.js":2192}],2189:[function(require,module,exports){
 module.exports=require(23)
-},{}],1425:[function(require,module,exports){
+},{}],2190:[function(require,module,exports){
 module.exports=require(14)
-},{}],1426:[function(require,module,exports){
+},{}],2191:[function(require,module,exports){
 module.exports=require(15)
-},{}],1427:[function(require,module,exports){
+},{}],2192:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1425,"./lib/window.console.js":1426}],1428:[function(require,module,exports){
+},{"./lib/matchesselector.js":2190,"./lib/window.console.js":2191}],2193:[function(require,module,exports){
 module.exports=require(14)
-},{}],1429:[function(require,module,exports){
+},{}],2194:[function(require,module,exports){
 module.exports=require(15)
-},{}],1430:[function(require,module,exports){
+},{}],2195:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1428,"./lib/window.console.js":1429}],1431:[function(require,module,exports){
+},{"./lib/matchesselector.js":2193,"./lib/window.console.js":2194}],2196:[function(require,module,exports){
 module.exports=require(30)
-},{"./lib/idgenerator.js":1432,"./lib/timers.js":1433}],1432:[function(require,module,exports){
+},{"./lib/idgenerator.js":2197,"./lib/timers.js":2198}],2197:[function(require,module,exports){
 module.exports=require(31)
-},{"js-ext/extra/hashmap.js":1421,"polyfill/polyfill-base.js":1436}],1433:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2186,"polyfill/polyfill-base.js":2201}],2198:[function(require,module,exports){
 module.exports=require(32)
-},{"polyfill/polyfill-base.js":1436}],1434:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":2201}],2199:[function(require,module,exports){
 module.exports=require(14)
-},{}],1435:[function(require,module,exports){
+},{}],2200:[function(require,module,exports){
 module.exports=require(15)
-},{}],1436:[function(require,module,exports){
+},{}],2201:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1434,"./lib/window.console.js":1435}],1437:[function(require,module,exports){
+},{"./lib/matchesselector.js":2199,"./lib/window.console.js":2200}],2202:[function(require,module,exports){
 module.exports=require(36)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1438:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],2203:[function(require,module,exports){
 module.exports=require(11)
-},{"../lib/object.js":1442,"js-ext/extra/hashmap.js":1439,"polyfill/polyfill-base.js":1448}],1439:[function(require,module,exports){
+},{"../lib/object.js":2207,"js-ext/extra/hashmap.js":2204,"polyfill/polyfill-base.js":2213}],2204:[function(require,module,exports){
 module.exports=require(4)
-},{}],1440:[function(require,module,exports){
+},{}],2205:[function(require,module,exports){
 module.exports=require(39)
-},{"../lib/array.js":1441,"../lib/object.js":1442,"./classes.js":1438,"js-ext/extra/hashmap.js":1439,"polyfill/lib/weakmap.js":1446}],1441:[function(require,module,exports){
+},{"../lib/array.js":2206,"../lib/object.js":2207,"./classes.js":2203,"js-ext/extra/hashmap.js":2204,"polyfill/lib/weakmap.js":2211}],2206:[function(require,module,exports){
 module.exports=require(21)
-},{"polyfill/polyfill-base.js":1448}],1442:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":2213}],2207:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1439,"polyfill/polyfill-base.js":1448}],1443:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2204,"polyfill/polyfill-base.js":2213}],2208:[function(require,module,exports){
 module.exports=require(42)
-},{"polyfill":1448}],1444:[function(require,module,exports){
+},{"polyfill":2213}],2209:[function(require,module,exports){
 module.exports=require(23)
-},{}],1445:[function(require,module,exports){
+},{}],2210:[function(require,module,exports){
 module.exports=require(14)
-},{}],1446:[function(require,module,exports){
+},{}],2211:[function(require,module,exports){
 module.exports=require(45)
-},{}],1447:[function(require,module,exports){
+},{}],2212:[function(require,module,exports){
 module.exports=require(15)
-},{}],1448:[function(require,module,exports){
+},{}],2213:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1445,"./lib/window.console.js":1447}],1449:[function(require,module,exports){
+},{"./lib/matchesselector.js":2210,"./lib/window.console.js":2212}],2214:[function(require,module,exports){
 module.exports=require(48)
-},{}],1450:[function(require,module,exports){
+},{}],2215:[function(require,module,exports){
 module.exports=require(49)
-},{"../bin/local-hashmap.js":1449}],1451:[function(require,module,exports){
+},{"../bin/local-hashmap.js":2214}],2216:[function(require,module,exports){
 module.exports=require(50)
-},{"../bin/local-hashmap.js":1449}],1452:[function(require,module,exports){
+},{"../bin/local-hashmap.js":2214}],2217:[function(require,module,exports){
 module.exports=require(51)
-},{"../bin/local-hashmap.js":1449}],1453:[function(require,module,exports){
+},{"../bin/local-hashmap.js":2214}],2218:[function(require,module,exports){
 module.exports=require(14)
-},{}],1454:[function(require,module,exports){
+},{}],2219:[function(require,module,exports){
 module.exports=require(15)
-},{}],1455:[function(require,module,exports){
+},{}],2220:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1453,"./lib/window.console.js":1454}],1456:[function(require,module,exports){
+},{"./lib/matchesselector.js":2218,"./lib/window.console.js":2219}],2221:[function(require,module,exports){
 module.exports=require(30)
-},{"./lib/idgenerator.js":1457,"./lib/timers.js":1458}],1457:[function(require,module,exports){
+},{"./lib/idgenerator.js":2222,"./lib/timers.js":2223}],2222:[function(require,module,exports){
 module.exports=require(31)
-},{"js-ext/extra/hashmap.js":1439,"polyfill/polyfill-base.js":1461}],1458:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2204,"polyfill/polyfill-base.js":2226}],2223:[function(require,module,exports){
 module.exports=require(32)
-},{"polyfill/polyfill-base.js":1461}],1459:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":2226}],2224:[function(require,module,exports){
 module.exports=require(14)
-},{}],1460:[function(require,module,exports){
+},{}],2225:[function(require,module,exports){
 module.exports=require(15)
-},{}],1461:[function(require,module,exports){
+},{}],2226:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1459,"./lib/window.console.js":1460}],1462:[function(require,module,exports){
+},{"./lib/matchesselector.js":2224,"./lib/window.console.js":2225}],2227:[function(require,module,exports){
 module.exports=require(61)
-},{"./lib/sizes.js":1463}],1463:[function(require,module,exports){
+},{"./lib/sizes.js":2228}],2228:[function(require,module,exports){
 module.exports=require(62)
-},{"js-ext/extra/hashmap.js":1464,"js-ext/lib/object.js":1465}],1464:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2229,"js-ext/lib/object.js":2230}],2229:[function(require,module,exports){
 module.exports=require(4)
-},{}],1465:[function(require,module,exports){
+},{}],2230:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1464,"polyfill/polyfill-base.js":1468}],1466:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2229,"polyfill/polyfill-base.js":2233}],2231:[function(require,module,exports){
 module.exports=require(14)
-},{}],1467:[function(require,module,exports){
+},{}],2232:[function(require,module,exports){
 module.exports=require(15)
-},{}],1468:[function(require,module,exports){
+},{}],2233:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1466,"./lib/window.console.js":1467}],1469:[function(require,module,exports){
+},{"./lib/matchesselector.js":2231,"./lib/window.console.js":2232}],2234:[function(require,module,exports){
 module.exports=require(68)
-},{"js-ext/extra/hashmap.js":1439,"js-ext/lib/object.js":1442,"js-ext/lib/string.js":1444,"polyfill":1455,"polyfill/extra/transition.js":1450,"polyfill/extra/vendorCSS.js":1452}],1470:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2204,"js-ext/lib/object.js":2207,"js-ext/lib/string.js":2209,"polyfill":2220,"polyfill/extra/transition.js":2215,"polyfill/extra/vendorCSS.js":2217}],2235:[function(require,module,exports){
 module.exports=require(69)
-},{"js-ext/extra/hashmap.js":1439,"js-ext/lib/object.js":1442,"polyfill":1455}],1471:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2204,"js-ext/lib/object.js":2207,"polyfill":2220}],2236:[function(require,module,exports){
 module.exports=require(70)
-},{"js-ext/extra/hashmap.js":1439,"js-ext/lib/object.js":1442,"js-ext/lib/string.js":1444,"polyfill":1455}],1472:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2204,"js-ext/lib/object.js":2207,"js-ext/lib/string.js":2209,"polyfill":2220}],2237:[function(require,module,exports){
 module.exports=require(71)
-},{"../css/element.css":1437,"./attribute-extractor.js":1469,"./element-array.js":1470,"./html-parser.js":1473,"./node-parser.js":1474,"./vdom-ns.js":1475,"./vnode.js":1476,"js-ext/extra/hashmap.js":1439,"js-ext/lib/object.js":1442,"js-ext/lib/promise.js":1443,"js-ext/lib/string.js":1444,"polyfill":1455,"polyfill/extra/transition.js":1450,"polyfill/extra/transitionend.js":1451,"polyfill/extra/vendorCSS.js":1452,"utils":1456,"window-ext":1462}],1473:[function(require,module,exports){
+},{"../css/element.css":2202,"./attribute-extractor.js":2234,"./element-array.js":2235,"./html-parser.js":2238,"./node-parser.js":2239,"./vdom-ns.js":2240,"./vnode.js":2241,"js-ext/extra/hashmap.js":2204,"js-ext/lib/object.js":2207,"js-ext/lib/promise.js":2208,"js-ext/lib/string.js":2209,"polyfill":2220,"polyfill/extra/transition.js":2215,"polyfill/extra/transitionend.js":2216,"polyfill/extra/vendorCSS.js":2217,"utils":2221,"window-ext":2227}],2238:[function(require,module,exports){
 module.exports=require(72)
-},{"./attribute-extractor.js":1469,"./vdom-ns.js":1475,"js-ext/extra/hashmap.js":1439,"js-ext/lib/object.js":1442,"polyfill":1455}],1474:[function(require,module,exports){
+},{"./attribute-extractor.js":2234,"./vdom-ns.js":2240,"js-ext/extra/hashmap.js":2204,"js-ext/lib/object.js":2207,"polyfill":2220}],2239:[function(require,module,exports){
 module.exports=require(73)
-},{"./attribute-extractor.js":1469,"./vdom-ns.js":1475,"./vnode.js":1476,"js-ext/extra/hashmap.js":1439,"js-ext/lib/object.js":1442,"polyfill":1455}],1475:[function(require,module,exports){
+},{"./attribute-extractor.js":2234,"./vdom-ns.js":2240,"./vnode.js":2241,"js-ext/extra/hashmap.js":2204,"js-ext/lib/object.js":2207,"polyfill":2220}],2240:[function(require,module,exports){
 module.exports=require(74)
-},{"js-ext/extra/hashmap.js":1439,"js-ext/lib/object.js":1442,"polyfill":1455}],1476:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2204,"js-ext/lib/object.js":2207,"polyfill":2220}],2241:[function(require,module,exports){
 module.exports=require(75)
-},{"./attribute-extractor.js":1469,"./html-parser.js":1473,"./vdom-ns.js":1475,"js-ext/extra/hashmap.js":1439,"js-ext/extra/lightmap.js":1440,"js-ext/lib/array.js":1441,"js-ext/lib/object.js":1442,"js-ext/lib/string.js":1444,"polyfill":1455,"utils/lib/timers.js":1458}],1477:[function(require,module,exports){
+},{"./attribute-extractor.js":2234,"./html-parser.js":2238,"./vdom-ns.js":2240,"js-ext/extra/hashmap.js":2204,"js-ext/extra/lightmap.js":2205,"js-ext/lib/array.js":2206,"js-ext/lib/object.js":2207,"js-ext/lib/string.js":2209,"polyfill":2220,"utils/lib/timers.js":2223}],2242:[function(require,module,exports){
 module.exports=require(76)
-},{"./partials/extend-document.js":1471,"./partials/extend-element.js":1472,"./partials/node-parser.js":1474,"js-ext/extra/hashmap.js":1439,"js-ext/lib/object.js":1442,"utils/lib/timers.js":1458}],1478:[function(require,module,exports){
+},{"./partials/extend-document.js":2236,"./partials/extend-element.js":2237,"./partials/node-parser.js":2239,"js-ext/extra/hashmap.js":2204,"js-ext/lib/object.js":2207,"utils/lib/timers.js":2223}],2243:[function(require,module,exports){
 module.exports=require(7)
-},{"js-ext/extra/hashmap.js":1481,"js-ext/lib/object.js":1482,"polyfill/polyfill-base.js":1489}],1479:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2246,"js-ext/lib/object.js":2247,"polyfill/polyfill-base.js":2254}],2244:[function(require,module,exports){
 module.exports=require(78)
-},{"js-ext/extra/hashmap.js":1481,"js-ext/lib/promise.js":1483}],1480:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2246,"js-ext/lib/promise.js":2248}],2245:[function(require,module,exports){
 module.exports=require(79)
-},{"../event-base.js":1478,"js-ext/extra/hashmap.js":1481}],1481:[function(require,module,exports){
+},{"../event-base.js":2243,"js-ext/extra/hashmap.js":2246}],2246:[function(require,module,exports){
 module.exports=require(4)
-},{}],1482:[function(require,module,exports){
+},{}],2247:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1481,"polyfill/polyfill-base.js":1486}],1483:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2246,"polyfill/polyfill-base.js":2251}],2248:[function(require,module,exports){
 module.exports=require(42)
-},{"polyfill":1486}],1484:[function(require,module,exports){
+},{"polyfill":2251}],2249:[function(require,module,exports){
 module.exports=require(14)
-},{}],1485:[function(require,module,exports){
+},{}],2250:[function(require,module,exports){
 module.exports=require(15)
-},{}],1486:[function(require,module,exports){
+},{}],2251:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1484,"./lib/window.console.js":1485}],1487:[function(require,module,exports){
+},{"./lib/matchesselector.js":2249,"./lib/window.console.js":2250}],2252:[function(require,module,exports){
 module.exports=require(14)
-},{}],1488:[function(require,module,exports){
+},{}],2253:[function(require,module,exports){
 module.exports=require(15)
-},{}],1489:[function(require,module,exports){
+},{}],2254:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1487,"./lib/window.console.js":1488}],1490:[function(require,module,exports){
+},{"./lib/matchesselector.js":2252,"./lib/window.console.js":2253}],2255:[function(require,module,exports){
 module.exports=require(11)
-},{"../lib/object.js":1492,"js-ext/extra/hashmap.js":1491,"polyfill/polyfill-base.js":1497}],1491:[function(require,module,exports){
+},{"../lib/object.js":2257,"js-ext/extra/hashmap.js":2256,"polyfill/polyfill-base.js":2262}],2256:[function(require,module,exports){
 module.exports=require(4)
-},{}],1492:[function(require,module,exports){
+},{}],2257:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1491,"polyfill/polyfill-base.js":1497}],1493:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2256,"polyfill/polyfill-base.js":2262}],2258:[function(require,module,exports){
 module.exports=require(42)
-},{"polyfill":1497}],1494:[function(require,module,exports){
+},{"polyfill":2262}],2259:[function(require,module,exports){
 module.exports=require(23)
-},{}],1495:[function(require,module,exports){
+},{}],2260:[function(require,module,exports){
 module.exports=require(14)
-},{}],1496:[function(require,module,exports){
+},{}],2261:[function(require,module,exports){
 module.exports=require(15)
-},{}],1497:[function(require,module,exports){
+},{}],2262:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1495,"./lib/window.console.js":1496}],1498:[function(require,module,exports){
+},{"./lib/matchesselector.js":2260,"./lib/window.console.js":2261}],2263:[function(require,module,exports){
 module.exports=require(14)
-},{}],1499:[function(require,module,exports){
+},{}],2264:[function(require,module,exports){
 module.exports=require(15)
-},{}],1500:[function(require,module,exports){
+},{}],2265:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1498,"./lib/window.console.js":1499}],1501:[function(require,module,exports){
+},{"./lib/matchesselector.js":2263,"./lib/window.console.js":2264}],2266:[function(require,module,exports){
 module.exports=require(32)
-},{"polyfill/polyfill-base.js":1504}],1502:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":2269}],2267:[function(require,module,exports){
 module.exports=require(14)
-},{}],1503:[function(require,module,exports){
+},{}],2268:[function(require,module,exports){
 module.exports=require(15)
-},{}],1504:[function(require,module,exports){
+},{}],2269:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1502,"./lib/window.console.js":1503}],1505:[function(require,module,exports){
+},{"./lib/matchesselector.js":2267,"./lib/window.console.js":2268}],2270:[function(require,module,exports){
 module.exports=require(36)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1506:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],2271:[function(require,module,exports){
 module.exports=require(11)
-},{"../lib/object.js":1510,"js-ext/extra/hashmap.js":1507,"polyfill/polyfill-base.js":1516}],1507:[function(require,module,exports){
+},{"../lib/object.js":2275,"js-ext/extra/hashmap.js":2272,"polyfill/polyfill-base.js":2281}],2272:[function(require,module,exports){
 module.exports=require(4)
-},{}],1508:[function(require,module,exports){
+},{}],2273:[function(require,module,exports){
 module.exports=require(39)
-},{"../lib/array.js":1509,"../lib/object.js":1510,"./classes.js":1506,"js-ext/extra/hashmap.js":1507,"polyfill/lib/weakmap.js":1514}],1509:[function(require,module,exports){
+},{"../lib/array.js":2274,"../lib/object.js":2275,"./classes.js":2271,"js-ext/extra/hashmap.js":2272,"polyfill/lib/weakmap.js":2279}],2274:[function(require,module,exports){
 module.exports=require(21)
-},{"polyfill/polyfill-base.js":1516}],1510:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":2281}],2275:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1507,"polyfill/polyfill-base.js":1516}],1511:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2272,"polyfill/polyfill-base.js":2281}],2276:[function(require,module,exports){
 module.exports=require(42)
-},{"polyfill":1516}],1512:[function(require,module,exports){
+},{"polyfill":2281}],2277:[function(require,module,exports){
 module.exports=require(23)
-},{}],1513:[function(require,module,exports){
+},{}],2278:[function(require,module,exports){
 module.exports=require(14)
-},{}],1514:[function(require,module,exports){
+},{}],2279:[function(require,module,exports){
 module.exports=require(45)
-},{}],1515:[function(require,module,exports){
+},{}],2280:[function(require,module,exports){
 module.exports=require(15)
-},{}],1516:[function(require,module,exports){
+},{}],2281:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1513,"./lib/window.console.js":1515}],1517:[function(require,module,exports){
+},{"./lib/matchesselector.js":2278,"./lib/window.console.js":2280}],2282:[function(require,module,exports){
 module.exports=require(48)
-},{}],1518:[function(require,module,exports){
+},{}],2283:[function(require,module,exports){
 module.exports=require(49)
-},{"../bin/local-hashmap.js":1517}],1519:[function(require,module,exports){
+},{"../bin/local-hashmap.js":2282}],2284:[function(require,module,exports){
 module.exports=require(50)
-},{"../bin/local-hashmap.js":1517}],1520:[function(require,module,exports){
+},{"../bin/local-hashmap.js":2282}],2285:[function(require,module,exports){
 module.exports=require(51)
-},{"../bin/local-hashmap.js":1517}],1521:[function(require,module,exports){
+},{"../bin/local-hashmap.js":2282}],2286:[function(require,module,exports){
 module.exports=require(14)
-},{}],1522:[function(require,module,exports){
+},{}],2287:[function(require,module,exports){
 module.exports=require(15)
-},{}],1523:[function(require,module,exports){
+},{}],2288:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1521,"./lib/window.console.js":1522}],1524:[function(require,module,exports){
+},{"./lib/matchesselector.js":2286,"./lib/window.console.js":2287}],2289:[function(require,module,exports){
 module.exports=require(30)
-},{"./lib/idgenerator.js":1525,"./lib/timers.js":1526}],1525:[function(require,module,exports){
+},{"./lib/idgenerator.js":2290,"./lib/timers.js":2291}],2290:[function(require,module,exports){
 module.exports=require(31)
-},{"js-ext/extra/hashmap.js":1507,"polyfill/polyfill-base.js":1529}],1526:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2272,"polyfill/polyfill-base.js":2294}],2291:[function(require,module,exports){
 module.exports=require(32)
-},{"polyfill/polyfill-base.js":1529}],1527:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":2294}],2292:[function(require,module,exports){
 module.exports=require(14)
-},{}],1528:[function(require,module,exports){
+},{}],2293:[function(require,module,exports){
 module.exports=require(15)
-},{}],1529:[function(require,module,exports){
+},{}],2294:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1527,"./lib/window.console.js":1528}],1530:[function(require,module,exports){
+},{"./lib/matchesselector.js":2292,"./lib/window.console.js":2293}],2295:[function(require,module,exports){
 module.exports=require(61)
-},{"./lib/sizes.js":1531}],1531:[function(require,module,exports){
+},{"./lib/sizes.js":2296}],2296:[function(require,module,exports){
 module.exports=require(62)
-},{"js-ext/extra/hashmap.js":1532,"js-ext/lib/object.js":1533}],1532:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2297,"js-ext/lib/object.js":2298}],2297:[function(require,module,exports){
 module.exports=require(4)
-},{}],1533:[function(require,module,exports){
+},{}],2298:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1532,"polyfill/polyfill-base.js":1536}],1534:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2297,"polyfill/polyfill-base.js":2301}],2299:[function(require,module,exports){
 module.exports=require(14)
-},{}],1535:[function(require,module,exports){
+},{}],2300:[function(require,module,exports){
 module.exports=require(15)
-},{}],1536:[function(require,module,exports){
+},{}],2301:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1534,"./lib/window.console.js":1535}],1537:[function(require,module,exports){
+},{"./lib/matchesselector.js":2299,"./lib/window.console.js":2300}],2302:[function(require,module,exports){
 module.exports=require(68)
-},{"js-ext/extra/hashmap.js":1507,"js-ext/lib/object.js":1510,"js-ext/lib/string.js":1512,"polyfill":1523,"polyfill/extra/transition.js":1518,"polyfill/extra/vendorCSS.js":1520}],1538:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2272,"js-ext/lib/object.js":2275,"js-ext/lib/string.js":2277,"polyfill":2288,"polyfill/extra/transition.js":2283,"polyfill/extra/vendorCSS.js":2285}],2303:[function(require,module,exports){
 module.exports=require(69)
-},{"js-ext/extra/hashmap.js":1507,"js-ext/lib/object.js":1510,"polyfill":1523}],1539:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2272,"js-ext/lib/object.js":2275,"polyfill":2288}],2304:[function(require,module,exports){
 module.exports=require(70)
-},{"js-ext/extra/hashmap.js":1507,"js-ext/lib/object.js":1510,"js-ext/lib/string.js":1512,"polyfill":1523}],1540:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2272,"js-ext/lib/object.js":2275,"js-ext/lib/string.js":2277,"polyfill":2288}],2305:[function(require,module,exports){
 module.exports=require(71)
-},{"../css/element.css":1505,"./attribute-extractor.js":1537,"./element-array.js":1538,"./html-parser.js":1541,"./node-parser.js":1542,"./vdom-ns.js":1543,"./vnode.js":1544,"js-ext/extra/hashmap.js":1507,"js-ext/lib/object.js":1510,"js-ext/lib/promise.js":1511,"js-ext/lib/string.js":1512,"polyfill":1523,"polyfill/extra/transition.js":1518,"polyfill/extra/transitionend.js":1519,"polyfill/extra/vendorCSS.js":1520,"utils":1524,"window-ext":1530}],1541:[function(require,module,exports){
+},{"../css/element.css":2270,"./attribute-extractor.js":2302,"./element-array.js":2303,"./html-parser.js":2306,"./node-parser.js":2307,"./vdom-ns.js":2308,"./vnode.js":2309,"js-ext/extra/hashmap.js":2272,"js-ext/lib/object.js":2275,"js-ext/lib/promise.js":2276,"js-ext/lib/string.js":2277,"polyfill":2288,"polyfill/extra/transition.js":2283,"polyfill/extra/transitionend.js":2284,"polyfill/extra/vendorCSS.js":2285,"utils":2289,"window-ext":2295}],2306:[function(require,module,exports){
 module.exports=require(72)
-},{"./attribute-extractor.js":1537,"./vdom-ns.js":1543,"js-ext/extra/hashmap.js":1507,"js-ext/lib/object.js":1510,"polyfill":1523}],1542:[function(require,module,exports){
+},{"./attribute-extractor.js":2302,"./vdom-ns.js":2308,"js-ext/extra/hashmap.js":2272,"js-ext/lib/object.js":2275,"polyfill":2288}],2307:[function(require,module,exports){
 module.exports=require(73)
-},{"./attribute-extractor.js":1537,"./vdom-ns.js":1543,"./vnode.js":1544,"js-ext/extra/hashmap.js":1507,"js-ext/lib/object.js":1510,"polyfill":1523}],1543:[function(require,module,exports){
+},{"./attribute-extractor.js":2302,"./vdom-ns.js":2308,"./vnode.js":2309,"js-ext/extra/hashmap.js":2272,"js-ext/lib/object.js":2275,"polyfill":2288}],2308:[function(require,module,exports){
 module.exports=require(74)
-},{"js-ext/extra/hashmap.js":1507,"js-ext/lib/object.js":1510,"polyfill":1523}],1544:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2272,"js-ext/lib/object.js":2275,"polyfill":2288}],2309:[function(require,module,exports){
 module.exports=require(75)
-},{"./attribute-extractor.js":1537,"./html-parser.js":1541,"./vdom-ns.js":1543,"js-ext/extra/hashmap.js":1507,"js-ext/extra/lightmap.js":1508,"js-ext/lib/array.js":1509,"js-ext/lib/object.js":1510,"js-ext/lib/string.js":1512,"polyfill":1523,"utils/lib/timers.js":1526}],1545:[function(require,module,exports){
+},{"./attribute-extractor.js":2302,"./html-parser.js":2306,"./vdom-ns.js":2308,"js-ext/extra/hashmap.js":2272,"js-ext/extra/lightmap.js":2273,"js-ext/lib/array.js":2274,"js-ext/lib/object.js":2275,"js-ext/lib/string.js":2277,"polyfill":2288,"utils/lib/timers.js":2291}],2310:[function(require,module,exports){
 module.exports=require(76)
-},{"./partials/extend-document.js":1539,"./partials/extend-element.js":1540,"./partials/node-parser.js":1542,"js-ext/extra/hashmap.js":1507,"js-ext/lib/object.js":1510,"utils/lib/timers.js":1526}],1546:[function(require,module,exports){
+},{"./partials/extend-document.js":2304,"./partials/extend-element.js":2305,"./partials/node-parser.js":2307,"js-ext/extra/hashmap.js":2272,"js-ext/lib/object.js":2275,"utils/lib/timers.js":2291}],2311:[function(require,module,exports){
 module.exports=require(14)
-},{}],1547:[function(require,module,exports){
+},{}],2312:[function(require,module,exports){
 module.exports=require(15)
-},{}],1548:[function(require,module,exports){
+},{}],2313:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1546,"./lib/window.console.js":1547}],1549:[function(require,module,exports){
+},{"./lib/matchesselector.js":2311,"./lib/window.console.js":2312}],2314:[function(require,module,exports){
 module.exports=require(4)
-},{}],1550:[function(require,module,exports){
+},{}],2315:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1549,"polyfill/polyfill-base.js":1553}],1551:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2314,"polyfill/polyfill-base.js":2318}],2316:[function(require,module,exports){
 module.exports=require(14)
-},{}],1552:[function(require,module,exports){
+},{}],2317:[function(require,module,exports){
 module.exports=require(15)
-},{}],1553:[function(require,module,exports){
+},{}],2318:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1551,"./lib/window.console.js":1552}],1554:[function(require,module,exports){
+},{"./lib/matchesselector.js":2316,"./lib/window.console.js":2317}],2319:[function(require,module,exports){
 module.exports=require(14)
-},{}],1555:[function(require,module,exports){
+},{}],2320:[function(require,module,exports){
 module.exports=require(15)
-},{}],1556:[function(require,module,exports){
+},{}],2321:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1554,"./lib/window.console.js":1555}],1557:[function(require,module,exports){
+},{"./lib/matchesselector.js":2319,"./lib/window.console.js":2320}],2322:[function(require,module,exports){
 module.exports=require(386)
-},{"js-ext/extra/hashmap.js":1549,"js-ext/lib/object.js":1550,"polyfill":1556}],1558:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2314,"js-ext/lib/object.js":2315,"polyfill":2321}],2323:[function(require,module,exports){
 module.exports=require(36)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1559:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],2324:[function(require,module,exports){
 module.exports=require(11)
-},{"../lib/object.js":1563,"js-ext/extra/hashmap.js":1560,"polyfill/polyfill-base.js":1569}],1560:[function(require,module,exports){
+},{"../lib/object.js":2328,"js-ext/extra/hashmap.js":2325,"polyfill/polyfill-base.js":2334}],2325:[function(require,module,exports){
 module.exports=require(4)
-},{}],1561:[function(require,module,exports){
+},{}],2326:[function(require,module,exports){
 module.exports=require(39)
-},{"../lib/array.js":1562,"../lib/object.js":1563,"./classes.js":1559,"js-ext/extra/hashmap.js":1560,"polyfill/lib/weakmap.js":1567}],1562:[function(require,module,exports){
+},{"../lib/array.js":2327,"../lib/object.js":2328,"./classes.js":2324,"js-ext/extra/hashmap.js":2325,"polyfill/lib/weakmap.js":2332}],2327:[function(require,module,exports){
 module.exports=require(21)
-},{"polyfill/polyfill-base.js":1569}],1563:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":2334}],2328:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1560,"polyfill/polyfill-base.js":1569}],1564:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2325,"polyfill/polyfill-base.js":2334}],2329:[function(require,module,exports){
 module.exports=require(42)
-},{"polyfill":1569}],1565:[function(require,module,exports){
+},{"polyfill":2334}],2330:[function(require,module,exports){
 module.exports=require(23)
-},{}],1566:[function(require,module,exports){
+},{}],2331:[function(require,module,exports){
 module.exports=require(14)
-},{}],1567:[function(require,module,exports){
+},{}],2332:[function(require,module,exports){
 module.exports=require(45)
-},{}],1568:[function(require,module,exports){
+},{}],2333:[function(require,module,exports){
 module.exports=require(15)
-},{}],1569:[function(require,module,exports){
+},{}],2334:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1566,"./lib/window.console.js":1568}],1570:[function(require,module,exports){
+},{"./lib/matchesselector.js":2331,"./lib/window.console.js":2333}],2335:[function(require,module,exports){
 module.exports=require(48)
-},{}],1571:[function(require,module,exports){
+},{}],2336:[function(require,module,exports){
 module.exports=require(49)
-},{"../bin/local-hashmap.js":1570}],1572:[function(require,module,exports){
+},{"../bin/local-hashmap.js":2335}],2337:[function(require,module,exports){
 module.exports=require(50)
-},{"../bin/local-hashmap.js":1570}],1573:[function(require,module,exports){
+},{"../bin/local-hashmap.js":2335}],2338:[function(require,module,exports){
 module.exports=require(51)
-},{"../bin/local-hashmap.js":1570}],1574:[function(require,module,exports){
+},{"../bin/local-hashmap.js":2335}],2339:[function(require,module,exports){
 module.exports=require(14)
-},{}],1575:[function(require,module,exports){
+},{}],2340:[function(require,module,exports){
 module.exports=require(15)
-},{}],1576:[function(require,module,exports){
+},{}],2341:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1574,"./lib/window.console.js":1575}],1577:[function(require,module,exports){
+},{"./lib/matchesselector.js":2339,"./lib/window.console.js":2340}],2342:[function(require,module,exports){
 module.exports=require(30)
-},{"./lib/idgenerator.js":1578,"./lib/timers.js":1579}],1578:[function(require,module,exports){
+},{"./lib/idgenerator.js":2343,"./lib/timers.js":2344}],2343:[function(require,module,exports){
 module.exports=require(31)
-},{"js-ext/extra/hashmap.js":1560,"polyfill/polyfill-base.js":1582}],1579:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2325,"polyfill/polyfill-base.js":2347}],2344:[function(require,module,exports){
 module.exports=require(32)
-},{"polyfill/polyfill-base.js":1582}],1580:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":2347}],2345:[function(require,module,exports){
 module.exports=require(14)
-},{}],1581:[function(require,module,exports){
+},{}],2346:[function(require,module,exports){
 module.exports=require(15)
-},{}],1582:[function(require,module,exports){
+},{}],2347:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1580,"./lib/window.console.js":1581}],1583:[function(require,module,exports){
+},{"./lib/matchesselector.js":2345,"./lib/window.console.js":2346}],2348:[function(require,module,exports){
 module.exports=require(61)
-},{"./lib/sizes.js":1584}],1584:[function(require,module,exports){
+},{"./lib/sizes.js":2349}],2349:[function(require,module,exports){
 module.exports=require(62)
-},{"js-ext/extra/hashmap.js":1585,"js-ext/lib/object.js":1586}],1585:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2350,"js-ext/lib/object.js":2351}],2350:[function(require,module,exports){
 module.exports=require(4)
-},{}],1586:[function(require,module,exports){
+},{}],2351:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1585,"polyfill/polyfill-base.js":1589}],1587:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2350,"polyfill/polyfill-base.js":2354}],2352:[function(require,module,exports){
 module.exports=require(14)
-},{}],1588:[function(require,module,exports){
+},{}],2353:[function(require,module,exports){
 module.exports=require(15)
-},{}],1589:[function(require,module,exports){
+},{}],2354:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1587,"./lib/window.console.js":1588}],1590:[function(require,module,exports){
+},{"./lib/matchesselector.js":2352,"./lib/window.console.js":2353}],2355:[function(require,module,exports){
 module.exports=require(68)
-},{"js-ext/extra/hashmap.js":1560,"js-ext/lib/object.js":1563,"js-ext/lib/string.js":1565,"polyfill":1576,"polyfill/extra/transition.js":1571,"polyfill/extra/vendorCSS.js":1573}],1591:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2325,"js-ext/lib/object.js":2328,"js-ext/lib/string.js":2330,"polyfill":2341,"polyfill/extra/transition.js":2336,"polyfill/extra/vendorCSS.js":2338}],2356:[function(require,module,exports){
 module.exports=require(69)
-},{"js-ext/extra/hashmap.js":1560,"js-ext/lib/object.js":1563,"polyfill":1576}],1592:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2325,"js-ext/lib/object.js":2328,"polyfill":2341}],2357:[function(require,module,exports){
 module.exports=require(70)
-},{"js-ext/extra/hashmap.js":1560,"js-ext/lib/object.js":1563,"js-ext/lib/string.js":1565,"polyfill":1576}],1593:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2325,"js-ext/lib/object.js":2328,"js-ext/lib/string.js":2330,"polyfill":2341}],2358:[function(require,module,exports){
 module.exports=require(71)
-},{"../css/element.css":1558,"./attribute-extractor.js":1590,"./element-array.js":1591,"./html-parser.js":1594,"./node-parser.js":1595,"./vdom-ns.js":1596,"./vnode.js":1597,"js-ext/extra/hashmap.js":1560,"js-ext/lib/object.js":1563,"js-ext/lib/promise.js":1564,"js-ext/lib/string.js":1565,"polyfill":1576,"polyfill/extra/transition.js":1571,"polyfill/extra/transitionend.js":1572,"polyfill/extra/vendorCSS.js":1573,"utils":1577,"window-ext":1583}],1594:[function(require,module,exports){
+},{"../css/element.css":2323,"./attribute-extractor.js":2355,"./element-array.js":2356,"./html-parser.js":2359,"./node-parser.js":2360,"./vdom-ns.js":2361,"./vnode.js":2362,"js-ext/extra/hashmap.js":2325,"js-ext/lib/object.js":2328,"js-ext/lib/promise.js":2329,"js-ext/lib/string.js":2330,"polyfill":2341,"polyfill/extra/transition.js":2336,"polyfill/extra/transitionend.js":2337,"polyfill/extra/vendorCSS.js":2338,"utils":2342,"window-ext":2348}],2359:[function(require,module,exports){
 module.exports=require(72)
-},{"./attribute-extractor.js":1590,"./vdom-ns.js":1596,"js-ext/extra/hashmap.js":1560,"js-ext/lib/object.js":1563,"polyfill":1576}],1595:[function(require,module,exports){
+},{"./attribute-extractor.js":2355,"./vdom-ns.js":2361,"js-ext/extra/hashmap.js":2325,"js-ext/lib/object.js":2328,"polyfill":2341}],2360:[function(require,module,exports){
 module.exports=require(73)
-},{"./attribute-extractor.js":1590,"./vdom-ns.js":1596,"./vnode.js":1597,"js-ext/extra/hashmap.js":1560,"js-ext/lib/object.js":1563,"polyfill":1576}],1596:[function(require,module,exports){
+},{"./attribute-extractor.js":2355,"./vdom-ns.js":2361,"./vnode.js":2362,"js-ext/extra/hashmap.js":2325,"js-ext/lib/object.js":2328,"polyfill":2341}],2361:[function(require,module,exports){
 module.exports=require(74)
-},{"js-ext/extra/hashmap.js":1560,"js-ext/lib/object.js":1563,"polyfill":1576}],1597:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2325,"js-ext/lib/object.js":2328,"polyfill":2341}],2362:[function(require,module,exports){
 module.exports=require(75)
-},{"./attribute-extractor.js":1590,"./html-parser.js":1594,"./vdom-ns.js":1596,"js-ext/extra/hashmap.js":1560,"js-ext/extra/lightmap.js":1561,"js-ext/lib/array.js":1562,"js-ext/lib/object.js":1563,"js-ext/lib/string.js":1565,"polyfill":1576,"utils/lib/timers.js":1579}],1598:[function(require,module,exports){
+},{"./attribute-extractor.js":2355,"./html-parser.js":2359,"./vdom-ns.js":2361,"js-ext/extra/hashmap.js":2325,"js-ext/extra/lightmap.js":2326,"js-ext/lib/array.js":2327,"js-ext/lib/object.js":2328,"js-ext/lib/string.js":2330,"polyfill":2341,"utils/lib/timers.js":2344}],2363:[function(require,module,exports){
 module.exports=require(76)
-},{"./partials/extend-document.js":1592,"./partials/extend-element.js":1593,"./partials/node-parser.js":1595,"js-ext/extra/hashmap.js":1560,"js-ext/lib/object.js":1563,"utils/lib/timers.js":1579}],1599:[function(require,module,exports){
+},{"./partials/extend-document.js":2357,"./partials/extend-element.js":2358,"./partials/node-parser.js":2360,"js-ext/extra/hashmap.js":2325,"js-ext/lib/object.js":2328,"utils/lib/timers.js":2344}],2364:[function(require,module,exports){
 module.exports=require(61)
-},{"./lib/sizes.js":1600}],1600:[function(require,module,exports){
+},{"./lib/sizes.js":2365}],2365:[function(require,module,exports){
 module.exports=require(62)
-},{"js-ext/extra/hashmap.js":1601,"js-ext/lib/object.js":1602}],1601:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2366,"js-ext/lib/object.js":2367}],2366:[function(require,module,exports){
 module.exports=require(4)
-},{}],1602:[function(require,module,exports){
+},{}],2367:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1601,"polyfill/polyfill-base.js":1605}],1603:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2366,"polyfill/polyfill-base.js":2370}],2368:[function(require,module,exports){
 module.exports=require(14)
-},{}],1604:[function(require,module,exports){
+},{}],2369:[function(require,module,exports){
 module.exports=require(15)
-},{}],1605:[function(require,module,exports){
+},{}],2370:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1603,"./lib/window.console.js":1604}],1606:[function(require,module,exports){
+},{"./lib/matchesselector.js":2368,"./lib/window.console.js":2369}],2371:[function(require,module,exports){
 module.exports=require(783)
-},{"./lib/hammer-2.0.4.js":1607,"event-dom":1608}],1607:[function(require,module,exports){
+},{"./lib/hammer-2.0.4.js":2372,"event-dom":2373}],2372:[function(require,module,exports){
 module.exports=require(784)
-},{"utils":1679}],1608:[function(require,module,exports){
+},{"utils":2444}],2373:[function(require,module,exports){
 module.exports=require(6)
-},{"event":1612,"js-ext/extra/hashmap.js":1622,"js-ext/lib/array.js":1623,"js-ext/lib/object.js":1624,"js-ext/lib/string.js":1625,"polyfill/polyfill-base.js":1631,"utils":1632,"vdom":1678}],1609:[function(require,module,exports){
+},{"event":2377,"js-ext/extra/hashmap.js":2387,"js-ext/lib/array.js":2388,"js-ext/lib/object.js":2389,"js-ext/lib/string.js":2390,"polyfill/polyfill-base.js":2396,"utils":2397,"vdom":2443}],2374:[function(require,module,exports){
 module.exports=require(7)
-},{"js-ext/extra/hashmap.js":1614,"js-ext/lib/object.js":1615,"polyfill/polyfill-base.js":1621}],1610:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2379,"js-ext/lib/object.js":2380,"polyfill/polyfill-base.js":2386}],2375:[function(require,module,exports){
 module.exports=require(8)
-},{"./event-base.js":1609}],1611:[function(require,module,exports){
+},{"./event-base.js":2374}],2376:[function(require,module,exports){
 module.exports=require(9)
-},{"./event-base.js":1609,"js-ext/extra/classes.js":1613,"js-ext/lib/object.js":1615}],1612:[function(require,module,exports){
+},{"./event-base.js":2374,"js-ext/extra/classes.js":2378,"js-ext/lib/object.js":2380}],2377:[function(require,module,exports){
 module.exports=require(10)
-},{"./event-base.js":1609,"./event-emitter.js":1610,"./event-listener.js":1611}],1613:[function(require,module,exports){
+},{"./event-base.js":2374,"./event-emitter.js":2375,"./event-listener.js":2376}],2378:[function(require,module,exports){
 module.exports=require(11)
-},{"../lib/object.js":1615,"js-ext/extra/hashmap.js":1614,"polyfill/polyfill-base.js":1618}],1614:[function(require,module,exports){
+},{"../lib/object.js":2380,"js-ext/extra/hashmap.js":2379,"polyfill/polyfill-base.js":2383}],2379:[function(require,module,exports){
 module.exports=require(4)
-},{}],1615:[function(require,module,exports){
+},{}],2380:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1614,"polyfill/polyfill-base.js":1618}],1616:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2379,"polyfill/polyfill-base.js":2383}],2381:[function(require,module,exports){
 module.exports=require(14)
-},{}],1617:[function(require,module,exports){
+},{}],2382:[function(require,module,exports){
 module.exports=require(15)
-},{}],1618:[function(require,module,exports){
+},{}],2383:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1616,"./lib/window.console.js":1617}],1619:[function(require,module,exports){
+},{"./lib/matchesselector.js":2381,"./lib/window.console.js":2382}],2384:[function(require,module,exports){
 module.exports=require(14)
-},{}],1620:[function(require,module,exports){
+},{}],2385:[function(require,module,exports){
 module.exports=require(15)
-},{}],1621:[function(require,module,exports){
+},{}],2386:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1619,"./lib/window.console.js":1620}],1622:[function(require,module,exports){
+},{"./lib/matchesselector.js":2384,"./lib/window.console.js":2385}],2387:[function(require,module,exports){
 module.exports=require(4)
-},{}],1623:[function(require,module,exports){
+},{}],2388:[function(require,module,exports){
 module.exports=require(21)
-},{"polyfill/polyfill-base.js":1628}],1624:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":2393}],2389:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1622,"polyfill/polyfill-base.js":1628}],1625:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2387,"polyfill/polyfill-base.js":2393}],2390:[function(require,module,exports){
 module.exports=require(23)
-},{}],1626:[function(require,module,exports){
+},{}],2391:[function(require,module,exports){
 module.exports=require(14)
-},{}],1627:[function(require,module,exports){
+},{}],2392:[function(require,module,exports){
 module.exports=require(15)
-},{}],1628:[function(require,module,exports){
+},{}],2393:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1626,"./lib/window.console.js":1627}],1629:[function(require,module,exports){
+},{"./lib/matchesselector.js":2391,"./lib/window.console.js":2392}],2394:[function(require,module,exports){
 module.exports=require(14)
-},{}],1630:[function(require,module,exports){
+},{}],2395:[function(require,module,exports){
 module.exports=require(15)
-},{}],1631:[function(require,module,exports){
+},{}],2396:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1629,"./lib/window.console.js":1630}],1632:[function(require,module,exports){
+},{"./lib/matchesselector.js":2394,"./lib/window.console.js":2395}],2397:[function(require,module,exports){
 module.exports=require(30)
-},{"./lib/idgenerator.js":1633,"./lib/timers.js":1634}],1633:[function(require,module,exports){
+},{"./lib/idgenerator.js":2398,"./lib/timers.js":2399}],2398:[function(require,module,exports){
 module.exports=require(31)
-},{"js-ext/extra/hashmap.js":1622,"polyfill/polyfill-base.js":1637}],1634:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2387,"polyfill/polyfill-base.js":2402}],2399:[function(require,module,exports){
 module.exports=require(32)
-},{"polyfill/polyfill-base.js":1637}],1635:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":2402}],2400:[function(require,module,exports){
 module.exports=require(14)
-},{}],1636:[function(require,module,exports){
+},{}],2401:[function(require,module,exports){
 module.exports=require(15)
-},{}],1637:[function(require,module,exports){
+},{}],2402:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1635,"./lib/window.console.js":1636}],1638:[function(require,module,exports){
+},{"./lib/matchesselector.js":2400,"./lib/window.console.js":2401}],2403:[function(require,module,exports){
 module.exports=require(36)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1639:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],2404:[function(require,module,exports){
 module.exports=require(11)
-},{"../lib/object.js":1643,"js-ext/extra/hashmap.js":1640,"polyfill/polyfill-base.js":1649}],1640:[function(require,module,exports){
+},{"../lib/object.js":2408,"js-ext/extra/hashmap.js":2405,"polyfill/polyfill-base.js":2414}],2405:[function(require,module,exports){
 module.exports=require(4)
-},{}],1641:[function(require,module,exports){
+},{}],2406:[function(require,module,exports){
 module.exports=require(39)
-},{"../lib/array.js":1642,"../lib/object.js":1643,"./classes.js":1639,"js-ext/extra/hashmap.js":1640,"polyfill/lib/weakmap.js":1647}],1642:[function(require,module,exports){
+},{"../lib/array.js":2407,"../lib/object.js":2408,"./classes.js":2404,"js-ext/extra/hashmap.js":2405,"polyfill/lib/weakmap.js":2412}],2407:[function(require,module,exports){
 module.exports=require(21)
-},{"polyfill/polyfill-base.js":1649}],1643:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":2414}],2408:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1640,"polyfill/polyfill-base.js":1649}],1644:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2405,"polyfill/polyfill-base.js":2414}],2409:[function(require,module,exports){
 module.exports=require(42)
-},{"polyfill":1649}],1645:[function(require,module,exports){
+},{"polyfill":2414}],2410:[function(require,module,exports){
 module.exports=require(23)
-},{}],1646:[function(require,module,exports){
+},{}],2411:[function(require,module,exports){
 module.exports=require(14)
-},{}],1647:[function(require,module,exports){
+},{}],2412:[function(require,module,exports){
 module.exports=require(45)
-},{}],1648:[function(require,module,exports){
+},{}],2413:[function(require,module,exports){
 module.exports=require(15)
-},{}],1649:[function(require,module,exports){
+},{}],2414:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1646,"./lib/window.console.js":1648}],1650:[function(require,module,exports){
+},{"./lib/matchesselector.js":2411,"./lib/window.console.js":2413}],2415:[function(require,module,exports){
 module.exports=require(48)
-},{}],1651:[function(require,module,exports){
+},{}],2416:[function(require,module,exports){
 module.exports=require(49)
-},{"../bin/local-hashmap.js":1650}],1652:[function(require,module,exports){
+},{"../bin/local-hashmap.js":2415}],2417:[function(require,module,exports){
 module.exports=require(50)
-},{"../bin/local-hashmap.js":1650}],1653:[function(require,module,exports){
+},{"../bin/local-hashmap.js":2415}],2418:[function(require,module,exports){
 module.exports=require(51)
-},{"../bin/local-hashmap.js":1650}],1654:[function(require,module,exports){
+},{"../bin/local-hashmap.js":2415}],2419:[function(require,module,exports){
 module.exports=require(14)
-},{}],1655:[function(require,module,exports){
+},{}],2420:[function(require,module,exports){
 module.exports=require(15)
-},{}],1656:[function(require,module,exports){
+},{}],2421:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1654,"./lib/window.console.js":1655}],1657:[function(require,module,exports){
+},{"./lib/matchesselector.js":2419,"./lib/window.console.js":2420}],2422:[function(require,module,exports){
 module.exports=require(30)
-},{"./lib/idgenerator.js":1658,"./lib/timers.js":1659}],1658:[function(require,module,exports){
+},{"./lib/idgenerator.js":2423,"./lib/timers.js":2424}],2423:[function(require,module,exports){
 module.exports=require(31)
-},{"js-ext/extra/hashmap.js":1640,"polyfill/polyfill-base.js":1662}],1659:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2405,"polyfill/polyfill-base.js":2427}],2424:[function(require,module,exports){
 module.exports=require(32)
-},{"polyfill/polyfill-base.js":1662}],1660:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":2427}],2425:[function(require,module,exports){
 module.exports=require(14)
-},{}],1661:[function(require,module,exports){
+},{}],2426:[function(require,module,exports){
 module.exports=require(15)
-},{}],1662:[function(require,module,exports){
+},{}],2427:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1660,"./lib/window.console.js":1661}],1663:[function(require,module,exports){
+},{"./lib/matchesselector.js":2425,"./lib/window.console.js":2426}],2428:[function(require,module,exports){
 module.exports=require(61)
-},{"./lib/sizes.js":1664}],1664:[function(require,module,exports){
+},{"./lib/sizes.js":2429}],2429:[function(require,module,exports){
 module.exports=require(62)
-},{"js-ext/extra/hashmap.js":1665,"js-ext/lib/object.js":1666}],1665:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2430,"js-ext/lib/object.js":2431}],2430:[function(require,module,exports){
 module.exports=require(4)
-},{}],1666:[function(require,module,exports){
+},{}],2431:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1665,"polyfill/polyfill-base.js":1669}],1667:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2430,"polyfill/polyfill-base.js":2434}],2432:[function(require,module,exports){
 module.exports=require(14)
-},{}],1668:[function(require,module,exports){
+},{}],2433:[function(require,module,exports){
 module.exports=require(15)
-},{}],1669:[function(require,module,exports){
+},{}],2434:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1667,"./lib/window.console.js":1668}],1670:[function(require,module,exports){
+},{"./lib/matchesselector.js":2432,"./lib/window.console.js":2433}],2435:[function(require,module,exports){
 module.exports=require(68)
-},{"js-ext/extra/hashmap.js":1640,"js-ext/lib/object.js":1643,"js-ext/lib/string.js":1645,"polyfill":1656,"polyfill/extra/transition.js":1651,"polyfill/extra/vendorCSS.js":1653}],1671:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2405,"js-ext/lib/object.js":2408,"js-ext/lib/string.js":2410,"polyfill":2421,"polyfill/extra/transition.js":2416,"polyfill/extra/vendorCSS.js":2418}],2436:[function(require,module,exports){
 module.exports=require(69)
-},{"js-ext/extra/hashmap.js":1640,"js-ext/lib/object.js":1643,"polyfill":1656}],1672:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2405,"js-ext/lib/object.js":2408,"polyfill":2421}],2437:[function(require,module,exports){
 module.exports=require(70)
-},{"js-ext/extra/hashmap.js":1640,"js-ext/lib/object.js":1643,"js-ext/lib/string.js":1645,"polyfill":1656}],1673:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2405,"js-ext/lib/object.js":2408,"js-ext/lib/string.js":2410,"polyfill":2421}],2438:[function(require,module,exports){
 module.exports=require(71)
-},{"../css/element.css":1638,"./attribute-extractor.js":1670,"./element-array.js":1671,"./html-parser.js":1674,"./node-parser.js":1675,"./vdom-ns.js":1676,"./vnode.js":1677,"js-ext/extra/hashmap.js":1640,"js-ext/lib/object.js":1643,"js-ext/lib/promise.js":1644,"js-ext/lib/string.js":1645,"polyfill":1656,"polyfill/extra/transition.js":1651,"polyfill/extra/transitionend.js":1652,"polyfill/extra/vendorCSS.js":1653,"utils":1657,"window-ext":1663}],1674:[function(require,module,exports){
+},{"../css/element.css":2403,"./attribute-extractor.js":2435,"./element-array.js":2436,"./html-parser.js":2439,"./node-parser.js":2440,"./vdom-ns.js":2441,"./vnode.js":2442,"js-ext/extra/hashmap.js":2405,"js-ext/lib/object.js":2408,"js-ext/lib/promise.js":2409,"js-ext/lib/string.js":2410,"polyfill":2421,"polyfill/extra/transition.js":2416,"polyfill/extra/transitionend.js":2417,"polyfill/extra/vendorCSS.js":2418,"utils":2422,"window-ext":2428}],2439:[function(require,module,exports){
 module.exports=require(72)
-},{"./attribute-extractor.js":1670,"./vdom-ns.js":1676,"js-ext/extra/hashmap.js":1640,"js-ext/lib/object.js":1643,"polyfill":1656}],1675:[function(require,module,exports){
+},{"./attribute-extractor.js":2435,"./vdom-ns.js":2441,"js-ext/extra/hashmap.js":2405,"js-ext/lib/object.js":2408,"polyfill":2421}],2440:[function(require,module,exports){
 module.exports=require(73)
-},{"./attribute-extractor.js":1670,"./vdom-ns.js":1676,"./vnode.js":1677,"js-ext/extra/hashmap.js":1640,"js-ext/lib/object.js":1643,"polyfill":1656}],1676:[function(require,module,exports){
+},{"./attribute-extractor.js":2435,"./vdom-ns.js":2441,"./vnode.js":2442,"js-ext/extra/hashmap.js":2405,"js-ext/lib/object.js":2408,"polyfill":2421}],2441:[function(require,module,exports){
 module.exports=require(74)
-},{"js-ext/extra/hashmap.js":1640,"js-ext/lib/object.js":1643,"polyfill":1656}],1677:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2405,"js-ext/lib/object.js":2408,"polyfill":2421}],2442:[function(require,module,exports){
 module.exports=require(75)
-},{"./attribute-extractor.js":1670,"./html-parser.js":1674,"./vdom-ns.js":1676,"js-ext/extra/hashmap.js":1640,"js-ext/extra/lightmap.js":1641,"js-ext/lib/array.js":1642,"js-ext/lib/object.js":1643,"js-ext/lib/string.js":1645,"polyfill":1656,"utils/lib/timers.js":1659}],1678:[function(require,module,exports){
+},{"./attribute-extractor.js":2435,"./html-parser.js":2439,"./vdom-ns.js":2441,"js-ext/extra/hashmap.js":2405,"js-ext/extra/lightmap.js":2406,"js-ext/lib/array.js":2407,"js-ext/lib/object.js":2408,"js-ext/lib/string.js":2410,"polyfill":2421,"utils/lib/timers.js":2424}],2443:[function(require,module,exports){
 module.exports=require(76)
-},{"./partials/extend-document.js":1672,"./partials/extend-element.js":1673,"./partials/node-parser.js":1675,"js-ext/extra/hashmap.js":1640,"js-ext/lib/object.js":1643,"utils/lib/timers.js":1659}],1679:[function(require,module,exports){
+},{"./partials/extend-document.js":2437,"./partials/extend-element.js":2438,"./partials/node-parser.js":2440,"js-ext/extra/hashmap.js":2405,"js-ext/lib/object.js":2408,"utils/lib/timers.js":2424}],2444:[function(require,module,exports){
 module.exports=require(30)
-},{"./lib/idgenerator.js":1680,"./lib/timers.js":1681}],1680:[function(require,module,exports){
+},{"./lib/idgenerator.js":2445,"./lib/timers.js":2446}],2445:[function(require,module,exports){
 module.exports=require(31)
-},{"js-ext/extra/hashmap.js":1685,"polyfill/polyfill-base.js":1684}],1681:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2450,"polyfill/polyfill-base.js":2449}],2446:[function(require,module,exports){
 module.exports=require(32)
-},{"polyfill/polyfill-base.js":1684}],1682:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":2449}],2447:[function(require,module,exports){
 module.exports=require(14)
-},{}],1683:[function(require,module,exports){
+},{}],2448:[function(require,module,exports){
 module.exports=require(15)
-},{}],1684:[function(require,module,exports){
+},{}],2449:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1682,"./lib/window.console.js":1683}],1685:[function(require,module,exports){
+},{"./lib/matchesselector.js":2447,"./lib/window.console.js":2448}],2450:[function(require,module,exports){
 module.exports=require(4)
-},{}],1686:[function(require,module,exports){
+},{}],2451:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1685,"polyfill/polyfill-base.js":1689}],1687:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2450,"polyfill/polyfill-base.js":2454}],2452:[function(require,module,exports){
 module.exports=require(14)
-},{}],1688:[function(require,module,exports){
+},{}],2453:[function(require,module,exports){
 module.exports=require(15)
-},{}],1689:[function(require,module,exports){
+},{}],2454:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1687,"./lib/window.console.js":1688}],1690:[function(require,module,exports){
+},{"./lib/matchesselector.js":2452,"./lib/window.console.js":2453}],2455:[function(require,module,exports){
 module.exports=require(5)
-},{"event-dom":1691,"event/extra/promise-finalize.js":1763,"event/extra/timer-finalize.js":1764,"js-ext/extra/classes.js":1774,"js-ext/extra/hashmap.js":1775,"js-ext/lib/object.js":1776,"js-ext/lib/promise.js":1777,"js-ext/lib/string.js":1778,"polyfill":1784,"utils/lib/timers.js":1785,"vdom":1829}],1691:[function(require,module,exports){
+},{"event-dom":2456,"event/extra/promise-finalize.js":2528,"event/extra/timer-finalize.js":2529,"js-ext/extra/classes.js":2539,"js-ext/extra/hashmap.js":2540,"js-ext/lib/object.js":2541,"js-ext/lib/promise.js":2542,"js-ext/lib/string.js":2543,"polyfill":2549,"utils/lib/timers.js":2550,"vdom":2594}],2456:[function(require,module,exports){
 module.exports=require(6)
-},{"event":1695,"js-ext/extra/hashmap.js":1705,"js-ext/lib/array.js":1706,"js-ext/lib/object.js":1707,"js-ext/lib/string.js":1708,"polyfill/polyfill-base.js":1714,"utils":1715,"vdom":1761}],1692:[function(require,module,exports){
+},{"event":2460,"js-ext/extra/hashmap.js":2470,"js-ext/lib/array.js":2471,"js-ext/lib/object.js":2472,"js-ext/lib/string.js":2473,"polyfill/polyfill-base.js":2479,"utils":2480,"vdom":2526}],2457:[function(require,module,exports){
 module.exports=require(7)
-},{"js-ext/extra/hashmap.js":1697,"js-ext/lib/object.js":1698,"polyfill/polyfill-base.js":1704}],1693:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2462,"js-ext/lib/object.js":2463,"polyfill/polyfill-base.js":2469}],2458:[function(require,module,exports){
 module.exports=require(8)
-},{"./event-base.js":1692}],1694:[function(require,module,exports){
+},{"./event-base.js":2457}],2459:[function(require,module,exports){
 module.exports=require(9)
-},{"./event-base.js":1692,"js-ext/extra/classes.js":1696,"js-ext/lib/object.js":1698}],1695:[function(require,module,exports){
+},{"./event-base.js":2457,"js-ext/extra/classes.js":2461,"js-ext/lib/object.js":2463}],2460:[function(require,module,exports){
 module.exports=require(10)
-},{"./event-base.js":1692,"./event-emitter.js":1693,"./event-listener.js":1694}],1696:[function(require,module,exports){
+},{"./event-base.js":2457,"./event-emitter.js":2458,"./event-listener.js":2459}],2461:[function(require,module,exports){
 module.exports=require(11)
-},{"../lib/object.js":1698,"js-ext/extra/hashmap.js":1697,"polyfill/polyfill-base.js":1701}],1697:[function(require,module,exports){
+},{"../lib/object.js":2463,"js-ext/extra/hashmap.js":2462,"polyfill/polyfill-base.js":2466}],2462:[function(require,module,exports){
 module.exports=require(4)
-},{}],1698:[function(require,module,exports){
+},{}],2463:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1697,"polyfill/polyfill-base.js":1701}],1699:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2462,"polyfill/polyfill-base.js":2466}],2464:[function(require,module,exports){
 module.exports=require(14)
-},{}],1700:[function(require,module,exports){
+},{}],2465:[function(require,module,exports){
 module.exports=require(15)
-},{}],1701:[function(require,module,exports){
+},{}],2466:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1699,"./lib/window.console.js":1700}],1702:[function(require,module,exports){
+},{"./lib/matchesselector.js":2464,"./lib/window.console.js":2465}],2467:[function(require,module,exports){
 module.exports=require(14)
-},{}],1703:[function(require,module,exports){
+},{}],2468:[function(require,module,exports){
 module.exports=require(15)
-},{}],1704:[function(require,module,exports){
+},{}],2469:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1702,"./lib/window.console.js":1703}],1705:[function(require,module,exports){
+},{"./lib/matchesselector.js":2467,"./lib/window.console.js":2468}],2470:[function(require,module,exports){
 module.exports=require(4)
-},{}],1706:[function(require,module,exports){
+},{}],2471:[function(require,module,exports){
 module.exports=require(21)
-},{"polyfill/polyfill-base.js":1711}],1707:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":2476}],2472:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1705,"polyfill/polyfill-base.js":1711}],1708:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2470,"polyfill/polyfill-base.js":2476}],2473:[function(require,module,exports){
 module.exports=require(23)
-},{}],1709:[function(require,module,exports){
+},{}],2474:[function(require,module,exports){
 module.exports=require(14)
-},{}],1710:[function(require,module,exports){
+},{}],2475:[function(require,module,exports){
 module.exports=require(15)
-},{}],1711:[function(require,module,exports){
+},{}],2476:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1709,"./lib/window.console.js":1710}],1712:[function(require,module,exports){
+},{"./lib/matchesselector.js":2474,"./lib/window.console.js":2475}],2477:[function(require,module,exports){
 module.exports=require(14)
-},{}],1713:[function(require,module,exports){
+},{}],2478:[function(require,module,exports){
 module.exports=require(15)
-},{}],1714:[function(require,module,exports){
+},{}],2479:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1712,"./lib/window.console.js":1713}],1715:[function(require,module,exports){
+},{"./lib/matchesselector.js":2477,"./lib/window.console.js":2478}],2480:[function(require,module,exports){
 module.exports=require(30)
-},{"./lib/idgenerator.js":1716,"./lib/timers.js":1717}],1716:[function(require,module,exports){
+},{"./lib/idgenerator.js":2481,"./lib/timers.js":2482}],2481:[function(require,module,exports){
 module.exports=require(31)
-},{"js-ext/extra/hashmap.js":1705,"polyfill/polyfill-base.js":1720}],1717:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2470,"polyfill/polyfill-base.js":2485}],2482:[function(require,module,exports){
 module.exports=require(32)
-},{"polyfill/polyfill-base.js":1720}],1718:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":2485}],2483:[function(require,module,exports){
 module.exports=require(14)
-},{}],1719:[function(require,module,exports){
+},{}],2484:[function(require,module,exports){
 module.exports=require(15)
-},{}],1720:[function(require,module,exports){
+},{}],2485:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1718,"./lib/window.console.js":1719}],1721:[function(require,module,exports){
+},{"./lib/matchesselector.js":2483,"./lib/window.console.js":2484}],2486:[function(require,module,exports){
 module.exports=require(36)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1722:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],2487:[function(require,module,exports){
 module.exports=require(11)
-},{"../lib/object.js":1726,"js-ext/extra/hashmap.js":1723,"polyfill/polyfill-base.js":1732}],1723:[function(require,module,exports){
+},{"../lib/object.js":2491,"js-ext/extra/hashmap.js":2488,"polyfill/polyfill-base.js":2497}],2488:[function(require,module,exports){
 module.exports=require(4)
-},{}],1724:[function(require,module,exports){
+},{}],2489:[function(require,module,exports){
 module.exports=require(39)
-},{"../lib/array.js":1725,"../lib/object.js":1726,"./classes.js":1722,"js-ext/extra/hashmap.js":1723,"polyfill/lib/weakmap.js":1730}],1725:[function(require,module,exports){
+},{"../lib/array.js":2490,"../lib/object.js":2491,"./classes.js":2487,"js-ext/extra/hashmap.js":2488,"polyfill/lib/weakmap.js":2495}],2490:[function(require,module,exports){
 module.exports=require(21)
-},{"polyfill/polyfill-base.js":1732}],1726:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":2497}],2491:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1723,"polyfill/polyfill-base.js":1732}],1727:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2488,"polyfill/polyfill-base.js":2497}],2492:[function(require,module,exports){
 module.exports=require(42)
-},{"polyfill":1732}],1728:[function(require,module,exports){
+},{"polyfill":2497}],2493:[function(require,module,exports){
 module.exports=require(23)
-},{}],1729:[function(require,module,exports){
+},{}],2494:[function(require,module,exports){
 module.exports=require(14)
-},{}],1730:[function(require,module,exports){
+},{}],2495:[function(require,module,exports){
 module.exports=require(45)
-},{}],1731:[function(require,module,exports){
+},{}],2496:[function(require,module,exports){
 module.exports=require(15)
-},{}],1732:[function(require,module,exports){
+},{}],2497:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1729,"./lib/window.console.js":1731}],1733:[function(require,module,exports){
+},{"./lib/matchesselector.js":2494,"./lib/window.console.js":2496}],2498:[function(require,module,exports){
 module.exports=require(48)
-},{}],1734:[function(require,module,exports){
+},{}],2499:[function(require,module,exports){
 module.exports=require(49)
-},{"../bin/local-hashmap.js":1733}],1735:[function(require,module,exports){
+},{"../bin/local-hashmap.js":2498}],2500:[function(require,module,exports){
 module.exports=require(50)
-},{"../bin/local-hashmap.js":1733}],1736:[function(require,module,exports){
+},{"../bin/local-hashmap.js":2498}],2501:[function(require,module,exports){
 module.exports=require(51)
-},{"../bin/local-hashmap.js":1733}],1737:[function(require,module,exports){
+},{"../bin/local-hashmap.js":2498}],2502:[function(require,module,exports){
 module.exports=require(14)
-},{}],1738:[function(require,module,exports){
+},{}],2503:[function(require,module,exports){
 module.exports=require(15)
-},{}],1739:[function(require,module,exports){
+},{}],2504:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1737,"./lib/window.console.js":1738}],1740:[function(require,module,exports){
+},{"./lib/matchesselector.js":2502,"./lib/window.console.js":2503}],2505:[function(require,module,exports){
 module.exports=require(30)
-},{"./lib/idgenerator.js":1741,"./lib/timers.js":1742}],1741:[function(require,module,exports){
+},{"./lib/idgenerator.js":2506,"./lib/timers.js":2507}],2506:[function(require,module,exports){
 module.exports=require(31)
-},{"js-ext/extra/hashmap.js":1723,"polyfill/polyfill-base.js":1745}],1742:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2488,"polyfill/polyfill-base.js":2510}],2507:[function(require,module,exports){
 module.exports=require(32)
-},{"polyfill/polyfill-base.js":1745}],1743:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":2510}],2508:[function(require,module,exports){
 module.exports=require(14)
-},{}],1744:[function(require,module,exports){
+},{}],2509:[function(require,module,exports){
 module.exports=require(15)
-},{}],1745:[function(require,module,exports){
+},{}],2510:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1743,"./lib/window.console.js":1744}],1746:[function(require,module,exports){
+},{"./lib/matchesselector.js":2508,"./lib/window.console.js":2509}],2511:[function(require,module,exports){
 module.exports=require(61)
-},{"./lib/sizes.js":1747}],1747:[function(require,module,exports){
+},{"./lib/sizes.js":2512}],2512:[function(require,module,exports){
 module.exports=require(62)
-},{"js-ext/extra/hashmap.js":1748,"js-ext/lib/object.js":1749}],1748:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2513,"js-ext/lib/object.js":2514}],2513:[function(require,module,exports){
 module.exports=require(4)
-},{}],1749:[function(require,module,exports){
+},{}],2514:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1748,"polyfill/polyfill-base.js":1752}],1750:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2513,"polyfill/polyfill-base.js":2517}],2515:[function(require,module,exports){
 module.exports=require(14)
-},{}],1751:[function(require,module,exports){
+},{}],2516:[function(require,module,exports){
 module.exports=require(15)
-},{}],1752:[function(require,module,exports){
+},{}],2517:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1750,"./lib/window.console.js":1751}],1753:[function(require,module,exports){
+},{"./lib/matchesselector.js":2515,"./lib/window.console.js":2516}],2518:[function(require,module,exports){
 module.exports=require(68)
-},{"js-ext/extra/hashmap.js":1723,"js-ext/lib/object.js":1726,"js-ext/lib/string.js":1728,"polyfill":1739,"polyfill/extra/transition.js":1734,"polyfill/extra/vendorCSS.js":1736}],1754:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2488,"js-ext/lib/object.js":2491,"js-ext/lib/string.js":2493,"polyfill":2504,"polyfill/extra/transition.js":2499,"polyfill/extra/vendorCSS.js":2501}],2519:[function(require,module,exports){
 module.exports=require(69)
-},{"js-ext/extra/hashmap.js":1723,"js-ext/lib/object.js":1726,"polyfill":1739}],1755:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2488,"js-ext/lib/object.js":2491,"polyfill":2504}],2520:[function(require,module,exports){
 module.exports=require(70)
-},{"js-ext/extra/hashmap.js":1723,"js-ext/lib/object.js":1726,"js-ext/lib/string.js":1728,"polyfill":1739}],1756:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2488,"js-ext/lib/object.js":2491,"js-ext/lib/string.js":2493,"polyfill":2504}],2521:[function(require,module,exports){
 module.exports=require(71)
-},{"../css/element.css":1721,"./attribute-extractor.js":1753,"./element-array.js":1754,"./html-parser.js":1757,"./node-parser.js":1758,"./vdom-ns.js":1759,"./vnode.js":1760,"js-ext/extra/hashmap.js":1723,"js-ext/lib/object.js":1726,"js-ext/lib/promise.js":1727,"js-ext/lib/string.js":1728,"polyfill":1739,"polyfill/extra/transition.js":1734,"polyfill/extra/transitionend.js":1735,"polyfill/extra/vendorCSS.js":1736,"utils":1740,"window-ext":1746}],1757:[function(require,module,exports){
+},{"../css/element.css":2486,"./attribute-extractor.js":2518,"./element-array.js":2519,"./html-parser.js":2522,"./node-parser.js":2523,"./vdom-ns.js":2524,"./vnode.js":2525,"js-ext/extra/hashmap.js":2488,"js-ext/lib/object.js":2491,"js-ext/lib/promise.js":2492,"js-ext/lib/string.js":2493,"polyfill":2504,"polyfill/extra/transition.js":2499,"polyfill/extra/transitionend.js":2500,"polyfill/extra/vendorCSS.js":2501,"utils":2505,"window-ext":2511}],2522:[function(require,module,exports){
 module.exports=require(72)
-},{"./attribute-extractor.js":1753,"./vdom-ns.js":1759,"js-ext/extra/hashmap.js":1723,"js-ext/lib/object.js":1726,"polyfill":1739}],1758:[function(require,module,exports){
+},{"./attribute-extractor.js":2518,"./vdom-ns.js":2524,"js-ext/extra/hashmap.js":2488,"js-ext/lib/object.js":2491,"polyfill":2504}],2523:[function(require,module,exports){
 module.exports=require(73)
-},{"./attribute-extractor.js":1753,"./vdom-ns.js":1759,"./vnode.js":1760,"js-ext/extra/hashmap.js":1723,"js-ext/lib/object.js":1726,"polyfill":1739}],1759:[function(require,module,exports){
+},{"./attribute-extractor.js":2518,"./vdom-ns.js":2524,"./vnode.js":2525,"js-ext/extra/hashmap.js":2488,"js-ext/lib/object.js":2491,"polyfill":2504}],2524:[function(require,module,exports){
 module.exports=require(74)
-},{"js-ext/extra/hashmap.js":1723,"js-ext/lib/object.js":1726,"polyfill":1739}],1760:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2488,"js-ext/lib/object.js":2491,"polyfill":2504}],2525:[function(require,module,exports){
 module.exports=require(75)
-},{"./attribute-extractor.js":1753,"./html-parser.js":1757,"./vdom-ns.js":1759,"js-ext/extra/hashmap.js":1723,"js-ext/extra/lightmap.js":1724,"js-ext/lib/array.js":1725,"js-ext/lib/object.js":1726,"js-ext/lib/string.js":1728,"polyfill":1739,"utils/lib/timers.js":1742}],1761:[function(require,module,exports){
+},{"./attribute-extractor.js":2518,"./html-parser.js":2522,"./vdom-ns.js":2524,"js-ext/extra/hashmap.js":2488,"js-ext/extra/lightmap.js":2489,"js-ext/lib/array.js":2490,"js-ext/lib/object.js":2491,"js-ext/lib/string.js":2493,"polyfill":2504,"utils/lib/timers.js":2507}],2526:[function(require,module,exports){
 module.exports=require(76)
-},{"./partials/extend-document.js":1755,"./partials/extend-element.js":1756,"./partials/node-parser.js":1758,"js-ext/extra/hashmap.js":1723,"js-ext/lib/object.js":1726,"utils/lib/timers.js":1742}],1762:[function(require,module,exports){
+},{"./partials/extend-document.js":2520,"./partials/extend-element.js":2521,"./partials/node-parser.js":2523,"js-ext/extra/hashmap.js":2488,"js-ext/lib/object.js":2491,"utils/lib/timers.js":2507}],2527:[function(require,module,exports){
 module.exports=require(7)
-},{"js-ext/extra/hashmap.js":1765,"js-ext/lib/object.js":1766,"polyfill/polyfill-base.js":1773}],1763:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2530,"js-ext/lib/object.js":2531,"polyfill/polyfill-base.js":2538}],2528:[function(require,module,exports){
 module.exports=require(78)
-},{"js-ext/extra/hashmap.js":1765,"js-ext/lib/promise.js":1767}],1764:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2530,"js-ext/lib/promise.js":2532}],2529:[function(require,module,exports){
 module.exports=require(79)
-},{"../event-base.js":1762,"js-ext/extra/hashmap.js":1765}],1765:[function(require,module,exports){
+},{"../event-base.js":2527,"js-ext/extra/hashmap.js":2530}],2530:[function(require,module,exports){
 module.exports=require(4)
-},{}],1766:[function(require,module,exports){
+},{}],2531:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1765,"polyfill/polyfill-base.js":1770}],1767:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2530,"polyfill/polyfill-base.js":2535}],2532:[function(require,module,exports){
 module.exports=require(42)
-},{"polyfill":1770}],1768:[function(require,module,exports){
+},{"polyfill":2535}],2533:[function(require,module,exports){
 module.exports=require(14)
-},{}],1769:[function(require,module,exports){
+},{}],2534:[function(require,module,exports){
 module.exports=require(15)
-},{}],1770:[function(require,module,exports){
+},{}],2535:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1768,"./lib/window.console.js":1769}],1771:[function(require,module,exports){
+},{"./lib/matchesselector.js":2533,"./lib/window.console.js":2534}],2536:[function(require,module,exports){
 module.exports=require(14)
-},{}],1772:[function(require,module,exports){
+},{}],2537:[function(require,module,exports){
 module.exports=require(15)
-},{}],1773:[function(require,module,exports){
+},{}],2538:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1771,"./lib/window.console.js":1772}],1774:[function(require,module,exports){
+},{"./lib/matchesselector.js":2536,"./lib/window.console.js":2537}],2539:[function(require,module,exports){
 module.exports=require(11)
-},{"../lib/object.js":1776,"js-ext/extra/hashmap.js":1775,"polyfill/polyfill-base.js":1781}],1775:[function(require,module,exports){
+},{"../lib/object.js":2541,"js-ext/extra/hashmap.js":2540,"polyfill/polyfill-base.js":2546}],2540:[function(require,module,exports){
 module.exports=require(4)
-},{}],1776:[function(require,module,exports){
+},{}],2541:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1775,"polyfill/polyfill-base.js":1781}],1777:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2540,"polyfill/polyfill-base.js":2546}],2542:[function(require,module,exports){
 module.exports=require(42)
-},{"polyfill":1781}],1778:[function(require,module,exports){
+},{"polyfill":2546}],2543:[function(require,module,exports){
 module.exports=require(23)
-},{}],1779:[function(require,module,exports){
+},{}],2544:[function(require,module,exports){
 module.exports=require(14)
-},{}],1780:[function(require,module,exports){
+},{}],2545:[function(require,module,exports){
 module.exports=require(15)
-},{}],1781:[function(require,module,exports){
+},{}],2546:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1779,"./lib/window.console.js":1780}],1782:[function(require,module,exports){
+},{"./lib/matchesselector.js":2544,"./lib/window.console.js":2545}],2547:[function(require,module,exports){
 module.exports=require(14)
-},{}],1783:[function(require,module,exports){
+},{}],2548:[function(require,module,exports){
 module.exports=require(15)
-},{}],1784:[function(require,module,exports){
+},{}],2549:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1782,"./lib/window.console.js":1783}],1785:[function(require,module,exports){
+},{"./lib/matchesselector.js":2547,"./lib/window.console.js":2548}],2550:[function(require,module,exports){
 module.exports=require(32)
-},{"polyfill/polyfill-base.js":1788}],1786:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":2553}],2551:[function(require,module,exports){
 module.exports=require(14)
-},{}],1787:[function(require,module,exports){
+},{}],2552:[function(require,module,exports){
 module.exports=require(15)
-},{}],1788:[function(require,module,exports){
+},{}],2553:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1786,"./lib/window.console.js":1787}],1789:[function(require,module,exports){
+},{"./lib/matchesselector.js":2551,"./lib/window.console.js":2552}],2554:[function(require,module,exports){
 module.exports=require(36)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1790:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],2555:[function(require,module,exports){
 module.exports=require(11)
-},{"../lib/object.js":1794,"js-ext/extra/hashmap.js":1791,"polyfill/polyfill-base.js":1800}],1791:[function(require,module,exports){
+},{"../lib/object.js":2559,"js-ext/extra/hashmap.js":2556,"polyfill/polyfill-base.js":2565}],2556:[function(require,module,exports){
 module.exports=require(4)
-},{}],1792:[function(require,module,exports){
+},{}],2557:[function(require,module,exports){
 module.exports=require(39)
-},{"../lib/array.js":1793,"../lib/object.js":1794,"./classes.js":1790,"js-ext/extra/hashmap.js":1791,"polyfill/lib/weakmap.js":1798}],1793:[function(require,module,exports){
+},{"../lib/array.js":2558,"../lib/object.js":2559,"./classes.js":2555,"js-ext/extra/hashmap.js":2556,"polyfill/lib/weakmap.js":2563}],2558:[function(require,module,exports){
 module.exports=require(21)
-},{"polyfill/polyfill-base.js":1800}],1794:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":2565}],2559:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1791,"polyfill/polyfill-base.js":1800}],1795:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2556,"polyfill/polyfill-base.js":2565}],2560:[function(require,module,exports){
 module.exports=require(42)
-},{"polyfill":1800}],1796:[function(require,module,exports){
+},{"polyfill":2565}],2561:[function(require,module,exports){
 module.exports=require(23)
-},{}],1797:[function(require,module,exports){
+},{}],2562:[function(require,module,exports){
 module.exports=require(14)
-},{}],1798:[function(require,module,exports){
+},{}],2563:[function(require,module,exports){
 module.exports=require(45)
-},{}],1799:[function(require,module,exports){
+},{}],2564:[function(require,module,exports){
 module.exports=require(15)
-},{}],1800:[function(require,module,exports){
+},{}],2565:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1797,"./lib/window.console.js":1799}],1801:[function(require,module,exports){
+},{"./lib/matchesselector.js":2562,"./lib/window.console.js":2564}],2566:[function(require,module,exports){
 module.exports=require(48)
-},{}],1802:[function(require,module,exports){
+},{}],2567:[function(require,module,exports){
 module.exports=require(49)
-},{"../bin/local-hashmap.js":1801}],1803:[function(require,module,exports){
+},{"../bin/local-hashmap.js":2566}],2568:[function(require,module,exports){
 module.exports=require(50)
-},{"../bin/local-hashmap.js":1801}],1804:[function(require,module,exports){
+},{"../bin/local-hashmap.js":2566}],2569:[function(require,module,exports){
 module.exports=require(51)
-},{"../bin/local-hashmap.js":1801}],1805:[function(require,module,exports){
+},{"../bin/local-hashmap.js":2566}],2570:[function(require,module,exports){
 module.exports=require(14)
-},{}],1806:[function(require,module,exports){
+},{}],2571:[function(require,module,exports){
 module.exports=require(15)
-},{}],1807:[function(require,module,exports){
+},{}],2572:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1805,"./lib/window.console.js":1806}],1808:[function(require,module,exports){
+},{"./lib/matchesselector.js":2570,"./lib/window.console.js":2571}],2573:[function(require,module,exports){
 module.exports=require(30)
-},{"./lib/idgenerator.js":1809,"./lib/timers.js":1810}],1809:[function(require,module,exports){
+},{"./lib/idgenerator.js":2574,"./lib/timers.js":2575}],2574:[function(require,module,exports){
 module.exports=require(31)
-},{"js-ext/extra/hashmap.js":1791,"polyfill/polyfill-base.js":1813}],1810:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2556,"polyfill/polyfill-base.js":2578}],2575:[function(require,module,exports){
 module.exports=require(32)
-},{"polyfill/polyfill-base.js":1813}],1811:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":2578}],2576:[function(require,module,exports){
 module.exports=require(14)
-},{}],1812:[function(require,module,exports){
+},{}],2577:[function(require,module,exports){
 module.exports=require(15)
-},{}],1813:[function(require,module,exports){
+},{}],2578:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1811,"./lib/window.console.js":1812}],1814:[function(require,module,exports){
+},{"./lib/matchesselector.js":2576,"./lib/window.console.js":2577}],2579:[function(require,module,exports){
 module.exports=require(61)
-},{"./lib/sizes.js":1815}],1815:[function(require,module,exports){
+},{"./lib/sizes.js":2580}],2580:[function(require,module,exports){
 module.exports=require(62)
-},{"js-ext/extra/hashmap.js":1816,"js-ext/lib/object.js":1817}],1816:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2581,"js-ext/lib/object.js":2582}],2581:[function(require,module,exports){
 module.exports=require(4)
-},{}],1817:[function(require,module,exports){
+},{}],2582:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1816,"polyfill/polyfill-base.js":1820}],1818:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2581,"polyfill/polyfill-base.js":2585}],2583:[function(require,module,exports){
 module.exports=require(14)
-},{}],1819:[function(require,module,exports){
+},{}],2584:[function(require,module,exports){
 module.exports=require(15)
-},{}],1820:[function(require,module,exports){
+},{}],2585:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1818,"./lib/window.console.js":1819}],1821:[function(require,module,exports){
+},{"./lib/matchesselector.js":2583,"./lib/window.console.js":2584}],2586:[function(require,module,exports){
 module.exports=require(68)
-},{"js-ext/extra/hashmap.js":1791,"js-ext/lib/object.js":1794,"js-ext/lib/string.js":1796,"polyfill":1807,"polyfill/extra/transition.js":1802,"polyfill/extra/vendorCSS.js":1804}],1822:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2556,"js-ext/lib/object.js":2559,"js-ext/lib/string.js":2561,"polyfill":2572,"polyfill/extra/transition.js":2567,"polyfill/extra/vendorCSS.js":2569}],2587:[function(require,module,exports){
 module.exports=require(69)
-},{"js-ext/extra/hashmap.js":1791,"js-ext/lib/object.js":1794,"polyfill":1807}],1823:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2556,"js-ext/lib/object.js":2559,"polyfill":2572}],2588:[function(require,module,exports){
 module.exports=require(70)
-},{"js-ext/extra/hashmap.js":1791,"js-ext/lib/object.js":1794,"js-ext/lib/string.js":1796,"polyfill":1807}],1824:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2556,"js-ext/lib/object.js":2559,"js-ext/lib/string.js":2561,"polyfill":2572}],2589:[function(require,module,exports){
 module.exports=require(71)
-},{"../css/element.css":1789,"./attribute-extractor.js":1821,"./element-array.js":1822,"./html-parser.js":1825,"./node-parser.js":1826,"./vdom-ns.js":1827,"./vnode.js":1828,"js-ext/extra/hashmap.js":1791,"js-ext/lib/object.js":1794,"js-ext/lib/promise.js":1795,"js-ext/lib/string.js":1796,"polyfill":1807,"polyfill/extra/transition.js":1802,"polyfill/extra/transitionend.js":1803,"polyfill/extra/vendorCSS.js":1804,"utils":1808,"window-ext":1814}],1825:[function(require,module,exports){
+},{"../css/element.css":2554,"./attribute-extractor.js":2586,"./element-array.js":2587,"./html-parser.js":2590,"./node-parser.js":2591,"./vdom-ns.js":2592,"./vnode.js":2593,"js-ext/extra/hashmap.js":2556,"js-ext/lib/object.js":2559,"js-ext/lib/promise.js":2560,"js-ext/lib/string.js":2561,"polyfill":2572,"polyfill/extra/transition.js":2567,"polyfill/extra/transitionend.js":2568,"polyfill/extra/vendorCSS.js":2569,"utils":2573,"window-ext":2579}],2590:[function(require,module,exports){
 module.exports=require(72)
-},{"./attribute-extractor.js":1821,"./vdom-ns.js":1827,"js-ext/extra/hashmap.js":1791,"js-ext/lib/object.js":1794,"polyfill":1807}],1826:[function(require,module,exports){
+},{"./attribute-extractor.js":2586,"./vdom-ns.js":2592,"js-ext/extra/hashmap.js":2556,"js-ext/lib/object.js":2559,"polyfill":2572}],2591:[function(require,module,exports){
 module.exports=require(73)
-},{"./attribute-extractor.js":1821,"./vdom-ns.js":1827,"./vnode.js":1828,"js-ext/extra/hashmap.js":1791,"js-ext/lib/object.js":1794,"polyfill":1807}],1827:[function(require,module,exports){
+},{"./attribute-extractor.js":2586,"./vdom-ns.js":2592,"./vnode.js":2593,"js-ext/extra/hashmap.js":2556,"js-ext/lib/object.js":2559,"polyfill":2572}],2592:[function(require,module,exports){
 module.exports=require(74)
-},{"js-ext/extra/hashmap.js":1791,"js-ext/lib/object.js":1794,"polyfill":1807}],1828:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2556,"js-ext/lib/object.js":2559,"polyfill":2572}],2593:[function(require,module,exports){
 module.exports=require(75)
-},{"./attribute-extractor.js":1821,"./html-parser.js":1825,"./vdom-ns.js":1827,"js-ext/extra/hashmap.js":1791,"js-ext/extra/lightmap.js":1792,"js-ext/lib/array.js":1793,"js-ext/lib/object.js":1794,"js-ext/lib/string.js":1796,"polyfill":1807,"utils/lib/timers.js":1810}],1829:[function(require,module,exports){
+},{"./attribute-extractor.js":2586,"./html-parser.js":2590,"./vdom-ns.js":2592,"js-ext/extra/hashmap.js":2556,"js-ext/extra/lightmap.js":2557,"js-ext/lib/array.js":2558,"js-ext/lib/object.js":2559,"js-ext/lib/string.js":2561,"polyfill":2572,"utils/lib/timers.js":2575}],2594:[function(require,module,exports){
 module.exports=require(76)
-},{"./partials/extend-document.js":1823,"./partials/extend-element.js":1824,"./partials/node-parser.js":1826,"js-ext/extra/hashmap.js":1791,"js-ext/lib/object.js":1794,"utils/lib/timers.js":1810}],1830:[function(require,module,exports){
+},{"./partials/extend-document.js":2588,"./partials/extend-element.js":2589,"./partials/node-parser.js":2591,"js-ext/extra/hashmap.js":2556,"js-ext/lib/object.js":2559,"utils/lib/timers.js":2575}],2595:[function(require,module,exports){
 module.exports=require(14)
-},{}],1831:[function(require,module,exports){
+},{}],2596:[function(require,module,exports){
 module.exports=require(15)
-},{}],1832:[function(require,module,exports){
+},{}],2597:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1830,"./lib/window.console.js":1831}],1833:[function(require,module,exports){
+},{"./lib/matchesselector.js":2595,"./lib/window.console.js":2596}],2598:[function(require,module,exports){
 module.exports=require(30)
-},{"./lib/idgenerator.js":1834,"./lib/timers.js":1835}],1834:[function(require,module,exports){
+},{"./lib/idgenerator.js":2599,"./lib/timers.js":2600}],2599:[function(require,module,exports){
 module.exports=require(31)
-},{"js-ext/extra/hashmap.js":1685,"polyfill/polyfill-base.js":1838}],1835:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2450,"polyfill/polyfill-base.js":2603}],2600:[function(require,module,exports){
 module.exports=require(32)
-},{"polyfill/polyfill-base.js":1838}],1836:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":2603}],2601:[function(require,module,exports){
 module.exports=require(14)
-},{}],1837:[function(require,module,exports){
+},{}],2602:[function(require,module,exports){
 module.exports=require(15)
-},{}],1838:[function(require,module,exports){
+},{}],2603:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1836,"./lib/window.console.js":1837}],1839:[function(require,module,exports){
+},{"./lib/matchesselector.js":2601,"./lib/window.console.js":2602}],2604:[function(require,module,exports){
 "use strict";
 
 require('js-ext/lib/object.js');
@@ -28207,149 +30346,149 @@ module.exports = function (window) {
 
     return Scrollable;
 };
-},{"./css/scrollable.css":1321,"drag":1323,"event-mobile":1606,"js-ext/extra/hashmap.js":1685,"js-ext/lib/object.js":1686,"node-plugin":1690,"polyfill":1832,"utils":1833,"window-ext":1896}],1840:[function(require,module,exports){
+},{"./css/scrollable.css":2086,"drag":2088,"event-mobile":2371,"js-ext/extra/hashmap.js":2450,"js-ext/lib/object.js":2451,"node-plugin":2455,"polyfill":2597,"utils":2598,"window-ext":2661}],2605:[function(require,module,exports){
 module.exports=require(4)
-},{}],1841:[function(require,module,exports){
+},{}],2606:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1840,"polyfill/polyfill-base.js":1844}],1842:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2605,"polyfill/polyfill-base.js":2609}],2607:[function(require,module,exports){
 module.exports=require(14)
-},{}],1843:[function(require,module,exports){
+},{}],2608:[function(require,module,exports){
 module.exports=require(15)
-},{}],1844:[function(require,module,exports){
+},{}],2609:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1842,"./lib/window.console.js":1843}],1845:[function(require,module,exports){
+},{"./lib/matchesselector.js":2607,"./lib/window.console.js":2608}],2610:[function(require,module,exports){
 module.exports=require(14)
-},{}],1846:[function(require,module,exports){
+},{}],2611:[function(require,module,exports){
 module.exports=require(15)
-},{}],1847:[function(require,module,exports){
+},{}],2612:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1845,"./lib/window.console.js":1846}],1848:[function(require,module,exports){
+},{"./lib/matchesselector.js":2610,"./lib/window.console.js":2611}],2613:[function(require,module,exports){
 module.exports=require(386)
-},{"js-ext/extra/hashmap.js":1840,"js-ext/lib/object.js":1841,"polyfill":1847}],1849:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2605,"js-ext/lib/object.js":2606,"polyfill":2612}],2614:[function(require,module,exports){
 module.exports=require(30)
-},{"./lib/idgenerator.js":1850,"./lib/timers.js":1851}],1850:[function(require,module,exports){
+},{"./lib/idgenerator.js":2615,"./lib/timers.js":2616}],2615:[function(require,module,exports){
 module.exports=require(31)
-},{"js-ext/extra/hashmap.js":1152,"polyfill/polyfill-base.js":1854}],1851:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":1150,"polyfill/polyfill-base.js":2619}],2616:[function(require,module,exports){
 module.exports=require(32)
-},{"polyfill/polyfill-base.js":1854}],1852:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":2619}],2617:[function(require,module,exports){
 module.exports=require(14)
-},{}],1853:[function(require,module,exports){
+},{}],2618:[function(require,module,exports){
 module.exports=require(15)
-},{}],1854:[function(require,module,exports){
+},{}],2619:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1852,"./lib/window.console.js":1853}],1855:[function(require,module,exports){
+},{"./lib/matchesselector.js":2617,"./lib/window.console.js":2618}],2620:[function(require,module,exports){
 module.exports=require(36)
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1856:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],2621:[function(require,module,exports){
 module.exports=require(11)
-},{"../lib/object.js":1860,"js-ext/extra/hashmap.js":1857,"polyfill/polyfill-base.js":1866}],1857:[function(require,module,exports){
+},{"../lib/object.js":2625,"js-ext/extra/hashmap.js":2622,"polyfill/polyfill-base.js":2631}],2622:[function(require,module,exports){
 module.exports=require(4)
-},{}],1858:[function(require,module,exports){
+},{}],2623:[function(require,module,exports){
 module.exports=require(39)
-},{"../lib/array.js":1859,"../lib/object.js":1860,"./classes.js":1856,"js-ext/extra/hashmap.js":1857,"polyfill/lib/weakmap.js":1864}],1859:[function(require,module,exports){
+},{"../lib/array.js":2624,"../lib/object.js":2625,"./classes.js":2621,"js-ext/extra/hashmap.js":2622,"polyfill/lib/weakmap.js":2629}],2624:[function(require,module,exports){
 module.exports=require(21)
-},{"polyfill/polyfill-base.js":1866}],1860:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":2631}],2625:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1857,"polyfill/polyfill-base.js":1866}],1861:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2622,"polyfill/polyfill-base.js":2631}],2626:[function(require,module,exports){
 module.exports=require(42)
-},{"polyfill":1866}],1862:[function(require,module,exports){
+},{"polyfill":2631}],2627:[function(require,module,exports){
 module.exports=require(23)
-},{}],1863:[function(require,module,exports){
+},{}],2628:[function(require,module,exports){
 module.exports=require(14)
-},{}],1864:[function(require,module,exports){
+},{}],2629:[function(require,module,exports){
 module.exports=require(45)
-},{}],1865:[function(require,module,exports){
+},{}],2630:[function(require,module,exports){
 module.exports=require(15)
-},{}],1866:[function(require,module,exports){
+},{}],2631:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1863,"./lib/window.console.js":1865}],1867:[function(require,module,exports){
+},{"./lib/matchesselector.js":2628,"./lib/window.console.js":2630}],2632:[function(require,module,exports){
 module.exports=require(48)
-},{}],1868:[function(require,module,exports){
+},{}],2633:[function(require,module,exports){
 module.exports=require(49)
-},{"../bin/local-hashmap.js":1867}],1869:[function(require,module,exports){
+},{"../bin/local-hashmap.js":2632}],2634:[function(require,module,exports){
 module.exports=require(50)
-},{"../bin/local-hashmap.js":1867}],1870:[function(require,module,exports){
+},{"../bin/local-hashmap.js":2632}],2635:[function(require,module,exports){
 module.exports=require(51)
-},{"../bin/local-hashmap.js":1867}],1871:[function(require,module,exports){
+},{"../bin/local-hashmap.js":2632}],2636:[function(require,module,exports){
 module.exports=require(14)
-},{}],1872:[function(require,module,exports){
+},{}],2637:[function(require,module,exports){
 module.exports=require(15)
-},{}],1873:[function(require,module,exports){
+},{}],2638:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1871,"./lib/window.console.js":1872}],1874:[function(require,module,exports){
+},{"./lib/matchesselector.js":2636,"./lib/window.console.js":2637}],2639:[function(require,module,exports){
 module.exports=require(30)
-},{"./lib/idgenerator.js":1875,"./lib/timers.js":1876}],1875:[function(require,module,exports){
+},{"./lib/idgenerator.js":2640,"./lib/timers.js":2641}],2640:[function(require,module,exports){
 module.exports=require(31)
-},{"js-ext/extra/hashmap.js":1857,"polyfill/polyfill-base.js":1879}],1876:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2622,"polyfill/polyfill-base.js":2644}],2641:[function(require,module,exports){
 module.exports=require(32)
-},{"polyfill/polyfill-base.js":1879}],1877:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":2644}],2642:[function(require,module,exports){
 module.exports=require(14)
-},{}],1878:[function(require,module,exports){
+},{}],2643:[function(require,module,exports){
 module.exports=require(15)
-},{}],1879:[function(require,module,exports){
+},{}],2644:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1877,"./lib/window.console.js":1878}],1880:[function(require,module,exports){
+},{"./lib/matchesselector.js":2642,"./lib/window.console.js":2643}],2645:[function(require,module,exports){
 module.exports=require(61)
-},{"./lib/sizes.js":1881}],1881:[function(require,module,exports){
+},{"./lib/sizes.js":2646}],2646:[function(require,module,exports){
 module.exports=require(62)
-},{"js-ext/extra/hashmap.js":1882,"js-ext/lib/object.js":1883}],1882:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2647,"js-ext/lib/object.js":2648}],2647:[function(require,module,exports){
 module.exports=require(4)
-},{}],1883:[function(require,module,exports){
+},{}],2648:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1882,"polyfill/polyfill-base.js":1886}],1884:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2647,"polyfill/polyfill-base.js":2651}],2649:[function(require,module,exports){
 module.exports=require(14)
-},{}],1885:[function(require,module,exports){
+},{}],2650:[function(require,module,exports){
 module.exports=require(15)
-},{}],1886:[function(require,module,exports){
+},{}],2651:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1884,"./lib/window.console.js":1885}],1887:[function(require,module,exports){
+},{"./lib/matchesselector.js":2649,"./lib/window.console.js":2650}],2652:[function(require,module,exports){
 module.exports=require(68)
-},{"js-ext/extra/hashmap.js":1857,"js-ext/lib/object.js":1860,"js-ext/lib/string.js":1862,"polyfill":1873,"polyfill/extra/transition.js":1868,"polyfill/extra/vendorCSS.js":1870}],1888:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2622,"js-ext/lib/object.js":2625,"js-ext/lib/string.js":2627,"polyfill":2638,"polyfill/extra/transition.js":2633,"polyfill/extra/vendorCSS.js":2635}],2653:[function(require,module,exports){
 module.exports=require(69)
-},{"js-ext/extra/hashmap.js":1857,"js-ext/lib/object.js":1860,"polyfill":1873}],1889:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2622,"js-ext/lib/object.js":2625,"polyfill":2638}],2654:[function(require,module,exports){
 module.exports=require(70)
-},{"js-ext/extra/hashmap.js":1857,"js-ext/lib/object.js":1860,"js-ext/lib/string.js":1862,"polyfill":1873}],1890:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2622,"js-ext/lib/object.js":2625,"js-ext/lib/string.js":2627,"polyfill":2638}],2655:[function(require,module,exports){
 module.exports=require(71)
-},{"../css/element.css":1855,"./attribute-extractor.js":1887,"./element-array.js":1888,"./html-parser.js":1891,"./node-parser.js":1892,"./vdom-ns.js":1893,"./vnode.js":1894,"js-ext/extra/hashmap.js":1857,"js-ext/lib/object.js":1860,"js-ext/lib/promise.js":1861,"js-ext/lib/string.js":1862,"polyfill":1873,"polyfill/extra/transition.js":1868,"polyfill/extra/transitionend.js":1869,"polyfill/extra/vendorCSS.js":1870,"utils":1874,"window-ext":1880}],1891:[function(require,module,exports){
+},{"../css/element.css":2620,"./attribute-extractor.js":2652,"./element-array.js":2653,"./html-parser.js":2656,"./node-parser.js":2657,"./vdom-ns.js":2658,"./vnode.js":2659,"js-ext/extra/hashmap.js":2622,"js-ext/lib/object.js":2625,"js-ext/lib/promise.js":2626,"js-ext/lib/string.js":2627,"polyfill":2638,"polyfill/extra/transition.js":2633,"polyfill/extra/transitionend.js":2634,"polyfill/extra/vendorCSS.js":2635,"utils":2639,"window-ext":2645}],2656:[function(require,module,exports){
 module.exports=require(72)
-},{"./attribute-extractor.js":1887,"./vdom-ns.js":1893,"js-ext/extra/hashmap.js":1857,"js-ext/lib/object.js":1860,"polyfill":1873}],1892:[function(require,module,exports){
+},{"./attribute-extractor.js":2652,"./vdom-ns.js":2658,"js-ext/extra/hashmap.js":2622,"js-ext/lib/object.js":2625,"polyfill":2638}],2657:[function(require,module,exports){
 module.exports=require(73)
-},{"./attribute-extractor.js":1887,"./vdom-ns.js":1893,"./vnode.js":1894,"js-ext/extra/hashmap.js":1857,"js-ext/lib/object.js":1860,"polyfill":1873}],1893:[function(require,module,exports){
+},{"./attribute-extractor.js":2652,"./vdom-ns.js":2658,"./vnode.js":2659,"js-ext/extra/hashmap.js":2622,"js-ext/lib/object.js":2625,"polyfill":2638}],2658:[function(require,module,exports){
 module.exports=require(74)
-},{"js-ext/extra/hashmap.js":1857,"js-ext/lib/object.js":1860,"polyfill":1873}],1894:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2622,"js-ext/lib/object.js":2625,"polyfill":2638}],2659:[function(require,module,exports){
 module.exports=require(75)
-},{"./attribute-extractor.js":1887,"./html-parser.js":1891,"./vdom-ns.js":1893,"js-ext/extra/hashmap.js":1857,"js-ext/extra/lightmap.js":1858,"js-ext/lib/array.js":1859,"js-ext/lib/object.js":1860,"js-ext/lib/string.js":1862,"polyfill":1873,"utils/lib/timers.js":1876}],1895:[function(require,module,exports){
+},{"./attribute-extractor.js":2652,"./html-parser.js":2656,"./vdom-ns.js":2658,"js-ext/extra/hashmap.js":2622,"js-ext/extra/lightmap.js":2623,"js-ext/lib/array.js":2624,"js-ext/lib/object.js":2625,"js-ext/lib/string.js":2627,"polyfill":2638,"utils/lib/timers.js":2641}],2660:[function(require,module,exports){
 module.exports=require(76)
-},{"./partials/extend-document.js":1889,"./partials/extend-element.js":1890,"./partials/node-parser.js":1892,"js-ext/extra/hashmap.js":1857,"js-ext/lib/object.js":1860,"utils/lib/timers.js":1876}],1896:[function(require,module,exports){
+},{"./partials/extend-document.js":2654,"./partials/extend-element.js":2655,"./partials/node-parser.js":2657,"js-ext/extra/hashmap.js":2622,"js-ext/lib/object.js":2625,"utils/lib/timers.js":2641}],2661:[function(require,module,exports){
 module.exports=require(61)
-},{"./lib/sizes.js":1897}],1897:[function(require,module,exports){
+},{"./lib/sizes.js":2662}],2662:[function(require,module,exports){
 module.exports=require(62)
-},{"js-ext/extra/hashmap.js":1898,"js-ext/lib/object.js":1899}],1898:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2663,"js-ext/lib/object.js":2664}],2663:[function(require,module,exports){
 module.exports=require(4)
-},{}],1899:[function(require,module,exports){
+},{}],2664:[function(require,module,exports){
 module.exports=require(13)
-},{"js-ext/extra/hashmap.js":1898,"polyfill/polyfill-base.js":1902}],1900:[function(require,module,exports){
+},{"js-ext/extra/hashmap.js":2663,"polyfill/polyfill-base.js":2667}],2665:[function(require,module,exports){
 module.exports=require(14)
-},{}],1901:[function(require,module,exports){
+},{}],2666:[function(require,module,exports){
 module.exports=require(15)
-},{}],1902:[function(require,module,exports){
+},{}],2667:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1900,"./lib/window.console.js":1901}],1903:[function(require,module,exports){
-module.exports=require(1306)
-},{"_process":1945,"buffer":1934,"child_process":1933,"fs":1933,"http":1938,"https":1942,"url":1963,"xmldom":1911}],1904:[function(require,module,exports){
-module.exports=require(1307)
-},{"./lib/XMLHttpRequest.js":1903,"js-ext/extra/hashmap.js":1905,"js-ext/lib/array.js":1906,"polyfill/lib/window.console.js":1910,"url":1963,"xmldom":1911}],1905:[function(require,module,exports){
+},{"./lib/matchesselector.js":2665,"./lib/window.console.js":2666}],2668:[function(require,module,exports){
+module.exports=require(1304)
+},{"_process":2710,"buffer":2699,"child_process":2698,"fs":2698,"http":2703,"https":2707,"url":2728,"xmldom":2676}],2669:[function(require,module,exports){
+module.exports=require(1305)
+},{"./lib/XMLHttpRequest.js":2668,"js-ext/extra/hashmap.js":2670,"js-ext/lib/array.js":2671,"polyfill/lib/window.console.js":2675,"url":2728,"xmldom":2676}],2670:[function(require,module,exports){
 module.exports=require(4)
-},{}],1906:[function(require,module,exports){
+},{}],2671:[function(require,module,exports){
 module.exports=require(21)
-},{"polyfill/polyfill-base.js":1909}],1907:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":2674}],2672:[function(require,module,exports){
 module.exports=require(14)
-},{}],1908:[function(require,module,exports){
+},{}],2673:[function(require,module,exports){
 module.exports=require(15)
-},{}],1909:[function(require,module,exports){
+},{}],2674:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":1907,"./lib/window.console.js":1908}],1910:[function(require,module,exports){
+},{"./lib/matchesselector.js":2672,"./lib/window.console.js":2673}],2675:[function(require,module,exports){
 module.exports=require(15)
-},{}],1911:[function(require,module,exports){
+},{}],2676:[function(require,module,exports){
 function DOMParser(options){
 	this.options = options ||{locator:{}};
 	
@@ -28606,7 +30745,7 @@ if(typeof require == 'function'){
 	exports.DOMParser = DOMParser;
 }
 
-},{"./dom":1912,"./sax":1913}],1912:[function(require,module,exports){
+},{"./dom":2677,"./sax":2678}],2677:[function(require,module,exports){
 /*
  * DOM Level 2
  * Object DOMException
@@ -29746,7 +31885,7 @@ if(typeof require == 'function'){
 	exports.XMLSerializer = XMLSerializer;
 }
 
-},{}],1913:[function(require,module,exports){
+},{}],2678:[function(require,module,exports){
 //[4]   	NameStartChar	   ::=   	":" | [A-Z] | "_" | [a-z] | [#xC0-#xD6] | [#xD8-#xF6] | [#xF8-#x2FF] | [#x370-#x37D] | [#x37F-#x1FFF] | [#x200C-#x200D] | [#x2070-#x218F] | [#x2C00-#x2FEF] | [#x3001-#xD7FF] | [#xF900-#xFDCF] | [#xFDF0-#xFFFD] | [#x10000-#xEFFFF]
 //[4a]   	NameChar	   ::=   	NameStartChar | "-" | "." | [0-9] | #xB7 | [#x0300-#x036F] | [#x203F-#x2040]
 //[5]   	Name	   ::=   	NameStartChar (NameChar)*
@@ -30332,7 +32471,7 @@ if(typeof require == 'function'){
 }
 
 
-},{}],1914:[function(require,module,exports){
+},{}],2679:[function(require,module,exports){
 (function (process,global){
 /*
 Copyright 2013 Yahoo! Inc. All rights reserved.
@@ -30948,9 +33087,9 @@ http://yuilibrary.com/license/
 
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":1945}],1915:[function(require,module,exports){
+},{"_process":2710}],2680:[function(require,module,exports){
 var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-button;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-button:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-button:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\ni-button {\n    margin: 0;\n    display: inline-block;\n    *display: inline; /*IE 6/7*/\n    zoom: 1;\n    position: relative;\n    vertical-align: middle;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-button.i-primary >button,\ni-button.i-focussed >button {\n    background-color: rgb(0, 120, 231);\n    color: #fff;\n}\n\n/*csslint outline-none:false*/\n\ni-button >button {\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    -khtml-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    position: relative;\n    padding: 0.5em 1em;\n    color: inherit; /* 1 */\n    font: inherit; /* 2 */\n    margin: 0; /* 3 */\n    overflow: visible;\n    text-transform: none;\n    -webkit-appearance: button; /* 2 */\n    line-height: normal;\n    white-space: nowrap;\n    vertical-align: baseline;\n    text-align: center;\n    cursor: pointer;\n    -webkit-user-drag: none;\n    -webkit-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    font-family: inherit;\n    font-size: 100%;\n    color: #444; /* rgba not supported (IE 8) */\n    color: rgba(0, 0, 0, 0.80); /* rgba supported */\n    border: 1px solid #999;  /*IE 6/7/8*/\n    border: none rgba(0, 0, 0, 0);  /*IE9 + everything else*/\n    background-color: #E6E6E6;\n    text-decoration: none;\n    border-radius: 2px;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n}\n\n\ni-button.i-hover >button,\ni-button >button:hover,\ni-button >button:focus {\n    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#00000000', endColorstr='#1a000000',GradientType=0);\n    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(transparent), color-stop(40%, rgba(0,0,0, 0.05)), to(rgba(0,0,0, 0.10)));\n    background-image: -webkit-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: -moz-linear-gradient(top, rgba(0,0,0, 0.05) 0%, rgba(0,0,0, 0.10));\n    background-image: -o-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n}\n\ni-button >button:focus {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.6) inset;\n}\n\ni-button.i-hover >button,\ni-button >button:hover,\ni-button.i-hover >button:focus,\ni-button >button:hover:focus {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.7) inset;\n}\n\ni-button >button:focus {\n    outline: 0;\n}\n\ni-button.i-active.i-hover >button,\ni-button.i-active >button:hover,\ni-button.i-active.i-hover >button:focus,\ni-button.i-active >button:hover:focus,\ni-button.i-hover >button.pure-button-active,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-button >button.pure-button-active:hover,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-button.i-hover >button.pure-button-active:focus,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-button >button.pure-button-active:hover:focus,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-button >button.pure-button-active,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-button >button.pure-button-active:focus,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-button.i-hover >button:active,\ni-button >button:hover:active,\ni-button.i-hover >button:focus:active,\ni-button >button:hover:focus:active {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.8) inset, 0 0 6px rgba(0,0,0, 0.4) inset;\n}\n\ni-button.i-disabled >button,\ni-button[disabled=\"true\"] >button,\ni-button.i-disabled >button:active,\ni-button[disabled=\"true\"] >button:active,\ni-button.i-disabled >button.pure-button-active, /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-button[disabled=\"true\"] >button.pure-button-active,\ni-button.i-disabled.i-active >button,\ni-button.i-active[disabled=\"true\"] >button,\ni-button.i-disabled >button:focus,\ni-button[disabled=\"true\"] >button:focus,\ni-button.i-disabled.focussed >button,\ni-button.focussed[disabled=\"true\"] >button,\ni-button.i-disabled >button:hover,\ni-button[disabled=\"true\"] >button:hover {\n    border: none;\n    background-image: none;\n    filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);\n    filter: alpha(opacity=60);\n    -khtml-opacity: 0.60;\n    -moz-opacity: 0.60;\n    opacity: 0.60;\n    cursor: not-allowed;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n    cursor: default;\n}\n\ni-button.i-rounded >button {\n    border-radius: 0.3em;\n}\n\ni-button.i-heavyrounded >button {\n    border-radius: 0.5em;\n}\n\ni-button.i-oval >button {\n    border-radius: 50%;\n}\n\ni-button.i-halfoval >button {\n    border-radius: 25%;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1916:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],2681:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 
@@ -31041,9 +33180,9 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 };
 
-},{"./css/i-button.css":1915,"i-formelement":1921,"itags.core":1932}],1917:[function(require,module,exports){
+},{"./css/i-button.css":2680,"i-formelement":2686,"itags.core":2697}],2682:[function(require,module,exports){
 var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-checkbox;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-checkbox:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-checkbox:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\ni-checkbox {\n    font-size: 0.9em;\n    margin: 0;\n    padding: 0;\n    display: inline-block;\n    position: relative;\n    vertical-align: middle;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    width: 4.5em;\n    height: 1.9em;\n}\n\ni-checkbox span {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-checkbox >span,\ni-checkbox >span >span,\ni-checkbox >span >span >span,\ni-checkbox >span >span >span >span {\n    display: block;\n}\n\n/* the first span is the focussable span */\ni-checkbox >span {\n    z-index: 1;\n    overflow: hidden;\n    border: 1px solid #CCC;\n    width: 100%;\n    height: 100%;\n}\n\ni-checkbox >span:focus .i-on,\ni-checkbox >span:focus .i-off {\n    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#00000000', endColorstr='#1a000000',GradientType=0);\n    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(transparent), color-stop(40%, rgba(0,0,0, 0.05)), to(rgba(0,0,0, 0.10)));\n    background-image: -webkit-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: -moz-linear-gradient(top, rgba(0,0,0, 0.05) 0%, rgba(0,0,0, 0.10));\n    background-image: -o-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.3) inset;\n}\n\ni-checkbox >span:focus .i-btn {\n    border: solid 1px #888;\n    box-shadow: inset 0 0.17em 0.5em rgba(0, 0, 0, 0.06);\n}\n\ni-checkbox >span:focus .i-btn.dd-dragging {\n    cursor: default;\n}\n\ni-checkbox .i-constrain {\n    height: 100%;\n    padding: 0;\n    margin: 0;\n    position: relative;\n    top: 0; /* left will be calculated by i-checkbox */\n}\n\ni-checkbox .i-container {\n    position: relative;\n    cursor: pointer;\n    padding: 0;\n    margin: 0;\n    height: 100%;\n    left: 0;\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    -khtml-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    -webkit-transition: left 0.25s;\n    -moz-transition: left 0.25s;\n    -ms-transition: left 0.25s;\n    -o-transition: left 0.25s;\n    transition: left 0.25s;\n}\n\ni-checkbox .i-on {\n    height: 100%;\n    background-color: #0078E7;\n    color: #FFF;\n    position: static;\n    text-align: center;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    padding-top: 2px;\n    float: left;\n    box-shadow: inset 0 0.3em 0.5em rgba(0, 0, 0, 0.18);\n}\n\ni-checkbox .i-off {\n    height: 100%;\n    background-color: #FFF;\n    color: #444;\n    position: static;\n    text-align: center;\n    padding-top: 2px;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    white-space: nowrap;\n    float: left;\n    box-shadow: inset 0 0.3em 0.5em rgba(0, 0, 0, 0.18);\n}\n\ni-checkbox .i-btn {\n    position: relative;\n    z-index: 1;\n    border-radius: 100%;\n    float: left;\n    box-shadow: inset 0 0.17em 0.5em rgba(0, 0, 0, 0.18);\n    background-color: #fff;\n    border: solid 1px #AAA;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1918:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],2683:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 
@@ -31280,9 +33419,9 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 };
 
-},{"./css/i-checkbox.css":1917,"i-formelement":1921,"itags.core":1932}],1919:[function(require,module,exports){
+},{"./css/i-checkbox.css":2682,"i-formelement":2686,"itags.core":2697}],2684:[function(require,module,exports){
 var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-select;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* =================================== */\n/* set invisiblity when not rendered   */\n/* =================================== */\ni-form.hide-children,\ni-form:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n/* ================================= */\n\n/*!\n * Most styles are from Pure v0.5.0\n * Licensed under the BSD License.\n*/\n\ni-form {\n    margin: 0;\n    padding: 0.25em 0.5em;\n    display: block;\n}\n\ni-form[active-labels=\"true\"] i-label {\n    cursor: default;\n}\n\ni-form fieldset {\n    margin: 0 0 0.8em;\n    padding: 0.75em 0;\n    border: 1px solid #C0C0C0;\n    border-radius: 2px;\n    background-color: rgba(0, 0, 0, 0.03);\n    width: 100%;\n    display: block;\n}\n\ni-form fieldset i-button {\n    margin-top: 0.75em;\n    margin-right: 0.25em;\n}\n\ni-form legend {\n    display: block;\n    width: 100%;\n    padding: 0.3em 0;\n    margin-bottom: 1em;\n    color: #333;\n    border-bottom: 1px solid #e5e5e5;\n}\n\ni-form div.i-formrow {\n    margin: 0;\n    padding: 0;\n    display: inline-block;\n}\n\n/* ======================================================== */\n/* Grouped Inputs */\ni-form.i-group:not(.i-aligned) i-label,\ni-form:not(.i-aligned) .i-group i-label {\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\ni-form.i-group [itag-formelement=\"true\"]:not(i-button),\ni-form .i-group [itag-formelement=\"true\"]:not(i-button) {\n    display: block;\n}\ni-form.i-group i-input input,\ni-form .i-group i-input input {\n    border-radius: 0;\n    position: relative;\n    top: -1px;\n}\ni-form.i-group div.i-formrow:first-child i-input input,\ni-form .i-group div.i-formrow:first-child i-input input {\n    top: 1px;\n    border-radius: 4px 4px 0 0;\n}\ni-form.i-group div.i-formrow:last-child i-input input,\ni-form .i-group div.i-formrow:last-child i-input input {\n    top: -2px;\n    border-radius: 0 0 4px 4px;\n}\ni-form.i-group div.i-formrow:first-child i-label,\ni-form .i-group div.i-formrow:first-child i-label {\n    margin-top: 1px;\n}\ni-form.i-group div.i-formrow:last-child i-label,\ni-form .i-group div.i-formrow:last-child i-label {\n    margin-top: -1px; /* not -2px: that would disturb appearance too much */;\n}\ni-form.i-group i-input input:focus,\ni-form .i-group i-input input:focus {\n    z-index: 2;\n}\ni-form.i-group i-button,\ni-form.i-group i-select,\ni-form .i-group i-button,\ni-form .i-group i-select {\n    margin: 0.35em 0;\n}\n/* ======================================================== */\n\n\n\n/* ======================================================== */\n/* Stacked */\ni-form.i-stacked div.i-formrow {\n    display: block;\n}\ni-form.i-stacked div.i-formrow.itag-noblock i-label {\n    display: inline-block;\n    margin-right: 1em;\n}\ni-form.i-stacked [itag-formelement=\"true\"]:not(i-button) {\n    display: block;\n    margin: 0.25em 0;\n}\ni-form.i-stacked div.i-formrow.itag-noblock [itag-formelement=\"true\"]:not(i-button) {\n    display: inline-block;\n    margin: 0;\n}\ni-form.i-stacked i-label {\n    display: block;\n    margin: 1em 0 0.4em 0.15em;\n}\ni-form.i-stacked fieldset div.i-formrow:first-child i-label {\n    margin-top: 0;\n}\ni-form.i-stacked .i-group i-input,\ni-form.i-aligned .i-group i-input,\ni-form .i-stacked .i-group i-input,\ni-form .i-aligned .i-group i-input {\n    margin: 0;\n}\n/* ======================================================== */\n\n\n\n/* ======================================================== */\n/* Aligned */\ni-form.i-aligned div.i-formrow {\n    display: block;\n}\ni-form.i-aligned i-label,\ni-form.i-aligned i-button,\ni-form.i-aligned [itag-formelement=\"true\"]:not(i-button) {\n    display: inline-block;\n    *display: inline;\n    *zoom: 1;\n    vertical-align: middle;\n}\ni-form.i-aligned div.i-formrow {\n    margin-bottom: 1em;\n}\ni-form.i-aligned .i-group div.i-formrow,\ni-form .i-aligned .i-group div.i-formrow {\n    margin-bottom: 0;\n}\ni-form.i-aligned div.i-formrow:last-child {\n    margin-bottom: 0;\n}\ni-form.i-aligned i-label {\n    text-align: right;\n    display: inline-block;\n    vertical-align: middle;\n    width: 10em;\n    margin: 0 1em 0 0;\n}\ni-form.i-aligned i-textarea {\n    vertical-align: top;\n}\ni-form.i-aligned.i-group,\ni-form.i-aligned .i-group {\n    margin-bottom: 0.8em;\n}\ni-form.i-aligned.i-group i-label label,\ni-form.i-aligned .i-group i-label label {\n    text-align: right;\n}\ni-form.i-aligned fieldset i-button:first-child {\n    margin-left: 11em;\n}\n/* ======================================================== */\n\n\n\n/* ======================================================== */\n/* Inline help for forms */\ni-form .message-inline {\n    display: inline-block;\n    padding-left: 0.3em;\n    color: #666;\n    vertical-align: middle;\n    font-size: 0.875em;\n}\n\n/* Block help for forms */\ni-form .message {\n    display: block;\n    color: #666;\n    font-size: 0.875em;\n}\n/* ======================================================== */\n\n\n\n@media only screen and (max-width : 480px) {\n    i-form {\n        display: block;\n        width: 100%;\n    }\n\n    i-form i-label,\n    i-form.i-aligned i-label {\n        display: block;\n        text-align: left;\n        margin: 1em 0 0.4em 3px; /* 3px as lect-padding --> needs to fit .itag-noblock labels  */\n    }\n\n    i-form fieldset div.i-formrow:first-child i-label,\n    i-form.i-aligned fieldset div.i-formrow:first-child i-label {\n        margin-top: 0;\n    }\n\n    i-form.i-aligned div.i-formrow.itag-noblock i-label {\n        display: inline-block;\n        width: 100%;\n        padding-left: 85px;  /* 82 + 3 extra pixels  */\n        margin-left: -82px;\n        margin-bottom: 0;\n    }\n\n    i-form.i-aligned div.i-formrow.itag-noblock i-checkbox {\n        margin-right: 12px;\n        width: 70px !important;\n    }\n\n    i-form.i-aligned div.i-formrow.itag-noblock {\n        text-align: right;\n    }\n\n    i-form.i-group i-label,\n    i-form .i-group i-label {\n        opacity: 0 !important;\n        position: absolute !important;\n        left: -9999px !important;\n        top: -9999px !important;\n        z-index: -1;\n    }\n\n    i-form i-input {\n        display: block;\n        text-align: left;\n        margin-bottom: 0.3em;\n    }\n\n    i-form.i-group i-input,\n    i-form .i-group i-input {\n        margin-bottom: 0em;\n    }\n\n    i-form.i-aligned .control {\n        margin: 1.5em 0 0 0;\n    }\n\n    i-form i-button,\n    i-form i-select {\n        display: block;\n        width: 100%;\n    }\n\n    i-form fieldset i-button {\n        margin-right: 0;\n        margin-top: 0;\n    }\n\n    i-form.i-aligned fieldset i-button:first-child {\n        margin-left: 0;\n    }\n\n    i-form i-button button,\n    i-form i-select >button,\n    i-form i-select >div >div {\n        width: 100%;\n    }\n\n    i-form i-select >button {\n        max-width: inherit;\n    }\n\n    i-form i-select > button div.btntext {\n        margin: 0;\n        max-width: inherit;\n        width: 100%;\n        text-align: center;\n    }\n\n    i-form i-select li {\n        text-align: center;\n    }\n\n    i-form i-button:last-child {\n        margin: 1em 0 0;\n    }\n\n    i-form .message-inline,\n    i-form .message {\n        display: block;\n        font-size: 0.75em;\n        /* Increased bottom padding to make it group with its related input element. */\n        padding: 0.2em 0 0.8em;\n    }\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1920:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],2685:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 
@@ -31506,7 +33645,7 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 };
 
-},{"./css/i-form.css":1919,"itags.core":1932}],1921:[function(require,module,exports){
+},{"./css/i-form.css":2684,"itags.core":2697}],2686:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 
@@ -31530,9 +33669,9 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 };
 
-},{"itags.core":1932}],1922:[function(require,module,exports){
+},{"itags.core":2697}],2687:[function(require,module,exports){
 var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-input;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-input:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-input:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\ni-input {\n    margin: 0;\n    display: inline-block;\n    width: 12em;\n    position: relative;\n    vertical-align: middle;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-input > input {\n    color: inherit;\n    font: inherit;\n    margin: 0;\n    padding: 0.5em 0.6em;\n    display: inline-block;\n    border: 1px solid #ccc;\n    box-shadow: inset 0 1px 3px #ddd;\n    border-radius: 4px;\n    line-height: normal;\n    width: 100%; /* within the i-input always 100% */\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\nhtml i-input[disabled] > input {\n    cursor: not-allowed;\n    background-color: #eaeded;\n    color: #cad2d3;\n}\n\ni-input > input::-moz-focus-inner {\n  border: 0;\n  padding: 0;\n}\n\n\ni-input > input:focus,\ni-input.focussed > input {\n    outline: 0;\n    outline: thin dotted \\9; /* IE6-9 */\n    border-color: #129FEA;\n}\n\ni-input[readonly=\"true\"] > input {\n    background: #eee; /* menu hover bg color */\n    color: #777; /* menu text color */\n    border-color: #ccc;\n}\n\ni-input > input:focus:invalid {\n    color: #b94a48;\n    border-color: #ee5f5b;\n}\n\ni-input > input:focus:invalid:focus {\n    border-color: #e9322d;\n}\n\ni-input.i-rounded > input {\n    border-radius: 2em;\n    padding: 0.5em 1em;\n}\n\ni-input.i-input-1 {\n    width: 100%;\n}\ni-input.i-input-2-3 {\n    width: 66%;\n}\ni-input.i-input-1-2 {\n    width: 50%;\n}\ni-input.i-input-1-3 {\n    width: 33%;\n}\ni-input.i-input-1-4 {\n    width: 25%;\n}\n\n@media only screen and (max-width : 480px) {\n    i-input {\n        margin-bottom: 0.3em;\n        display: block;\n    }\n}\n\n"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1923:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],2688:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 
@@ -31643,7 +33782,7 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 };
 
-},{"./css/i-input.css":1922,"i-formelement":1921,"itags.core":1932}],1924:[function(require,module,exports){
+},{"./css/i-input.css":2687,"i-formelement":2686,"itags.core":2697}],2689:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 
@@ -31756,18 +33895,31 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 };
 
-},{"itags.core":1932}],1925:[function(require,module,exports){
+},{"itags.core":2697}],2690:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 
     var itagCore = require('itags.core')(window),
         itagName = 'i-parcel', // <-- define your own itag-name here
         DOCUMENT = window.document,
-        ITSA = window.ITSA,
         Itag;
 
     if (!window.ITAGS[itagName]) {
-        Itag = DOCUMENT.createItag(itagName, null, false); // not subclassable, only pseudoclassable
+        Itag = DOCUMENT.createItag(itagName, {
+            init: function() {
+                var element = this,
+                    designNode = element.getItagContainer(),
+                    content = designNode.getHTML();
+                // when initializing: make sure NOT to overrule model-properties that already
+                // might have been defined when modeldata was boundend. Therefore, use `defineWhenUndefined`
+                // element.defineWhenUndefined('someprop', somevalue); // sets element.model.someprop = somevalue; when not defined yet
+                element.defineWhenUndefined('content', content);
+            },
+            sync: function() {
+                var element = this;
+                element.setHTML(element.model.content);
+            }
+        });
         itagCore.setContentVisibility(Itag, true);
         window.ITAGS[itagName] = Itag;
     }
@@ -31775,7 +33927,7 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 };
 
-},{"itags.core":1932}],1926:[function(require,module,exports){
+},{"itags.core":2697}],2691:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 
@@ -31813,9 +33965,9 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 };
 
-},{"i-button":1916,"itags.core":1932}],1927:[function(require,module,exports){
+},{"i-button":2681,"itags.core":2697}],2692:[function(require,module,exports){
 var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-select;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-select:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-select:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\ni-select {\n    margin: 0;\n    display: inline-block;\n    *display: inline; /*IE 6/7*/\n    zoom: 1;\n    position: relative;\n    vertical-align: middle;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-select >span {\n    position: relative;\n    z-index: 2;\n    -webkit-transition: opacity 0.1s;\n    -moz-transition: opacity 0.1s;\n    -ms-transition: opacity 0.1s;\n    -o-transition: opacity 0.1s;\n    transition: opacity 0.1s;\n    opacity: 0;\n}\n\ni-select >span.i-select-show {\n    -webkit-transition: opacity 0.2s;\n    -moz-transition: opacity 0.2s;\n    -ms-transition: opacity 0.2s;\n    -o-transition: opacity 0.2s;\n    transition: opacity 0.2s;\n    opacity: 1;\n}\n\ni-select >button >span,\ni-select >span,\ni-select >span >span,\ni-select >span >span >span {\n    display: block;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-select.i-primary >button,\ni-select.i-focussed >button {\n    background-color: rgb(0, 120, 231);\n    color: #fff;\n}\n\n/*csslint outline-none:false*/\n\ni-select >button {\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    -khtml-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    position: relative;\n    padding: 0.5em 0;\n    max-width: 8em;\n    color: inherit; /* 1 */\n    font: inherit; /* 2 */\n    margin: 0; /* 3 */\n    overflow: visible;\n    text-transform: none;\n    -webkit-appearance: button; /* 2 */\n    line-height: normal;\n    white-space: nowrap;\n    vertical-align: baseline;\n    text-align: center;\n    cursor: pointer;\n    -webkit-user-drag: none;\n    -webkit-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    font-family: inherit;\n    font-size: 100%;\n    color: #444; /* rgba not supported (IE 8) */\n    color: rgba(0, 0, 0, 0.80); /* rgba supported */\n    border: 1px solid #999;  /*IE 6/7/8*/\n    border: none rgba(0, 0, 0, 0);  /*IE9 + everything else*/\n    background-color: #E6E6E6;\n    text-decoration: none;\n    border-radius: 2px;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n}\n\n/* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select.i-hover >button,\ni-select >button:hover,\ni-select >button:focus {\n    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#00000000', endColorstr='#1a000000',GradientType=0);\n    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(transparent), color-stop(40%, rgba(0,0,0, 0.05)), to(rgba(0,0,0, 0.10)));\n    background-image: -webkit-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: -moz-linear-gradient(top, rgba(0,0,0, 0.05) 0%, rgba(0,0,0, 0.10));\n    background-image: -o-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n}\ni-select >button:focus {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.6) inset;\n    outline: 0;\n}\ni-select.i-active.i-hover >button,\ni-select.i-active >button:hover,\ni-select.i-active.i-hover >button:focus,\ni-select.i-active >button:hover:focus,\ni-select.i-hover >button.pure-button-active,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select >button.pure-button-active:hover,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select.i-hover >button.pure-button-active:focus,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select >button.pure-button-active:hover:focus,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select >button.pure-button-active,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select >button.pure-button-active:focus,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select.i-hover >button:active,\ni-select >button:hover:active,\ni-select.i-hover >button:focus:active,\ni-select >button:hover:focus:active {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.8) inset, 0 0 6px rgba(0,0,0, 0.4) inset;\n}\n\ni-select.i-disabled >button,\ni-select[disabled=\"true\"] >button,\ni-select.i-disabled >button:active,\ni-select[disabled=\"true\"] >button:active,\ni-select.i-disabled >button.pure-button-active, /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select[disabled=\"true\"] >button.pure-button-active,\ni-select.i-disabled.i-active >button,\ni-select.i-active[disabled=\"true\"] >button,\ni-select.i-disabled >button:focus,\ni-select[disabled=\"true\"] >button:focus,\ni-select.i-disabled.focussed >button,\ni-select.focussed[disabled=\"true\"] >button,\ni-select.i-disabled >button:hover,\ni-select[disabled=\"true\"] >button:hover {\n    border: none;\n    background-image: none;\n    filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);\n    filter: alpha(opacity=60);\n    -khtml-opacity: 0.60;\n    -moz-opacity: 0.60;\n    opacity: 0.60;\n    cursor: not-allowed;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n    cursor: default;\n}\n\ni-select.i-rounded >button {\n    border-radius: 0.3em;\n}\n\ni-select.i-heavyrounded >button {\n    border-radius: 0.5em;\n}\n\ni-select.i-oval >button {\n    border-radius: 50%;\n}\n\ni-select.i-halfoval >button {\n    border-radius: 25%;\n}\n\ni-select.i-hidden {\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -9;\n}\n\ni-select >button::-moz-focus-inner {\n  border: 0;\n  padding: 0;\n}\n\ni-select >button >span.btntext {\n    margin: 0 1.25em 0 1em;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 8em;\n    display: block;\n}\n\ni-select >button >span.pointer {\n    border-left: 0.4em solid rgba(0, 0, 0, 0);\n    border-right: 0.4em solid rgba(0, 0, 0, 0);\n    border-top: 0.5em solid #000;\n    right: 0.25em;\n    position: absolute;\n    bottom: 0.2em;\n}\n\ni-select >button.i-nonexpandable span.btntext {\n    margin: 0 1em;\n}\n\ni-select >button.i-nonexpandable span.pointer {\n    visibility: hidden;\n}\n\ni-select >span >span {\n    position: absolute;\n    left: 0;\n    top: 0;\n    cursor: pointer;\n    border-style: solid;\n    border-width: 0.1em;\n    -webkit-border-radius: 0 0 0.3em 0.3em;\n    -moz-border-radius: 0 0 0.3em 0.3em;\n    border-radius: 0 0 0.3em 0.3em;\n    -webkit-box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n    -moz-box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n    box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n}\n\ni-select >span >span >span {\n    font-size: 1.2em;\n    padding: 0 0 0.3em;\n    list-style: none;\n    margin: 0;\n}\n\ni-select option {\n    padding: 0.25em 0.7em;\n    white-space: nowrap;\n}\n\ni-select option.focussed {\n    background-color: #B3D4FF;\n}\n\ni-select option.selected:before {\n    content: '*';\n    margin-left: -0.7em;\n    padding-right: 0.25em;\n}\n\ni-select option:before,\ni-select option:after {\n    content: '';\n    padding: 0;\n    margin: 0;\n}\n\n/* color specification:; */\n\ni-select >span >span {\n    background-color: #FFF;\n    border-color: #000;\n}\n\ni-select option:hover {\n    background-color: #B3D4FF;\n}\n\ni-select.i-focused > button span.pointer,\ni-select.i-primary > button span.pointer {\n    border-top: 0.5em solid #FEFEFE;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1928:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],2693:[function(require,module,exports){
 /**
  * Provides several methods that override native Element-methods to work with the vdom.
  *
@@ -32197,9 +34349,9 @@ module.exports = function (window) {
 
     return window.ITAGS[itagName];
 };
-},{"./css/i-select.css":1927,"i-formelement":1921,"itags.core":1932}],1929:[function(require,module,exports){
+},{"./css/i-select.css":2692,"i-formelement":2686,"itags.core":2697}],2694:[function(require,module,exports){
 var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-tabpane;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-tabpane:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-tabpane:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\ni-tabpane {\n    /* make it accept width and height by swith from :inline\" to \"inline-block\"*/\n    display: inline-block;\n    *display: block;\n    *zoom: 1;\n}\n\ni-tabpane >ul {\n    margin:0;\n    padding:0;\n    list-style:none;\n    height: 1.9em;\n    overflow: hidden;\n}\n\ni-tabpane >ul li div {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    opacity: 0.6;\n    margin: 0;\n    padding: 0;\n    border: none;\n}\n\ni-tabpane >ul li:hover div {\n    opacity: 0.8;\n}\n\ni-tabpane >ul li.pure-button-active div,\ni-tabpane >ul li:active div {\n    opacity: 1;\n}\n\ni-tabpane >ul li {\n    display: inline-block;\n    *display: inline; /* IE */\n    *zoom: 1; /* IE */\n    margin-right: 0.25em;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n}\n\ni-tabpane >ul li.pure-button {\n    display: inline-block;\n    *display: inline; /* IE */\n    *zoom: 1; /* IE */\n    margin-right: 0.2em;\n    border-radius: 2px 2px 0 0;\n    border-bottom: none;\n}\n\ni-tabpane >div {\n    height: 100%;\n    margin-top: -2.18em;\n    padding-top: 2.18em;\n}\n\ni-tabpane >div >div.container {\n    border: 1px solid #2647a0;\n    border-top: 5px solid #2647a0;\n    padding: 0.25em 0.5em;\n    height: 100%;\n    width: 100%;\n    overflow: scroll;\n}\n"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1930:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],2695:[function(require,module,exports){
 /*
 * attributes:
 * value, expanded, primary-button
@@ -32409,9 +34561,9 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 
 };
-},{"./css/i-tabpane.css":1929,"itags.core":1932}],1931:[function(require,module,exports){
+},{"./css/i-tabpane.css":2694,"itags.core":2697}],2696:[function(require,module,exports){
 var css = "span.itag-data {\n    display: none !important;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],1932:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],2697:[function(require,module,exports){
 (function (global){
 /*jshint proto:true */
 
@@ -34275,9 +36427,9 @@ module.exports = function (window) {
     return itagCore;
 };
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./css/itags.core.css":1931,"itsa":2}],1933:[function(require,module,exports){
+},{"./css/itags.core.css":2696,"itsa":2}],2698:[function(require,module,exports){
 
-},{}],1934:[function(require,module,exports){
+},{}],2699:[function(require,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *
@@ -35448,7 +37600,7 @@ function assert (test, message) {
   if (!test) throw new Error(message || 'Failed assertion')
 }
 
-},{"base64-js":1935,"ieee754":1936}],1935:[function(require,module,exports){
+},{"base64-js":2700,"ieee754":2701}],2700:[function(require,module,exports){
 var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
 ;(function (exports) {
@@ -35570,7 +37722,7 @@ var lookup = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 	exports.fromByteArray = uint8ToBase64
 }(typeof exports === 'undefined' ? (this.base64js = {}) : exports))
 
-},{}],1936:[function(require,module,exports){
+},{}],2701:[function(require,module,exports){
 exports.read = function(buffer, offset, isLE, mLen, nBytes) {
   var e, m,
       eLen = nBytes * 8 - mLen - 1,
@@ -35656,7 +37808,7 @@ exports.write = function(buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128;
 };
 
-},{}],1937:[function(require,module,exports){
+},{}],2702:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -35961,7 +38113,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],1938:[function(require,module,exports){
+},{}],2703:[function(require,module,exports){
 var http = module.exports;
 var EventEmitter = require('events').EventEmitter;
 var Request = require('./lib/request');
@@ -36100,7 +38252,7 @@ http.STATUS_CODES = {
     510 : 'Not Extended',               // RFC 2774
     511 : 'Network Authentication Required' // RFC 6585
 };
-},{"./lib/request":1939,"events":1937,"url":1963}],1939:[function(require,module,exports){
+},{"./lib/request":2704,"events":2702,"url":2728}],2704:[function(require,module,exports){
 var Stream = require('stream');
 var Response = require('./response');
 var Base64 = require('Base64');
@@ -36294,7 +38446,7 @@ var indexOf = function (xs, x) {
     return -1;
 };
 
-},{"./response":1940,"Base64":1941,"inherits":1943,"stream":1962}],1940:[function(require,module,exports){
+},{"./response":2705,"Base64":2706,"inherits":2708,"stream":2727}],2705:[function(require,module,exports){
 var Stream = require('stream');
 var util = require('util');
 
@@ -36416,7 +38568,7 @@ var isArray = Array.isArray || function (xs) {
     return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{"stream":1962,"util":1965}],1941:[function(require,module,exports){
+},{"stream":2727,"util":2730}],2706:[function(require,module,exports){
 ;(function () {
 
   var object = typeof exports != 'undefined' ? exports : this; // #8: web workers
@@ -36478,7 +38630,7 @@ var isArray = Array.isArray || function (xs) {
 
 }());
 
-},{}],1942:[function(require,module,exports){
+},{}],2707:[function(require,module,exports){
 var http = require('http');
 
 var https = module.exports;
@@ -36493,7 +38645,7 @@ https.request = function (params, cb) {
     return http.request.call(this, params, cb);
 }
 
-},{"http":1938}],1943:[function(require,module,exports){
+},{"http":2703}],2708:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -36518,12 +38670,12 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],1944:[function(require,module,exports){
+},{}],2709:[function(require,module,exports){
 module.exports = Array.isArray || function (arr) {
   return Object.prototype.toString.call(arr) == '[object Array]';
 };
 
-},{}],1945:[function(require,module,exports){
+},{}],2710:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -36588,7 +38740,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],1946:[function(require,module,exports){
+},{}],2711:[function(require,module,exports){
 (function (global){
 /*! http://mths.be/punycode v1.2.4 by @mathias */
 ;(function(root) {
@@ -37099,7 +39251,7 @@ process.chdir = function (dir) {
 }(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],1947:[function(require,module,exports){
+},{}],2712:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -37185,7 +39337,7 @@ var isArray = Array.isArray || function (xs) {
   return Object.prototype.toString.call(xs) === '[object Array]';
 };
 
-},{}],1948:[function(require,module,exports){
+},{}],2713:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -37272,16 +39424,16 @@ var objectKeys = Object.keys || function (obj) {
   return res;
 };
 
-},{}],1949:[function(require,module,exports){
+},{}],2714:[function(require,module,exports){
 'use strict';
 
 exports.decode = exports.parse = require('./decode');
 exports.encode = exports.stringify = require('./encode');
 
-},{"./decode":1947,"./encode":1948}],1950:[function(require,module,exports){
+},{"./decode":2712,"./encode":2713}],2715:[function(require,module,exports){
 module.exports = require("./lib/_stream_duplex.js")
 
-},{"./lib/_stream_duplex.js":1951}],1951:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":2716}],2716:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -37374,7 +39526,7 @@ function forEach (xs, f) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_readable":1953,"./_stream_writable":1955,"_process":1945,"core-util-is":1956,"inherits":1943}],1952:[function(require,module,exports){
+},{"./_stream_readable":2718,"./_stream_writable":2720,"_process":2710,"core-util-is":2721,"inherits":2708}],2717:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -37422,7 +39574,7 @@ PassThrough.prototype._transform = function(chunk, encoding, cb) {
   cb(null, chunk);
 };
 
-},{"./_stream_transform":1954,"core-util-is":1956,"inherits":1943}],1953:[function(require,module,exports){
+},{"./_stream_transform":2719,"core-util-is":2721,"inherits":2708}],2718:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -38385,7 +40537,7 @@ function indexOf (xs, x) {
 }
 
 }).call(this,require('_process'))
-},{"_process":1945,"buffer":1934,"core-util-is":1956,"events":1937,"inherits":1943,"isarray":1944,"stream":1962,"string_decoder/":1957}],1954:[function(require,module,exports){
+},{"_process":2710,"buffer":2699,"core-util-is":2721,"events":2702,"inherits":2708,"isarray":2709,"stream":2727,"string_decoder/":2722}],2719:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -38597,7 +40749,7 @@ function done(stream, er) {
   return stream.push(null);
 }
 
-},{"./_stream_duplex":1951,"core-util-is":1956,"inherits":1943}],1955:[function(require,module,exports){
+},{"./_stream_duplex":2716,"core-util-is":2721,"inherits":2708}],2720:[function(require,module,exports){
 (function (process){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -38988,7 +41140,7 @@ function endWritable(stream, state, cb) {
 }
 
 }).call(this,require('_process'))
-},{"./_stream_duplex":1951,"_process":1945,"buffer":1934,"core-util-is":1956,"inherits":1943,"stream":1962}],1956:[function(require,module,exports){
+},{"./_stream_duplex":2716,"_process":2710,"buffer":2699,"core-util-is":2721,"inherits":2708,"stream":2727}],2721:[function(require,module,exports){
 (function (Buffer){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -39098,7 +41250,7 @@ function objectToString(o) {
   return Object.prototype.toString.call(o);
 }
 }).call(this,require("buffer").Buffer)
-},{"buffer":1934}],1957:[function(require,module,exports){
+},{"buffer":2699}],2722:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -39300,10 +41452,10 @@ function base64DetectIncompleteChar(buffer) {
   return incomplete;
 }
 
-},{"buffer":1934}],1958:[function(require,module,exports){
+},{"buffer":2699}],2723:[function(require,module,exports){
 module.exports = require("./lib/_stream_passthrough.js")
 
-},{"./lib/_stream_passthrough.js":1952}],1959:[function(require,module,exports){
+},{"./lib/_stream_passthrough.js":2717}],2724:[function(require,module,exports){
 exports = module.exports = require('./lib/_stream_readable.js');
 exports.Readable = exports;
 exports.Writable = require('./lib/_stream_writable.js');
@@ -39311,13 +41463,13 @@ exports.Duplex = require('./lib/_stream_duplex.js');
 exports.Transform = require('./lib/_stream_transform.js');
 exports.PassThrough = require('./lib/_stream_passthrough.js');
 
-},{"./lib/_stream_duplex.js":1951,"./lib/_stream_passthrough.js":1952,"./lib/_stream_readable.js":1953,"./lib/_stream_transform.js":1954,"./lib/_stream_writable.js":1955}],1960:[function(require,module,exports){
+},{"./lib/_stream_duplex.js":2716,"./lib/_stream_passthrough.js":2717,"./lib/_stream_readable.js":2718,"./lib/_stream_transform.js":2719,"./lib/_stream_writable.js":2720}],2725:[function(require,module,exports){
 module.exports = require("./lib/_stream_transform.js")
 
-},{"./lib/_stream_transform.js":1954}],1961:[function(require,module,exports){
+},{"./lib/_stream_transform.js":2719}],2726:[function(require,module,exports){
 module.exports = require("./lib/_stream_writable.js")
 
-},{"./lib/_stream_writable.js":1955}],1962:[function(require,module,exports){
+},{"./lib/_stream_writable.js":2720}],2727:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -39446,7 +41598,7 @@ Stream.prototype.pipe = function(dest, options) {
   return dest;
 };
 
-},{"events":1937,"inherits":1943,"readable-stream/duplex.js":1950,"readable-stream/passthrough.js":1958,"readable-stream/readable.js":1959,"readable-stream/transform.js":1960,"readable-stream/writable.js":1961}],1963:[function(require,module,exports){
+},{"events":2702,"inherits":2708,"readable-stream/duplex.js":2715,"readable-stream/passthrough.js":2723,"readable-stream/readable.js":2724,"readable-stream/transform.js":2725,"readable-stream/writable.js":2726}],2728:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -40155,14 +42307,14 @@ function isNullOrUndefined(arg) {
   return  arg == null;
 }
 
-},{"punycode":1946,"querystring":1949}],1964:[function(require,module,exports){
+},{"punycode":2711,"querystring":2714}],2729:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],1965:[function(require,module,exports){
+},{}],2730:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -40752,7 +42904,7 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":1964,"_process":1945,"inherits":1943}],"itags":[function(require,module,exports){
+},{"./support/isBuffer":2729,"_process":2710,"inherits":2708}],"itags":[function(require,module,exports){
 (function (global){
 /**
  * The ITSA module is an aggregator for all the individual modules that the library uses.
@@ -40784,4 +42936,4 @@ function hasOwnProperty(obj, prop) {
 
 })(global.window || require('node-win'));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"i-button":1916,"i-checkbox":1918,"i-form":1920,"i-input":1923,"i-label":1924,"i-parcel":1925,"i-reset":1926,"i-select":1928,"i-tabpane":1930,"node-win":1904}]},{},[]);
+},{"i-button":2681,"i-checkbox":2683,"i-form":2685,"i-input":2688,"i-label":2689,"i-parcel":2690,"i-reset":2691,"i-select":2693,"i-tabpane":2695,"node-win":2669}]},{},[]);
