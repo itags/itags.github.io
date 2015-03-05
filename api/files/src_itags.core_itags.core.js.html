@@ -1246,7 +1246,6 @@ module.exports = function (window) {
                                 }, DELAYED_EVT_TIME));
                             }
                             else {
-                                console.info(&#x27;Event-finalizer will refresh itags because of event: &#x27;+type);
                                 DOCUMENT.refreshItags();
                             }
                         }
@@ -1528,14 +1527,12 @@ module.exports = function (window) {
     * @since 0.0.1
     */
     DOCUMENT.refreshItags = function(force) {
-        console.log(NAME+&#x27;refreshItags&#x27;);
         var instance = this,
             list, len, i, itagElement, needRefresh, stringifiedModel;
         if (!NATIVE_OBJECT_OBSERVE || force) {
             list = instance.getItags();
             len = list.length;
             allowedToRefreshItags = false; // prevent setTimeout to fall into loop
-            (len===0) || console.info(&#x27;refreshing Itags&#x27;);
             for (i=0; i&lt;len; i++) {
                 itagElement = list[i];
                 // because itagElement could be removed intermediate, we need to check if it&#x27;s there
