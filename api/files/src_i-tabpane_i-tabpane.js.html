@@ -127,8 +127,6 @@
             
                 <li><a href="../modules/event-mobile.html">event-mobile</a></li>
             
-                <li><a href="../modules/event-objectobserve.html">event-objectobserve</a></li>
-            
                 <li><a href="../modules/extend-document.html">extend-document</a></li>
             
                 <li><a href="../modules/extend-element.html">extend-element</a></li>
@@ -365,8 +363,6 @@ module.exports = function (window) {
             reset: function() {
                 var model = this.model;
                 model.pane = model[&#x27;reset-value&#x27;];
-                // no need to call &#x60;refreshItags&#x60; --&gt; the reset()-method doesn&#x27;t come out of the blue
-                // so, the eventsystem will refresh it afterwards
             },
 
            /**
@@ -420,7 +416,6 @@ module.exports = function (window) {
             }
         });
 
-        itagCore.setDirectEventResponse(Itag, &#x27;focus&#x27;);
         itagCore.setContentVisibility(Itag, true);
 
         window.ITAGS[itagName] = Itag;

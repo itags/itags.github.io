@@ -127,8 +127,6 @@
             
                 <li><a href="../modules/event-mobile.html">event-mobile</a></li>
             
-                <li><a href="../modules/event-objectobserve.html">event-objectobserve</a></li>
-            
                 <li><a href="../modules/extend-document.html">extend-document</a></li>
             
                 <li><a href="../modules/extend-element.html">extend-element</a></li>
@@ -229,12 +227,12 @@ module.exports = function (window) {
     var itagName = &#x27;i-checkbox&#x27;, // &lt;-- define your own itag-name here
         ITSA = window.ITSA,
         Event = ITSA.Event,
-        laterSilent = ITSA.laterSilent,
+        later = ITSA.later,
         DEFAULT_ON_TEXT = &#x27;I&#x27;,
         DEFAULT_OFF_TEXT = &#x27;O&#x27;,
         SUPPRESS_DELAY = 50,
         INTERVAL_FONTCHANGE_CHECK = 350,
-        Itag, IFormElement, registeredElements;
+        Itag, IFormElement, registeredElements, timer, registerElement, unRegisterElement;
 
     if (!window.ITAGS[itagName]) {
         ITSA.DD.init();
@@ -287,14 +285,12 @@ module.exports = function (window) {
                 distance = btnNode.left - checkbox.left - checkbox.getData(&#x27;_leftBorder&#x27;) + Math.round(checkbox.getData(&#x27;_height&#x27;)/2);
             checkbox.model.checked = (distance&gt;Math.round(checkbox.getData(&#x27;_width&#x27;)/2));
             checkbox._setUIState();
-            laterSilent(function() {
+            later(function() {
                 checkbox.removeData(&#x27;_suppressTap&#x27;);
             }, SUPPRESS_DELAY);
         }, &#x27;i-checkbox&#x27;);
 
-        Event.defineEvent(itagName+&#x27;:checkedchange&#x27;)
-             .unPreventable()
-             .noRender();
+        Event.defineEvent(itagName+&#x27;:checkedchange&#x27;).unPreventable();
 
         Event.after(itagName+&#x27;:change&#x27;, function(e) {
             var element = e.target,
@@ -319,17 +315,31 @@ module.exports = function (window) {
         // we have no means of listening to this - even it&#x27;s unlikely to happen
         // yet we want the i-checkboxes to fit at anytime, so we set up a lazy timer
         // that checks all registered itag-instances
-        laterSilent(function() {
-            var len = registeredElements.length,
-                i, element;
-            for (i=0; i&lt;len; i++) {
-                element = registeredElements[i];
-                if (!element.hasData(&#x27;_suppressTap&#x27;)) {
-                    element._fitCheckbox();
-                    element._setUIState();
-                }
+
+        registerElement = function(element) {
+            registeredElements.push(element);
+            if (!timer) {
+                timer = later(function() {
+                    var len = registeredElements.length,
+                        i, element;
+                    for (i=0; i&lt;len; i++) {
+                        element = registeredElements[i];
+                        if (!element.hasData(&#x27;_suppressTap&#x27;)) {
+                            element._fitCheckbox();
+                            element._setUIState();
+                        }
+                    }
+                }, INTERVAL_FONTCHANGE_CHECK, true);
             }
-        }, INTERVAL_FONTCHANGE_CHECK, true);
+        };
+
+        unRegisterElement = function(element) {
+            registeredElements.remove(element);
+            if ((registeredElements.length===0) &amp;&amp; timer) {
+                timer.cancel();
+                timer = null;
+            }
+        };
 
         Itag = IFormElement.subClass(itagName, {
             attrs: {
@@ -347,7 +357,7 @@ module.exports = function (window) {
                 element.defineWhenUndefined(&#x27;reset-value&#x27;, value)
                        .defineWhenUndefined(&#x27;on-text&#x27;, options[0] ? options[0].getHTML() : DEFAULT_ON_TEXT)
                        .defineWhenUndefined(&#x27;off-text&#x27;, options[1] ? options[1].getHTML() : DEFAULT_OFF_TEXT);
-                registeredElements.push(element);
+                registerElement(element);
             },
 
             render: function() {
@@ -441,12 +451,10 @@ module.exports = function (window) {
             reset: function() {
                 var model = this.model;
                 model.checked = model[&#x27;reset-value&#x27;];
-                // no need to call &#x60;refreshItags&#x60; --&gt; the reset()-method doesn&#x27;t come out of the blue
-                // so, the eventsystem will refresh it afterwards
             },
 
             destroy: function() {
-                registeredElements.remove(this);
+                unRegisterElement(this);
             }
         });
 

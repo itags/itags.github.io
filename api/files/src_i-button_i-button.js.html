@@ -127,8 +127,6 @@
             
                 <li><a href="../modules/event-mobile.html">event-mobile</a></li>
             
-                <li><a href="../modules/event-objectobserve.html">event-objectobserve</a></li>
-            
                 <li><a href="../modules/extend-document.html">extend-document</a></li>
             
                 <li><a href="../modules/extend-element.html">extend-element</a></li>
@@ -245,7 +243,7 @@ module.exports = function (window) {
             element.itagReady().then(
                 function() {
                     var button = element.getElement(&#x27;button&#x27;);
-                    button &amp;&amp; button.focus(true, true);
+                    button &amp;&amp; button.focus(true);
                 }
             );
         });

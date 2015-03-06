@@ -13,14 +13,15 @@
     <script src="../../dist/itagsbuild.js"></script>
     <script>
         require('itags');
+
         ITSA.async(function() {
             ITSA.alert('I am the first alert');
+            ITSA.alert('I a second first alert');
         });
-        // ITSA.alert('I a second first alert');
 
-    // ITSA.later(function() {
-    //     ITSA.warn('i am a warning');
-    // }, 1500);
+        ITSA.later(function() {
+            ITSA.warn('i am a warning');
+        }, 1500);
     </script>
 
 </body>

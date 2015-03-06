@@ -127,8 +127,6 @@
             
                 <li><a href="../modules/event-mobile.html">event-mobile</a></li>
             
-                <li><a href="../modules/event-objectobserve.html">event-objectobserve</a></li>
-            
                 <li><a href="../modules/extend-document.html">extend-document</a></li>
             
                 <li><a href="../modules/extend-element.html">extend-element</a></li>
@@ -248,13 +246,13 @@ var DELAY_BLURCLOSE = 125,
 module.exports = function (window) {
     &quot;use strict&quot;;
 
+    require(&#x27;itags.core&#x27;)(window);
+
     var DEFAULT_INVALID_VALUE = &#x27;choose&#x27;,
         itagName = &#x27;i-select&#x27;,
-        itagCore = require(&#x27;itags.core&#x27;)(window),
-        DOCUMENT = window.document,
         ITSA = window.ITSA,
-        asyncSilent = ITSA.asyncSilent,
-        laterSilent = ITSA.laterSilent,
+        async = ITSA.async,
+        later = ITSA.later,
         Event = ITSA.Event,
         HIDDEN = &#x27;itsa-hidden&#x27;,
         SHOW = &#x27;i-select-show&#x27;,
@@ -275,7 +273,7 @@ module.exports = function (window) {
             element.itagReady().then(
                 function() {
                     var button = element.getElement(&#x27;button&#x27;);
-                    button &amp;&amp; button.focus(true, true);
+                    button &amp;&amp; button.focus(true);
                 }
             );
         });
@@ -311,16 +309,16 @@ module.exports = function (window) {
                     model.expanded = !model.expanded;
                     if (!model.expanded) {
                         liNode = element.getElement(&#x27;span[plugin-fm=&quot;true&quot;] &gt;option[fm-defaultitem]&#x27;);
-                        liNode &amp;&amp; liNode.focus(true);
+                        liNode &amp;&amp; liNode.focus();
                     }
                 }
                 if (model.expanded) {
                     ulNode = element.getElement(&#x27;span[plugin-fm=&quot;true&quot;]&#x27;);
-                    ulNode &amp;&amp; ulNode.focus(true);
+                    ulNode &amp;&amp; ulNode.focus();
                 }
                 if (model.expanded || (e_type===&#x27;tap&#x27;)) {
                     element.setData(&#x27;_suppressClose&#x27;, true);
-                    laterSilent(function() {
+                    later(function() {
                         element.removeData(&#x27;_suppressClose&#x27;);
                     }, SUPPRESS_DELAY);
                 }
@@ -348,25 +346,23 @@ module.exports = function (window) {
                     model.value = index+1;
                     if (e_type===&#x27;tap&#x27;) {
                         element.setData(&#x27;_suppressClose&#x27;, true);
-                        laterSilent(function() {
+                        later(function() {
                             element.removeData(&#x27;_suppressClose&#x27;);
                         }, SUPPRESS_DELAY);
                         ulNode = element.getElement(&#x27;span[plugin-fm=&quot;true&quot;]&#x27;);
-                        ulNode &amp;&amp; ulNode.focus(true);
+                        ulNode &amp;&amp; ulNode.focus();
                     }
                     // prevent that the focus will be reset to the focusmanager
                     // when re-synced --&gt; we want the focus on the button:
                     ulNode.removeClass(&#x27;focussed&#x27;);
-                    asyncSilent(function() {
-                        element.focus(true);
+                    async(function() {
+                        element.focus();
                     });
                 }
             }
         }, &#x27;i-select span[plugin-fm=&quot;true&quot;] &gt; option&#x27;);
 
-        Event.defineEvent(itagName+&#x27;:valuechange&#x27;)
-             .unPreventable()
-             .noRender();
+        Event.defineEvent(itagName+&#x27;:valuechange&#x27;).unPreventable();
 
         Event.after(itagName+&#x27;:change&#x27;, function(e) {
             var element = e.target,
@@ -490,28 +486,24 @@ module.exports = function (window) {
             reset: function() {
                 var model = this.model;
                 model.value = model[&#x27;reset-value&#x27;];
-                // no need to call &#x60;refreshItags&#x60; --&gt; the reset()-method doesn&#x27;t come out of the blue
-                // so, the eventsystem will refresh it afterwards
             },
 
             setupEvents: function() {
                 var element = this;
                 // because the tapoutside event is not set through element.salfAfter, we need to detach the event when needed:
                 element._outsideListener = Event.after(&#x27;tapoutside&#x27;, function(e) {
-                    asyncSilent(function() {
+                    async(function() {
                         if (!element.hasData(&#x27;_suppressClose&#x27;) &amp;&amp; !element.contains(e.sourceTarget)) {
                             element.model.expanded = false;
-                            DOCUMENT.refreshItags();
                         }
                     });
                 }, &#x27;i-select&#x27;);
                 element.selfAfter(&#x27;blurnode&#x27;, function() {
                     // at the end of the eventstack: give &#x60;blurnode&#x60; a way to set the &#x27;_suppressClose&#x27;-data when needed
                     // need a bit more time because there is time inbetween the blur vs click events
-                    laterSilent(function() {
+                    later(function() {
                         if (!element.hasData(&#x27;_suppressClose&#x27;)) {
                             element.model.expanded = false;
-                            DOCUMENT.refreshItags();
                         }
                     }, DELAY_BLURCLOSE);
                 });
@@ -572,7 +564,7 @@ module.exports = function (window) {
                 else {
                     container.removeClass(SHOW);
                     // hide the layer completely: we need to access anything underneath:
-                    hiddenTimer = laterSilent(function() {
+                    hiddenTimer = later(function() {
                         container.setClass(HIDDEN);
                     }, 110);
                     container.setData(&#x27;_hiddenTimer&#x27;, hiddenTimer);
@@ -593,8 +585,6 @@ module.exports = function (window) {
                 this.cleanupEvents();
             }
         });
-
-        itagCore.setDirectEventResponse(Itag, [&#x27;keypress&#x27;, &#x27;keydown&#x27;]);
 
         window.ITAGS[itagName] = Itag;
     }

@@ -127,8 +127,6 @@
             
                 <li><a href="../modules/event-mobile.html">event-mobile</a></li>
             
-                <li><a href="../modules/event-objectobserve.html">event-objectobserve</a></li>
-            
                 <li><a href="../modules/extend-document.html">extend-document</a></li>
             
                 <li><a href="../modules/extend-element.html">extend-element</a></li>
@@ -227,7 +225,6 @@ module.exports = function (window) {
     require(&#x27;itags.core&#x27;)(window);
 
     var itagName = &#x27;i-input&#x27;, // &lt;-- define your own itag-name here
-        DOCUMENT = window.document,
         ITSA = window.ITSA,
         Event = ITSA.Event,
         Itag, IFormElement;
@@ -247,7 +244,7 @@ module.exports = function (window) {
             element.itagReady().then(
                 function() {
                     var input = element.getElement(&#x27;input&#x27;);
-                    input &amp;&amp; input.focus(true, true);
+                    input &amp;&amp; input.focus(true);
                 }
             );
         });
@@ -272,9 +269,6 @@ module.exports = function (window) {
                 prevValue: prevValue,
                 newValue: newValue
             });
-            // because &#x60;valuechange&#x60; does no finalize, we need to refresh
-            // the itags manually:
-            DOCUMENT.refreshItags();
         }, &#x27;i-input &gt; input&#x27;);
 
         Itag = IFormElement.subClass(itagName, {
@@ -319,8 +313,6 @@ module.exports = function (window) {
             reset: function() {
                 var model = this.model;
                 model.value = model[&#x27;reset-value&#x27;];
-                // no need to call &#x60;refreshItags&#x60; --&gt; the reset()-method doesn&#x27;t come out of the blue
-                // so, the eventsystem will refresh it afterwards
             }
         });
 
