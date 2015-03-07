@@ -38,7 +38,7 @@ YUI.add("yuidoc-meta", function(Y) {
         "element-array",
         "event",
         "event-blurnode",
-        "event-blurnode",
+        "event-dom",
         "event-dom",
         "event-emitter",
         "event-focusnode",
@@ -73,6 +73,10 @@ YUI.add("yuidoc-meta", function(Y) {
         "utils",
         "vdom",
         "vdom-ns",
+        "vnode",
+        "vnode",
+        "vnode",
+        "vnode",
         "vnode"
     ],
     "allModules": [

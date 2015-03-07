@@ -222,7 +222,7 @@
 
     
         <div class="foundat">
-            Defined in: <a href="../files/site-preview_dist_itagsbuild.js.html#l17809"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:17809</code></a>
+            Defined in: <a href="../files/site-preview_dist_itagsbuild.js.html#l60409"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:60409</code></a>
         </div>
     
 
@@ -268,8 +268,26 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
                 </li>
             
                 <li class="module-class">
+                    <a href="../classes/IO.html">
+                        IO
+                    </a>
+                </li>
+            
+                <li class="module-class">
                     <a href="../classes/USERAGENT.html">
                         USERAGENT
+                    </a>
+                </li>
+            
+                <li class="module-class">
+                    <a href="../classes/vnode.html">
+                        vnode
+                    </a>
+                </li>
+            
+                <li class="module-class">
+                    <a href="../classes/window.html">
+                        window
                     </a>
                 </li>
             
@@ -290,21 +308,6 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
 
                     <div class="module-submodule-description">
                         Adds the <code>blurnode</code> event as a DOM-event to event-dom. more about DOM-events:
-http://www.smashingmagazine.com/2013/11/12/an-introduction-to-dom-events/
-
-
-<i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
-New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
-                    </div>
-                </li>
-            
-                <li class="module-submodule">
-                    <a href="../modules/event-dom.html">
-                        event-dom
-                    </a>
-
-                    <div class="module-submodule-description">
-                        Integrates DOM-events to event. more about DOM-events:
 http://www.smashingmagazine.com/2013/11/12/an-introduction-to-dom-events/
 
 
@@ -343,6 +346,36 @@ http://www.smashingmagazine.com/2013/11/12/an-introduction-to-dom-events/
 
 
 <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+                    </div>
+                </li>
+            
+                <li class="module-submodule">
+                    <a href="../modules/io-xml.html">
+                        io-xml
+                    </a>
+
+                    <div class="module-submodule-description">
+                        Extends io by adding the method <code>readXML</code> to it.
+Should be called using  the provided <code>mergeInto</code>-method like this:
+                    </div>
+                </li>
+            
+                <li class="module-submodule">
+                    <a href="../modules/vnode.html">
+                        vnode
+                    </a>
+
+                    <div class="module-submodule-description">
+                        Delivers the <code>vnode</code> prototype object, which is a virtualisation of an <code>Element</code> inside the Dom.
+These Elements work smoothless with the vdom (see ...).
+
+vnodes are much quicker to access and walk through than native dom-nodes. However, this is a module you don't need
+by itself: <code>Element</code>-types use these features under the hood.
+
+
+<i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
+<br>
 New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
                     </div>
                 </li>

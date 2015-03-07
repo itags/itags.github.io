@@ -117,7 +117,7 @@ module.exports.byUrl = function(url) {
 /*jshint boss:true */
     if (window._ITSAmodules.ITSA) {
 /*jshint boss:false */
-        return ITSA; // ITSA was already created
+        return window._ITSAmodules.ITSA; // ITSA was already created
     }
 
     var ITSA = function (config) {
@@ -1094,7 +1094,7 @@ module.exports = function (window) {
                 vnode = node.vnode,
                 character1 = selector && selector.substr(1),
                 match = false;
-            if (!isCustomElement || visibleContent || subscriber.o.contains(node)) {
+            if (!isCustomElement || visibleContent || context.contains(node)) {
                 if (selector==='') {
                     match = true;
                 }
@@ -2383,7 +2383,7 @@ var createHashMap = require('js-ext/extra/hashmap.js').createMap;
                 cb: callback,
                 f: filter
             };
-
+console.warn(item);
             // if extract[1] is undefined, a simple customEvent is going to subscribe (without :)
             // therefore: recomposite customEvent:
             extract[1] || (customEvent='UI:'+customEvent);
@@ -3096,7 +3096,7 @@ require('js-ext/lib/object.js');
 
 var Event = require('./event-base.js'),
     Classes = require("js-ext/extra/classes.js"),
-    filterFn, ClassListener;
+    callbackFn, ClassListener;
 
 Event.Listener = {
     /**
@@ -3220,8 +3220,12 @@ Event.Listener = {
     }
 };
 
-filterFn = function(e) {
-    return e.target===this;
+callbackFn = function(callback, e) {
+    var instance = this,
+        eTarget = e.target,
+        accept;
+    accept = (eTarget===instance) || (eTarget.vnode && instance.vnode && instance.contains(eTarget));
+    accept && callback.call(instance, e);
 };
 
 Event._CE_listener = ClassListener = {
@@ -3238,12 +3242,17 @@ Event._CE_listener = ClassListener = {
      *        If `emitterName` is not defined, `UI` is assumed.
      * @param callback {Function} subscriber:will be invoked when the event occurs. An `eventobject` will be passed
      *        as its only argument.
+     * @param [filter] {String|Function} to filter the event.
+     *        Use a String if you want to filter DOM-events by a `selector`
+     *        Use a function if you want to filter by any other means. If the function returns a trully value, the
+     *        subscriber gets invoked. The function gets the `eventobject` as its only argument and the context is
+     *        the subscriber.
      * @param [prepend=false] {Boolean} whether the subscriber should be the first in the list of after-subscribers.
      * @return {Object} handler with a `detach()`-method which can be used to detach the subscriber
      * @since 0.0.1
     */
-    selfAfter: function (customEvent, callback, prepend) {
-        return Event.after(customEvent, callback, this, filterFn.bind(this), prepend);
+    selfAfter: function (customEvent, callback, filter, prepend) {
+        return Event.after(customEvent, callbackFn.bind(this, callback), this, filter, prepend);
     },
 
     /**
@@ -3259,12 +3268,17 @@ Event._CE_listener = ClassListener = {
      *        If `emitterName` is not defined, `UI` is assumed.
      * @param callback {Function} subscriber:will be invoked when the event occurs. An `eventobject` will be passed
      *        as its only argument.
+     * @param [filter] {String|Function} to filter the event.
+     *        Use a String if you want to filter DOM-events by a `selector`
+     *        Use a function if you want to filter by any other means. If the function returns a trully value, the
+     *        subscriber gets invoked. The function gets the `eventobject` as its only argument and the context is
+     *        the subscriber.
      * @param [prepend=false] {Boolean} whether the subscriber should be the first in the list of before-subscribers.
      * @return {Object} handler with a `detach()`-method which can be used to detach the subscriber
      * @since 0.0.1
     */
-    selfBefore: function (customEvent, callback, prepend) {
-        return Event.before(customEvent, callback, this, filterFn.bind(this), prepend);
+    selfBefore: function (customEvent, callback, filter, prepend) {
+        return Event.before(customEvent, callbackFn.bind(this, callback), this, filter, prepend);
     },
 
     /**
@@ -3282,12 +3296,17 @@ Event._CE_listener = ClassListener = {
      *        If `emitterName` is not defined, `UI` is assumed.
      * @param callback {Function} subscriber:will be invoked when the event occurs. An `eventobject` will be passed
      *        as its only argument.
+     * @param [filter] {String|Function} to filter the event.
+     *        Use a String if you want to filter DOM-events by a `selector`
+     *        Use a function if you want to filter by any other means. If the function returns a trully value, the
+     *        subscriber gets invoked. The function gets the `eventobject` as its only argument and the context is
+     *        the subscriber.
      * @param [prepend=false] {Boolean} whether the subscriber should be the first in the list of after-subscribers.
      * @return {Object} handler with a `detach()`-method which can be used to detach the subscriber
      * @since 0.0.1
     */
-    selfOnceAfter: function (customEvent, callback, prepend) {
-        return Event.onceAfter(customEvent, callback, this, filterFn.bind(this), prepend);
+    selfOnceAfter: function (customEvent, callback, filter, prepend) {
+        return Event.onceAfter(customEvent, callbackFn.bind(this, callback), this, filter, prepend);
     },
 
     /**
@@ -3305,12 +3324,17 @@ Event._CE_listener = ClassListener = {
      *        If `emitterName` is not defined, `UI` is assumed.
      * @param callback {Function} subscriber:will be invoked when the event occurs. An `eventobject` will be passed
      *        as its only argument.
+     * @param [filter] {String|Function} to filter the event.
+     *        Use a String if you want to filter DOM-events by a `selector`
+     *        Use a function if you want to filter by any other means. If the function returns a trully value, the
+     *        subscriber gets invoked. The function gets the `eventobject` as its only argument and the context is
+     *        the subscriber.
      * @param [prepend=false] {Boolean} whether the subscriber should be the first in the list of before-subscribers.
      * @return {Object} handler with a `detach()`-method which can be used to detach the subscriber
      * @since 0.0.1
     */
-    selfOnceBefore: function (customEvent, callback, prepend) {
-        return Event.onceBefore(customEvent, callback, this, filterFn.bind(this), prepend);
+    selfOnceBefore: function (customEvent, callback, filter, prepend) {
+        return Event.onceBefore(customEvent, callbackFn.bind(this, callback), this, filter, prepend);
     },
 
     destroy: function(notChained) {
@@ -8826,7 +8850,7 @@ module.exports = function (window) {
          *
          * @method contains
          * @param otherElement {Element}
-         * @param [excludeItself] {Boolean} to exclude itsefl as a hit
+         * @param [excludeItself=false] {Boolean} to exclude itself as a hit
          * @param [inspectProtectedNodes=false] {Boolean} no deepsearch in protected Nodes or iTags --> by default, these elements should be hidden
          * @return {Boolean} whether this Element contains OR equals otherElement.
          */
@@ -14000,7 +14024,7 @@ module.exports = function (window) {
             while (otherVNode && (otherVNode!==instance)) {
                 otherVNode = otherVNode.vParent;
                 if (otherVNode && noProtectedSearch && (otherVNode._systemNode || (otherVNode.isItag && otherVNode.domNode.contentHidden))) {
-                    return false;
+                    return (otherVNode===instance);
                 }
             }
             return (otherVNode===instance);
@@ -40495,12 +40519,7 @@ module.exports = function (window) {
                 element.setData('errors', []);
                 element.defineWhenUndefined('readyContent', DEFAULT_READY);
                 element.defineWhenUndefined('content', element.model.readyContent || '');
-
-
-                element.after('tap', element.finishMessage.bind(element)); // works
-                // element.after('tap', element.finishMessage.bind(element), 'button'); // doesn't work
-
-
+                element.selfAfter('tap', element.finishMessage.bind(element), '>span:last-child button');
             },
 
             setupListener: function() {
@@ -40548,8 +40567,8 @@ module.exports = function (window) {
                 var element = this,
                     buttonNode = e.target,
                     model = element.model,
-                    containerNode = DOCUMENT.createElement('div');
-                containerNode.setHTML(model.content);
+                    messageSpan = element.getElement('>span'),
+                    containerNode = messageSpan.cloneNode(true);
                 containerNode.append(buttonNode.getOuterHTML());
                 model.messagePromise.fulfill(containerNode);
             },
