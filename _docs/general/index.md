@@ -182,11 +182,11 @@ controlModel.pane = 3;
 
 There are three different ways of developing an Itag-Class:
 
-* create completely new using `createItag()`
+* create completely new using `defineItag()`
 * sub-classing an existing Itag-Class with `subClass()`
 * pseudoClassing an existing Itag-Class with `pseudoClass()`
 
-In either case, the basic skeleton look like this (example is based upon `createItag`):
+In either case, the basic skeleton look like this (example is based upon `defineItag`):
 
 ####default skeleton defining itags####
 ```js
@@ -200,7 +200,7 @@ module.exports = function (window) {
 
     if (!window.ITAGS[itagName]) {
 
-        Itag = DOCUMENT.createItag(itagName, {
+        Itag = DOCUMENT.defineItag(itagName, {
             attrs: {
             },
 
@@ -224,13 +224,13 @@ module.exports = function (window) {
 *Note:* every new definition is automaticly stored inside the object `window.ITAGS` like this: *window.ITAGS[itagName] = ItagClass;*
 
 
-##createItag##
+##defineItag##
 
-You can use `window.document.createItag()` for every new itag you want to setup that doesn't need to be inherited from an existing itag. Probably most of the cases. The first argument holds the *name* of the `itag`. The second argument (as well as the other) are discussed later on.
+You can use `window.document.defineItag()` for every new itag you want to setup that doesn't need to be inherited from an existing itag. Probably most of the cases. The first argument holds the *name* of the `itag`. The second argument (as well as the other) are discussed later on.
 
-####Example document.createItag()####
+####Example document.defineItag()####
 ```js
-document.createItag('i-myform');
+document.defineItag('i-myform');
 ```
 
 
@@ -240,7 +240,7 @@ Any `Itag-Class` can be subclassed with 'subClass()`. The subclass has its own i
 
 Important (and different compared to `pseudoClass`) is that the itag <u>has its own element-name</u>. This is important, because you probably loose `css`-styles and maybe events (when they are filtered by element-name as they should) by the superclass. So, you need to redefine them again.
 
-Subclassing using `subClass` isn't very useful unless you want to inherit a lot of the functionality that was defined by its parent by the second argument (member of the prototype). Mostly you be better of using `document.createItag()` or `ItagClass.pseudoClass()`.
+Subclassing using `subClass` isn't very useful unless you want to inherit a lot of the functionality that was defined by its parent by the second argument (member of the prototype). Mostly you be better of using `document.defineItag()` or `ItagClass.pseudoClass()`.
 
 
 ####Example defining subClass####
@@ -291,8 +291,8 @@ In the previous methods to create itags, you can pass 5 arguments:
 
 * itagname/pseudoname
 * prototypes
-* chainInit (not applyable for createItag)
-* chainDestroy (not applyable for createItag)
+* chainInit (not applyable for defineItag)
+* chainDestroy (not applyable for defineItag)
 * subClassable
 
 ###itagname/pseudoname###
@@ -308,7 +308,7 @@ This is an optional object containing all members (properties and methods) that 
 ####Example defining attrs####
 
 ```js
-var MyIFormClass = document.createItag('i-myform', {
+var MyIFormClass = document.defineItag('i-myform', {
     attrs: {
         action: 'string'
     }
@@ -333,14 +333,14 @@ Note: within the sync-method, you can set any attribute on the itag-element <u>e
 
 This is a boolean (defaults true) which specifies that the parent Class its `init`-method should be invoked before its own `init`. This is normal behaviour when sub-classing, though can suppress it. When suppressed, you still can invoke the parent Class its `init`, by using **this.$superProp('init')**
 
-chainInit is not applyable on document.createItag().
+chainInit is not applyable on document.defineItag().
 
 
 ###chainDestroy###
 
 This is a boolean (defaults true) which specifies that the parent Class its `destroy`-method should be invoked after its own `destroy`. This is normal behaviour when sub-classing, though can suppress it. When suppressed, you still can invoke the parent Class its `destroy`, by using **this.$superProp('destroy')**
 
-chainDestroy is not applyable on document.createItag().
+chainDestroy is not applyable on document.defineItag().
 
 
 ###subClassable###
@@ -477,7 +477,7 @@ Under the hood, `destroy` gets stored as `_destroy`, whereas `Class.destroy(notC
 var regArray = [],
     MyIFormClass, newNode;
 
-MyIFormClass = document.createItag('i-myform', {
+MyIFormClass = document.defineItag('i-myform', {
     init: function() {
         var element = this;
         regArray.push(element);
@@ -526,7 +526,7 @@ All Itag-Classes are automaticly become an Event-emitter (for more info on event
 ```js
 var MyIFormClass, newNode;
 
-MyIFormClass = document.createItag('i-myform');
+MyIFormClass = document.defineItag('i-myform');
 
 newNode = document.body.append('<i-myform></i-myform>');
 
@@ -567,7 +567,7 @@ By setting `itsa/focusmanager` on the itag-element (which could be done in the i
 ####Example focusmanager on Itag####
 
 ```js
-document.createItag('i-myform', {
+document.defineItag('i-myform', {
     init: function() {
         this.plug(ITSA.Plugins.focusManager);
     }
@@ -582,7 +582,7 @@ Another way is to listen for a `manualfocus`-event --> which gets fired before a
 ####Example using the manualfocus-event####
 
 ```js
-document.createItag('i-myform', {
+document.defineItag('i-myform', {
     init: function() {
         this.append('<button>Send data</button>');
     },
@@ -607,7 +607,7 @@ The same technique can be used in combination with the focusmanager:
 ####Example using the manualfocus-event with focusmanager####
 
 ```js
-document.createItag('i-myform', {
+document.defineItag('i-myform', {
     init: function() {
         this.append('<ul fm-manage="true"><input /><button>Send data</button></ul>');
     },
