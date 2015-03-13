@@ -49,6 +49,8 @@
             
                 <li><a href="../classes/DD.html">DD</a></li>
             
+                <li><a href="../classes/Dialog.html">Dialog</a></li>
+            
                 <li><a href="../classes/document.html">document</a></li>
             
                 <li><a href="../classes/Element.html">Element</a></li>
@@ -67,6 +69,8 @@
             
                 <li><a href="../classes/HTMLElement.html">HTMLElement</a></li>
             
+                <li><a href="../classes/Icons.html">Icons</a></li>
+            
                 <li><a href="../classes/IO.html">IO</a></li>
             
                 <li><a href="../classes/ItagBaseClass.html">ItagBaseClass</a></li>
@@ -74,6 +78,8 @@
                 <li><a href="../classes/itagCore.html">itagCore</a></li>
             
                 <li><a href="../classes/ITSA.html">ITSA</a></li>
+            
+                <li><a href="../classes/Messages.html">Messages</a></li>
             
                 <li><a href="../classes/Node.html">Node</a></li>
             
@@ -104,6 +110,8 @@
             <ul id="api-modules" class="apis modules">
             
                 <li><a href="../modules/attribute-extractor.html">attribute-extractor</a></li>
+            
+                <li><a href="../modules/dialog.html">dialog</a></li>
             
                 <li><a href="../modules/drag.html">drag</a></li>
             
@@ -137,6 +145,8 @@
             
                 <li><a href="../modules/html-parser.html">html-parser</a></li>
             
+                <li><a href="../modules/icons.html">icons</a></li>
+            
                 <li><a href="../modules/io.html">io</a></li>
             
                 <li><a href="../modules/io-cors.html">io-cors</a></li>
@@ -160,6 +170,8 @@
                 <li><a href="../modules/lib_promise.s.html">lib/promise.s</a></li>
             
                 <li><a href="../modules/lib_string.js.html">lib/string.js</a></li>
+            
+                <li><a href="../modules/messages.html">messages</a></li>
             
                 <li><a href="../modules/node-parser.html">node-parser</a></li>
             
@@ -244,17 +256,50 @@ module.exports = function (window) {
             element.itagReady().then(
                 function() {
                     var input = element.getElement(&#x27;input&#x27;);
-                    input &amp;&amp; input.focus(true);
+                    input &amp;&amp; input.focus(true); // MUST be silent
                 }
             );
         });
 
+        Event.after([&#x27;keypress&#x27;, &#x27;mouseup&#x27;, &#x27;panup&#x27;, &#x27;mousedown&#x27;, &#x27;pandown&#x27;], function(e) {
+            var inputNode = e.target,
+                element = inputNode.getParent(),
+                model = element.model;
+            model[&#x27;selection-start&#x27;] = inputNode.selectionStart || 0;
+            model[&#x27;selection-end&#x27;] = inputNode.selectionEnd || 0;
+        }, &#x27;i-input input&#x27;);
+
         Event.after(&#x27;valuechange&#x27;, function(e) {
-            var newValue = e.value,
-                element = e.target.getParent(),
+            var element = e.target.getParent(),
+                newValue = e.value,
                 model = element.model,
-                prevValue = model.value;
+                prevValue = model.value,
+                validNumber, min, max;
             model.value = newValue;
+            switch (model.type) {
+                case &#x27;number&#x27;:
+                    validNumber = model.floated ? newValue.validateFloat() : newValue.validateNumber();
+                    if (validNumber) {
+                        min = model.min;
+                        max = model.max;
+                        if ((typeof min===&#x27;number&#x27;) &amp;&amp; (newValue&lt;min)) {
+                            validNumber = false;
+                        }
+                        else if ((typeof max===&#x27;number&#x27;) &amp;&amp; (newValue&gt;max)) {
+                            validNumber = false;
+                        }
+                    }
+                    model.invalid = !validNumber;
+                    break;
+                case &#x27;email&#x27;:
+                    model.invalid = !newValue.validateEmail();
+                    break;
+                case &#x27;url&#x27;:
+                    model.invalid = !newValue.validateURL();
+                    break;
+                default:
+                    model.invalid = false;
+            }
             /**
             * Emitted when a the i-select changes its value
             *
@@ -275,34 +320,93 @@ module.exports = function (window) {
             attrs: {
                 &#x27;i-prop&#x27;: &#x27;string&#x27;,
                 &#x27;reset-value&#x27;: &#x27;string&#x27;,
-                &#x27;placeholder&#x27;: &#x27;string&#x27;,
-                &#x27;readonly&#x27;: &#x27;boolean&#x27;
+                placeholder: &#x27;string&#x27;,
+                readonly: &#x27;boolean&#x27;,
+                primaryonenter: &#x27;boolean&#x27;,
+                min: &#x27;number&#x27;,
+                max: &#x27;number&#x27;,
+                floated: &#x27;boolean&#x27;,
+                type: &#x27;string&#x27;,
+                invalid: &#x27;boolean&#x27;,
+                format: &#x27;string&#x27;,
+                &#x27;selection-start&#x27;: &#x27;number&#x27;,
+                &#x27;selection-end&#x27;: &#x27;number&#x27;
             },
 
             init: function() {
                 var element = this,
                     designNode = element.getItagContainer(),
-                    value = designNode.getText();
+                    model = element.model,
+                    value = designNode.getText(),
+                    validNumber, min, max;
 
                 element.defineWhenUndefined(&#x27;value&#x27;, value)
                        // set the reset-value to the inital-value in case &#x60;reset-value&#x60; was not present
                        .defineWhenUndefined(&#x27;reset-value&#x27;, value);
+                value = model.value;
+                switch (model.type) {
+                    case &#x27;number&#x27;:
+                        validNumber = model.floated ? value.validateFloat() : value.validateNumber();
+                        if (validNumber) {
+                            min = model.min;
+                            max = model.max;
+                            if ((typeof min===&#x27;number&#x27;) &amp;&amp; (value&lt;min)) {
+                                validNumber = false;
+                            }
+                            else if ((typeof max===&#x27;number&#x27;) &amp;&amp; (value&gt;max)) {
+                                validNumber = false;
+                            }
+                        }
+                        model.invalid = !validNumber;
+                        break;
+                    case &#x27;email&#x27;:
+                        model.invalid = !value.validateEmail();
+                        break;
+                    case &#x27;url&#x27;:
+                        model.invalid = !value.validateURL();
+                        break;
+                    default:
+                        model.invalid = false;
+                }
             },
 
             render: function() {
-                this.setHTML(&#x27;&lt;input value=&quot;&#x27;+this.model.value+&#x27;&quot; /&gt;&#x27;);
+                this.setHTML(&#x27;&lt;input type=&quot;text&quot; value=&quot;&#x27;+this.model.value+&#x27;&quot; /&gt;&#x27;);
             },
 
             sync: function() {
                 var element = this,
                     model = element.model,
-                    input = element.getElement(&#x27;&gt;input&#x27;);
+                    input = element.getElement(&#x27;&gt;input&#x27;),
+                    selectionEnd, selectionStart;
                 // it is safe to use setValue --&gt; when the content hasn&#x27;t changed, &#x60;setValue&#x60; doesn&#x27;t do anything
                 input.setValue(model.value);
 
-// model.placeholder &amp;&amp; input.setAttr(&#x27;placeholder&#x27;, model.placeholder, true);
-// model[&#x27;reset-value&#x27;] &amp;&amp; input.setAttr(&#x27;reset-value&#x27;, model[&#x27;reset-value&#x27;], true);
+                // cautious: fm-selectionstart can be 0 --&gt; which would lead into a falsy value
+                selectionStart = model[&#x27;selection-start&#x27;];
+                (selectionStart===undefined) &amp;&amp; (selectionStart=String(model.value).length);
+                selectionEnd = Math.max(model[&#x27;selection-end&#x27;] || selectionStart, selectionStart);
+                input.selectionEnd = selectionEnd;
+                input.selectionStart = selectionStart;
 
+                if (model.placeholder) {
+                    input.setAttr(&#x27;placeholder&#x27;, model.placeholder, true);
+                }
+                else {
+                    input.removeAttr(&#x27;placeholder&#x27;, true);
+                }
+                if (model.primaryonenter) {
+                    input.setAttr(&#x27;fm-primaryonenter&#x27;, model.primaryonenter, true);
+                }
+                else {
+                    input.removeAttr(&#x27;fm-primaryonenter&#x27;, true);
+                }
+                if (model.readonly) {
+                    input.setAttr(&#x27;readonly&#x27;, model.readonly, true);
+                }
+                else {
+                    input.removeAttr(&#x27;readonly&#x27;, true);
+                }
             },
 
             currentToReset: function() {
@@ -313,6 +417,10 @@ module.exports = function (window) {
             reset: function() {
                 var model = this.model;
                 model.value = model[&#x27;reset-value&#x27;];
+            },
+
+            invalid: function() {
+                return this.model.invalid;
             }
         });
 

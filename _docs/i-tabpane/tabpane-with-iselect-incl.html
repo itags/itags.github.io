@@ -9,7 +9,7 @@
     </style>
 </head>
 
-<body fm-manage="true">
+<body>
 
     <i-tabpane pane="2">
         <!--
@@ -17,16 +17,20 @@
         <section><span is="tab">item 2</span>Content second page</section>
         <section><span is="tab">item3 header</span>page 3</section>
         <section>
-            <i-select value="2" class="i-primary">
+            <i-form>
                 <!==
-                    <option>item1</option>
-                    <option>item2</option>
-                    <option><span is="button">item3 header</span>item3 content</option>
-                    <option>item4</option>
-                    <option>item5</option>
+                    <i-select value="2" class="i-primary">
+                        <!==
+                            <option>item1</option>
+                            <option>item2</option>
+                            <option><span is="button">item3 header</span>item3 content</option>
+                            <option>item4</option>
+                            <option>item5</option>
+                        ==>
+                    </i-select>
+                    <i-input reset-value="nobody" placeholder="Say your name"></i-input>
                 ==>
-            </i-select>
-            <i-input reset-value="nobody" placeholder="Say your name">Marco</i-input>
+            </i-form>
         </section>
         <section><i-input id="2" reset-value="nobody" placeholder="Say your name">Marco</i-input></section>
         -->

@@ -49,6 +49,8 @@
             
                 <li><a href="../classes/DD.html">DD</a></li>
             
+                <li><a href="../classes/Dialog.html">Dialog</a></li>
+            
                 <li><a href="../classes/document.html">document</a></li>
             
                 <li><a href="../classes/Element.html">Element</a></li>
@@ -67,6 +69,8 @@
             
                 <li><a href="../classes/HTMLElement.html">HTMLElement</a></li>
             
+                <li><a href="../classes/Icons.html">Icons</a></li>
+            
                 <li><a href="../classes/IO.html">IO</a></li>
             
                 <li><a href="../classes/ItagBaseClass.html">ItagBaseClass</a></li>
@@ -74,6 +78,8 @@
                 <li><a href="../classes/itagCore.html">itagCore</a></li>
             
                 <li><a href="../classes/ITSA.html">ITSA</a></li>
+            
+                <li><a href="../classes/Messages.html">Messages</a></li>
             
                 <li><a href="../classes/Node.html">Node</a></li>
             
@@ -104,6 +110,8 @@
             <ul id="api-modules" class="apis modules">
             
                 <li><a href="../modules/attribute-extractor.html">attribute-extractor</a></li>
+            
+                <li><a href="../modules/dialog.html">dialog</a></li>
             
                 <li><a href="../modules/drag.html">drag</a></li>
             
@@ -137,6 +145,8 @@
             
                 <li><a href="../modules/html-parser.html">html-parser</a></li>
             
+                <li><a href="../modules/icons.html">icons</a></li>
+            
                 <li><a href="../modules/io.html">io</a></li>
             
                 <li><a href="../modules/io-cors.html">io-cors</a></li>
@@ -160,6 +170,8 @@
                 <li><a href="../modules/lib_promise.s.html">lib/promise.s</a></li>
             
                 <li><a href="../modules/lib_string.js.html">lib/string.js</a></li>
+            
+                <li><a href="../modules/messages.html">messages</a></li>
             
                 <li><a href="../modules/node-parser.html">node-parser</a></li>
             
@@ -234,7 +246,18 @@ module.exports = function (window) {
         DOCUMENT = window.document,
         ITSA = window.ITSA,
         Event = ITSA.Event,
+        KEY_UP = 37, // don&#x27;t use hot keys without altering the code: just numbers
+        KEY_DOWN = 39, // don&#x27;t use hot keys without altering the code: just numbers
+        KEY_ENTER = 40, // don&#x27;t use hot keys without altering the code: just numbers
+        KEY_LEAVE = 27, // don&#x27;t use hot keys without altering the code: just numbers
         SUPPRESS_DELAY = 150, // to prevent flickr due to focusmanager when clicked on li-elements
+        // SPECIAL_KEYS needs to be a native Object --&gt; we need .some()
+        SPECIAL_KEYS = {
+            shift: &#x27;shiftKey&#x27;,
+            ctrl: &#x27;ctrlKey&#x27;,
+            cmd: &#x27;metaKey&#x27;,
+            alt: &#x27;altKey&#x27;
+        },
         Itag;
 
     if (!window.ITAGS[itagName]) {
@@ -257,7 +280,7 @@ module.exports = function (window) {
 
         Event.after(&#x27;focus&#x27;, function(e) {
             var node = e.target,
-                ul = node.getParent(),
+                ul = node.inside(&#x27;i-tabpane &gt;ul&#x27;),
                 element = ul.getParent(),
                 model = element.model,
                 liNodes, newPane;
@@ -280,6 +303,69 @@ module.exports = function (window) {
                 element.setData(&#x27;_newPane&#x27;, newPane);
             }
         }, &#x27;i-tabpane &gt; ul li&#x27;);
+
+        Event.after(&#x27;keydown&#x27;, function(e) {
+            var keyCode = e.keyCode,
+                element, childFocusManagerNode;
+            if ((keyCode===KEY_ENTER) &amp;&amp; !e.shiftKey &amp;&amp; !e.ctrlKey &amp;&amp; !e.metaKey &amp;&amp; !e.altKey) {
+                element = e.target.inside(&#x27;i-tabpane&#x27;);
+                childFocusManagerNode = element.getElement(&#x27;&gt;div &gt;div.container [plugin-fm=&quot;true&quot;]&#x27;);
+                childFocusManagerNode &amp;&amp; childFocusManagerNode.focus();
+            }
+        }, &#x27;i-tabpane &gt; ul li&#x27;);
+
+        Event.before(&#x27;keydown&#x27;, function(e) {
+            var keyCode = e.keyCode,
+                acceptedKey, hotKey;
+            acceptedKey = (keyCode===KEY_UP) || (keyCode===KEY_DOWN) || (keyCode===KEY_LEAVE) || (keyCode===KEY_ENTER);
+            hotKey = e.shiftKey || e.ctrlKey || e.metaKey || e.altKey;
+            if (!acceptedKey || hotKey) {
+                e.preventDefault();
+            }
+        }, &#x27;i-tabpane &gt; ul li&#x27;);
+
+        Event.after(&#x27;keydown&#x27;, function(e) {
+            var keyCode = e.keyCode,
+                fmNode = e.sourceTarget.inside(&#x27;[plugin-fm=&quot;true&quot;]&#x27;),
+                parentFmNode, tabPaneNode, mightFocus;
+
+            // check if the next upper focusmanager lies higher than i-tabpane:
+            if (fmNode) {
+                parentFmNode = fmNode.inside(&#x27;[plugin-fm=&quot;true&quot;]&#x27;);
+                tabPaneNode = e.target.inside(&#x27;i-tabpane&#x27;);
+                // if outside, than we are allowed to focus on the tabs:
+                mightFocus = !parentFmNode || !parentFmNode.inside(tabPaneNode);
+            }
+            if (mightFocus) {
+                // check for keyleave:
+                fmNode.getPlugin(&#x27;fm&#x27;).then(
+                    function(plugin) {
+                        var actionkey = plugin.model.keyleave,
+                            specialKeysMatch = false,
+                            keys, i, len, lastIndex, specialKey;
+                        if (actionkey) {
+                            keys = actionkey.split(&#x27;+&#x27;);
+                            len = keys.length;
+                            lastIndex = len - 1;
+                            // double == --&gt; keyCode is number, keys is a string
+                            if (keyCode==keys[lastIndex]) {
+                                // posible keyleave --&gt; check if special characters match:
+                                specialKeysMatch = true;
+                                SPECIAL_KEYS.some(function(value) {
+                                    specialKeysMatch = !e[value];
+                                    return !specialKeysMatch;
+                                });
+                                for (i=lastIndex-1; (i&gt;=0) &amp;&amp; !specialKeysMatch; i--) {
+                                    specialKey = keys[i].toLowerCase();
+                                    specialKeysMatch = e[SPECIAL_KEYS[specialKey]];
+                                }
+                            }
+                            specialKeysMatch &amp;&amp; ITSA.async(tabPaneNode.focus.bind(tabPaneNode));
+                        }
+                    }
+                );
+            }
+        }, &#x27;i-tabpane &gt; div&#x27;);
 
         Itag = DOCUMENT.defineItag(itagName, {
             /*
@@ -349,7 +435,7 @@ module.exports = function (window) {
                 var element = this,
                     content;
                 // note: the container wil excist of a div inside a div --&gt; to make the css work (100% height within i-tabpane)
-                content = &#x27;&lt;ul plugin-fm=&quot;true&quot; fm-manage=&quot;li&quot; fm-keyup=&quot;37&quot; fm-keydown=&quot;39&quot; fm-noloop=&quot;true&quot;&gt;&lt;/ul&gt;&#x27;;
+                content = &#x27;&lt;ul plugin-fm=&quot;true&quot; fm-manage=&quot;li&quot; fm-keyup=&quot;&#x27;+KEY_UP+&#x27;&quot; fm-keydown=&quot;&#x27;+KEY_DOWN+&#x27;&quot; fm-keyenter=&quot;&#x27;+KEY_ENTER+&#x27;&quot; fm-keyleave=&quot;&#x27;+KEY_LEAVE+&#x27;&quot; fm-noloop=&quot;true&quot;&gt;&lt;/ul&gt;&#x27;;
                 content += &#x27;&lt;div&gt;&lt;div class=&quot;container&quot;&gt;&lt;/div&gt;&lt;/div&gt;&#x27;;
                 // set the other content:
                 element.setHTML(content);
@@ -393,7 +479,7 @@ module.exports = function (window) {
                     tabs = model.tabs,
                     len = tabs.length,
                     navContainer = element.getElement(&#x27;&gt;ul&#x27;),
-                    container = element.getElement(&#x27;div.container&#x27;),
+                    container = element.getElement(&#x27;&gt;div &gt;div.container&#x27;),
                     content = &#x27;&#x27;,
                     i, tabItem, index;
                 index = pane - 1;

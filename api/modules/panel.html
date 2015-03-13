@@ -49,6 +49,8 @@
             
                 <li><a href="../classes/DD.html">DD</a></li>
             
+                <li><a href="../classes/Dialog.html">Dialog</a></li>
+            
                 <li><a href="../classes/document.html">document</a></li>
             
                 <li><a href="../classes/Element.html">Element</a></li>
@@ -67,6 +69,8 @@
             
                 <li><a href="../classes/HTMLElement.html">HTMLElement</a></li>
             
+                <li><a href="../classes/Icons.html">Icons</a></li>
+            
                 <li><a href="../classes/IO.html">IO</a></li>
             
                 <li><a href="../classes/ItagBaseClass.html">ItagBaseClass</a></li>
@@ -74,6 +78,8 @@
                 <li><a href="../classes/itagCore.html">itagCore</a></li>
             
                 <li><a href="../classes/ITSA.html">ITSA</a></li>
+            
+                <li><a href="../classes/Messages.html">Messages</a></li>
             
                 <li><a href="../classes/Node.html">Node</a></li>
             
@@ -104,6 +110,8 @@
             <ul id="api-modules" class="apis modules">
             
                 <li><a href="../modules/attribute-extractor.html">attribute-extractor</a></li>
+            
+                <li><a href="../modules/dialog.html">dialog</a></li>
             
                 <li><a href="../modules/drag.html">drag</a></li>
             
@@ -137,6 +145,8 @@
             
                 <li><a href="../modules/html-parser.html">html-parser</a></li>
             
+                <li><a href="../modules/icons.html">icons</a></li>
+            
                 <li><a href="../modules/io.html">io</a></li>
             
                 <li><a href="../modules/io-cors.html">io-cors</a></li>
@@ -160,6 +170,8 @@
                 <li><a href="../modules/lib_promise.s.html">lib/promise.s</a></li>
             
                 <li><a href="../modules/lib_string.js.html">lib/string.js</a></li>
+            
+                <li><a href="../modules/messages.html">messages</a></li>
             
                 <li><a href="../modules/node-parser.html">node-parser</a></li>
             
@@ -222,7 +234,7 @@
 
     
         <div class="foundat">
-            Defined in: <a href="../files/site-preview_dist_itagsbuild.js.html#l23570"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:23570</code></a>
+            Defined in: <a href="../files/site-preview_dist_itagsbuild.js.html#l23525"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:23525</code></a>
         </div>
     
 
@@ -250,20 +262,20 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
             <ul class="module-classes">
             
                 <li class="module-class">
-                    <a href="../classes/Array.html">
-                        Array
+                    <a href="../classes/document.html">
+                        document
+                    </a>
+                </li>
+            
+                <li class="module-class">
+                    <a href="../classes/Event.html">
+                        Event
                     </a>
                 </li>
             
                 <li class="module-class">
                     <a href="../classes/FocusManager.html">
                         FocusManager
-                    </a>
-                </li>
-            
-                <li class="module-class">
-                    <a href="../classes/vnode.html">
-                        vnode
                     </a>
                 </li>
             
@@ -278,28 +290,29 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
             <ul class="module-submodules">
             
                 <li class="module-submodule">
-                    <a href="../modules/lib_array.js.html">
-                        lib_array.js
+                    <a href="../modules/event-hover.html">
+                        event-hover
                     </a>
 
                     <div class="module-submodule-description">
-                        Pollyfils for often used functionality for Arrays
+                        Adds the <code>hover</code> event as a DOM-event to event-dom. more about DOM-events:
+http://www.smashingmagazine.com/2013/11/12/an-introduction-to-dom-events/
+
+Should be called using  the provided <code>mergeInto</code>-method like this:
+
+
 <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
- New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
                     </div>
                 </li>
             
                 <li class="module-submodule">
-                    <a href="../modules/vnode.html">
-                        vnode
+                    <a href="../modules/extend-element.html">
+                        extend-element
                     </a>
 
                     <div class="module-submodule-description">
-                        Delivers the <code>vnode</code> prototype object, which is a virtualisation of an <code>Element</code> inside the Dom.
-These Elements work smoothless with the vdom (see ...).
-
-vnodes are much quicker to access and walk through than native dom-nodes. However, this is a module you don't need
-by itself: <code>Element</code>-types use these features under the hood.
+                        Provides several methods that override native Element-methods to work with the vdom.
 
 
 <i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
