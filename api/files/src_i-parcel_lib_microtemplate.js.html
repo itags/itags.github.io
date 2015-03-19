@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>useragent - Itsa</title>
+    <title>src/i-parcel/lib/microtemplate.js - Itsa</title>
     <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -226,74 +226,69 @@
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-                        <h1>useragent Module</h1>
-<div class="box clearfix meta">
-    
+                        <h1 class="file-heading">File: src/i-parcel/lib/microtemplate.js</h1>
 
-    
+<div class="file">
+    <pre class="code prettyprint linenums">
+/**
+ * Based on:
+ * https://github.com/cho45/micro-template.js
+ * (c) cho45 http://cho45.github.com/mit-license
+ */
+// &quot;use strict&quot;;
 
-    
-        <div class="foundat">
-            Defined in: <a href="../files/site-preview_dist_itagsbuild.js.html#l17903"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:17903</code></a>
-        </div>
-    
+var cache = {},
+    templateFn;
 
-    
-        <p>Available since 0.0.1</p>
-    
-</div>
+templateFn = function(template, data) {
+    var me = arguments.callee;
+    if (!cache[template]) {
+        cache[template] = (function () {
+            &quot;use strict&quot;;
+            var name, line, body, func, map, escapeHTML, Fn;
+            name = &#x27;templateFn(template)&#x27;;
+            line = 1;
+            body = (
+                &quot;try { &quot; +
+                    (me.variable ?  &quot;var &quot; + me.variable + &quot; = this.stash;&quot; : &quot;with (this.stash) { &quot;) +
+                        &quot;this.ret += &#x27;&quot;  +
+                        template.replace(/&lt;%/g, &#x27;\x11&#x27;).replace(/%&gt;/g, &#x27;\x13&#x27;) // if you want other tag, just edit this line
+                                .replace(/&#x27;(?![^\x11\x13]+?\x13)/g, &#x27;\\x27&#x27;)
+                                .replace(/^\s*|\s*$/g, &#x27;&#x27;)
+                                .replace(/\n/g, function () {
+                                    return &quot;&#x27;;\nthis.line = &quot; + (++line) + &quot;; this.ret += &#x27;\\n&quot;;
+                                 })
+                                .replace(/\x11=raw(.+?)\x13/g, &quot;&#x27; + ($1) + &#x27;&quot;)
+                                .replace(/\x11=(.+?)\x13/g, &quot;&#x27; + this.escapeHTML($1) + &#x27;&quot;)
+                                .replace(/\x11(.+?)\x13/g, &quot;&#x27;; $1; this.ret += &#x27;&quot;) +
+                        &quot;&#x27;; &quot; + (me.variable ? &quot;&quot; : &quot;}&quot;) + &quot;return this.ret;&quot; +
+                &quot;} catch (e) { throw &#x27;TemplateError: &#x27; + e + &#x27; (on &quot; + name + &quot;&#x27; + &#x27; line &#x27; + this.line + &#x27;)&#x27;; } &quot; +
+                &quot;//@ sourceURL=&quot; + name + &quot;\n&quot; // source map
+            ).replace(/this\.ret \+= &#x27;&#x27;;/g, &#x27;&#x27;);
+            // work arround sjhint:
+            Fn = Function;
+            func = new Fn(body);
+            map  = { &#x27;&amp;&#x27; : &#x27;&amp;amp;&#x27;, &#x27;&lt;&#x27; : &#x27;&amp;lt;&#x27;, &#x27;&gt;&#x27; : &#x27;&amp;gt;&#x27;, &#x27;\x22&#x27; : &#x27;&amp;#x22;&#x27;, &#x27;\x27&#x27; : &#x27;&amp;#x27;&#x27; };
+            escapeHTML = function (template) {
+                return (&#x27;&#x27;+template).replace(/[&amp;&lt;&gt;\&#x27;\&quot;]/g, function (_) {
+                    return map[_];
+                });
+            };
+            return function (stash) {
+                return func.call(me.context = {
+                    escapeHTML: escapeHTML,
+                    line: 1,
+                    ret : &#x27;&#x27;,
+                    stash: stash
+                });
+            };
+        })();
+    }
+    return data ? cache[template](data) : cache[template];
+};
 
-
-
-<div class="box intro">
-    <p><i>Copyright (c) 2014 ITSA - <a href="https://github.com/itsa">https://github.com/itsa</a></i>
- New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">http://choosealicense.com/licenses/bsd-3-clause/</a></p>
-
-</div>
-
-
-
-<div class="yui3-g">
-    <div class="yui3-u-1-2">
-        
-            <p>This module provides the following classes:</p>
-
-            <ul class="module-classes">
-            
-                <li class="module-class">
-                    <a href="../classes/DD.html">
-                        DD
-                    </a>
-                </li>
-            
-            </ul>
-        
-    </div>
-
-    <div class="yui3-u-1-2">
-        
-            <p>This module is a rollup of the following modules:</p>
-
-            <ul class="module-submodules">
-            
-                <li class="module-submodule">
-                    <a href="../modules/event-blurnode.html">
-                        event-blurnode
-                    </a>
-
-                    <div class="module-submodule-description">
-                        Adds the <code>blurnode</code> event as a DOM-event to event-dom. more about DOM-events:
-http://www.smashingmagazine.com/2013/11/12/an-introduction-to-dom-events/
-
-
-<i>Copyright (c) 2014 ITSA - https://github.com/itsa</i>
-New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
-                    </div>
-                </li>
-            
-            </ul>
-        
-    </div>
+module.exports = templateFn;
+    </pre>
 </div>
 
                     </div>

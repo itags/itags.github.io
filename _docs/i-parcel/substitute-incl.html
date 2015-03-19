@@ -10,10 +10,7 @@
 
     <i-parcel lazybind="true">
     <!--
-        Escaped: <%= what %>
-        <br>
-        <br>
-        Unescaped: <%=raw what %>
+        I am <b>just</b> {what}.
     -->
     </i-parcel>
 
@@ -21,7 +18,7 @@
     <script>
         require('itags');
         var iparcel = document.getElement('i-parcel'),
-            model = {what: 'a <b>template</b>'};
+            model = {what: 'a template'};
         iparcel.bindModel(model);
     </script>
 

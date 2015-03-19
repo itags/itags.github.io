@@ -11,15 +11,11 @@ includeexample: 20em
 
 ```html
 <body>
-    <i-select value="2" class="i-primary">
+    <i-parcel>
     <!--
-        <option>item1</option>
-        <option>item2</option>
-        <option><span is="button">item3 header</span>item3 content</option>
-        <option>item4</option>
-        <option>item5</option>
+        I am <b>just</b> plain text.
     -->
-    </i-select>
+    </i-parcel>
 </body>
 ```
 
@@ -27,6 +23,5 @@ includeexample: 20em
 <script src="itagsbuild-min.js"></script>
 <script>
     require('itags');
-    document.getElement('i-select').focus();
 </script>
 ```

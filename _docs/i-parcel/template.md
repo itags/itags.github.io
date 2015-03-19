@@ -1,7 +1,7 @@
 ---
 module: i-parcel
 maintainer: Marco Asbreuk
-title: simple templating
+title: micro-templating
 intro: ""
 includeexample: 20em
 ---
@@ -11,15 +11,11 @@ includeexample: 20em
 
 ```html
 <body>
-    <i-select value="2" class="i-primary">
+    <i-parcel lazybind="true">
     <!--
-        <option>item1</option>
-        <option>item2</option>
-        <option><span is="button">item3 header</span>item3 content</option>
-        <option>item4</option>
-        <option>item5</option>
+        I am <b>just</b> <%= what %>.
     -->
-    </i-select>
+    </i-parcel>
 </body>
 ```
 
@@ -27,6 +23,8 @@ includeexample: 20em
 <script src="itagsbuild-min.js"></script>
 <script>
     require('itags');
-    document.getElement('i-select').focus();
+    var iparcel = document.getElement('i-parcel'),
+        model = {what: 'a template'};
+    iparcel.bindModel(model);
 </script>
 ```

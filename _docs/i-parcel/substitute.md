@@ -1,7 +1,7 @@
 ---
 module: i-parcel
 maintainer: Marco Asbreuk
-title: unescape template-content
+title: substitute-templating
 intro: ""
 includeexample: 20em
 ---
@@ -13,9 +13,7 @@ includeexample: 20em
 <body>
     <i-parcel lazybind="true">
     <!--
-        Escaped will look like: <%= what %>.
-        <br>
-        Unescaped will look like: <%=raw what %>.
+        I am <b>just</b> {what}.
     -->
     </i-parcel>
 </body>
@@ -26,7 +24,7 @@ includeexample: 20em
 <script>
     require('itags');
     var iparcel = document.getElement('i-parcel'),
-        model = {what: 'a <b>template</b>'};
+        model = {what: 'a template'};
     iparcel.bindModel(model);
 </script>
 ```

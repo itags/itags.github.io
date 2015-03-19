@@ -5676,7 +5676,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],45:[function(require,module,exports){
 require('ypromise');
-},{"ypromise":5229}],46:[function(require,module,exports){
+},{"ypromise":5228}],46:[function(require,module,exports){
 (function (global){
 // based upon https://gist.github.com/Gozala/1269991
 
@@ -12373,7 +12373,8 @@ module.exports = function (window) {
         }),
         STARTTAG_OR_ATTR_VALUE_ENDS_CHARACTERS = createHashMap({
             ' ': true,
-            '>': true
+            '>': true,
+            '/': true
         }),
         ATTRUBUTE_NAME_ENDS_CHARACTER = createHashMap({
             ' ': true,
@@ -12512,7 +12513,7 @@ module.exports = function (window) {
                     }
 
                     // just to be sure there won't be a `script`-tag passed inside the argument (something modern browsers never let happen):
-                    (tag==='SCRIPT') && (tag==='XSCRIPT');
+                    (tag==='SCRIPT') && (tag='XSCRIPT');
 
                     // the string-parser expects </xscript> for `script`-tags
                     if ((tag==='XSCRIPT') && allowScripts) {
@@ -16147,7 +16148,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],92:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],93:[function(require,module,exports){
+},{"ypromise":5228}],93:[function(require,module,exports){
 module.exports=require(46)
 },{}],94:[function(require,module,exports){
 module.exports=require(15)
@@ -16199,7 +16200,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],118:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],119:[function(require,module,exports){
+},{"ypromise":5228}],119:[function(require,module,exports){
 module.exports=require(46)
 },{}],120:[function(require,module,exports){
 module.exports=require(15)
@@ -16683,7 +16684,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],186:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],187:[function(require,module,exports){
+},{"ypromise":5228}],187:[function(require,module,exports){
 module.exports=require(15)
 },{}],188:[function(require,module,exports){
 module.exports=require(16)
@@ -17456,7 +17457,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],237:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],238:[function(require,module,exports){
+},{"ypromise":5228}],238:[function(require,module,exports){
 module.exports=require(46)
 },{}],239:[function(require,module,exports){
 module.exports=require(15)
@@ -17552,7 +17553,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],285:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],286:[function(require,module,exports){
+},{"ypromise":5228}],286:[function(require,module,exports){
 module.exports=require(15)
 },{}],287:[function(require,module,exports){
 module.exports=require(16)
@@ -17650,7 +17651,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],334:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],335:[function(require,module,exports){
+},{"ypromise":5228}],335:[function(require,module,exports){
 module.exports=require(46)
 },{}],336:[function(require,module,exports){
 module.exports=require(15)
@@ -17744,7 +17745,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],381:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],382:[function(require,module,exports){
+},{"ypromise":5228}],382:[function(require,module,exports){
 module.exports=require(46)
 },{}],383:[function(require,module,exports){
 module.exports=require(15)
@@ -17796,7 +17797,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],407:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],408:[function(require,module,exports){
+},{"ypromise":5228}],408:[function(require,module,exports){
 module.exports=require(46)
 },{}],409:[function(require,module,exports){
 module.exports=require(15)
@@ -17957,7 +17958,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],468:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],469:[function(require,module,exports){
+},{"ypromise":5228}],469:[function(require,module,exports){
 module.exports=require(46)
 },{}],470:[function(require,module,exports){
 module.exports=require(15)
@@ -20622,7 +20623,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],555:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],556:[function(require,module,exports){
+},{"ypromise":5228}],556:[function(require,module,exports){
 module.exports=require(46)
 },{}],557:[function(require,module,exports){
 module.exports=require(15)
@@ -21310,7 +21311,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],643:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],644:[function(require,module,exports){
+},{"ypromise":5228}],644:[function(require,module,exports){
 module.exports=require(46)
 },{}],645:[function(require,module,exports){
 module.exports=require(15)
@@ -21490,7 +21491,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],733:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],734:[function(require,module,exports){
+},{"ypromise":5228}],734:[function(require,module,exports){
 module.exports=require(46)
 },{}],735:[function(require,module,exports){
 module.exports=require(15)
@@ -21584,7 +21585,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],780:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],781:[function(require,module,exports){
+},{"ypromise":5228}],781:[function(require,module,exports){
 module.exports=require(46)
 },{}],782:[function(require,module,exports){
 module.exports=require(15)
@@ -21636,7 +21637,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],806:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],807:[function(require,module,exports){
+},{"ypromise":5228}],807:[function(require,module,exports){
 module.exports=require(46)
 },{}],808:[function(require,module,exports){
 module.exports=require(15)
@@ -21846,7 +21847,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],911:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],912:[function(require,module,exports){
+},{"ypromise":5228}],912:[function(require,module,exports){
 module.exports=require(46)
 },{}],913:[function(require,module,exports){
 module.exports=require(15)
@@ -21940,7 +21941,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],958:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],959:[function(require,module,exports){
+},{"ypromise":5228}],959:[function(require,module,exports){
 module.exports=require(46)
 },{}],960:[function(require,module,exports){
 module.exports=require(15)
@@ -21992,7 +21993,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],984:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],985:[function(require,module,exports){
+},{"ypromise":5228}],985:[function(require,module,exports){
 module.exports=require(46)
 },{}],986:[function(require,module,exports){
 module.exports=require(15)
@@ -22160,7 +22161,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],1068:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],1069:[function(require,module,exports){
+},{"ypromise":5228}],1069:[function(require,module,exports){
 module.exports=require(46)
 },{}],1070:[function(require,module,exports){
 module.exports=require(15)
@@ -22256,7 +22257,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],1116:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],1117:[function(require,module,exports){
+},{"ypromise":5228}],1117:[function(require,module,exports){
 module.exports=require(15)
 },{}],1118:[function(require,module,exports){
 module.exports=require(16)
@@ -22354,7 +22355,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],1165:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],1166:[function(require,module,exports){
+},{"ypromise":5228}],1166:[function(require,module,exports){
 module.exports=require(46)
 },{}],1167:[function(require,module,exports){
 module.exports=require(15)
@@ -22448,7 +22449,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],1212:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],1213:[function(require,module,exports){
+},{"ypromise":5228}],1213:[function(require,module,exports){
 module.exports=require(46)
 },{}],1214:[function(require,module,exports){
 module.exports=require(15)
@@ -22500,7 +22501,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],1238:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],1239:[function(require,module,exports){
+},{"ypromise":5228}],1239:[function(require,module,exports){
 module.exports=require(46)
 },{}],1240:[function(require,module,exports){
 module.exports=require(15)
@@ -22622,7 +22623,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],1299:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],1300:[function(require,module,exports){
+},{"ypromise":5228}],1300:[function(require,module,exports){
 module.exports=require(46)
 },{}],1301:[function(require,module,exports){
 module.exports=require(15)
@@ -22796,7 +22797,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],1386:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],1387:[function(require,module,exports){
+},{"ypromise":5228}],1387:[function(require,module,exports){
 module.exports=require(46)
 },{}],1388:[function(require,module,exports){
 module.exports=require(15)
@@ -22976,7 +22977,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],1476:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],1477:[function(require,module,exports){
+},{"ypromise":5228}],1477:[function(require,module,exports){
 module.exports=require(46)
 },{}],1478:[function(require,module,exports){
 module.exports=require(15)
@@ -23070,7 +23071,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],1523:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],1524:[function(require,module,exports){
+},{"ypromise":5228}],1524:[function(require,module,exports){
 module.exports=require(46)
 },{}],1525:[function(require,module,exports){
 module.exports=require(15)
@@ -23122,7 +23123,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],1549:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],1550:[function(require,module,exports){
+},{"ypromise":5228}],1550:[function(require,module,exports){
 module.exports=require(46)
 },{}],1551:[function(require,module,exports){
 module.exports=require(15)
@@ -25128,7 +25129,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],1668:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],1669:[function(require,module,exports){
+},{"ypromise":5228}],1669:[function(require,module,exports){
 module.exports=require(46)
 },{}],1670:[function(require,module,exports){
 module.exports=require(15)
@@ -25224,7 +25225,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],1716:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],1717:[function(require,module,exports){
+},{"ypromise":5228}],1717:[function(require,module,exports){
 module.exports=require(15)
 },{}],1718:[function(require,module,exports){
 module.exports=require(16)
@@ -25322,7 +25323,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],1765:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],1766:[function(require,module,exports){
+},{"ypromise":5228}],1766:[function(require,module,exports){
 module.exports=require(46)
 },{}],1767:[function(require,module,exports){
 module.exports=require(15)
@@ -25416,7 +25417,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],1812:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],1813:[function(require,module,exports){
+},{"ypromise":5228}],1813:[function(require,module,exports){
 module.exports=require(46)
 },{}],1814:[function(require,module,exports){
 module.exports=require(15)
@@ -25468,7 +25469,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],1838:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],1839:[function(require,module,exports){
+},{"ypromise":5228}],1839:[function(require,module,exports){
 module.exports=require(46)
 },{}],1840:[function(require,module,exports){
 module.exports=require(15)
@@ -25590,7 +25591,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],1899:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],1900:[function(require,module,exports){
+},{"ypromise":5228}],1900:[function(require,module,exports){
 module.exports=require(46)
 },{}],1901:[function(require,module,exports){
 module.exports=require(15)
@@ -25760,7 +25761,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],1984:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],1985:[function(require,module,exports){
+},{"ypromise":5228}],1985:[function(require,module,exports){
 module.exports=require(46)
 },{}],1986:[function(require,module,exports){
 module.exports=require(15)
@@ -25856,7 +25857,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],2032:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],2033:[function(require,module,exports){
+},{"ypromise":5228}],2033:[function(require,module,exports){
 module.exports=require(15)
 },{}],2034:[function(require,module,exports){
 module.exports=require(16)
@@ -25954,7 +25955,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],2081:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],2082:[function(require,module,exports){
+},{"ypromise":5228}],2082:[function(require,module,exports){
 module.exports=require(46)
 },{}],2083:[function(require,module,exports){
 module.exports=require(15)
@@ -26048,7 +26049,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],2128:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],2129:[function(require,module,exports){
+},{"ypromise":5228}],2129:[function(require,module,exports){
 module.exports=require(46)
 },{}],2130:[function(require,module,exports){
 module.exports=require(15)
@@ -26100,7 +26101,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],2154:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],2155:[function(require,module,exports){
+},{"ypromise":5228}],2155:[function(require,module,exports){
 module.exports=require(46)
 },{}],2156:[function(require,module,exports){
 module.exports=require(15)
@@ -26202,7 +26203,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],2205:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],2206:[function(require,module,exports){
+},{"ypromise":5228}],2206:[function(require,module,exports){
 module.exports=require(46)
 },{}],2207:[function(require,module,exports){
 module.exports=require(15)
@@ -26949,7 +26950,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],2294:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],2295:[function(require,module,exports){
+},{"ypromise":5228}],2295:[function(require,module,exports){
 module.exports=require(46)
 },{}],2296:[function(require,module,exports){
 module.exports=require(15)
@@ -27109,7 +27110,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],2374:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],2375:[function(require,module,exports){
+},{"ypromise":5228}],2375:[function(require,module,exports){
 module.exports=require(46)
 },{}],2376:[function(require,module,exports){
 module.exports=require(15)
@@ -27311,7 +27312,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],2475:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],2476:[function(require,module,exports){
+},{"ypromise":5228}],2476:[function(require,module,exports){
 module.exports=require(46)
 },{}],2477:[function(require,module,exports){
 module.exports=require(15)
@@ -27491,7 +27492,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],2565:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],2566:[function(require,module,exports){
+},{"ypromise":5228}],2566:[function(require,module,exports){
 module.exports=require(46)
 },{}],2567:[function(require,module,exports){
 module.exports=require(15)
@@ -27585,7 +27586,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],2612:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],2613:[function(require,module,exports){
+},{"ypromise":5228}],2613:[function(require,module,exports){
 module.exports=require(46)
 },{}],2614:[function(require,module,exports){
 module.exports=require(15)
@@ -27637,7 +27638,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],2638:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],2639:[function(require,module,exports){
+},{"ypromise":5228}],2639:[function(require,module,exports){
 module.exports=require(46)
 },{}],2640:[function(require,module,exports){
 module.exports=require(15)
@@ -28277,7 +28278,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],2753:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],2754:[function(require,module,exports){
+},{"ypromise":5228}],2754:[function(require,module,exports){
 module.exports=require(46)
 },{}],2755:[function(require,module,exports){
 module.exports=require(15)
@@ -28383,7 +28384,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],2806:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],2807:[function(require,module,exports){
+},{"ypromise":5228}],2807:[function(require,module,exports){
 module.exports=require(46)
 },{}],2808:[function(require,module,exports){
 module.exports=require(15)
@@ -28587,7 +28588,7 @@ module.exports = function (window) {
     return IO;
 };
 
-},{"../io.js":2849,"js-ext/extra/hashmap.js":2850,"js-ext/lib/object.js":2855,"xmldom":5226}],2846:[function(require,module,exports){
+},{"../io.js":2849,"js-ext/extra/hashmap.js":2850,"js-ext/lib/object.js":2855,"xmldom":5225}],2846:[function(require,module,exports){
 "use strict";
 
 require('js-ext/lib/object.js');
@@ -29703,7 +29704,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],2859:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],2860:[function(require,module,exports){
+},{"ypromise":5228}],2860:[function(require,module,exports){
 module.exports=require(15)
 },{}],2861:[function(require,module,exports){
 module.exports=require(16)
@@ -29960,7 +29961,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],2891:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],2892:[function(require,module,exports){
+},{"ypromise":5228}],2892:[function(require,module,exports){
 module.exports=require(15)
 },{}],2893:[function(require,module,exports){
 module.exports=require(16)
@@ -30114,7 +30115,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],2925:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],2926:[function(require,module,exports){
+},{"ypromise":5228}],2926:[function(require,module,exports){
 module.exports=require(46)
 },{}],2927:[function(require,module,exports){
 module.exports=require(15)
@@ -30180,7 +30181,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],2958:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],2959:[function(require,module,exports){
+},{"ypromise":5228}],2959:[function(require,module,exports){
 module.exports=require(15)
 },{}],2960:[function(require,module,exports){
 module.exports=require(16)
@@ -30296,7 +30297,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],3016:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],3017:[function(require,module,exports){
+},{"ypromise":5228}],3017:[function(require,module,exports){
 module.exports=require(46)
 },{}],3018:[function(require,module,exports){
 module.exports=require(15)
@@ -30390,7 +30391,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],3063:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],3064:[function(require,module,exports){
+},{"ypromise":5228}],3064:[function(require,module,exports){
 module.exports=require(46)
 },{}],3065:[function(require,module,exports){
 module.exports=require(15)
@@ -30442,7 +30443,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],3089:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],3090:[function(require,module,exports){
+},{"ypromise":5228}],3090:[function(require,module,exports){
 module.exports=require(46)
 },{}],3091:[function(require,module,exports){
 module.exports=require(15)
@@ -31133,7 +31134,7 @@ exports.XMLHttpRequest = function() {
 };
 
 }).call(this,require('_process'),require("buffer").Buffer)
-},{"_process":5268,"buffer":5257,"child_process":5256,"fs":5256,"http":5261,"https":5265,"url":5286,"xmldom":5226}],3129:[function(require,module,exports){
+},{"_process":5268,"buffer":5257,"child_process":5256,"fs":5256,"http":5261,"https":5265,"url":5286,"xmldom":5225}],3129:[function(require,module,exports){
 "use strict";
 
 /**
@@ -31346,7 +31347,7 @@ reset = function () {
 reset();
 
 module.exports = win;
-},{"./lib/XMLHttpRequest.js":3128,"js-ext/extra/hashmap.js":3130,"js-ext/lib/array.js":3131,"polyfill/lib/window.console.js":3135,"url":5286,"xmldom":5226}],3130:[function(require,module,exports){
+},{"./lib/XMLHttpRequest.js":3128,"js-ext/extra/hashmap.js":3130,"js-ext/lib/array.js":3131,"polyfill/lib/window.console.js":3135,"url":5286,"xmldom":5225}],3130:[function(require,module,exports){
 module.exports=require(4)
 },{}],3131:[function(require,module,exports){
 module.exports=require(21)
@@ -31444,7 +31445,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],3178:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],3179:[function(require,module,exports){
+},{"ypromise":5228}],3179:[function(require,module,exports){
 module.exports=require(46)
 },{}],3180:[function(require,module,exports){
 module.exports=require(15)
@@ -31540,7 +31541,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],3226:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],3227:[function(require,module,exports){
+},{"ypromise":5228}],3227:[function(require,module,exports){
 module.exports=require(15)
 },{}],3228:[function(require,module,exports){
 module.exports=require(16)
@@ -31638,7 +31639,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],3275:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],3276:[function(require,module,exports){
+},{"ypromise":5228}],3276:[function(require,module,exports){
 module.exports=require(46)
 },{}],3277:[function(require,module,exports){
 module.exports=require(15)
@@ -31732,7 +31733,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],3322:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],3323:[function(require,module,exports){
+},{"ypromise":5228}],3323:[function(require,module,exports){
 module.exports=require(46)
 },{}],3324:[function(require,module,exports){
 module.exports=require(15)
@@ -31784,7 +31785,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],3348:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],3349:[function(require,module,exports){
+},{"ypromise":5228}],3349:[function(require,module,exports){
 module.exports=require(46)
 },{}],3350:[function(require,module,exports){
 module.exports=require(15)
@@ -31906,7 +31907,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],3409:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],3410:[function(require,module,exports){
+},{"ypromise":5228}],3410:[function(require,module,exports){
 module.exports=require(46)
 },{}],3411:[function(require,module,exports){
 module.exports=require(15)
@@ -32080,7 +32081,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],3496:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],3497:[function(require,module,exports){
+},{"ypromise":5228}],3497:[function(require,module,exports){
 module.exports=require(46)
 },{}],3498:[function(require,module,exports){
 module.exports=require(15)
@@ -32256,7 +32257,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],3584:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],3585:[function(require,module,exports){
+},{"ypromise":5228}],3585:[function(require,module,exports){
 module.exports=require(46)
 },{}],3586:[function(require,module,exports){
 module.exports=require(15)
@@ -32436,7 +32437,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],3674:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],3675:[function(require,module,exports){
+},{"ypromise":5228}],3675:[function(require,module,exports){
 module.exports=require(46)
 },{}],3676:[function(require,module,exports){
 module.exports=require(15)
@@ -32530,7 +32531,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],3721:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],3722:[function(require,module,exports){
+},{"ypromise":5228}],3722:[function(require,module,exports){
 module.exports=require(46)
 },{}],3723:[function(require,module,exports){
 module.exports=require(15)
@@ -32582,7 +32583,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],3747:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],3748:[function(require,module,exports){
+},{"ypromise":5228}],3748:[function(require,module,exports){
 module.exports=require(46)
 },{}],3749:[function(require,module,exports){
 module.exports=require(15)
@@ -32792,7 +32793,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],3852:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],3853:[function(require,module,exports){
+},{"ypromise":5228}],3853:[function(require,module,exports){
 module.exports=require(46)
 },{}],3854:[function(require,module,exports){
 module.exports=require(15)
@@ -32886,7 +32887,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],3899:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],3900:[function(require,module,exports){
+},{"ypromise":5228}],3900:[function(require,module,exports){
 module.exports=require(46)
 },{}],3901:[function(require,module,exports){
 module.exports=require(15)
@@ -32938,7 +32939,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],3925:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],3926:[function(require,module,exports){
+},{"ypromise":5228}],3926:[function(require,module,exports){
 module.exports=require(46)
 },{}],3927:[function(require,module,exports){
 module.exports=require(15)
@@ -33106,7 +33107,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],4009:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],4010:[function(require,module,exports){
+},{"ypromise":5228}],4010:[function(require,module,exports){
 module.exports=require(46)
 },{}],4011:[function(require,module,exports){
 module.exports=require(15)
@@ -33202,7 +33203,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],4057:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],4058:[function(require,module,exports){
+},{"ypromise":5228}],4058:[function(require,module,exports){
 module.exports=require(15)
 },{}],4059:[function(require,module,exports){
 module.exports=require(16)
@@ -33300,7 +33301,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],4106:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],4107:[function(require,module,exports){
+},{"ypromise":5228}],4107:[function(require,module,exports){
 module.exports=require(46)
 },{}],4108:[function(require,module,exports){
 module.exports=require(15)
@@ -33394,7 +33395,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],4153:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],4154:[function(require,module,exports){
+},{"ypromise":5228}],4154:[function(require,module,exports){
 module.exports=require(46)
 },{}],4155:[function(require,module,exports){
 module.exports=require(15)
@@ -33446,7 +33447,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],4179:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],4180:[function(require,module,exports){
+},{"ypromise":5228}],4180:[function(require,module,exports){
 module.exports=require(46)
 },{}],4181:[function(require,module,exports){
 module.exports=require(15)
@@ -33568,7 +33569,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],4240:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],4241:[function(require,module,exports){
+},{"ypromise":5228}],4241:[function(require,module,exports){
 module.exports=require(46)
 },{}],4242:[function(require,module,exports){
 module.exports=require(15)
@@ -33742,7 +33743,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],4327:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],4328:[function(require,module,exports){
+},{"ypromise":5228}],4328:[function(require,module,exports){
 module.exports=require(46)
 },{}],4329:[function(require,module,exports){
 module.exports=require(15)
@@ -33922,7 +33923,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],4417:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],4418:[function(require,module,exports){
+},{"ypromise":5228}],4418:[function(require,module,exports){
 module.exports=require(46)
 },{}],4419:[function(require,module,exports){
 module.exports=require(15)
@@ -34016,7 +34017,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],4464:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],4465:[function(require,module,exports){
+},{"ypromise":5228}],4465:[function(require,module,exports){
 module.exports=require(46)
 },{}],4466:[function(require,module,exports){
 module.exports=require(15)
@@ -34068,7 +34069,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],4490:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],4491:[function(require,module,exports){
+},{"ypromise":5228}],4491:[function(require,module,exports){
 module.exports=require(46)
 },{}],4492:[function(require,module,exports){
 module.exports=require(15)
@@ -34790,7 +34791,7 @@ module.exports=require(14)
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 },{}],4559:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],4560:[function(require,module,exports){
+},{"ypromise":5228}],4560:[function(require,module,exports){
 module.exports=require(46)
 },{}],4561:[function(require,module,exports){
 module.exports=require(15)
@@ -34887,7 +34888,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],4606:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],4607:[function(require,module,exports){
+},{"ypromise":5228}],4607:[function(require,module,exports){
 module.exports=require(46)
 },{}],4608:[function(require,module,exports){
 module.exports=require(15)
@@ -34983,7 +34984,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],4654:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],4655:[function(require,module,exports){
+},{"ypromise":5228}],4655:[function(require,module,exports){
 module.exports=require(15)
 },{}],4656:[function(require,module,exports){
 module.exports=require(16)
@@ -35081,7 +35082,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],4703:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],4704:[function(require,module,exports){
+},{"ypromise":5228}],4704:[function(require,module,exports){
 module.exports=require(46)
 },{}],4705:[function(require,module,exports){
 module.exports=require(15)
@@ -35175,7 +35176,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],4750:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],4751:[function(require,module,exports){
+},{"ypromise":5228}],4751:[function(require,module,exports){
 module.exports=require(46)
 },{}],4752:[function(require,module,exports){
 module.exports=require(15)
@@ -35227,7 +35228,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],4776:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],4777:[function(require,module,exports){
+},{"ypromise":5228}],4777:[function(require,module,exports){
 module.exports=require(46)
 },{}],4778:[function(require,module,exports){
 module.exports=require(15)
@@ -35349,7 +35350,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],4837:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],4838:[function(require,module,exports){
+},{"ypromise":5228}],4838:[function(require,module,exports){
 module.exports=require(46)
 },{}],4839:[function(require,module,exports){
 module.exports=require(15)
@@ -35523,7 +35524,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],4924:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],4925:[function(require,module,exports){
+},{"ypromise":5228}],4925:[function(require,module,exports){
 module.exports=require(46)
 },{}],4926:[function(require,module,exports){
 module.exports=require(15)
@@ -35703,7 +35704,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],5014:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],5015:[function(require,module,exports){
+},{"ypromise":5228}],5015:[function(require,module,exports){
 module.exports=require(46)
 },{}],5016:[function(require,module,exports){
 module.exports=require(15)
@@ -35797,7 +35798,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],5061:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],5062:[function(require,module,exports){
+},{"ypromise":5228}],5062:[function(require,module,exports){
 module.exports=require(46)
 },{}],5063:[function(require,module,exports){
 module.exports=require(15)
@@ -35849,7 +35850,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],5087:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],5088:[function(require,module,exports){
+},{"ypromise":5228}],5088:[function(require,module,exports){
 module.exports=require(46)
 },{}],5089:[function(require,module,exports){
 module.exports=require(15)
@@ -36017,7 +36018,7 @@ module.exports=require(23)
 module.exports=require(14)
 },{}],5171:[function(require,module,exports){
 module.exports=require(45)
-},{"ypromise":5229}],5172:[function(require,module,exports){
+},{"ypromise":5228}],5172:[function(require,module,exports){
 module.exports=require(46)
 },{}],5173:[function(require,module,exports){
 module.exports=require(15)
@@ -36108,107 +36109,22 @@ module.exports=require(15)
 },{}],5216:[function(require,module,exports){
 module.exports=require(16)
 },{"./lib/matchesselector.js":5214,"./lib/window.console.js":5215}],5217:[function(require,module,exports){
-/**
- * https://github.com/cho45/micro-template.js
- * (c) cho45 http://cho45.github.com/mit-license
- */
-function template (id, data) {
-	var me = arguments.callee;
-console.warn('fase 1');
-	if (!me.cache[id]) me.cache[id] = (function () {
-console.warn('fase 2');
-		var name = id, string = /^[\w\-]+$/.test(id) ? me.get(id): (name = 'template(string)', id); // no warnings
-		var line = 1, body = (
-			"try { " +
-				(me.variable ?  "var " + me.variable + " = this.stash;" : "with (this.stash) { ") +
-					"this.ret += '"  +
-					string.
-						replace(/<%/g, '\x11').replace(/%>/g, '\x13'). // if you want other tag, just edit this line
-						replace(/'(?![^\x11\x13]+?\x13)/g, '\\x27').
-						replace(/^\s*|\s*$/g, '').
-						replace(/\n/g, function () { return "';\nthis.line = " + (++line) + "; this.ret += '\\n" }).
-						replace(/\x11=raw(.+?)\x13/g, "' + ($1) + '").
-						replace(/\x11=(.+?)\x13/g, "' + this.escapeHTML($1) + '").
-						replace(/\x11(.+?)\x13/g, "'; $1; this.ret += '") +
-				"'; " + (me.variable ? "" : "}") + "return this.ret;" +
-			"} catch (e) { throw 'TemplateError: ' + e + ' (on " + name + "' + ' line ' + this.line + ')'; } " +
-			"//@ sourceURL=" + name + "\n" // source map
-		).replace(/this\.ret \+= '';/g, '');
-		var func = new Function(body);
-		var map  = { '&' : '&amp;', '<' : '&lt;', '>' : '&gt;', '\x22' : '&#x22;', '\x27' : '&#x27;' };
-		var escapeHTML = function (string) { return (''+string).replace(/[&<>\'\"]/g, function (_) { return map[_] }) };
-		return function (stash) { return func.call(me.context = { escapeHTML: escapeHTML, line: 1, ret : '', stash: stash }) };
-	})();
-console.warn('fase 3');
-console.warn(me.cache[id]);
-	return data ? me.cache[id](data) : me.cache[id];
-}
-template.cache = {};
-template.get = function (id) { return document.getElementById(id).innerHTML };
-
-/**
- * Extended template function:
- *   requires: basic template() function
- *   provides:
- *     include(id)
- *     wrapper(id, function () {})
- */
-function extended (id, data) {
-	var fun = function (data) {
-		data.include = function (name, args) {
-			var stash = {};
-			for (var key in template.context.stash) if (template.context.stash.hasOwnProperty(key)) {
-				stash[key] = template.context.stash[key];
-			}
-			if (args) for (var key in args) if (args.hasOwnProperty(key)) {
-				stash[key] = args[key];
-			}
-			var context = template.context;
-			context.ret += template(name, stash);
-			template.context = context;
-		};
-
-		data.wrapper = function (name, fun) {
-			var current = template.context.ret;
-			template.context.ret = '';
-			fun.apply(template.context);
-			var content = template.context.ret;
-			var orig_content = template.context.stash.content;
-			template.context.stash.content = content;
-			template.context.ret = current + template(name, template.context.stash);
-			template.context.stash.content = orig_content;
-		};
-
-		return template(id, data);
-	};
-
-	return data ? fun(data) : fun;
-}
-
-template.get = function (id) {
-	var fun = extended.get;
-	return fun ? fun(id) : document.getElementById(id).innerHTML;
-};
-this.template = template;
-this.extended = extended;
-
-},{}],5218:[function(require,module,exports){
 module.exports=require(3128)
-},{"_process":5268,"buffer":5257,"child_process":5256,"fs":5256,"http":5261,"https":5265,"url":5286,"xmldom":5226}],5219:[function(require,module,exports){
+},{"_process":5268,"buffer":5257,"child_process":5256,"fs":5256,"http":5261,"https":5265,"url":5286,"xmldom":5225}],5218:[function(require,module,exports){
 module.exports=require(3129)
-},{"./lib/XMLHttpRequest.js":5218,"js-ext/extra/hashmap.js":5220,"js-ext/lib/array.js":5221,"polyfill/lib/window.console.js":5225,"url":5286,"xmldom":5226}],5220:[function(require,module,exports){
+},{"./lib/XMLHttpRequest.js":5217,"js-ext/extra/hashmap.js":5219,"js-ext/lib/array.js":5220,"polyfill/lib/window.console.js":5224,"url":5286,"xmldom":5225}],5219:[function(require,module,exports){
 module.exports=require(4)
-},{}],5221:[function(require,module,exports){
+},{}],5220:[function(require,module,exports){
 module.exports=require(21)
-},{"polyfill/polyfill-base.js":5224}],5222:[function(require,module,exports){
+},{"polyfill/polyfill-base.js":5223}],5221:[function(require,module,exports){
 module.exports=require(14)
+},{}],5222:[function(require,module,exports){
+module.exports=require(15)
 },{}],5223:[function(require,module,exports){
-module.exports=require(15)
-},{}],5224:[function(require,module,exports){
 module.exports=require(16)
-},{"./lib/matchesselector.js":5222,"./lib/window.console.js":5223}],5225:[function(require,module,exports){
+},{"./lib/matchesselector.js":5221,"./lib/window.console.js":5222}],5224:[function(require,module,exports){
 module.exports=require(15)
-},{}],5226:[function(require,module,exports){
+},{}],5225:[function(require,module,exports){
 function DOMParser(options){
 	this.options = options ||{locator:{}};
 	
@@ -36465,7 +36381,7 @@ if(typeof require == 'function'){
 	exports.DOMParser = DOMParser;
 }
 
-},{"./dom":5227,"./sax":5228}],5227:[function(require,module,exports){
+},{"./dom":5226,"./sax":5227}],5226:[function(require,module,exports){
 /*
  * DOM Level 2
  * Object DOMException
@@ -37605,7 +37521,7 @@ if(typeof require == 'function'){
 	exports.XMLSerializer = XMLSerializer;
 }
 
-},{}],5228:[function(require,module,exports){
+},{}],5227:[function(require,module,exports){
 //[4]   	NameStartChar	   ::=   	":" | [A-Z] | "_" | [a-z] | [#xC0-#xD6] | [#xD8-#xF6] | [#xF8-#x2FF] | [#x370-#x37D] | [#x37F-#x1FFF] | [#x200C-#x200D] | [#x2070-#x218F] | [#x2C00-#x2FEF] | [#x3001-#xD7FF] | [#xF900-#xFDCF] | [#xFDF0-#xFFFD] | [#x10000-#xEFFFF]
 //[4a]   	NameChar	   ::=   	NameStartChar | "-" | "." | [0-9] | #xB7 | [#x0300-#x036F] | [#x203F-#x2040]
 //[5]   	Name	   ::=   	NameStartChar (NameChar)*
@@ -38191,7 +38107,7 @@ if(typeof require == 'function'){
 }
 
 
-},{}],5229:[function(require,module,exports){
+},{}],5228:[function(require,module,exports){
 (function (process,global){
 /*
 Copyright 2013 Yahoo! Inc. All rights reserved.
@@ -38807,9 +38723,9 @@ http://yuilibrary.com/license/
 
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":5268}],5230:[function(require,module,exports){
+},{"_process":5268}],5229:[function(require,module,exports){
 var css = "[plugin-panel=\"true\"] i-input#iprompt[type=\"email\"],\n[plugin-panel=\"true\"] i-input#iprompt[type=\"url\"] {\n    width: 20em;\n}\n\n[plugin-panel=\"true\"] i-input#iprompt[type=\"number\"] {\n    width: 8em;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],5231:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],5230:[function(require,module,exports){
 (function (global){
 /**
  * The ITSA module is an aggregator for all the individual modules that the library uses.
@@ -38934,9 +38850,9 @@ var css = "[plugin-panel=\"true\"] i-input#iprompt[type=\"email\"],\n[plugin-pan
 })(global.window || require('node-win'));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"../css/dialog.css":5230,"i-input":5240,"itsa":2,"node-win":5219}],5232:[function(require,module,exports){
+},{"../css/dialog.css":5229,"i-input":5239,"itsa":2,"node-win":5218}],5231:[function(require,module,exports){
 var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-button;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-button:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-button:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\ni-button {\n    margin: 0;\n    display: inline-block;\n    *display: inline; /*IE 6/7*/\n    zoom: 1;\n    position: relative;\n    vertical-align: middle;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-button.i-primary >button,\ni-button.i-focussed >button {\n    background-color: rgb(0, 120, 231);\n    color: #fff;\n}\n\n/*csslint outline-none:false*/\n\ni-button >button {\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    -khtml-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    position: relative;\n    padding: 0.5em 1em;\n    color: inherit; /* 1 */\n    font: inherit; /* 2 */\n    margin: 0; /* 3 */\n    overflow: visible;\n    text-transform: none;\n    -webkit-appearance: button; /* 2 */\n    line-height: normal;\n    white-space: nowrap;\n    vertical-align: baseline;\n    text-align: center;\n    cursor: pointer;\n    -webkit-user-drag: none;\n    -webkit-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    font-family: inherit;\n    font-size: 100%;\n    color: #444; /* rgba not supported (IE 8) */\n    color: rgba(0, 0, 0, 0.80); /* rgba supported */\n    border: 1px solid #999;  /*IE 6/7/8*/\n    border: none rgba(0, 0, 0, 0);  /*IE9 + everything else*/\n    background-color: #E6E6E6;\n    text-decoration: none;\n    border-radius: 2px;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n}\n\n\ni-button.i-hover >button,\ni-button >button:hover,\ni-button >button:focus {\n    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#00000000', endColorstr='#1a000000',GradientType=0);\n    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(transparent), color-stop(40%, rgba(0,0,0, 0.05)), to(rgba(0,0,0, 0.10)));\n    background-image: -webkit-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: -moz-linear-gradient(top, rgba(0,0,0, 0.05) 0%, rgba(0,0,0, 0.10));\n    background-image: -o-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n}\n\ni-button >button:focus {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.6) inset;\n}\n\ni-button.i-hover >button,\ni-button >button:hover,\ni-button.i-hover >button:focus,\ni-button >button:hover:focus {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.7) inset;\n}\n\ni-button >button:focus {\n    outline: 0;\n}\n\ni-button.i-active.i-hover >button,\ni-button.i-active >button:hover,\ni-button.i-active.i-hover >button:focus,\ni-button.i-active >button:hover:focus,\ni-button.i-hover >button.pure-button-active,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-button >button.pure-button-active:hover,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-button.i-hover >button.pure-button-active:focus,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-button >button.pure-button-active:hover:focus,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-button >button.pure-button-active,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-button >button.pure-button-active:focus,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-button.i-hover >button:active,\ni-button >button:hover:active,\ni-button.i-hover >button:focus:active,\ni-button >button:hover:focus:active {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.8) inset, 0 0 6px rgba(0,0,0, 0.4) inset;\n}\n\ni-button.i-disabled >button,\ni-button[disabled=\"true\"] >button,\ni-button.i-disabled >button:active,\ni-button[disabled=\"true\"] >button:active,\ni-button.i-disabled >button.pure-button-active, /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-button[disabled=\"true\"] >button.pure-button-active,\ni-button.i-disabled.i-active >button,\ni-button.i-active[disabled=\"true\"] >button,\ni-button.i-disabled >button:focus,\ni-button[disabled=\"true\"] >button:focus,\ni-button.i-disabled.focussed >button,\ni-button.focussed[disabled=\"true\"] >button,\ni-button.i-disabled >button:hover,\ni-button[disabled=\"true\"] >button:hover {\n    border: none;\n    background-image: none;\n    filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);\n    filter: alpha(opacity=60);\n    -khtml-opacity: 0.60;\n    -moz-opacity: 0.60;\n    opacity: 0.60;\n    cursor: not-allowed;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n    cursor: default;\n}\n\ni-button.i-rounded >button {\n    border-radius: 0.3em;\n}\n\ni-button.i-heavyrounded >button {\n    border-radius: 0.5em;\n}\n\ni-button.i-oval >button {\n    border-radius: 50%;\n}\n\ni-button.i-halfoval >button {\n    border-radius: 25%;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],5233:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],5232:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 
@@ -39027,9 +38943,9 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 };
 
-},{"./css/i-button.css":5232,"i-formelement":5238,"itags.core":5255}],5234:[function(require,module,exports){
+},{"./css/i-button.css":5231,"i-formelement":5237,"itags.core":5255}],5233:[function(require,module,exports){
 var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-checkbox;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-checkbox:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-checkbox:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\ni-checkbox {\n    font-size: 0.9em;\n    margin: 0;\n    padding: 0;\n    display: inline-block;\n    position: relative;\n    vertical-align: middle;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    width: 4.5em;\n    height: 1.9em;\n}\n\ni-checkbox span {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-checkbox >span,\ni-checkbox >span >span,\ni-checkbox >span >span >span,\ni-checkbox >span >span >span >span {\n    display: block;\n}\n\n/* the first span is the focussable span */\ni-checkbox >span {\n    z-index: 1;\n    overflow: hidden;\n    border: 1px solid #CCC;\n    width: 100%;\n    height: 100%;\n}\n\ni-checkbox >span:focus .i-on,\ni-checkbox >span:focus .i-off {\n    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#00000000', endColorstr='#1a000000',GradientType=0);\n    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(transparent), color-stop(40%, rgba(0,0,0, 0.05)), to(rgba(0,0,0, 0.10)));\n    background-image: -webkit-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: -moz-linear-gradient(top, rgba(0,0,0, 0.05) 0%, rgba(0,0,0, 0.10));\n    background-image: -o-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.3) inset;\n}\n\ni-checkbox >span:focus .i-btn {\n    border: solid 1px #888;\n    box-shadow: inset 0 0.17em 0.5em rgba(0, 0, 0, 0.06);\n}\n\ni-checkbox >span:focus .i-btn.dd-dragging {\n    cursor: default;\n}\n\ni-checkbox .i-constrain {\n    height: 100%;\n    padding: 0;\n    margin: 0;\n    position: relative;\n    top: 0; /* left will be calculated by i-checkbox */\n}\n\ni-checkbox .i-container {\n    position: relative;\n    cursor: pointer;\n    padding: 0;\n    margin: 0;\n    height: 100%;\n    left: 0;\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    -khtml-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    -webkit-transition: left 0.25s;\n    -moz-transition: left 0.25s;\n    -ms-transition: left 0.25s;\n    -o-transition: left 0.25s;\n    transition: left 0.25s;\n}\n\ni-checkbox .i-on {\n    height: 100%;\n    background-color: #0078E7;\n    color: #FFF;\n    position: static;\n    text-align: center;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    padding-top: 2px;\n    float: left;\n    box-shadow: inset 0 0.3em 0.5em rgba(0, 0, 0, 0.18);\n}\n\ni-checkbox .i-off {\n    height: 100%;\n    background-color: #FFF;\n    color: #444;\n    position: static;\n    text-align: center;\n    padding-top: 2px;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    white-space: nowrap;\n    float: left;\n    box-shadow: inset 0 0.3em 0.5em rgba(0, 0, 0, 0.18);\n}\n\ni-checkbox .i-btn {\n    position: relative;\n    z-index: 1;\n    border-radius: 100%;\n    float: left;\n    box-shadow: inset 0 0.17em 0.5em rgba(0, 0, 0, 0.18);\n    background-color: #fff;\n    border: solid 1px #AAA;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],5235:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],5234:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 
@@ -39276,9 +39192,9 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 };
 
-},{"./css/i-checkbox.css":5234,"i-formelement":5238,"itags.core":5255}],5236:[function(require,module,exports){
+},{"./css/i-checkbox.css":5233,"i-formelement":5237,"itags.core":5255}],5235:[function(require,module,exports){
 var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-select;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* =================================== */\n/* set invisiblity when not rendered   */\n/* =================================== */\ni-form.hide-children,\ni-form:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n/* ================================= */\n\n/*!\n * Most styles are from Pure v0.5.0\n * Licensed under the BSD License.\n*/\n\ni-form {\n    margin: 0;\n    padding: 0.25em 0.5em;\n    display: block;\n}\n\ni-form[active-labels=\"true\"] i-label {\n    cursor: default;\n}\n\ni-form fieldset {\n    margin: 0 0 0.8em;\n    padding: 0.75em 0;\n    border: 1px solid #C0C0C0;\n    border-radius: 2px;\n    background-color: rgba(0, 0, 0, 0.03);\n    width: 100%;\n    display: block;\n}\n\ni-form fieldset i-button {\n    margin-top: 0.75em;\n    margin-right: 0.25em;\n}\n\ni-form legend {\n    display: block;\n    width: 100%;\n    padding: 0.3em 0;\n    margin-bottom: 1em;\n    color: #333;\n    border-bottom: 1px solid #e5e5e5;\n}\n\ni-form div.i-formrow {\n    margin: 0;\n    padding: 0;\n    display: inline-block;\n}\n\n/* ======================================================== */\n/* Grouped Inputs */\ni-form.i-group:not(.i-aligned) i-label,\ni-form:not(.i-aligned) .i-group i-label {\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\ni-form.i-group [itag-formelement=\"true\"]:not(i-button),\ni-form .i-group [itag-formelement=\"true\"]:not(i-button) {\n    display: block;\n}\ni-form.i-group i-input input,\ni-form .i-group i-input input {\n    border-radius: 0;\n    position: relative;\n    top: -1px;\n}\ni-form.i-group div.i-formrow:first-child i-input input,\ni-form .i-group div.i-formrow:first-child i-input input {\n    top: 1px;\n    border-radius: 4px 4px 0 0;\n}\ni-form.i-group div.i-formrow:last-child i-input input,\ni-form .i-group div.i-formrow:last-child i-input input {\n    top: -2px;\n    border-radius: 0 0 4px 4px;\n}\ni-form.i-group div.i-formrow:first-child i-label,\ni-form .i-group div.i-formrow:first-child i-label {\n    margin-top: 1px;\n}\ni-form.i-group div.i-formrow:last-child i-label,\ni-form .i-group div.i-formrow:last-child i-label {\n    margin-top: -1px; /* not -2px: that would disturb appearance too much */;\n}\ni-form.i-group i-input input:focus,\ni-form .i-group i-input input:focus {\n    z-index: 2;\n}\ni-form.i-group i-button,\ni-form.i-group i-select,\ni-form .i-group i-button,\ni-form .i-group i-select {\n    margin: 0.35em 0;\n}\n/* ======================================================== */\n\n\n\n/* ======================================================== */\n/* Stacked */\ni-form.i-stacked div.i-formrow {\n    display: block;\n}\ni-form.i-stacked div.i-formrow.itag-noblock i-label {\n    display: inline-block;\n    margin-right: 1em;\n}\ni-form.i-stacked [itag-formelement=\"true\"]:not(i-button) {\n    display: block;\n    margin: 0.25em 0;\n}\ni-form.i-stacked div.i-formrow.itag-noblock [itag-formelement=\"true\"]:not(i-button) {\n    display: inline-block;\n    margin: 0;\n}\ni-form.i-stacked i-label {\n    display: block;\n    margin: 1em 0 0.4em 0.15em;\n}\ni-form.i-stacked fieldset div.i-formrow:first-child i-label {\n    margin-top: 0;\n}\ni-form.i-stacked .i-group i-input,\ni-form.i-aligned .i-group i-input,\ni-form .i-stacked .i-group i-input,\ni-form .i-aligned .i-group i-input {\n    margin: 0;\n}\n/* ======================================================== */\n\n\n\n/* ======================================================== */\n/* Aligned */\ni-form.i-aligned div.i-formrow {\n    display: block;\n}\ni-form.i-aligned i-label,\ni-form.i-aligned i-button,\ni-form.i-aligned [itag-formelement=\"true\"]:not(i-button) {\n    display: inline-block;\n    *display: inline;\n    *zoom: 1;\n    vertical-align: middle;\n}\ni-form.i-aligned div.i-formrow {\n    margin-bottom: 1em;\n}\ni-form.i-aligned .i-group div.i-formrow,\ni-form .i-aligned .i-group div.i-formrow {\n    margin-bottom: 0;\n}\ni-form.i-aligned div.i-formrow:last-child {\n    margin-bottom: 0;\n}\ni-form.i-aligned i-label {\n    text-align: right;\n    display: inline-block;\n    vertical-align: middle;\n    width: 10em;\n    margin: 0 1em 0 0;\n}\ni-form.i-aligned i-textarea {\n    vertical-align: top;\n}\ni-form.i-aligned.i-group,\ni-form.i-aligned .i-group {\n    margin-bottom: 0.8em;\n}\ni-form.i-aligned.i-group i-label label,\ni-form.i-aligned .i-group i-label label {\n    text-align: right;\n}\ni-form.i-aligned fieldset i-button:first-child {\n    margin-left: 11em;\n}\n/* ======================================================== */\n\n\n\n/* ======================================================== */\n/* Inline help for forms */\ni-form .message-inline {\n    display: inline-block;\n    padding-left: 0.3em;\n    color: #666;\n    vertical-align: middle;\n    font-size: 0.875em;\n}\n\n/* Block help for forms */\ni-form .message {\n    display: block;\n    color: #666;\n    font-size: 0.875em;\n}\n/* ======================================================== */\n\n\n\n@media only screen and (max-width : 480px) {\n    i-form {\n        display: block;\n        width: 100%;\n    }\n\n    i-form i-label,\n    i-form.i-aligned i-label {\n        display: block;\n        text-align: left;\n        margin: 1em 0 0.4em 3px; /* 3px as lect-padding --> needs to fit .itag-noblock labels  */\n    }\n\n    i-form fieldset div.i-formrow:first-child i-label,\n    i-form.i-aligned fieldset div.i-formrow:first-child i-label {\n        margin-top: 0;\n    }\n\n    i-form.i-aligned div.i-formrow.itag-noblock i-label {\n        display: inline-block;\n        width: 100%;\n        padding-left: 85px;  /* 82 + 3 extra pixels  */\n        margin-left: -82px;\n        margin-bottom: 0;\n    }\n\n    i-form.i-aligned div.i-formrow.itag-noblock i-checkbox {\n        margin-right: 12px;\n        width: 70px !important;\n    }\n\n    i-form.i-aligned div.i-formrow.itag-noblock {\n        text-align: right;\n    }\n\n    i-form.i-group i-label,\n    i-form .i-group i-label {\n        opacity: 0 !important;\n        position: absolute !important;\n        left: -9999px !important;\n        top: -9999px !important;\n        z-index: -1;\n    }\n\n    i-form i-input {\n        display: block;\n        text-align: left;\n        margin-bottom: 0.3em;\n    }\n\n    i-form.i-group i-input,\n    i-form .i-group i-input {\n        margin-bottom: 0em;\n    }\n\n    i-form.i-aligned .control {\n        margin: 1.5em 0 0 0;\n    }\n\n    i-form i-button,\n    i-form i-select {\n        display: block;\n        width: 100%;\n    }\n\n    i-form fieldset i-button {\n        margin-right: 0;\n        margin-top: 0;\n    }\n\n    i-form.i-aligned fieldset i-button:first-child {\n        margin-left: 0;\n    }\n\n    i-form i-button button,\n    i-form i-select >button,\n    i-form i-select >div >div {\n        width: 100%;\n    }\n\n    i-form i-select >button {\n        max-width: inherit;\n    }\n\n    i-form i-select > button div.btntext {\n        margin: 0;\n        max-width: inherit;\n        width: 100%;\n        text-align: center;\n    }\n\n    i-form i-select li {\n        text-align: center;\n    }\n\n    i-form i-button:last-child {\n        margin: 1em 0 0;\n    }\n\n    i-form .message-inline,\n    i-form .message {\n        display: block;\n        font-size: 0.75em;\n        /* Increased bottom padding to make it group with its related input element. */\n        padding: 0.2em 0 0.8em;\n    }\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],5237:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],5236:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 
@@ -39519,7 +39435,7 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 };
 
-},{"./css/i-form.css":5236,"itags.core":5255}],5238:[function(require,module,exports){
+},{"./css/i-form.css":5235,"itags.core":5255}],5237:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 
@@ -39543,9 +39459,9 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 };
 
-},{"itags.core":5255}],5239:[function(require,module,exports){
+},{"itags.core":5255}],5238:[function(require,module,exports){
 var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-input;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-input:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-input:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\ni-input {\n    margin: 0;\n    display: inline-block;\n    width: 12em;\n    position: relative;\n    vertical-align: middle;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-input > input {\n    color: inherit;\n    font: inherit;\n    margin: 0;\n    padding: 0.5em 0.6em;\n    display: inline-block;\n    border: 1px solid #ccc;\n    box-shadow: inset 0 1px 3px #ddd;\n    border-radius: 4px;\n    line-height: normal;\n    width: 100%; /* within the i-input always 100% */\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\nhtml i-input[disabled] > input {\n    cursor: not-allowed;\n    background-color: #eaeded;\n    color: #cad2d3;\n}\n\ni-input > input::-moz-focus-inner {\n  border: 0;\n  padding: 0;\n}\n\ni-input > input:focus,\ni-input.focussed > input {\n    outline: 0;\n    outline: thin dotted \\9; /* IE6-9 */\n    border-color: #129FEA;\n}\n\ni-input[readonly=\"true\"] > input {\n    background: #eee; /* menu hover bg color */\n    color: #777; /* menu text color */\n    border-color: #ccc;\n}\n\ni-input[type=\"number\"] > input {\n    text-align: right;\n}\n\ni-input[invalid=\"true\"] > input[type=\"text\"],\ni-input[invalid=\"true\"] > input[type=\"text\"]:focus,\ni-input[invalid=\"true\"].focussed > input[type=\"text\"],\ni-input[invalid=\"true\"].focussed > input[type=\"text\"]:focus,\n.pure-form i-input[invalid=\"true\"] > input[type=\"text\"],\n.pure-form i-input[invalid=\"true\"] > input[type=\"text\"]:focus,\n.pure-form i-input[invalid=\"true\"].focussed > input[type=\"text\"],\n.pure-form i-input[invalid=\"true\"].focussed > input[type=\"text\"]:focus {\n    border-color: #e9322d;\n}\n\ni-input.i-rounded > input {\n    border-radius: 2em;\n    padding: 0.5em 1em;\n}\n\ni-input.i-input-1 {\n    width: 100%;\n}\ni-input.i-input-2-3 {\n    width: 66%;\n}\ni-input.i-input-1-2 {\n    width: 50%;\n}\ni-input.i-input-1-3 {\n    width: 33%;\n}\ni-input.i-input-1-4 {\n    width: 25%;\n}\n\n@media only screen and (max-width : 480px) {\n    i-input {\n        margin-bottom: 0.3em;\n        display: block;\n    }\n}\n\n"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],5240:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],5239:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 
@@ -39746,7 +39662,7 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 };
 
-},{"./css/i-input.css":5239,"i-formelement":5238,"itags.core":5255}],5241:[function(require,module,exports){
+},{"./css/i-input.css":5238,"i-formelement":5237,"itags.core":5255}],5240:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 
@@ -39859,9 +39775,9 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 };
 
-},{"itags.core":5255}],5242:[function(require,module,exports){
+},{"itags.core":5255}],5241:[function(require,module,exports){
 var css = "i-menu.css"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],5243:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],5242:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 
@@ -39907,9 +39823,9 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 };
 
-},{"./css/i-menu.css":5242,"itags.core":5255}],5244:[function(require,module,exports){
+},{"./css/i-menu.css":5241,"itags.core":5255}],5243:[function(require,module,exports){
 var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-nav;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-nav:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-nav:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\ni-nav,\ni-nav >div,\ni-nav >div >div,\ni-nav >div >div >div {\n    margin: 0;\n    padding: 0;\n    position: relative;\n    display: block;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-nav[horizontal=\"true\"] >div >div >div {\n    display: inline-block;\n}\n\ni-nav div.menuitem >a {\n    text-decoration: none;\n    white-space: nowrap;\n    padding: 0;\n    margin: 0;\n    height: 100%;\n}\n\ni-nav div.separator {\n    background-color: #ccc;\n}\n\ni-nav[horizontal=\"true\"] div.separator {\n    width: 1px;\n    height: 1.3em;\n    margin: 0 .3em ;\n    vertical-align: middle;\n}\n\ni-nav[horizontal=\"false\"] div.separator {\n    height: 1px;\n    margin: .3em 0;\n    width: 100%;\n}\n\ni-nav div.heading {\n    white-space: nowrap;\n    padding: .5em 1em;\n    vertical-align: middle;\n    color: #000;\n}\n\ni-nav div.menuitem {\n    padding: 0;\n    line-height: 2em;\n    vertical-align: middle;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-nav div.menuitem >a {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    color: #777;\n    padding: 0 1em;\n    display: block;\n    height: 100%;\n    vertical-align: middle;\n}\n\ni-nav div.menuitem >a:visited {\n    color: #777;\n}\n\ni-nav div.menuitem:not(.disabled):hover {\n    background-color: #eee;\n    cursor: pointer;\n}\n\ni-nav div.menuitem:hover >a {\n    color: #000;\n}\n\ni-nav div.menuitem[selected=\"true\"] >a,\ni-nav div.menuitem[selected=\"true\"] >a:visited {\n    color: #000;\n}\n\ni-nav div.menuitem.disabled {\n    opacity: .5;\n}\n"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
-},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],5245:[function(require,module,exports){
+},{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],5244:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 
@@ -40066,13 +39982,13 @@ IO.xhrPageSupport = function() {return true;};
     return window.ITAGS[itagName];
 };
 
-},{"./css/i-nav.css":5244,"itags.core":5255}],5246:[function(require,module,exports){
+},{"./css/i-nav.css":5243,"itags.core":5255}],5245:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 
     var itagCore = require('itags.core')(window),
         itagName = 'i-parcel', // <-- define your own itag-name here
-        microtemplate = require('micro-template').template,
+        microtemplate = require('./lib/microtemplate.js'),
         DOCUMENT = window.document,
         Itag;
 
@@ -40091,13 +40007,21 @@ module.exports = function (window) {
                 template = template.replaceAll('template', '')
                                    .replaceAll('&lt;', '<')
                                    .replaceAll('&gt;', '>');
-console.warn(template);
                 element.defineWhenUndefined('template', template);
             },
             sync: function() {
                 var element = this,
-                    model = element.model;
-                element.setHTML(microtemplate(model.template, model));
+                    model = element.model,
+                    template = model.template;
+                if (template.indexOf('<%')!==-1) {
+                    element.setHTML(microtemplate(template, model));
+                }
+                else if (/{\S+}/.test(template)) {
+                    element.setHTML(template.substitute(model));
+                }
+                else {
+                    element.setHTML(template);
+                }
             }
         });
         itagCore.setContentVisibility(Itag, true);
@@ -40106,7 +40030,66 @@ console.warn(template);
 
     return window.ITAGS[itagName];
 };
-},{"itags.core":5255,"micro-template":5217}],5247:[function(require,module,exports){
+},{"./lib/microtemplate.js":5246,"itags.core":5255}],5246:[function(require,module,exports){
+/**
+ * Based on:
+ * https://github.com/cho45/micro-template.js
+ * (c) cho45 http://cho45.github.com/mit-license
+ */
+// "use strict";
+
+var cache = {},
+    templateFn;
+
+templateFn = function(template, data) {
+    var me = arguments.callee;
+    if (!cache[template]) {
+        cache[template] = (function () {
+            "use strict";
+            var name, line, body, func, map, escapeHTML, Fn;
+            name = 'templateFn(template)';
+            line = 1;
+            body = (
+                "try { " +
+                    (me.variable ?  "var " + me.variable + " = this.stash;" : "with (this.stash) { ") +
+                        "this.ret += '"  +
+                        template.replace(/<%/g, '\x11').replace(/%>/g, '\x13') // if you want other tag, just edit this line
+                                .replace(/'(?![^\x11\x13]+?\x13)/g, '\\x27')
+                                .replace(/^\s*|\s*$/g, '')
+                                .replace(/\n/g, function () {
+                                    return "';\nthis.line = " + (++line) + "; this.ret += '\\n";
+                                 })
+                                .replace(/\x11=raw(.+?)\x13/g, "' + ($1) + '")
+                                .replace(/\x11=(.+?)\x13/g, "' + this.escapeHTML($1) + '")
+                                .replace(/\x11(.+?)\x13/g, "'; $1; this.ret += '") +
+                        "'; " + (me.variable ? "" : "}") + "return this.ret;" +
+                "} catch (e) { throw 'TemplateError: ' + e + ' (on " + name + "' + ' line ' + this.line + ')'; } " +
+                "//@ sourceURL=" + name + "\n" // source map
+            ).replace(/this\.ret \+= '';/g, '');
+            // work arround sjhint:
+            Fn = Function;
+            func = new Fn(body);
+            map  = { '&' : '&amp;', '<' : '&lt;', '>' : '&gt;', '\x22' : '&#x22;', '\x27' : '&#x27;' };
+            escapeHTML = function (template) {
+                return (''+template).replace(/[&<>\'\"]/g, function (_) {
+                    return map[_];
+                });
+            };
+            return function (stash) {
+                return func.call(me.context = {
+                    escapeHTML: escapeHTML,
+                    line: 1,
+                    ret : '',
+                    stash: stash
+                });
+            };
+        })();
+    }
+    return data ? cache[template](data) : cache[template];
+};
+
+module.exports = templateFn;
+},{}],5247:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
 
@@ -40144,7 +40127,7 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 };
 
-},{"i-button":5233,"itags.core":5255}],5248:[function(require,module,exports){
+},{"i-button":5232,"itags.core":5255}],5248:[function(require,module,exports){
 var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-select;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-select:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-select:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\ni-select {\n    margin: 0;\n    display: inline-block;\n    *display: inline; /*IE 6/7*/\n    zoom: 1;\n    position: relative;\n    vertical-align: middle;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-select >span {\n    position: relative;\n    z-index: 2;\n    -webkit-transition: opacity 0.1s;\n    -moz-transition: opacity 0.1s;\n    -ms-transition: opacity 0.1s;\n    -o-transition: opacity 0.1s;\n    transition: opacity 0.1s;\n    opacity: 0;\n}\n\ni-select >span.i-select-show {\n    -webkit-transition: opacity 0.2s;\n    -moz-transition: opacity 0.2s;\n    -ms-transition: opacity 0.2s;\n    -o-transition: opacity 0.2s;\n    transition: opacity 0.2s;\n    opacity: 1;\n}\n\ni-select >button >span,\ni-select >span,\ni-select >span >span,\ni-select >span >span >span {\n    display: block;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-select.i-primary >button,\ni-select.i-focussed >button {\n    background-color: rgb(0, 120, 231);\n    color: #fff;\n}\n\n/*csslint outline-none:false*/\n\ni-select >button {\n    -webkit-touch-callout: none;\n    -webkit-user-select: none;\n    -khtml-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    position: relative;\n    padding: 0.5em 0;\n    max-width: 8em;\n    color: inherit; /* 1 */\n    font: inherit; /* 2 */\n    margin: 0; /* 3 */\n    overflow: visible;\n    text-transform: none;\n    -webkit-appearance: button; /* 2 */\n    line-height: normal;\n    white-space: nowrap;\n    vertical-align: baseline;\n    text-align: center;\n    cursor: pointer;\n    -webkit-user-drag: none;\n    -webkit-user-select: none;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    user-select: none;\n    font-family: inherit;\n    font-size: 100%;\n    color: #444; /* rgba not supported (IE 8) */\n    color: rgba(0, 0, 0, 0.80); /* rgba supported */\n    border: 1px solid #999;  /*IE 6/7/8*/\n    border: none rgba(0, 0, 0, 0);  /*IE9 + everything else*/\n    background-color: #E6E6E6;\n    text-decoration: none;\n    border-radius: 2px;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n}\n\n/* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select.i-hover >button,\ni-select >button:hover,\ni-select >button:focus {\n    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#00000000', endColorstr='#1a000000',GradientType=0);\n    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(transparent), color-stop(40%, rgba(0,0,0, 0.05)), to(rgba(0,0,0, 0.10)));\n    background-image: -webkit-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: -moz-linear-gradient(top, rgba(0,0,0, 0.05) 0%, rgba(0,0,0, 0.10));\n    background-image: -o-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n}\ni-select >button:focus {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.6) inset;\n    outline: 0;\n}\ni-select.i-active.i-hover >button,\ni-select.i-active >button:hover,\ni-select.i-active.i-hover >button:focus,\ni-select.i-active >button:hover:focus,\ni-select.i-hover >button.pure-button-active,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select >button.pure-button-active:hover,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select.i-hover >button.pure-button-active:focus,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select >button.pure-button-active:hover:focus,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select >button.pure-button-active,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select >button.pure-button-active:focus,  /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select.i-hover >button:active,\ni-select >button:hover:active,\ni-select.i-hover >button:focus:active,\ni-select >button:hover:focus:active {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.8) inset, 0 0 6px rgba(0,0,0, 0.4) inset;\n}\n\ni-select.i-disabled >button,\ni-select[disabled=\"true\"] >button,\ni-select.i-disabled >button:active,\ni-select[disabled=\"true\"] >button:active,\ni-select.i-disabled >button.pure-button-active, /* need .pure-button-active for it gets set when \"enter-pressed\" on button */\ni-select[disabled=\"true\"] >button.pure-button-active,\ni-select.i-disabled.i-active >button,\ni-select.i-active[disabled=\"true\"] >button,\ni-select.i-disabled >button:focus,\ni-select[disabled=\"true\"] >button:focus,\ni-select.i-disabled.focussed >button,\ni-select.focussed[disabled=\"true\"] >button,\ni-select.i-disabled >button:hover,\ni-select[disabled=\"true\"] >button:hover {\n    border: none;\n    background-image: none;\n    filter: progid:DXImageTransform.Microsoft.gradient(enabled = false);\n    filter: alpha(opacity=60);\n    -khtml-opacity: 0.60;\n    -moz-opacity: 0.60;\n    opacity: 0.60;\n    cursor: not-allowed;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n    cursor: default;\n}\n\ni-select.i-rounded >button {\n    border-radius: 0.3em;\n}\n\ni-select.i-heavyrounded >button {\n    border-radius: 0.5em;\n}\n\ni-select.i-oval >button {\n    border-radius: 50%;\n}\n\ni-select.i-halfoval >button {\n    border-radius: 25%;\n}\n\ni-select.i-hidden {\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -9;\n}\n\ni-select >button::-moz-focus-inner {\n  border: 0;\n  padding: 0;\n}\n\ni-select >button >span.btntext {\n    margin: 0 1.25em 0 1em;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n    max-width: 8em;\n    display: block;\n}\n\ni-select >button >span.pointer {\n    border-left: 0.4em solid rgba(0, 0, 0, 0);\n    border-right: 0.4em solid rgba(0, 0, 0, 0);\n    border-top: 0.5em solid #000;\n    right: 0.25em;\n    position: absolute;\n    bottom: 0.2em;\n}\n\ni-select >button.i-nonexpandable span.btntext {\n    margin: 0 1em;\n}\n\ni-select >button.i-nonexpandable span.pointer {\n    visibility: hidden;\n}\n\ni-select >span >span {\n    position: absolute;\n    left: 0;\n    top: 0;\n    cursor: pointer;\n    border-style: solid;\n    border-width: 0.1em;\n    -webkit-border-radius: 0 0 0.3em 0.3em;\n    -moz-border-radius: 0 0 0.3em 0.3em;\n    border-radius: 0 0 0.3em 0.3em;\n    -webkit-box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n    -moz-box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n    box-shadow: 0.3em 0.3em 5px rgba(0,0,0,0.15);\n}\n\ni-select >span >span >span {\n    font-size: 1.2em;\n    padding: 0 0 0.3em;\n    list-style: none;\n    margin: 0;\n}\n\ni-select option {\n    padding: 0.25em 0.7em;\n    white-space: nowrap;\n}\n\ni-select option.focussed {\n    background-color: #B3D4FF;\n}\n\ni-select option.selected:before {\n    content: '*';\n    margin-left: -0.7em;\n    padding-right: 0.25em;\n}\n\ni-select option:before,\ni-select option:after {\n    content: '';\n    padding: 0;\n    margin: 0;\n}\n\n/* color specification:; */\n\ni-select >span >span {\n    background-color: #FFF;\n    border-color: #000;\n}\n\ni-select option:hover {\n    background-color: #B3D4FF;\n}\n\ni-select.i-focused > button span.pointer,\ni-select.i-primary > button span.pointer {\n    border-top: 0.5em solid #FEFEFE;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
 },{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],5249:[function(require,module,exports){
 /**
@@ -40525,7 +40508,7 @@ module.exports = function (window) {
 
     return window.ITAGS[itagName];
 };
-},{"./css/i-select.css":5248,"i-formelement":5238,"itags.core":5255}],5250:[function(require,module,exports){
+},{"./css/i-select.css":5248,"i-formelement":5237,"itags.core":5255}],5250:[function(require,module,exports){
 var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` /*\n/* will define which itag will be css-shadowed                             /*\n/* ======================================================================= */\nitag-css {\n    i-tag: i-statusbar;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-statusbar:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-statusbar:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\ni-statusbar {\n    color: #222;\n    text-align: left;\n    margin: 0;\n    padding: 0;\n    display: block;\n    position: fixed;\n    left: 0;\n    bottom: 0;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    width: 100%;\n    line-height: 1.5em;\n    vertical-align: middle;\n    padding: 2px 0.5em 0;\n    border-top: solid 1px #BBB;\n    background: rgb(238,238,238);\n    background: -moz-linear-gradient(top,  rgba(238,238,238,1) 0%, rgba(238,238,238,1) 11%, rgba(221,221,221,1) 100%);\n    background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(238,238,238,1)), color-stop(11%,rgba(238,238,238,1)), color-stop(100%,rgba(221,221,221,1)));\n    background: -webkit-linear-gradient(top,  rgba(238,238,238,1) 0%,rgba(238,238,238,1) 11%,rgba(221,221,221,1) 100%);\n    background: -o-linear-gradient(top,  rgba(238,238,238,1) 0%,rgba(238,238,238,1) 11%,rgba(221,221,221,1) 100%);\n    background: -ms-linear-gradient(top,  rgba(238,238,238,1) 0%,rgba(238,238,238,1) 11%,rgba(221,221,221,1) 100%);\n    background: linear-gradient(to bottom,  rgba(238,238,238,1) 0%,rgba(238,238,238,1) 11%,rgba(221,221,221,1) 100%);\n}\n\ni-statusbar >span {\n    white-space: nowrap;\n}\n\ni-statusbar >span:first-child {\n    overflow: hidden;\n    text-overflow: ellipsis;\n    text-align: left;\n}\n\ni-statusbar >span:last-child {\n    text-align: right;\n    float: right;\n}\n\ni-statusbar >span i-button,\ni-statusbar >span button.pure-button,\ni-statusbar >span button {\n    margin: 0;\n    background-color: #FFF;\n    padding: 0.4em 0.6em 0.25em;\n    color: #222;\n    font-size: 0.8em;\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.15) inset;\n}\n\ni-statusbar >span i-button.i-primary,\ni-statusbar >span button.pure-button-primary {\n    background-color: #FFF;\n    color: #222;\n}\n\ni-statusbar >span div.dialog-message-icon,\ni-statusbar >span div.dialog-message {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    padding: 0;\n    margin: 0;\n    vertical-align: top;\n    display: inline-block;\n}\n\ni-statusbar >span div.dialog-message-icon {\n    margin-left: -1em;\n    padding-left: 1em;\n    width: 1em;\n}\n\ni-statusbar >span div.dialog-message {\n    margin-left: 1.4em;\n    padding-top: 0.05em;\n}\n"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
 },{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],5251:[function(require,module,exports){
 module.exports = function (window) {
@@ -49121,4 +49104,4 @@ function hasOwnProperty(obj, prop) {
 
 })(global.window || require('node-win'));
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./extra/dialog":5231,"i-button":5233,"i-checkbox":5235,"i-form":5237,"i-input":5240,"i-label":5241,"i-menu":5243,"i-nav":5245,"i-parcel":5246,"i-reset":5247,"i-select":5249,"i-statusbar":5251,"i-tabpane":5253,"node-win":5219}]},{},[]);
+},{"./extra/dialog":5230,"i-button":5232,"i-checkbox":5234,"i-form":5236,"i-input":5239,"i-label":5240,"i-menu":5242,"i-nav":5244,"i-parcel":5245,"i-reset":5247,"i-select":5249,"i-statusbar":5251,"i-tabpane":5253,"node-win":5218}]},{},[]);
