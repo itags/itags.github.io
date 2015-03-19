@@ -1,0 +1,31 @@
+
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>i-parcel with template</title>
+</head>
+
+<body>
+
+    <i-parcel lazybind="true">
+    <!--
+        I am <% if (age>=18) { %><%= adultMessage %><% } else { %><%= childMessage %><% } %>.
+    -->
+    </i-parcel>
+
+    <script src="../../dist/itagsbuild.js"></script>
+    <script>
+        require('itags');
+        var iparcel = document.getElement('i-parcel'),
+            model = {
+                age: 20,
+                adultMessage: 'an adult',
+                childMessage: 'a child'
+            };
+        iparcel.bindModel(model);
+    </script>
+
+</body>
+
+</html>

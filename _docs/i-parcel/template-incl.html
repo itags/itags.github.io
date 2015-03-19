@@ -1,0 +1,27 @@
+
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>i-parcel with template</title>
+</head>
+
+<body>
+
+    <i-parcel lazybind="true">
+    <!--
+        I am <b>just</b> <%= what %>.
+    -->
+    </i-parcel>
+
+    <script src="../../dist/itagsbuild.js"></script>
+    <script>
+        require('itags');
+        var iparcel = document.getElement('i-parcel'),
+            model = {what: 'a template'};
+        iparcel.bindModel(model);
+    </script>
+
+</body>
+
+</html>
