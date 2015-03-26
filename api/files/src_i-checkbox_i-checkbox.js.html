@@ -455,6 +455,10 @@ module.exports = function (window) {
                 itemContainers[1].setHTML(model[&#x27;off-text&#x27;]);
             },
 
+            getValue: function() {
+                return this.model.checked;
+            },
+
             currentToReset: function() {
                 var model = this.model;
                 model[&#x27;reset-value&#x27;] = model.checked;

@@ -1,0 +1,38 @@
+
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>Simple i-label</title>
+    <style type="text/css">
+        body {
+            margin: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <i-link href="http://itsasbreuk.nl" target="_blank" button-style="true">
+    <!--
+    itsasbreuk.nl
+    -->
+    </i-link>
+    <i-button><!--Click me--></i-button>
+    <i-link class="i-primary" href="http://itsasbreuk.nl" target="_blank" button-style="true">
+    <!--
+    itsasbreuk.nl
+    -->
+    </i-link>
+    <i-button class="i-primary"><!--Click me--></i-button>
+
+
+    <script src="../../dist/itagsbuild.js"></script>
+    <script>
+        require('itags');
+        document.getElement('i-link').focus();
+    </script>
+
+</body>
+
+</html>

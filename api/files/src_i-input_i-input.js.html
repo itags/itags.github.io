@@ -261,12 +261,26 @@ module.exports = function (window) {
             );
         });
 
-        Event.after([&#x27;keypress&#x27;, &#x27;mouseup&#x27;, &#x27;panup&#x27;, &#x27;mousedown&#x27;, &#x27;pandown&#x27;], function(e) {
+        Event.after([&#x27;keyup&#x27;, &#x27;mouseup&#x27;, &#x27;panup&#x27;, &#x27;mousedown&#x27;, &#x27;pandown&#x27;], function(e) {
             var inputNode = e.target,
                 element = inputNode.getParent(),
-                model = element.model;
-            model[&#x27;selection-start&#x27;] = inputNode.selectionStart || 0;
-            model[&#x27;selection-end&#x27;] = inputNode.selectionEnd || 0;
+                model = element.model,
+                updateCursorPos, cursorMove;
+            updateCursorPos = function() {
+                model[&#x27;selection-start&#x27;] = inputNode.selectionStart || 0;
+                model[&#x27;selection-end&#x27;] = inputNode.selectionEnd || 0;
+            };
+            cursorMove = function(keyCode) {
+                return (keyCode&gt;=37) &amp;&amp; (keyCode&lt;=40);
+            };
+            if ((e.type===&#x27;keyup&#x27;) &amp;&amp; !cursorMove(e.keyCode)) {
+                // we need to wait after the value has been processed by valuechange, otherwise model.value resets
+                // itself and won;t change!
+                Event.onceAfter(&#x27;valuechange&#x27;, updateCursorPos, &#x27;i-input &gt; input&#x27;);
+            }
+            else {
+                updateCursorPos();
+            }
         }, &#x27;i-input input&#x27;);
 
         Event.after(&#x27;valuechange&#x27;, function(e) {
@@ -275,6 +289,7 @@ module.exports = function (window) {
                 model = element.model,
                 prevValue = model.value,
                 validNumber, min, max;
+
             model.value = newValue;
             switch (model.type) {
                 case &#x27;number&#x27;:
@@ -412,6 +427,10 @@ module.exports = function (window) {
             currentToReset: function() {
                 var model = this.model;
                 model[&#x27;reset-value&#x27;] = model.value;
+            },
+
+            getValue: function() {
+                return this.model.value;
             },
 
             reset: function() {

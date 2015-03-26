@@ -678,7 +678,7 @@ module.exports = function (window) {
     */
     PROTECTED_MEMBERS = createHashMap();
     EXTRA_BASE_MEMBERS.each(function(value, key) {
-        ITAG_METHOD_VALUES[key] || (key===&#x27;_afterBindModel&#x27;) || (PROTECTED_MEMBERS[key] = true);
+        ITAG_METHOD_VALUES[key] || (key===&#x27;_afterBindModel&#x27;) || (key===&#x27;itagReady&#x27;) || (PROTECTED_MEMBERS[key] = true);
     });
 
    /**
