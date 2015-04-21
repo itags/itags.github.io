@@ -301,13 +301,15 @@ module.exports = function (window) {
                     // now set the right width:
                     width = col.width;
                     if (width) {
-                        if (width.endsWith(&#x27;%&#x27;)) {
-                            // calculate the width into pixels:
-                            width = (width*availableWidth/100);
-                        }
-                        // always specified as number (saved as pixels)
-                        else {
-                            width = parseInt(width, 10);
+                        if (typeof width===&#x27;string&#x27;) {
+                            if (width.endsWith(&#x27;%&#x27;)) {
+                                // calculate the width into pixels:
+                                width = (width*availableWidth/100);
+                            }
+                            // always specified as number (saved as pixels)
+                            else {
+                                width = parseInt(width, 10);
+                            }
                         }
                         occupied += width;
                         css += &#x27;i-table &gt;span &gt;span &gt;span:nth-child(&#x27;+(i+1)+&#x27;) {width: &#x27;+width+&#x27;px}&#x27;;
