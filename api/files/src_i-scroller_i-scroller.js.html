@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>src/i-scroller/i-scroller.js - Itsa</title>
+    <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
+    <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
+    <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
+    <link rel="shortcut icon" type="image/png" href="../assets/favicon.png">
+    <script src="http://yui.yahooapis.com/combo?3.9.1/build/yui/yui-min.js"></script>
+</head>
+<body class="yui3-skin-sam">
+
+<div id="doc">
+    <div id="hd" class="yui3-g header">
+        <div class="yui3-u-3-4">
+            
+                <h1><img src="../assets/css/logo.png" title="Itsa"></h1>
+            
+        </div>
+        <div class="yui3-u-1-4 version">
+            <em>API Docs for: 0.0.1</em>
+        </div>
+    </div>
+    <div id="bd" class="yui3-g">
+
+        <div class="yui3-u-1-4">
+            <div id="docs-sidebar" class="sidebar apidocs">
+                <div id="api-list">
+    <h2 class="off-left">APIs</h2>
+    <div id="api-tabview" class="tabview">
+        <ul class="tabs">
+            <li><a href="#api-classes">Classes</a></li>
+            <li><a href="#api-modules">Modules</a></li>
+        </ul>
+
+        <div id="api-tabview-filter">
+            <input type="search" id="api-filter" placeholder="Type to filter APIs">
+        </div>
+
+        <div id="api-tabview-panel">
+            <ul id="api-classes" class="apis classes">
+            
+                <li><a href="../classes/Array.html">Array</a></li>
+            
+                <li><a href="../classes/BaseClass.html">BaseClass</a></li>
+            
+                <li><a href="../classes/Classes.html">Classes</a></li>
+            
+                <li><a href="../classes/DD.html">DD</a></li>
+            
+                <li><a href="../classes/Dialog.html">Dialog</a></li>
+            
+                <li><a href="../classes/document.html">document</a></li>
+            
+                <li><a href="../classes/Element.html">Element</a></li>
+            
+                <li><a href="../classes/ElementArray.html">ElementArray</a></li>
+            
+                <li><a href="../classes/Event.html">Event</a></li>
+            
+                <li><a href="../classes/Event.Emitter.html">Event.Emitter</a></li>
+            
+                <li><a href="../classes/Event.Listener.html">Event.Listener</a></li>
+            
+                <li><a href="../classes/FocusManager.html">FocusManager</a></li>
+            
+                <li><a href="../classes/Function.html">Function</a></li>
+            
+                <li><a href="../classes/HTMLElement.html">HTMLElement</a></li>
+            
+                <li><a href="../classes/Icons.html">Icons</a></li>
+            
+                <li><a href="../classes/IO.html">IO</a></li>
+            
+                <li><a href="../classes/ItagBaseClass.html">ItagBaseClass</a></li>
+            
+                <li><a href="../classes/itagCore.html">itagCore</a></li>
+            
+                <li><a href="../classes/ITSA.html">ITSA</a></li>
+            
+                <li><a href="../classes/Messages.html">Messages</a></li>
+            
+                <li><a href="../classes/Node.html">Node</a></li>
+            
+                <li><a href="../classes/NodePlugin.html">NodePlugin</a></li>
+            
+                <li><a href="../classes/NS-vdom.html">NS-vdom</a></li>
+            
+                <li><a href="../classes/Object.html">Object</a></li>
+            
+                <li><a href="../classes/Panel.html">Panel</a></li>
+            
+                <li><a href="../classes/Promise.html">Promise</a></li>
+            
+                <li><a href="../classes/Promise.Resolver.html">Promise.Resolver</a></li>
+            
+                <li><a href="../classes/String.html">String</a></li>
+            
+                <li><a href="../classes/USERAGENT.html">USERAGENT</a></li>
+            
+                <li><a href="../classes/Utils.html">Utils</a></li>
+            
+                <li><a href="../classes/vnode.html">vnode</a></li>
+            
+                <li><a href="../classes/window.html">window</a></li>
+            
+            </ul>
+
+            <ul id="api-modules" class="apis modules">
+            
+                <li><a href="../modules/attribute-extractor.html">attribute-extractor</a></li>
+            
+                <li><a href="../modules/dialog.html">dialog</a></li>
+            
+                <li><a href="../modules/drag.html">drag</a></li>
+            
+                <li><a href="../modules/drag-drop.html">drag-drop</a></li>
+            
+                <li><a href="../modules/element-array.html">element-array</a></li>
+            
+                <li><a href="../modules/event.html">event</a></li>
+            
+                <li><a href="../modules/event-blurnode.html">event-blurnode</a></li>
+            
+                <li><a href="../modules/event-dom.html">event-dom</a></li>
+            
+                <li><a href="../modules/event-emitter.html">event-emitter</a></li>
+            
+                <li><a href="../modules/event-focusnode.html">event-focusnode</a></li>
+            
+                <li><a href="../modules/event-hover.html">event-hover</a></li>
+            
+                <li><a href="../modules/event-listener.html">event-listener</a></li>
+            
+                <li><a href="../modules/event-mobile.html">event-mobile</a></li>
+            
+                <li><a href="../modules/extend-document.html">extend-document</a></li>
+            
+                <li><a href="../modules/extend-element.html">extend-element</a></li>
+            
+                <li><a href="../modules/extra_classes.js.html">extra/classes.js</a></li>
+            
+                <li><a href="../modules/focusmanager.html">focusmanager</a></li>
+            
+                <li><a href="../modules/html-parser.html">html-parser</a></li>
+            
+                <li><a href="../modules/icons.html">icons</a></li>
+            
+                <li><a href="../modules/io.html">io</a></li>
+            
+                <li><a href="../modules/io-cors.html">io-cors</a></li>
+            
+                <li><a href="../modules/io-transfer.html">io-transfer</a></li>
+            
+                <li><a href="../modules/io-xml.html">io-xml</a></li>
+            
+                <li><a href="../modules/itags.core.html">itags.core</a></li>
+            
+                <li><a href="../modules/itsa.build.html">itsa.build</a></li>
+            
+                <li><a href="../modules/js-ext.html">js-ext</a></li>
+            
+                <li><a href="../modules/lib_array.js.html">lib/array.js</a></li>
+            
+                <li><a href="../modules/lib_function.js.html">lib/function.js</a></li>
+            
+                <li><a href="../modules/lib_object.js.html">lib/object.js</a></li>
+            
+                <li><a href="../modules/lib_promise.s.html">lib/promise.s</a></li>
+            
+                <li><a href="../modules/lib_string.js.html">lib/string.js</a></li>
+            
+                <li><a href="../modules/messages.html">messages</a></li>
+            
+                <li><a href="../modules/node-parser.html">node-parser</a></li>
+            
+                <li><a href="../modules/node-plugin.html">node-plugin</a></li>
+            
+                <li><a href="../modules/node-win.html">node-win</a></li>
+            
+                <li><a href="../modules/panel.html">panel</a></li>
+            
+                <li><a href="../modules/useragent.html">useragent</a></li>
+            
+                <li><a href="../modules/utils.html">utils</a></li>
+            
+                <li><a href="../modules/vdom.html">vdom</a></li>
+            
+                <li><a href="../modules/vdom-ns.html">vdom-ns</a></li>
+            
+                <li><a href="../modules/vnode.html">vnode</a></li>
+            
+            </ul>
+        </div>
+    </div>
+</div>
+
+            </div>
+        </div>
+        <div class="yui3-u-3-4">
+                <div id="api-options">
+        Show:
+        <label for="api-show-inherited">
+            <input type="checkbox" id="api-show-inherited" checked>
+            Inherited
+        </label>
+
+        <label for="api-show-protected">
+            <input type="checkbox" id="api-show-protected">
+            Protected
+        </label>
+
+        <label for="api-show-private">
+            <input type="checkbox" id="api-show-private">
+            Private
+        </label>
+        <label for="api-show-deprecated">
+            <input type="checkbox" id="api-show-deprecated">
+            Deprecated
+        </label>
+
+    </div>
+
+
+            <div class="apidocs">
+                <div id="docs-main">
+                    <div class="content">
+                        <h1 class="file-heading">File: src/i-scroller/i-scroller.js</h1>
+
+<div class="file">
+    <pre class="code prettyprint linenums">
+module.exports = function (window) {
+    &quot;use strict&quot;;
+
+    require(&#x27;./css/i-scroller.css&#x27;); // &lt;-- define your own itag-name here
+
+    var margeItems = 1,
+        itagCore = require(&#x27;itags.core&#x27;)(window),
+        itagName = &#x27;i-scroller&#x27;, // &lt;-- define your own itag-name here
+        DOCUMENT = window.document,
+        ITSA = window.ITSA,
+        Event = ITSA.Event,
+        AUTO_EXPAND_DELAY = 2000,
+        IParcel = require(&#x27;i-parcel&#x27;)(window),
+        microtemplate = require(&#x27;i-parcel/lib/microtemplate.js&#x27;),
+        scrollers = [],
+        Itag, autoExpandScrollers, registerScroller, unregisterScroller;
+
+    if (!window.ITAGS[itagName]) {
+
+        registerScroller = function(iscroller) {
+            scrollers.push(iscroller);
+        };
+
+        unregisterScroller = function(iscroller) {
+            scrollers.remove(iscroller);
+        };
+
+        autoExpandScrollers = function() {
+            ITSA.later(function() {
+                var len = scrollers.length,
+                    i;
+                for (i=0; i&lt;len; i++) {
+// expand has currently errors, when not expanding, but scrolled --&gt; afterwards
+// the scrollerContainer is shifted out of view
+// THEREFORE comment &#x60;autoExpand()&#x60; for now:
+
+                    // scrollers[i].autoExpand();
+
+                }
+            }, AUTO_EXPAND_DELAY, true);
+        };
+
+        Event.after(&#x27;dd&#x27;, function(e) {
+            // start dragging
+            var node = e.target,
+                sourceNode = e.sourceTarget,
+                iscroller = node.getParent(),
+                dragPromise = e.dd;
+            // store initial start-item:
+            iscroller.setData(&#x27;_scrollBefore&#x27;, iscroller.model[&#x27;start-item&#x27;]);
+        //            iscroller.setData(&#x27;_dragging&#x27;, true);
+            dragPromise.finally(function() {
+                iscroller.redefineStartItem(true);
+                if (!iscroller.getData(&#x27;_dragging&#x27;)) {
+                    var index;
+                    sourceNode.matches(&#x27;span.item&#x27;) ||  (sourceNode=sourceNode.inside(&#x27;span.item&#x27;));
+                    index = sourceNode.getData(&#x27;_index&#x27;);
+                    /**
+                    * Emitted when a the i-select changes its value
+                    *
+                    * @event i-select:valuechange
+                    * @param e {Object} eventobject including:
+                    * @param e.target {HtmlElement} the i-select element
+                    * @param e.prevValue {Number} the selected item, starting with 1
+                    * @param e.newValue {Number} the selected item, starting with 1
+                    * @param e.buttonText {String} the text that will appear on the button
+                    * @param e.listText {String} the text as it is in the list
+                    * @since 0.1
+                    */
+                    iscroller.emit(&#x27;selected&#x27;, {
+                        newValue: sourceNode,
+                        index: index,
+                        item: iscroller.model.items[index]
+                    });
+                }
+                iscroller.removeData(&#x27;_dragging&#x27;);
+            });
+        }, &#x27;i-scroller &gt;span, i-table &gt;span&#x27;);
+
+        Event.before(&#x27;dd-drag&#x27;, function(e) {
+            var node = e.target,
+                iscroller = node.getParent(),
+                scrollContainer = iscroller.getData(&#x27;_scrollContainer&#x27;),
+                model = iscroller.model,
+                items = model.items,
+                horizontal = model.horizontal,
+                end = horizontal ? &#x27;right&#x27; : &#x27;bottom&#x27;,
+                start = horizontal ? &#x27;left&#x27; : &#x27;top&#x27;,
+                up, clientX, clientY, boundaryNode;
+
+            if (typeof e.center===&#x27;object&#x27;) {
+                clientX = e.center.x;
+                clientY = e.center.y;
+            }
+            else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            if (!iscroller.insidePos(e.xMouse, e.yMouse)) {
+                e.preventDefault();
+            }
+            else {
+                up = horizontal ? (e.clientX&gt;e.xMouse) : (e.clientY&gt;e.yMouse);
+                if (up) {
+                    boundaryNode = scrollContainer.getData(&#x27;_lowerNode&#x27;);
+                    if (boundaryNode.getData(&#x27;_index&#x27;)===(items.length-1)) {
+                        (boundaryNode[end]&lt;=iscroller[end]) &amp;&amp; e.preventDefault();
+                    }
+                }
+                else {
+                    boundaryNode = scrollContainer.getData(&#x27;_upperNode&#x27;);
+                    if (boundaryNode.getData(&#x27;_index&#x27;)===0) {
+                        (boundaryNode[start]&gt;=iscroller[start]) &amp;&amp; e.preventDefault();
+                    }
+                }
+            }
+        }, &#x27;i-scroller &gt;span, i-table &gt;span&#x27;);
+
+        // also: correction if dragging was too heavy and it bounced through the limit:
+        Event.after(&#x27;dd-drag&#x27;, function(e) {
+            var node = e.target,
+                iscroller = node.getParent(),
+                scrollContainer = iscroller.getData(&#x27;_scrollContainer&#x27;),
+                model = iscroller.model,
+                items = model.items,
+                horizontal = model.horizontal,
+                end = horizontal ? &#x27;right&#x27; : &#x27;bottom&#x27;,
+                start = horizontal ? &#x27;left&#x27; : &#x27;top&#x27;,
+                up, clientX, clientY, boundaryNode, difference, value, isDragging;
+            if (typeof e.center===&#x27;object&#x27;) {
+                clientX = e.center.x;
+                clientY = e.center.y;
+            }
+            else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            isDragging = iscroller.getData(&#x27;_dragging&#x27;);
+            if (!isDragging) {
+                difference = Math.abs(horizontal ? (e.clientX-e.xMouse) : (e.clientY-e.yMouse));
+                if (difference&gt;=2) {
+                    iscroller.setData(&#x27;_dragging&#x27;, true);
+                }
+            }
+            up = horizontal ? (e.clientX&gt;e.xMouse) : (e.clientY&gt;e.yMouse);
+            if (up) {
+                boundaryNode = scrollContainer.getData(&#x27;_lowerNode&#x27;);
+                if (boundaryNode.getData(&#x27;_index&#x27;)===(items.length-1)) {
+                    difference = boundaryNode[end]-iscroller[end];
+                }
+            }
+            else {
+                boundaryNode = scrollContainer.getData(&#x27;_upperNode&#x27;);
+                if (boundaryNode.getData(&#x27;_index&#x27;)===0) {
+                    difference = iscroller[start]-boundaryNode[start];
+                }
+            }
+            if (difference&lt;0) {
+                value = parseInt(scrollContainer.getInlineStyle(start), 10);
+                if (up) {
+                    value += difference;
+                }
+                else {
+                    value -= difference;
+                }
+                scrollContainer.setInlineStyle(start, value+&#x27;px&#x27;);
+            }
+            iscroller.redefineStartItem();
+        }, &#x27;i-scroller &gt;span, i-table &gt;span&#x27;);
+
+        Itag = IParcel.subClass(itagName, {
+            /*
+             *
+             * @property attrs
+             * @type Object
+             * @since 0.0.1
+            */
+            attrs: {
+                &#x27;item-size&#x27;: &#x27;string&#x27;,
+                horizontal: &#x27;boolean&#x27;,
+                &#x27;start-item&#x27;: &#x27;number&#x27;,
+                disabled: &#x27;boolean&#x27;,
+                &#x27;items-focusable&#x27;: &#x27;boolean&#x27;,
+                scrollbar: &#x27;boolean&#x27;,
+                required: &#x27;boolean&#x27;,
+                value: &#x27;string&#x27;,
+                multiple: &#x27;boolean&#x27;,
+                &#x27;i-prop&#x27;: &#x27;string&#x27;,
+                &#x27;reset-value&#x27;: &#x27;string&#x27;
+            },
+
+            init: function() {
+                var element = this,
+                    // designNode = element.getItagContainer(),
+                    model = element.model,
+                    value = model.value || -1,
+                    itemsize = model[&#x27;item-size&#x27;] || &#x27;2em&#x27;,
+                    startItem = model[&#x27;start-item&#x27;] || 0;
+
+                element.defineWhenUndefined(&#x27;value&#x27;, value)
+                       .defineWhenUndefined(&#x27;item-size&#x27;, itemsize)
+                       .defineWhenUndefined(&#x27;start-item&#x27;, startItem)
+                        // set the reset-value to the inital-value in case &#x60;reset-value&#x60; was not present
+                       .defineWhenUndefined(&#x27;reset-value&#x27;, value);
+                // store its current value, so that valueChange-event can fire:
+                element.setData(&#x27;i-scroller-value&#x27;, value);
+
+                // element.cleanupEvents();
+                // element.setupEvents();
+
+                // make it a focusable form-element:
+                element.setAttr(&#x27;itag-formelement&#x27;, &#x27;true&#x27;, true);
+
+                // define unique id:
+                element[&#x27;i-id&#x27;] = ITSA.idGenerator(&#x27;i-scroller&#x27;);
+
+                element.itagReady().then(function() {
+                    registerScroller(element);
+                });
+            },
+
+            contTag: &#x27;span&#x27;,
+
+           /**
+            * Redefines the childNodes of both the vnode as well as its related dom-node. The new
+            * definition replaces any previous nodes. (without touching unmodified nodes).
+            *
+            * Syncs the new vnode&#x27;s childNodes with the dom.
+            *
+            * @method render
+            * @chainable
+            * @since 0.0.1
+            */
+            render: function() {
+                var element = this,
+                    containerTag = element.contTag,
+                    content = &#x27;&lt;&#x27;+containerTag+&#x27; plugin-dd=&quot;true&quot; dd-direction=&quot;y&quot;&gt;&lt;/&#x27;+containerTag+&#x27;&gt;&#x27;;
+                // mark element its i-id:
+                element.setAttr(&#x27;i-id&#x27;, element[&#x27;i-id&#x27;]);
+
+                // set the content:
+                element.setHTML(content);
+                // for quick access to the scrollcontainer, we add it as data:
+                element.setData(&#x27;_scrollContainer&#x27;, element.getElement(&#x27;&gt;&#x27;+containerTag));
+
+            },
+
+            sync: function() {
+                var element = this,
+                    model = element.model,
+                    items = model.items,
+                    horizontal = model.horizontal,
+                    size = horizontal ? &#x27;width&#x27; : &#x27;height&#x27;,
+                    start = horizontal ? &#x27;left&#x27; : &#x27;top&#x27;,
+                    iscrollerSize = element[size],
+                    iscrollerStart = element[start],
+                    scrollContainer = element.getData(&#x27;_scrollContainer&#x27;),
+                    startItem = model[&#x27;start-item&#x27;],
+                    scrollContainerVChildNodes = scrollContainer.vnode.vChildNodes,
+                    indentNode, indentNode2, size1, shiftFromFirstRange, topNode, size2, scrolledPages, firstIsInside, lastIsInside,
+                    beyondEdge, beyondEdgecount, node, shift, startItemFloor, dif, prevFirstIndex, prevLastIndex, count, noOverlap,
+                    firstIndex, j, k, len, content, i, lastIndex, item, newHeight, isDragging, decreaseScrollPages, lowerNode;
+
+                content = &#x27;&#x27;;
+
+                // if container is empty: fill it as far as needed
+                if (scrollContainer.isEmpty()) {
+                    firstIndex = Math.max(0, Math.floor((startItem - margeItems)));
+                    lastIndex = items.length-1;
+                    beyondEdgecount = 0;
+                    startItemFloor = Math.floor(startItem);
+                    for (i=firstIndex; (i&lt;=lastIndex) &amp;&amp; (beyondEdgecount&lt;(2*margeItems)); i++) {
+                        item = items[i];
+                        node = scrollContainer.append(element.drawItem(item, i));
+                        node.setData(&#x27;_index&#x27;, i);
+                        (i===firstIndex) &amp;&amp; scrollContainer.setData(&#x27;_upperNode&#x27;, node);
+                        if (i===startItemFloor) {
+                            shift = node[start];
+                            dif = (startItem-startItemFloor);
+                            if (dif&gt;0) {
+                                shift += dif*node[size];
+                            }
+                        }
+                        if (!beyondEdge) {
+                            (scrollContainer[size]&gt;iscrollerSize) &amp;&amp; (beyondEdge=true);
+                        }
+                        else {
+                            beyondEdgecount++;
+                        }
+                    }
+                    if (shift) {
+                        scrollContainer.setInlineStyle(start, (iscrollerStart-shift)+&#x27;px&#x27;);
+                    }
+                    // now store the lowest and highest index that was drawn:
+                    // we need it when updating:
+                    scrollContainer.setData(&#x27;_firstIndex&#x27;, firstIndex);
+                    scrollContainer.setData(&#x27;_lastIndex&#x27;, i-1);
+                    scrollContainer.setData(&#x27;_lowerNode&#x27;, node);
+                }
+                // else, update content
+                else {
+                    isDragging = element.hasData(&#x27;_dragging&#x27;);
+                    // figure out if the new range has items that are already drawn:
+                    prevFirstIndex = scrollContainer.getData(&#x27;_firstIndex&#x27;);
+                    prevLastIndex = scrollContainer.getData(&#x27;_lastIndex&#x27;);
+                    count = scrollContainerVChildNodes.length;
+                    firstIndex = Math.floor(startItem - margeItems);
+                    lastIndex = firstIndex + count;
+                    if (firstIndex&lt;0) {
+                        lastIndex -= firstIndex;
+                        firstIndex = 0;
+                    }
+                    if (!isDragging || ((firstIndex!==prevFirstIndex) || (lastIndex!==prevLastIndex))) {
+                            size2 = 0;
+                            firstIsInside = ((firstIndex&gt;=prevFirstIndex) &amp;&amp; (firstIndex&lt;=prevLastIndex));
+                            lastIsInside = ((lastIndex&gt;=prevFirstIndex) &amp;&amp; (lastIndex&lt;=prevLastIndex));
+                            noOverlap = !firstIsInside &amp;&amp; !lastIsInside;
+                            startItemFloor = Math.floor(startItem);
+                            if (noOverlap) {
+                                // completely refill
+                                for (i=firstIndex; i&lt;lastIndex; i++) {
+                                    item = items[i];
+                                    node = scrollContainerVChildNodes[i-firstIndex].domNode.replace(element.drawItem(item, i));
+                                    node.setData(&#x27;_index&#x27;, i);
+                                    (i===firstIndex) &amp;&amp; scrollContainer.setData(&#x27;_upperNode&#x27;, node);
+                                    (i===startItemFloor) &amp;&amp; (topNode=node);
+                                    node.removeInlineStyle(&#x27;margin-&#x27;+start);
+                                }
+                                scrollContainer.removeData(&#x27;_lowerShiftNode&#x27;);
+                                scrollContainer.setData(&#x27;_lowerNode&#x27;, node);
+                            }
+                            else {
+                                // the list is broken into 2 area&#x27;s
+                                // the division is at item &quot;firstIndex&quot;, which IS NOT the first childNode!
+                                // we start with the one item that we know that is already drawn and will redraw all others from that point.
+                                len = scrollContainerVChildNodes.length;
+                                if (firstIsInside) {
+                                    // start with &quot;firstIndex&quot;
+                                    // first we need to find it:
+                                    for (i=0; i&lt;len; i++) {
+                                        node = scrollContainerVChildNodes[i].domNode;
+                                        if (node.getData(&#x27;_index&#x27;)===firstIndex) {
+                                            break;
+                                        }
+                                    }
+                                    // &quot;i&quot; has the index of the first item to draw
+                                    // first, going up:
+                                    k = firstIndex - 1;
+                                    for (j=i; j&lt;len; j++) {
+                                        item = items[++k];
+                                        node = scrollContainerVChildNodes[j].domNode;
+                                        if (node.getData(&#x27;_index&#x27;)!==k) {
+                                            if (item) {
+                                                node = node.replace(element.drawItem(item, k));
+                                                lowerNode = node;
+                                            }
+                                            else {
+                                                node.empty();
+                                                node.setClass(&#x27;empty&#x27;);
+                                            }
+                                            node.setData(&#x27;_index&#x27;, k);
+                                        }
+                                        node.removeInlineStyle(&#x27;margin-&#x27;+start);
+                                        (k===startItemFloor) &amp;&amp; (topNode=node);
+                                        (j===i) &amp;&amp; (indentNode=node);
+                                    }
+                                    // now we are starting from 0 to i:
+                                    for (j=0; j&lt;i; j++) {
+                                        item = items[++k];
+                                        node = scrollContainerVChildNodes[j].domNode;
+                                        if (node.getData(&#x27;_index&#x27;)!==k) {
+                                            if (item) {
+                                                node = node.replace(element.drawItem(item, k));
+                                                lowerNode = node;
+                                            }
+                                            else {
+                                                node.empty();
+                                                node.setClass(&#x27;empty&#x27;);
+                                            }
+                                            node.setData(&#x27;_index&#x27;, k);
+                                        }
+                                        node.removeInlineStyle(&#x27;margin-&#x27;+start);
+                                        size2 += node[size];
+                                        (k===startItemFloor) &amp;&amp; (topNode=node);
+                                        (j===0) &amp;&amp; (indentNode2=node);
+                                    }
+                                    scrollContainer.setData(&#x27;_lowerNode&#x27;, lowerNode);
+                                    scrolledPages = scrollContainer.getData(&#x27;_scrolledPages&#x27;) || 0;
+                                    size1 = scrollContainer[size];
+                                    scrollContainer.setData(&#x27;_contSize&#x27;, size1);
+                                    if (indentNode2) {
+                                        indentNode &amp;&amp; indentNode.setInlineStyle(&#x27;margin-&#x27;+start, -size1+&#x27;px&#x27;);
+                                        indentNode2.setInlineStyle(&#x27;margin-&#x27;+start, ((1+scrolledPages)*size1)+&#x27;px&#x27;);
+                                        scrollContainer.setData(&#x27;_lowerShiftNode&#x27;, indentNode);
+                                    }
+                                    else {
+                                        node = scrollContainerVChildNodes[i].domNode;
+                                        node.setInlineStyle(&#x27;margin-&#x27;+start, ((1+scrolledPages)*size1)+&#x27;px&#x27;);
+                                        scrolledPages++;
+                                        scrollContainer.setData(&#x27;_scrolledPages&#x27;, scrolledPages);
+                                        scrollContainer.removeData(&#x27;_lowerShiftNode&#x27;);
+                                    }
+                                    scrollContainer.setData(&#x27;_upperNode&#x27;, indentNode);
+                                }
+                                else {
+                                    // --going down--
+                                    // start with &quot;lastIndex&quot;
+                                    // first we need to find it:
+                                    for (i=0; i&lt;len; i++) {
+                                        node = scrollContainerVChildNodes[i].domNode;
+                                        if (node.getData(&#x27;_index&#x27;)===lastIndex) {
+                                            break;
+                                        }
+                                    }
+                                    // &quot;i&quot; has the index of the last item to draw
+                                    // first, going down:
+                                    k = lastIndex + 1;
+                                    decreaseScrollPages = true;
+                                    for (j=i; j&gt;=0; j--) {
+                                        item = items[--k];
+                                        node = scrollContainerVChildNodes[j].domNode;
+                                        if (node.getData(&#x27;_index&#x27;)!==k) {
+                                            if (item) {
+                                                node = node.replace(element.drawItem(item, k));
+                                            }
+                                            else {
+                                                node.empty();
+                                                node.setClass(&#x27;empty&#x27;);
+                                            }
+                                            node.setData(&#x27;_index&#x27;, k);
+                                        }
+                                        node.removeInlineStyle(&#x27;margin-&#x27;+start);
+                                        (k===startItemFloor) &amp;&amp; (topNode=node);
+                                        (j===0) &amp;&amp; (indentNode2=node);
+                                        if (j===i) {
+                                            scrollContainer.setData(&#x27;_lowerNode&#x27;, node);
+                                        }
+                                        else {
+                                            decreaseScrollPages = false;
+                                        }
+                                    }
+                                    // now we are starting from len-1 downto i:
+                                    for (j=len-1; j&gt;=i; j--) {
+                                        item = items[--k];
+                                        node = scrollContainerVChildNodes[j].domNode;
+                                        if (node.getData(&#x27;_index&#x27;)!==k) {
+                                            if (item) {
+                                                node = node.replace(element.drawItem(item, k));
+                                            }
+                                            else {
+                                                node.empty();
+                                                node.setClass(&#x27;empty&#x27;);
+                                            }
+                                            node.setData(&#x27;_index&#x27;, k);
+                                        }
+                                        node.removeInlineStyle(&#x27;margin-&#x27;+start);
+                                        size2 += node[size];
+                                        (k===startItemFloor) &amp;&amp; (topNode=node);
+                                        (j===i) &amp;&amp; (indentNode=node);
+                                    }
+                                    scrolledPages = scrollContainer.getData(&#x27;_scrolledPages&#x27;) || 0;
+                                    size1 = scrollContainer[size];
+                                    scrollContainer.setData(&#x27;_contSize&#x27;, size1);
+                                    if (decreaseScrollPages) {
+                                        scrolledPages--;
+                                        scrollContainer.setData(&#x27;_scrolledPages&#x27;, scrolledPages);
+                                        scrollContainer.removeData(&#x27;_lowerShiftNode&#x27;);
+                                    }
+                                    newHeight = ((1+scrolledPages)*size1);
+                                    indentNode2 &amp;&amp; indentNode2.setInlineStyle(&#x27;margin-&#x27;+start, newHeight+&#x27;px&#x27;);
+                                    if (!decreaseScrollPages) {
+                                        indentNode.setInlineStyle(&#x27;margin-&#x27;+start, -size1+&#x27;px&#x27;);
+                                        scrollContainer.setData(&#x27;_lowerShiftNode&#x27;, indentNode);
+                                    }
+                                    scrollContainer.setData(&#x27;_upperNode&#x27;, node);
+                                }
+                            }
+                            if (topNode &amp;&amp; !isDragging) {
+                                shift = topNode[start];
+                                dif = (startItem-startItemFloor);
+                                if (dif&gt;0) {
+                                    shift += dif*topNode[size];
+                                }
+                                if (shiftFromFirstRange) {
+                                    shift -= scrollContainer[size]-size2;
+                                }
+                                scrollContainer.setInlineStyle(start, (scrollContainer[start]-shift)+&#x27;px&#x27;);
+                            }
+                            scrollContainer.setData(&#x27;_firstIndex&#x27;, firstIndex);
+                            scrollContainer.setData(&#x27;_lastIndex&#x27;, lastIndex);
+                    }
+                }
+            },
+
+            autoExpand: function() {
+                var element = this,
+                    model = element.model,
+                    scrollContainer = element.getData(&#x27;_scrollContainer&#x27;),
+                    scrollContainerVChildNodes = scrollContainer.vnode.vChildNodes,
+                    count = scrollContainerVChildNodes.length,
+                    lowerNode = scrollContainer.getData(&#x27;_lowerNode&#x27;),
+                    items = model.items,
+                    horizontal = model.horizontal,
+                    start = horizontal ? &#x27;left&#x27; : &#x27;top&#x27;,
+                    end = horizontal ? &#x27;right&#x27; : &#x27;bottom&#x27;,
+                    size = horizontal ? &#x27;width&#x27; : &#x27;height&#x27;,
+                    maxIndex = items.length-1,
+                    isDragging = element.hasData(&#x27;_dragging&#x27;),
+                    item, index, firstChildNode, startShift, lowerShiftNode, lowerShift, size1, lowerNodeAtPosZero;
+                if (!isDragging &amp;&amp; (count&gt;0)) {
+                    firstChildNode = scrollContainerVChildNodes[0].domNode;
+                    startShift = parseInt(firstChildNode.getInlineStyle(&#x27;margin-&#x27;+start), 10);
+                    lowerShiftNode = scrollContainer.getData(&#x27;_lowerShiftNode&#x27;);
+                    lowerShiftNode &amp;&amp; (lowerShift=parseInt(lowerShiftNode.getInlineStyle(&#x27;margin-&#x27;+start), 10));
+                    index = lowerNode.getData(&#x27;_index&#x27;);
+                    lowerNodeAtPosZero = (lowerNode===firstChildNode);
+                    while ((lowerNode[start]&lt;element[end]) &amp;&amp; (++index&lt;=maxIndex)) {
+                        item = items[index];
+                        lowerNode = scrollContainer.append(element.drawItem(item, index), false, !lowerNodeAtPosZero ? lowerNode : null);
+                        lowerNode.setData(&#x27;_index&#x27;, index);
+                        scrollContainer.setData(&#x27;_lastIndex&#x27;, index);
+                        scrollContainer.setData(&#x27;_lowerNode&#x27;, lowerNode);
+                        size1 = lowerNode[size];
+                        startShift += size1;
+                        if (lowerShiftNode) {
+                            lowerShift -= size1;
+                            lowerShiftNode.setInlineStyle(&#x27;margin-&#x27;+start, lowerShift+&#x27;px&#x27;);
+                            firstChildNode.setInlineStyle(&#x27;margin-&#x27;+start, startShift+&#x27;px&#x27;);
+                            startShift = parseInt(scrollContainer.getInlineStyle(start), 10);
+                            startShift -= size1;
+                            scrollContainer.setInlineStyle(start, startShift+&#x27;px&#x27;);
+                        }
+                    }
+                }
+            },
+
+            redefineStartItem: function(resetContainer) {
+                var element = this,
+                    model = element.model,
+                    horizontal = model.horizontal,
+                    scrollContainer = element.getData(&#x27;_scrollContainer&#x27;),
+                    start = horizontal ? &#x27;left&#x27; : &#x27;top&#x27;,
+                    end = horizontal ? &#x27;right&#x27; : &#x27;bottom&#x27;,
+                    size = horizontal ? &#x27;width&#x27; : &#x27;height&#x27;,
+                    iscrollerStart = element[start],
+                    highestEnd = 99999,
+                    highestEndNotFound = highestEnd,
+                    vChildNodes = scrollContainer.vnode.vChildNodes,
+                    len = vChildNodes.length,
+                    partial, i, firstVisibleNode, firstVisibleNodeNotFound, startItem, domNode, endPos, foundNode,
+                    contHeight, firstNode, value, scrolledPages;
+                // find the first childNode that lies within the visible area:
+                for (i=0; (i&lt;len); i++) {
+                    domNode = vChildNodes[i].domNode;
+                    endPos = domNode[end];
+                    if ((endPos&gt;iscrollerStart) &amp;&amp; (endPos&lt;highestEnd)) {
+                        if (domNode[start]&lt;=iscrollerStart) {
+                            firstVisibleNode = domNode;
+                            highestEnd = endPos;
+                        }
+                        else if (endPos&lt;highestEndNotFound) {
+                            // need to search for the highest item when there was none
+                            firstVisibleNodeNotFound = domNode;
+                            highestEndNotFound = endPos;
+                        }
+                    }
+                }
+                foundNode = firstVisibleNode || firstVisibleNodeNotFound;
+                if (foundNode) {
+                    partial = (iscrollerStart-foundNode[start])/foundNode[size];
+                    startItem = foundNode.getData(&#x27;_index&#x27;) + partial;
+                }
+                else {
+                    startItem = 0;
+                }
+                model[&#x27;start-item&#x27;] = startItem;
+                if (resetContainer) {
+                    scrolledPages = scrollContainer.getData(&#x27;_scrolledPages&#x27;);
+                    if (scrolledPages) {
+                        contHeight = scrollContainer.getData(&#x27;_contSize&#x27;);
+                        value = parseInt(scrollContainer.getInlineStyle(start), 10);
+                        scrollContainer.setInlineStyle(start, (value+(scrolledPages*contHeight))+&#x27;px&#x27;);
+                        firstNode = vChildNodes[0].domNode;
+                        value = parseInt(firstNode.getInlineStyle(&#x27;margin-&#x27;+start), 10) || 0;
+                        firstNode.setInlineStyle(&#x27;margin-&#x27;+start, (value-(scrolledPages*contHeight))+&#x27;px&#x27;);
+                    }
+                    scrollContainer.removeData(&#x27;_scrolledPages&#x27;);
+                }
+            },
+
+            drawItem: function(oneItem, index) {
+                var element = this,
+                    model = element.model,
+                    template = model.template,
+                    odd = ((index%2)!==0),
+                    itemContent = &#x27;&lt;span class=&quot;item&#x27;+(odd ? &#x27; odd&#x27; : &#x27; even&#x27;)+&#x27;&quot;&gt;&#x27;;
+                if (typeof oneItem===&#x27;string&#x27;) {
+                    itemContent += oneItem;
+                }
+                else {
+                    if (template.indexOf(&#x27;&lt;%&#x27;)!==-1) {
+                        itemContent += microtemplate(template, oneItem);
+                    }
+                    else if (/{\S+}/.test(template)) {
+                        itemContent += template.substitute(oneItem);
+                    }
+                    else {
+                        itemContent += template;
+                    }
+                }
+                itemContent += &#x27;&lt;/span&gt;&#x27;;
+                return itemContent;
+            },
+
+            destroy: function() {
+                unregisterScroller(this);
+            }
+        });
+
+        itagCore.setLazyBinding(Itag, true);
+        autoExpandScrollers();
+        window.ITAGS[itagName] = Itag;
+    }
+
+    return window.ITAGS[itagName];
+};
+
+    </pre>
+</div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="../assets/vendor/prettify/prettify-min.js"></script>
+<script>prettyPrint();</script>
+<script src="../assets/js/yui-prettify.js"></script>
+<script src="../assets/../api.js"></script>
+<script src="../assets/js/api-filter.js"></script>
+<script src="../assets/js/api-list.js"></script>
+<script src="../assets/js/api-search.js"></script>
+<script src="../assets/js/apidocs.js"></script>
+</body>
+</html>

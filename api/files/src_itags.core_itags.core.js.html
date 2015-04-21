@@ -829,6 +829,7 @@ module.exports = function (window) {
         * @param model {Object} the model to bind to the itag-element
         * @param [mergeCurrent=false] {Boolean} when set true, current properties on the iTag&#x27;s model that aren&#x27;t defined
         *        in the new model, get merged into the new model.
+        *        NOTE: ItagClasses with &#x60;setLazyBinding&#x60; set &#x60;true&#x60; will merge by default, unless other specified
         * @since 0.0.1
         */
         bindModel: function(element, model, mergeCurrent) {
@@ -840,7 +841,9 @@ module.exports = function (window) {
                 Object.protectedProp(element.vnode, &#x27;ce_boundModel&#x27;, true);
                 observer = element.getData(&#x27;_observer&#x27;);
                 element.model.unobserve(observer);
-                mergeCurrent &amp;&amp; (model.merge(element.model, {full: true}));
+                if (mergeCurrent || (element.lazyBind &amp;&amp; (mergeCurrent!==false))) {
+                    model.merge(element.model, {full: true});
+                }
                 element.model = model;
                 observer = function() {
                     itagCore.modelToAttrs(element);
@@ -1026,6 +1029,11 @@ module.exports = function (window) {
             (typeof value === &#x27;boolean&#x27;) &amp;&amp; ItagClass.mergePrototypes({contentHidden: !value}, true, false, true);
         },
 
+        setLazyBinding: function(ItagClass, value) {
+            console.log(NAME+&#x27;setLazyBinding&#x27;);
+            (typeof value === &#x27;boolean&#x27;) &amp;&amp; ItagClass.mergePrototypes({lazyBind: !value}, true, false, true);
+        },
+
        /**
         * Sets up all itag-watchers, giving itags its life behaviour.
         *
@@ -1179,7 +1187,7 @@ module.exports = function (window) {
             // sync, but do this after the element is created:
             // in the next eventcycle:
             async(function(){
-                var needsToBind = (domElement.getAttr(&#x27;lazybind&#x27;)===&#x27;true&#x27;);
+                var needsToBind = domElement.lazyBind || (domElement.getAttr(&#x27;lazybind&#x27;)===&#x27;true&#x27;);
                 // only if no modelbinding is needed, we can directly init, sync and make ready,
                 // otherwise we need to make this done by  &#x60;bindModel&#x60;
                 BINDING_LIST.some(function(value, selector) {
@@ -1241,6 +1249,7 @@ module.exports = function (window) {
     * @param selector {String|HTMLElement} a css-selector or an HTMLElement where the data should be bound
     * @param [mergeCurrent=false] {Boolean} when set true, current properties on the iTag that aren&#x27;t defined
     *                                       in the new model, get merged into the new model.
+    *        NOTE: ItagClasses with &#x60;setLazyBinding&#x60; set &#x60;true&#x60; will merge by default, unless other specified
     * @param [fineGrain] {Function} A function that recieves &#x60;model&#x60; as argument and should return a
     *                               manipulated (subset) of model as new model to be bound
     * @return {Object} handler with a &#x60;detach()&#x60;-method which can be used to detach the binder
@@ -1622,6 +1631,7 @@ module.exports = function (window) {
         * @param model {Object} the model to bind to the itag-element
         * @param [mergeCurrent=false] {Boolean} when set true, current properties on the iTag that aren&#x27;t defined
         *                                       in the new model, get merged into the new model.
+        *        NOTE: ItagClasses with &#x60;setLazyBinding&#x60; set &#x60;true&#x60; will merge by default, unless other specified
         * @param [fineGrain] {Function} A function that recieves &#x60;model&#x60; as argument and should return a
         *                               manipulated (subset) of model as new model to be bound
         * @return {Object} handler with a &#x60;detach()&#x60;-method which can be used to detach the binder

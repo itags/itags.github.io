@@ -397,7 +397,7 @@ module.exports = function (window) {
                 element.emit(&#x27;valuechange&#x27;, {
                     prevValue: prevValue,
                     newValue: newValue,
-                    buttonText: model.buttonTexts[value] || model.items[newValue],
+                    buttonText: model.buttonTexts[newValue] || model.items[newValue],
                     listText: model.items[newValue]
                 });
             }
@@ -415,6 +415,7 @@ module.exports = function (window) {
                 expanded: &#x27;boolean&#x27;,
                 disabled: &#x27;boolean&#x27;,
                 value: &#x27;string&#x27;,
+                required: &#x27;boolean&#x27;,
                 &#x27;i-prop&#x27;: &#x27;string&#x27;,
                 &#x27;invalid-value&#x27;: &#x27;string&#x27;,
                 &#x27;reset-value&#x27;: &#x27;string&#x27;
@@ -436,7 +437,7 @@ module.exports = function (window) {
                     itemNodes = designNode.getAll(&#x27;&gt;option&#x27;),
                     items = [],
                     buttonTexts = [],
-                    value = element.model.value;
+                    value = element.model.value || -1;
                 itemNodes.forEach(function(node, i) {
                     var header = node.getElement(&#x27;span[is=&quot;button&quot;]&#x27;);
                     if (header) {
@@ -445,7 +446,8 @@ module.exports = function (window) {
                     items[items.length] = node.getHTML(header);
                 });
 
-                element.defineWhenUndefined(&#x27;items&#x27;, items)
+                element.defineWhenUndefined(&#x27;value&#x27;, value)
+                       .defineWhenUndefined(&#x27;items&#x27;, items)
                        .defineWhenUndefined(&#x27;buttonTexts&#x27;, buttonTexts)
                         // set the reset-value to the inital-value in case &#x60;reset-value&#x60; was not present
                        .defineWhenUndefined(&#x27;reset-value&#x27;, value);
@@ -557,7 +559,7 @@ module.exports = function (window) {
                     button, container, itemsContainer, hiddenTimer;
 
                 len = items.length;
-                (value&gt;len) &amp;&amp; (value=0);
+                (value&gt;len) &amp;&amp; (value=-1);
 
                 if (value&gt;=0) {
                     buttonText = buttonTexts[value] || items[value];
@@ -597,6 +599,11 @@ module.exports = function (window) {
 
                 // set the items:
                 itemsContainer.setHTML(content, true);
+            },
+
+            invalid: function() {
+                var model = this.model;
+                return model.required &amp;&amp; (model.value === -1);
             },
 
             destroy: function() {

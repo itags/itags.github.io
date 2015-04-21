@@ -1,0 +1,56 @@
+
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>Simple i-table</title>
+    <style type="text/css">
+        html, body {
+            height: 100%;
+        }
+        i-table {
+            width: 200px;
+            height: 40%;
+            top: 120px;
+            left: 50px;
+            font-size: 120%;
+        }
+        i-table >span >span.odd {
+            background-color: #DDD;
+        }
+    </style>
+</head>
+
+<body>
+
+    <i-table start-item="19">
+    <!--
+        [{"key": "id", "width": 25}, "price"]
+    -->
+    </i-table>
+
+    <script src="../../dist/itagsbuild.js"></script>
+    <script>
+        require('itags');
+        var iscroller = document.getElement('i-table'),
+            model = {items: []},
+            i;
+        for (i=0; i<50; i++) {
+            model.items.push({id: i, price: 100*i});
+        }
+        iscroller.bindModel(model);
+        // ITSA.later(function() {
+            // model['start-item'] = 12;
+        // }, 2000);
+            model['start-item'] = 25;
+        ITSA.later(function() {
+            // model['start-item'] = 28.75;
+        }, 5000);
+        ITSA.Event.after('*:selected', function(e) {
+            console.warn(e);
+        });
+    </script>
+
+</body>
+
+</html>
