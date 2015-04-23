@@ -79,6 +79,8 @@
             
                 <li><a href="../classes/ITSA.html">ITSA</a></li>
             
+                <li><a href="../classes/Math.html">Math</a></li>
+            
                 <li><a href="../classes/Messages.html">Messages</a></li>
             
                 <li><a href="../classes/Node.html">Node</a></li>
@@ -165,6 +167,8 @@
             
                 <li><a href="../modules/lib_function.js.html">lib/function.js</a></li>
             
+                <li><a href="../modules/lib_math.js.html">lib/math.js</a></li>
+            
                 <li><a href="../modules/lib_object.js.html">lib/object.js</a></li>
             
                 <li><a href="../modules/lib_promise.s.html">lib/promise.s</a></li>
@@ -247,10 +251,9 @@ module.exports = function (window) {
     if (!window.ITAGS[itagName]) {
 
         Itag = IScroller.subClass(itagName, {
-            attrs: {
-            },
 
             init: function() {
+console.warn(&#x27;init table&#x27;);
                 var element = this,
                     model = element.model;
                 // i-scroller reads the innercontent as it were the template
@@ -337,7 +340,7 @@ module.exports = function (window) {
                     model = element.model,
                     columns = model.columns,
                     odd = ((index%2)!==0),
-                    rowContent = &#x27;&lt;span class=&quot;&#x27;+(odd ? &#x27; odd&#x27; : &#x27; even&#x27;)+&#x27;&quot;&gt;&#x27;,
+                    rowContent = &#x27;&lt;span class=&quot;i-table-row &#x27;+(odd ? &#x27; odd&#x27; : &#x27; even&#x27;)+&#x27;&quot;&gt;&#x27;,
                     len, i, col, value, formatter, cellContent;
                 if (!Object.isObject(oneItem)) {
                     console.warn(&#x27;table item is no object!&#x27;);

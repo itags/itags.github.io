@@ -79,6 +79,8 @@
             
                 <li><a href="../classes/ITSA.html">ITSA</a></li>
             
+                <li><a href="../classes/Math.html">Math</a></li>
+            
                 <li><a href="../classes/Messages.html">Messages</a></li>
             
                 <li><a href="../classes/Node.html">Node</a></li>
@@ -164,6 +166,8 @@
                 <li><a href="../modules/lib_array.js.html">lib/array.js</a></li>
             
                 <li><a href="../modules/lib_function.js.html">lib/function.js</a></li>
+            
+                <li><a href="../modules/lib_math.js.html">lib/math.js</a></li>
             
                 <li><a href="../modules/lib_object.js.html">lib/object.js</a></li>
             
@@ -428,7 +432,6 @@ module.exports = function (window) {
                     value = model.value || -1,
                     itemsize = model[&#x27;item-size&#x27;] || &#x27;2em&#x27;,
                     startItem = model[&#x27;start-item&#x27;] || 0;
-
                 element.defineWhenUndefined(&#x27;value&#x27;, value)
                        .defineWhenUndefined(&#x27;item-size&#x27;, itemsize)
                        .defineWhenUndefined(&#x27;start-item&#x27;, startItem)
@@ -501,6 +504,11 @@ module.exports = function (window) {
                     lastIndex = items.length-1;
                     beyondEdgecount = 0;
                     startItemFloor = Math.floor(startItem);
+console.warn(&#x27;build first time&#x27;);
+console.warn(&#x27;startItem &#x27;+startItem);
+console.warn(&#x27;margeItems &#x27;+margeItems);
+console.warn(&#x27;firstIndex &#x27;+firstIndex);
+console.warn(&#x27;lastIndex &#x27;+lastIndex);
                     for (i=firstIndex; (i&lt;=lastIndex) &amp;&amp; (beyondEdgecount&lt;(2*margeItems)); i++) {
                         item = items[i];
                         node = scrollContainer.append(element.drawItem(item, i));
@@ -542,6 +550,8 @@ module.exports = function (window) {
                         lastIndex -= firstIndex;
                         firstIndex = 0;
                     }
+console.warn(&#x27;firstIndex &#x27;+firstIndex);
+console.warn(&#x27;lastIndex &#x27;+lastIndex);
                     if (!isDragging || ((firstIndex!==prevFirstIndex) || (lastIndex!==prevLastIndex))) {
                             size2 = 0;
                             firstIsInside = ((firstIndex&gt;=prevFirstIndex) &amp;&amp; (firstIndex&lt;=prevLastIndex));
@@ -549,6 +559,7 @@ module.exports = function (window) {
                             noOverlap = !firstIsInside &amp;&amp; !lastIsInside;
                             startItemFloor = Math.floor(startItem);
                             if (noOverlap) {
+console.warn(&#x27;noOverlap&#x27;);
                                 // completely refill
                                 for (i=firstIndex; i&lt;lastIndex; i++) {
                                     item = items[i];
@@ -562,6 +573,7 @@ module.exports = function (window) {
                                 scrollContainer.setData(&#x27;_lowerNode&#x27;, node);
                             }
                             else {
+console.warn(&#x27;firstIsInside &#x27;+firstIsInside);
                                 // the list is broken into 2 area&#x27;s
                                 // the division is at item &quot;firstIndex&quot;, which IS NOT the first childNode!
                                 // we start with the one item that we know that is already drawn and will redraw all others from that point.
@@ -579,6 +591,7 @@ module.exports = function (window) {
                                     // first, going up:
                                     k = firstIndex - 1;
                                     for (j=i; j&lt;len; j++) {
+console.warn(&#x27;fase 1&#x27;);
                                         item = items[++k];
                                         node = scrollContainerVChildNodes[j].domNode;
                                         if (node.getData(&#x27;_index&#x27;)!==k) {
@@ -598,6 +611,7 @@ module.exports = function (window) {
                                     }
                                     // now we are starting from 0 to i:
                                     for (j=0; j&lt;i; j++) {
+console.warn(&#x27;fase 2&#x27;);
                                         item = items[++k];
                                         node = scrollContainerVChildNodes[j].domNode;
                                         if (node.getData(&#x27;_index&#x27;)!==k) {
@@ -621,11 +635,13 @@ module.exports = function (window) {
                                     size1 = scrollContainer[size];
                                     scrollContainer.setData(&#x27;_contSize&#x27;, size1);
                                     if (indentNode2) {
+console.warn(&#x27;setting fase 1 --&gt; &#x27;+((1+scrolledPages)*size1));
                                         indentNode &amp;&amp; indentNode.setInlineStyle(&#x27;margin-&#x27;+start, -size1+&#x27;px&#x27;);
                                         indentNode2.setInlineStyle(&#x27;margin-&#x27;+start, ((1+scrolledPages)*size1)+&#x27;px&#x27;);
                                         scrollContainer.setData(&#x27;_lowerShiftNode&#x27;, indentNode);
                                     }
                                     else {
+console.warn(&#x27;setting fase 2 --&gt; &#x27;+((1+scrolledPages)*size1));
                                         node = scrollContainerVChildNodes[i].domNode;
                                         node.setInlineStyle(&#x27;margin-&#x27;+start, ((1+scrolledPages)*size1)+&#x27;px&#x27;);
                                         scrolledPages++;
@@ -805,7 +821,9 @@ module.exports = function (window) {
                 else {
                     startItem = 0;
                 }
+console.warn(&#x27;setting startitem to: &#x27;+startItem);
                 model[&#x27;start-item&#x27;] = startItem;
+resetContainer = false;
                 if (resetContainer) {
                     scrolledPages = scrollContainer.getData(&#x27;_scrolledPages&#x27;);
                     if (scrolledPages) {

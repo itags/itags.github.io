@@ -1,7 +1,7 @@
 ---
 module: i-splitdiv
 maintainer: Marco Asbreuk
-title: simple i-splitdiv
+title: resizable i-splitdiv
 intro: ""
 includeexample: 20em
 ---
@@ -31,7 +31,7 @@ includeexample: 20em
 
 ```html
 <body>
-    <i-splitdiv horizontal="true" divider="120px">
+    <i-splitdiv horizontal="true" divider="50px" resizable="true">
     <!--
         <section>Content first section</section>
         <section>Content second section</section>
