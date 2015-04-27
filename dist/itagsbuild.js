@@ -41791,7 +41791,7 @@ module.exports = function (window) {
                     * @param e.listText {String} the text as it is in the list
                     * @since 0.1
                     */
-                    iscroller.emit('selected', {
+                    iscroller.emit('UI:selected', {
                         newValue: sourceNode,
                         index: index,
                         item: iscroller.model.items[index]
