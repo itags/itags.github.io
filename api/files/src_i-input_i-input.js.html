@@ -329,7 +329,7 @@ module.exports = function (window) {
             /**
             * Emitted when a the i-select changes its value
             *
-            * @event i-select:valuechange
+            * @event i-input:valuechange
             * @param e {Object} eventobject including:
             * @param e.target {HtmlElement} the i-input element
             * @param e.prevValue {String}
@@ -340,6 +340,42 @@ module.exports = function (window) {
                 prevValue: prevValue,
                 newValue: newValue
             });
+        }, &#x27;i-input &gt; input&#x27;);
+
+        Event.after(&#x27;keypress&#x27;, function(e) {
+            var inputNode = e.target,
+                element = inputNode.getParent();
+            (e.keyCode===13) &amp;&amp; inputNode.hasFocus() &amp;&amp; inputNode.blur();
+        }, &#x27;i-input &gt; input&#x27;);
+
+        Event.after(&#x27;focus&#x27;, function(e) {
+            var inputNode = e.target,
+                element = inputNode.getParent();
+            element.setData(&#x27;_initialVal&#x27;, inputNode.getValue());
+        }, &#x27;i-input &gt; input&#x27;);
+
+        Event.after(&#x27;blur&#x27;, function(e) {
+            var inputNode = e.target,
+                element = inputNode.getParent(),
+                prevValue = element.getData(&#x27;_initialVal&#x27;),
+                newValue = inputNode.getValue();
+            if (newValue!==prevValue) {
+                /**
+                * Emitted when a the i-select changes its value
+                *
+                * @event i-input:changed
+                * @param e {Object} eventobject including:
+                * @param e.target {HtmlElement} the i-input element
+                * @param e.prevValue {String}
+                * @param e.newValue {String}
+                * @since 0.1
+                */
+                element.emit(&#x27;changed&#x27;, {
+                    prevValue: prevValue,
+                    newValue: newValue
+                });
+            }
+            element.removeData(&#x27;_initialVal&#x27;);
         }, &#x27;i-input &gt; input&#x27;);
 
         Itag = IFormElement.subClass(itagName, {

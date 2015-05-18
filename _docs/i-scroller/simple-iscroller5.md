@@ -1,7 +1,7 @@
 ---
 module: i-scroller
 maintainer: Marco Asbreuk
-title: simple i-scroller
+title: simple i-scroller 4
 intro: ""
 includeexample: 20em
 ---

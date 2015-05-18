@@ -238,33 +238,166 @@ module.exports = function (window) {
     &quot;use strict&quot;;
 
     require(&#x27;./css/i-table.css&#x27;); // &lt;-- define your own itag-name here
+    require(&#x27;itags.core&#x27;)(window);
 
-    var itagCore = require(&#x27;itags.core&#x27;)(window),
-        itagName = &#x27;i-table&#x27;, // &lt;-- define your own itag-name here
-        DOCUMENT = window.document,
+    var itagName = &#x27;i-table&#x27;, // &lt;-- define your own itag-name here
         ITSA = window.ITSA,
-        Event = ITSA.Event,
         microtemplate = require(&#x27;i-parcel/lib/microtemplate.js&#x27;),
         IScroller = require(&#x27;i-scroller&#x27;)(window),
+        RESIZE_MARGIN = 5,
         Itag;
 
     if (!window.ITAGS[itagName]) {
 
+        require(&#x27;./global-events.js&#x27;)(window);
+
         Itag = IScroller.subClass(itagName, {
 
             init: function() {
-console.warn(&#x27;init table&#x27;);
                 var element = this,
                     model = element.model;
                 // i-scroller reads the innercontent as it were the template
                 // i-table doesn&#x27;t have a global template, but uses the innercontent as the columns-definition
-                // we can easily transfrom it:
+                // we can easily transform it:
                 try {
                     model.columns = JSON.parse(model.template);
                 }
                 catch(err) {
                     model.columns = [];
                 }
+            },
+
+            attrs: {
+                reorderable: &#x27;boolean&#x27;,
+                resizable: &#x27;boolean&#x27;,
+                sortable: &#x27;string&#x27;,
+                sort: &#x27;string&#x27;
+            },
+
+            // adjust behaviour of the iscroller:
+            getDirection: function() {
+                return &#x27;xy&#x27;;
+            },
+
+            cloneItems: function() {
+                // overrule &#x60;cloneItems&#x60; --&gt; not only need they to be cloned, they might also need to be sorted
+                var element = this,
+                    i, len, col, columns;
+                element.$superProp(&#x27;cloneItems&#x27;);
+                // life sorting? than sort the table:
+                if (element.model.sortable &amp;&amp; (element.model.sortable.toLowerCase()===&#x27;life&#x27;)) {
+                    element._sortItems();
+                }
+                else {
+                    // no guarantee the items are still sorted --&gt; unmark it
+                    columns = element.model.columns;
+                    if (columns) {
+                        len = columns.length;
+                        for (i=0; i&lt;len; i++) {
+                            col = columns[i];
+                            (col.sort===&#x27;hidden&#x27;) || (col.sort=&#x27;none&#x27;);
+                        }
+                    }
+                }
+            },
+
+            sort: function(colIndex, keepCurrent, force) {
+                var element = this,
+                    model = element.model,
+                    columns = model.columns,
+                    column = columns[colIndex],
+                    i, len, col;
+                if (!column) {
+                    console.warn(&#x27;trying to sort an invalid column. index: &#x27;+colIndex);
+                    return;
+                }
+                if (!force &amp;&amp; (!model.sortable || (column.sort===&#x27;hidden&#x27;))) {
+                    console.warn(&#x27;not allowed to sort column at index &#x27;+colIndex);
+                    return;
+                }
+                len = columns.length;
+                for (i=0; i&lt;len; i++) {
+                    col = columns[i];
+                    if (force || (col.sort!==&#x27;hidden&#x27;)) {
+                        col.sort = (i===colIndex) ? ((col.sort===&#x27;up&#x27;) ? &#x27;down&#x27; : &#x27;up&#x27;) : (keepCurrent ? col.sort : &#x27;none&#x27;);
+                    }
+                }
+            },
+
+            _sortItems: function() {
+                var element = this,
+                    model = element.model,
+                    column, colIndex, items, property, sortRendered, sortUp;
+                // find the first col that has a sort property:
+                model.columns.some(function(col, index) {
+                    if ((col.sort===&#x27;up&#x27;) || (col.sort===&#x27;down&#x27;)) {
+                        colIndex = index;
+                    }
+                    return (colIndex!==undefined);
+                });
+                if (colIndex!==undefined) {
+                    column = model.columns[colIndex];
+                    sortUp = (column.sort===&#x27;up&#x27;);
+                    items = element.getData(&#x27;items&#x27;);
+                    property = column.key;
+                    sortRendered = column.sortRendered;
+                    items.sort(function(a, b) {
+                        var aComp, bComp;
+                        if (sortRendered) {
+                            aComp = element.getCellContent(a, column);
+                            bComp = element.getCellContent(b, column);
+                        }
+                        else {
+                            aComp = a[property];
+                            bComp = b[property];
+                        }
+                        if (aComp&lt;bComp) {
+                            return sortUp ? -1 : 1;
+                        }
+                        if (aComp&gt;bComp) {
+                            return sortUp ? 1 : -1;
+                        }
+                        // a must be equal to b
+                        return sortUp ? 0 : -1;
+                    });
+                }
+            },
+
+            removeListeners: function() {
+                var element = this,
+                    listener = element.getData(&#x27;_headerMoveListener&#x27;);
+                if (listener) {
+                    listener.detach();
+                    element.removeData(&#x27;_headerMoveListener&#x27;);
+                }
+            },
+
+            setListeners: function() {
+                var element = this,
+                    model = element.model,
+                    listener;
+                listener = element.selfAfter(&#x27;mousemove&#x27;, function(e) {
+                    var node = e.target.getParent(),
+                        fixedHeaderNode = element.getData(&#x27;_fixedHeaderNode&#x27;),
+                        vChildNodes = fixedHeaderNode.vnode.vChildNodes,
+                        colIndex = vChildNodes.indexOf(node.vnode),
+                        firstCol = (colIndex===0),
+                        lastCol = (colIndex===(vChildNodes.length-1)),
+                        xMouse = e.clientX,
+                        colLeft = node.left,
+                        colRight = colLeft + node.width,
+                        resizeHandle, insideRightArea, insideLeftArea;
+                    if (colIndex===-1) {
+                        // need to have this: when entering the table from left or right,
+                        // colIndex can be -1.
+                        return;
+                    }
+                    insideRightArea = (xMouse&lt;=colRight) &amp;&amp; (xMouse&gt;=(colRight-RESIZE_MARGIN));
+                    insideLeftArea = !insideRightArea &amp;&amp; (xMouse&gt;=colLeft) &amp;&amp; (xMouse&lt;=(colLeft+RESIZE_MARGIN));
+                    resizeHandle = model.resizable &amp;&amp; ((insideLeftArea &amp;&amp; !firstCol) || (insideRightArea &amp;&amp; !lastCol));
+                    fixedHeaderNode.toggleClass(&#x27;resize&#x27;, resizeHandle);
+                });
+                element.setData(&#x27;_headerMoveListener&#x27;, listener);
             },
 
            /**
@@ -279,22 +412,34 @@ console.warn(&#x27;init table&#x27;);
             */
             render: function() {
                 var element = this,
-                    css = &#x27;&lt;style type=&quot;text/css&quot;&gt;&lt;/style&gt;&#x27;;
+                    css = &#x27;&lt;style type=&quot;text/css&quot;&gt;&lt;/style&gt;&#x27;,
+                    fixedHeaderNode;
                 // set element css:
                 element.addSystemElement(css, false, true);
                 element.$superProp(&#x27;render&#x27;);
+                // fixedheadernode is only available after render of iscroller:
+                fixedHeaderNode = element.getData(&#x27;_fixedHeaderNode&#x27;);
+                fixedHeaderNode.setAttr(&#x27;is&#x27;, &#x27;thead&#x27;)
+                               .removeClass(&#x27;itsa-hidden&#x27;);
             },
 
-            sync: function() {
+            templateHeaders: false,
+
+            syncCols: function() {
                 var element = this,
-                    columns = element.model.columns,
+                    model = element.model,
+                    columns = model.columns,
+                    fixedHeaderNode = element.getData(&#x27;_fixedHeaderNode&#x27;),
                     availableWidth = element.width - parseInt(element.getStyle(&#x27;border-left-width&#x27;), 10) - parseInt(element.getStyle(&#x27;border-right-width&#x27;), 10),
                     len = columns.length,
                     occupied = 0,
                     css = &#x27;&#x27;,
+                    headerContent = &#x27;&#x27;,
+                    sortAttr = &#x27;&#x27;,
                     cssNode = element.getElement(&#x27;&gt;style&#x27;, true),
                     unspecified = [],
                     i, col, width, remaining, index;
+
                 for (i=0; i&lt;len; i++) {
                     col = columns[i];
                     if (typeof col===&#x27;string&#x27;) {
@@ -303,7 +448,7 @@ console.warn(&#x27;init table&#x27;);
                     }
                     // now set the right width:
                     width = col.width;
-                    if (width) {
+                    if (width!==undefined) { // can be zero!
                         if (typeof width===&#x27;string&#x27;) {
                             if (width.endsWith(&#x27;%&#x27;)) {
                                 // calculate the width into pixels:
@@ -315,33 +460,126 @@ console.warn(&#x27;init table&#x27;);
                             }
                         }
                         occupied += width;
-                        css += &#x27;i-table &gt;span &gt;span &gt;span:nth-child(&#x27;+(i+1)+&#x27;) {width: &#x27;+width+&#x27;px}&#x27;;
+                        css += &#x27;i-table section.i-table-row &gt;section:nth-child(&#x27;+(i+1)+&#x27;), &#x27;+
+                               &#x27;i-table section.i-table-row &gt;section:nth-child(&#x27;+(i+1)+&#x27;) section[is=&quot;td&quot;], &#x27;+
+                               &#x27;i-table &gt;section[is=&quot;thead&quot;] &gt;span:nth-child(&#x27;+(i+1)+&#x27;), &#x27;+
+                               &#x27;i-table &gt;section[is=&quot;thead&quot;] &gt;span:nth-child(&#x27;+(i+1)+&#x27;) span[is=&quot;th&quot;] &#x27;+
+                               &#x27;{width: &#x27;+width+&#x27;px;&#x27;+((width===0) ? &#x27;height:0;&#x27; : &#x27;&#x27;)+&#x27;}&#x27;;
                     }
                     else {
                         // unspecified: give it the remaining width
                         // shared among other cols without width
                         unspecified[unspecified.length] = i;
                     }
+                    // NEED DOUBLE SPAN!
+                    // outer span has padding=0, so we can easily resize below padding, while the padding is applied to the inner span.
+                    if (model.sortable) {
+                        col.sort || (col.sort=&#x27;none&#x27;);
+                        sortAttr = &#x27; sort=&quot;&#x27;+col.sort+&#x27;&quot;&#x27;;
+                    }
+                    headerContent += &#x27;&lt;span&#x27;+sortAttr+&#x27;&gt;&lt;span is=&quot;th&quot;&gt;&#x27; + col.key + &#x27;&lt;/span&gt;&#x27;+(model.sortable ? &#x27;&lt;span is=&quot;sort&quot;&gt;&lt;/span&gt;&#x27; : &#x27;&#x27;)+&#x27;&lt;/span&gt;&#x27;;
                 }
                 len = unspecified.length;
                 if (len&gt;0) {
                     remaining = Math.max(0, availableWidth - occupied)/len;
                     for (i=0; i&lt;len; i++) {
                         index = unspecified[i];
-                        css += &#x27;i-table &gt;span &gt;span &gt;span:nth-child(&#x27;+(index+1)+&#x27;) {width: &#x27;+remaining+&#x27;px}&#x27;;
+                        css += &#x27;i-table section.i-table-row &gt;section:nth-child(&#x27;+(index+1)+&#x27;), &#x27;+
+                               &#x27;i-table section.i-table-row &gt;section:nth-child(&#x27;+(index+1)+&#x27;) section[is=&quot;td&quot;], &#x27;+
+                               &#x27;i-table &gt;section[is=&quot;thead&quot;] &gt;span:nth-child(&#x27;+(index+1)+&#x27;), &#x27;+
+                               &#x27;i-table &gt;section[is=&quot;thead&quot;] &gt;span:nth-child(&#x27;+(index+1)+&#x27;) span[is=&quot;th&quot;] &#x27;+
+                               &#x27;{width: &#x27;+remaining+&#x27;px;&#x27;+((remaining&lt;0.5) ? &#x27;height:0;&#x27; : &#x27;&#x27;)+&#x27;}&#x27;;
+                        occupied += remaining;
                     }
                 }
+                else if (occupied&lt;availableWidth) {
+                    // all cols are set, yet the table isn&#x27;t fully filled
+                    // we already have the last col&#x27;s width set, but we can do it again: the latter will overrule.
+                    // &#x60;availableWidth&#x60; holds the last set width
+                    width || (width=0);
+                    width += (availableWidth - occupied);
+                    occupied = availableWidth; // needed for setting container width later on
+                    len = columns.length; // redefine for it was changed
+                    css += &#x27;i-table section.i-table-row &gt;section:nth-child(&#x27;+len+&#x27;), &#x27;+
+                           &#x27;i-table section.i-table-row &gt;section:nth-child(&#x27;+len+&#x27;) section[is=&quot;td&quot;], &#x27;+
+                           &#x27;i-table &gt;section[is=&quot;thead&quot;] &gt;span:nth-child(&#x27;+len+&#x27;), &#x27;+
+                           &#x27;i-table &gt;section[is=&quot;thead&quot;] &gt;span:nth-child(&#x27;+len+&#x27;) span[is=&quot;th&quot;] &#x27;+
+                           &#x27;{width: &#x27;+width+&#x27;px;&#x27;+((width===0) ? &#x27;height:0;&#x27; : &#x27;&#x27;)+&#x27;}&#x27;;
+
+                }
+                css += &#x27;i-table &gt;section[is=&quot;thead&quot;], i-table &gt;span {width:&#x27;+occupied+&#x27;px}&#x27;;
                 cssNode.setText(css);
-                element.$superProp(&#x27;sync&#x27;);
+                // no node.templateHeaders, but predefined:
+                fixedHeaderNode.setHTML(headerContent);
+                // save current definition of the columns as a copy:
+                element.setData(&#x27;_columnsCopy&#x27;, columns.deepClone());
+                // if the sortdata changed, than we might need to resort:
+                model.sortable &amp;&amp; element._sortItems();
             },
 
-            drawItem: function(oneItem, index) {
+            sync: function() {
+                var element = this,
+                    prevColDef = element.getData(&#x27;_columnsCopy&#x27;) || [],
+                    scrollContainer, maxHeight, vRowChildNodes, vRowChildNode, len, i, vCellNodes, vCellChildNode, j, len2;
+
+                element.model.columns.sameValue(prevColDef) || element.syncCols();
+                element.$superProp(&#x27;sync&#x27;);
+                if (ITSA.UA.isIE &amp;&amp; ITSA.UA.ieVersion&lt;10) {
+                    // we need to calculate the height of each cell of every row and set the max-height as inline height
+                    // only IE9, because above, we are using display: flex
+                    scrollContainer = element.getData(&#x27;_scrollContainer&#x27;);
+                    vRowChildNodes = scrollContainer.vnode.vChildNodes;
+                    len = vRowChildNodes.length;
+                    for (i=0; i&lt;len; i++) {
+                        vRowChildNode = vRowChildNodes[i];
+                        vCellNodes = vRowChildNode.vChildNodes[0].vChildNodes;
+                        len2 = vCellNodes.length;
+                        // first calculate the maxheight:
+                        maxHeight = 0;
+                        for (j=0; j&lt;len2; j++) {
+                            vCellChildNode = vCellNodes[j].vChildNodes[0];
+                            maxHeight = Math.max(maxHeight, vCellChildNode.domNode.height);
+                        }
+                        // set the max height for all cells
+                        for (j=0; j&lt;len2; j++) {
+                            vCellChildNode = vCellNodes[j].vChildNodes[0];
+                            vCellChildNode.domNode.setInlineStyle(&#x27;height&#x27;, maxHeight+&#x27;px&#x27;);
+                        }
+                    }
+                }
+            },
+
+            getCellContent: function(item, col) {
+                var value, formatter, cellContent;
+                value = item[col.key];
+                formatter = col.formatter;
+                (value===undefined) &amp;&amp; (value=&#x27;&#x27;);
+                if (formatter) {
+                    if (formatter.indexOf(&#x27;&lt;%&#x27;)!==-1) {
+                        cellContent = microtemplate(formatter, value);
+                    }
+                    else if (/{\S+}/.test(formatter)) {
+                        cellContent = formatter.substitute(value);
+                    }
+                    else {
+                        cellContent = formatter;
+                    }
+                }
+                else {
+                    cellContent = value;
+                }
+                return cellContent;
+            },
+
+            drawItem: function(oneItem, prevItem, index) {
                 var element = this,
                     model = element.model,
+                    editCell = model.editCell,
                     columns = model.columns,
                     odd = ((index%2)!==0),
-                    rowContent = &#x27;&lt;span class=&quot;i-table-row &#x27;+(odd ? &#x27; odd&#x27; : &#x27; even&#x27;)+&#x27;&quot;&gt;&#x27;,
-                    len, i, col, value, formatter, cellContent;
+                    draggedCol = element.getData(&#x27;_draggedCol&#x27;),
+                    rowContent = &#x27;&lt;section data-index=&quot;&#x27;+index+&#x27;&quot; class=&quot;i-table-row &#x27;+(odd ? &#x27; odd&#x27; : &#x27; even&#x27;)+&#x27;&quot;&gt;&#x27;,
+                    len, i, col, cellContent, dataEditing;
                 if (!Object.isObject(oneItem)) {
                     console.warn(&#x27;table item is no object!&#x27;);
                     return;
@@ -349,29 +587,24 @@ console.warn(&#x27;init table&#x27;);
                 len = columns.length;
                 for (i=0; i&lt;len; i++) {
                     col = columns[i];
-                    value = oneItem[col.key] || &#x27;&#x27;;
-                    formatter = col.formatter;
-                    if (formatter) {
-                        if (formatter.indexOf(&#x27;&lt;%&#x27;)!==-1) {
-                            cellContent = microtemplate(formatter, value);
-                        }
-                        else if (/{\S+}/.test(formatter)) {
-                            cellContent = formatter.substitute(value);
-                        }
-                        else {
-                            cellContent = formatter;
-                        }
+                    // NEED DOUBLE SPAN!
+                    // outer section has padding=0, so we can easily resize below padding, while the padding is applied to the inner section.
+                    if (editCell &amp;&amp; (editCell.col===i) &amp;&amp; (editCell.row===index)) {
+                        cellContent = &#x27;&lt;input value=&quot;&#x27;+(oneItem[col.key] || &#x27;&#x27;)+&#x27;&quot; /&gt;&#x27;;
+                        dataEditing = &#x27;  data-editing=&quot;true&quot;&#x27;;
                     }
                     else {
-                        cellContent = value;
+                        cellContent = element.getCellContent(oneItem, col);
+                        dataEditing = &#x27;&#x27;;
                     }
-                    rowContent += &#x27;&lt;span class=&quot;col-&#x27;+col.key.replaceAll(&#x27; &#x27;, &#x27;-&#x27;)+&#x27;&quot;&gt;&#x27; + cellContent + &#x27;&lt;/span&gt;&#x27;;
+                    rowContent += &#x27;&lt;section&gt;&lt;section is=&quot;td&quot;&#x27;+dataEditing+&#x27; prop=&quot;&#x27;+col.key+&#x27;&quot;&#x27;+((draggedCol===i) ? &#x27; class=&quot;col-dragging&quot;&#x27; : &#x27;&#x27;)+&#x27;&gt;&#x27; + cellContent + &#x27;&lt;/section&gt;&lt;/section&gt;&#x27;;
                 }
-                rowContent += &#x27;&lt;/span&gt;&#x27;;
+                rowContent += &#x27;&lt;/section&gt;&#x27;;
                 return rowContent;
             },
 
             destroy: function() {
+                this.removeListeners();
             }
         });
 

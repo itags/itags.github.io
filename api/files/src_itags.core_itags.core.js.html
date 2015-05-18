@@ -841,28 +841,32 @@ module.exports = function (window) {
             var instance = this,
                 observer;
             if (element.isItag() &amp;&amp; (element.model!==model) &amp;&amp; !element.inside(&#x27;.ce-design-node&#x27;)) {
-                element.removeAttr(&#x27;lazybind&#x27;);
-                Object.protectedProp(element.vnode, &#x27;ce_boundModel&#x27;, true);
-                observer = element.getData(&#x27;_observer&#x27;);
-                element.model.unobserve(observer);
-                if (mergeCurrent || (element.lazyBind &amp;&amp; (mergeCurrent!==false))) {
-                    model.merge(element.model, {full: true});
-                }
-                element.model = model;
-                observer = function() {
-                    itagCore.modelToAttrs(element);
+                // NOTE: IE9 forces us to go async --&gt; otherwise randomly an error is thrown
+                // probably because not all nodes are updated
+                // async(function() {
+                    element.removeAttr(&#x27;lazybind&#x27;);
+                    Object.protectedProp(element.vnode, &#x27;ce_boundModel&#x27;, true);
+                    observer = element.getData(&#x27;_observer&#x27;);
+                    element.model.unobserve(observer);
+                    if (mergeCurrent || (element.lazyBind &amp;&amp; (mergeCurrent!==false))) {
+                        model.merge(element.model, {full: true});
+                    }
+                    element.model = model;
+                    observer = function() {
+                        itagCore.modelToAttrs(element);
+                        element.syncUI();
+                    };
+                    element.model.observe(observer);
+                    element.setData(&#x27;_observer&#x27;, observer);
+                    if (!element.vnode.ce_initialized) {
+                        instance.attrsToModel(element);
+                        element.initUI(PROTO_SUPPORTED ? null : element.__proto__.constructor)
+                               .renderUI();
+                    }
+                    element._afterBindModel();
                     element.syncUI();
-                };
-                element.model.observe(observer);
-                element.setData(&#x27;_observer&#x27;, observer);
-                if (!element.vnode.ce_initialized) {
-                    instance.attrsToModel(element);
-                    element.initUI(PROTO_SUPPORTED ? null : element.__proto__.constructor)
-                           .renderUI();
-                }
-                element._afterBindModel();
-                element.syncUI();
-                element.itagRendered || instance.setRendered(element);
+                    element.itagRendered || instance.setRendered(element);
+                // });
             }
         },
 
@@ -949,7 +953,8 @@ module.exports = function (window) {
         itagFilter: function(e) {
             console.log(NAME+&#x27;itagFilter&#x27;);
             var node = e.target;
-            return node.vnode.isItag &amp;&amp; node.getData(&#x27;itagRendered&#x27;);
+            // also check for &#x60;destroyUI&#x60; --&gt; to prevent errors when cloning while busy rendering
+            return node.vnode.isItag &amp;&amp; node.getData(&#x27;itagRendered&#x27;) &amp;&amp; node.destroyUI;
         },
 
        /**
@@ -1035,7 +1040,7 @@ module.exports = function (window) {
 
         setLazyBinding: function(ItagClass, value) {
             console.log(NAME+&#x27;setLazyBinding&#x27;);
-            (typeof value === &#x27;boolean&#x27;) &amp;&amp; ItagClass.mergePrototypes({lazyBind: !value}, true, false, true);
+            (typeof value === &#x27;boolean&#x27;) &amp;&amp; ItagClass.mergePrototypes({lazyBind: value}, true, false, true);
         },
 
        /**

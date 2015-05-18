@@ -9,40 +9,50 @@
             height: 100%;
         }
         i-table {
-            width: 200px;
+            width: 500px;
             height: 40%;
             top: 120px;
             left: 50px;
             font-size: 120%;
-        }
-        i-table >span >span.odd {
-            background-color: #DDD;
         }
     </style>
 </head>
 
 <body>
 
-    <i-table start-item="19">
+    <i-table start-item="1" class="striped bordered">
     <!--
-        [{"key": "id", "width": 25}, "price"]
+        [{"key": "id", "width": 50},
+         {"key": "price", "width": 50},
+         {"key": "description", "width": 150},
+         {"key": "delivertime", "width": 50}]
     -->
     </i-table>
 
-    <script src="../../dist/itagsbuild.js"></script>
+    <!-- `sortRendered` means: sort by the rendered array's value, not the value that is in the array -->
+
+    <script src="../../dist/itagsbuild-min.js"></script>
     <script>
         require('itags');
         var iscroller = document.getElement('i-table'),
             model = {items: []},
             i;
-        for (i=0; i<50; i++) {
-            model.items.push({id: i, price: 100*i});
+        for (i=0; i<5000; i++) {
+            model.items.push({id: i, price: 100*i, description: 'Desc. '+i, delivertime: 3*i+3});
         }
         iscroller.bindModel(model);
         // ITSA.later(function() {
             // model['start-item'] = 12;
         // }, 2000);
-            model['start-item'] = 25;
+
+
+
+// --> MAG NOOI HOGER DAN AANTAL!!!
+            // model['start-item'] = 25;
+
+
+
+
         ITSA.later(function() {
             // model['start-item'] = 28.75;
         }, 5000);

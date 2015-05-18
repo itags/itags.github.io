@@ -1,0 +1,80 @@
+
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>Simple i-scroller</title>
+    <style type="text/css">
+        html, body {
+            height: 100%;
+        }
+        i-scroller {
+            width: 200px;
+            height: 50%;
+            top: 70px;
+            left: 50px;
+            border: solid 5px #000 !important;
+        }
+        .item.odd {
+            background-color: #DDD;
+        }
+        i-scroller span.item {
+            text-align: center;
+            line-height: 2em;
+            font-weight: bold;
+            font-size: 120%;
+        }
+    </style>
+</head>
+
+<body>
+<div id='infonode'></div>
+    <i-scroller start-item="300">
+    <!--
+        {nr}
+    -->
+    </i-scroller>
+
+    <script src="../../dist/itagsbuild-min.js"></script>
+    <script>
+        require('itags');
+        var iscroller = document.getElement('i-scroller'),
+            model = {items: []},
+            infonode = document.getElement('#infonode'),
+            i, scrollContainer;
+        for (i=0; i<1500; i++) {
+            model.items.push({nr: i});
+        }
+        iscroller.bindModel(model);
+
+        ITSA.later(function() {
+            scrollContainer || (scrollContainer=iscroller.getElement('>span'));
+            infonode.setHTML('scrolledPages: '+scrollContainer.getData('_scrolledPages'));
+        }, 100, 10);
+
+        ITSA.later(function() {
+            // model['start-item'] = 315;
+            // model['start-item'] = 295;
+        }, 1000);
+/*
+        ITSA.later(function() {
+            iscroller.swipe(600, 200)
+            .then(function() {
+                return iscroller.swipe(600, 200);
+            })
+            .then(function() {
+                return iscroller.swipe(600, 200);
+            })
+            .then(function() {
+                return iscroller.swipe(-600, 200);
+            })
+            .then(function() {
+                return iscroller.swipe(-600, 200);
+            });
+        }, 1000);
+*/
+    </script>
+
+</body>
+
+</html>

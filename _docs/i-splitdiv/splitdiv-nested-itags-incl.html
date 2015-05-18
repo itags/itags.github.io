@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>i-splitdiv with inner itags</title>
+    <style type="text/css">
+        i-splitdiv {
+            width: 500px;
+            height: 190px;
+            position: absolute;
+            top: 50px;
+            left: 50px;
+            border: solid 1px #000;
+        }
+        i-splitdiv section {
+            background-color: #DDD;
+            padding: 20px;
+        }
+        i-splitdiv section[section="second"] {
+            border-left: dotted 4px #000;
+            background-color: #EEE;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <i-splitdiv horizontal="true" divider="12em">
+    <!--
+        <section>
+            <i-button id="expand-projects1"><!==Projects==></i-button>
+        </section>
+        <section>
+            <i-button id="expand-projects2"><!==Projects==></i-button>
+        </section>
+    -->
+    </i-splitdiv>
+    <script src="../../dist/itagsbuild.js"></script>
+    <script>
+        require('itags');
+        document.getElementOnAvailable('#expand-projects1').then(function() {
+            console.warn('NODE IS INSERTED!');
+        });
+    </script>
+
+</body>
+
+</html>

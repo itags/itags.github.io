@@ -19,11 +19,14 @@
         require('itags');
         var iparcel = document.getElement('i-parcel'),
             model = {
-                age: 20,
+                age: 17,
                 adultMessage: 'an adult',
                 childMessage: 'a child'
             };
         iparcel.bindModel(model);
+        ITSA.later(function() {
+            model.age = 18;
+        }, 1500);
     </script>
 
 </body>
