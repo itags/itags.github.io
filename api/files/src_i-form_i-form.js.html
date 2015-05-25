@@ -79,6 +79,8 @@
             
                 <li><a href="../classes/ITSA.html">ITSA</a></li>
             
+                <li><a href="../classes/JSON.html">JSON</a></li>
+            
                 <li><a href="../classes/Math.html">Math</a></li>
             
                 <li><a href="../classes/Messages.html">Messages</a></li>
@@ -166,6 +168,8 @@
                 <li><a href="../modules/lib_array.js.html">lib/array.js</a></li>
             
                 <li><a href="../modules/lib_function.js.html">lib/function.js</a></li>
+            
+                <li><a href="../modules/lib_json.js.html">lib/json.js</a></li>
             
                 <li><a href="../modules/lib_math.js.html">lib/math.js</a></li>
             
@@ -423,7 +427,13 @@ module.exports = function (window) {
                     var property = formElement.getAttr(&#x27;i-prop&#x27;);
                     if (property) {
                         propertyModel = model[property];
-                        if (propertyModel) {
+                        if (propertyModel!==undefined) {
+                            // in case the property consists of a &#x27;non&#x27;-object,
+                            // than it has to be the &#x60;value&#x60; of the model that should be passed through.
+                            if (!Object.isObject(propertyModel)) {
+                                propertyModel = {};
+                                propertyModel[formElement.valueProperty] = model[property];
+                            }
                             databinders[databinders.length] = formElement.bindModel(propertyModel, true);
                         }
                         else {

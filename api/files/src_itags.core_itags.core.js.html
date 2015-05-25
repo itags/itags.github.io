@@ -79,6 +79,8 @@
             
                 <li><a href="../classes/ITSA.html">ITSA</a></li>
             
+                <li><a href="../classes/JSON.html">JSON</a></li>
+            
                 <li><a href="../classes/Math.html">Math</a></li>
             
                 <li><a href="../classes/Messages.html">Messages</a></li>
@@ -166,6 +168,8 @@
                 <li><a href="../modules/lib_array.js.html">lib/array.js</a></li>
             
                 <li><a href="../modules/lib_function.js.html">lib/function.js</a></li>
+            
+                <li><a href="../modules/lib_json.js.html">lib/json.js</a></li>
             
                 <li><a href="../modules/lib_math.js.html">lib/math.js</a></li>
             
@@ -841,32 +845,28 @@ module.exports = function (window) {
             var instance = this,
                 observer;
             if (element.isItag() &amp;&amp; (element.model!==model) &amp;&amp; !element.inside(&#x27;.ce-design-node&#x27;)) {
-                // NOTE: IE9 forces us to go async --&gt; otherwise randomly an error is thrown
-                // probably because not all nodes are updated
-                // async(function() {
-                    element.removeAttr(&#x27;lazybind&#x27;);
-                    Object.protectedProp(element.vnode, &#x27;ce_boundModel&#x27;, true);
-                    observer = element.getData(&#x27;_observer&#x27;);
-                    element.model.unobserve(observer);
-                    if (mergeCurrent || (element.lazyBind &amp;&amp; (mergeCurrent!==false))) {
-                        model.merge(element.model, {full: true});
-                    }
-                    element.model = model;
-                    observer = function() {
-                        itagCore.modelToAttrs(element);
-                        element.syncUI();
-                    };
-                    element.model.observe(observer);
-                    element.setData(&#x27;_observer&#x27;, observer);
-                    if (!element.vnode.ce_initialized) {
-                        instance.attrsToModel(element);
-                        element.initUI(PROTO_SUPPORTED ? null : element.__proto__.constructor)
-                               .renderUI();
-                    }
-                    element._afterBindModel();
+                element.removeAttr(&#x27;lazybind&#x27;);
+                Object.protectedProp(element.vnode, &#x27;ce_boundModel&#x27;, true);
+                observer = element.getData(&#x27;_observer&#x27;);
+                element.model.unobserve(observer);
+                if (mergeCurrent || (element.lazyBind &amp;&amp; (mergeCurrent!==false))) {
+                    model.merge(element.model, {full: true});
+                }
+                element.model = model;
+                observer = function() {
+                    itagCore.modelToAttrs(element);
                     element.syncUI();
-                    element.itagRendered || instance.setRendered(element);
-                // });
+                };
+                element.model.observe(observer);
+                element.setData(&#x27;_observer&#x27;, observer);
+                if (!element.vnode.ce_initialized) {
+                    instance.attrsToModel(element);
+                    element.initUI(PROTO_SUPPORTED ? null : element.__proto__.constructor)
+                           .renderUI();
+                }
+                element._afterBindModel();
+                element.syncUI();
+                element.itagRendered || instance.setRendered(element);
             }
         },
 

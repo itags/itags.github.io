@@ -79,6 +79,8 @@
             
                 <li><a href="../classes/ITSA.html">ITSA</a></li>
             
+                <li><a href="../classes/JSON.html">JSON</a></li>
+            
                 <li><a href="../classes/Math.html">Math</a></li>
             
                 <li><a href="../classes/Messages.html">Messages</a></li>
@@ -166,6 +168,8 @@
                 <li><a href="../modules/lib_array.js.html">lib/array.js</a></li>
             
                 <li><a href="../modules/lib_function.js.html">lib/function.js</a></li>
+            
+                <li><a href="../modules/lib_json.js.html">lib/json.js</a></li>
             
                 <li><a href="../modules/lib_math.js.html">lib/math.js</a></li>
             
@@ -459,19 +463,7 @@ module.exports = function (window) {
                 itemContainers[1].setHTML(model[&#x27;off-text&#x27;]);
             },
 
-            getValue: function() {
-                return this.model.checked;
-            },
-
-            currentToReset: function() {
-                var model = this.model;
-                model[&#x27;reset-value&#x27;] = model.checked;
-            },
-
-            reset: function() {
-                var model = this.model;
-                model.checked = model[&#x27;reset-value&#x27;];
-            },
+            valueProperty: &#x27;checked&#x27;,
 
             destroy: function() {
                 unRegisterElement(this);

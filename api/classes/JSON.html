@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Math - Itsa</title>
+    <title>JSON - Itsa</title>
     <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -234,7 +234,7 @@
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-                        <h1>Math Class</h1>
+                        <h1>JSON Class</h1>
 <div class="box meta">
     
 
@@ -242,13 +242,13 @@
 
     
         <div class="foundat">
-            Defined in: <a href="../files/site-preview_dist_itagsbuild.js.html#l2736"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:2736</code></a>
+            Defined in: <a href="../files/site-preview_dist_itagsbuild.js.html#l2647"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:2647</code></a>
         </div>
     
 
     
         
-            Module: <a href="../modules/lib_object.js.html">lib/object.js</a><br>
+            Module: <a href="../modules/lib_math.js.html">lib/math.js</a><br>
             Parent Module: <a href="../modules/js-ext.html">js-ext</a>
         
     
@@ -259,7 +259,7 @@
 
 
 <div class="box intro">
-    <p>Extension of Math
+    <p>Pollyfils for often used functionality for Arrays
 <i>Copyright (c) 2014 ITSA - <a href="https://github.com/itsa">https://github.com/itsa</a></i>
  New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">http://choosealicense.com/licenses/bsd-3-clause/</a></p>
 
@@ -290,42 +290,32 @@
                     <ul class="index-list methods">
                         
                             <li class="index-item method">
-                                <a href="#method_ceilFromZero">ceilFromZero</a>
+                                <a href="#method_isObject">isObject</a>
+
+                                
+                                    <span class="flag static">static</span>
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
+                                <a href="#method_isObject">isObject</a>
+
+                                
+                                    <span class="flag static">static</span>
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item method">
+                                <a href="#method_parseWithDate">parseWithDate</a>
 
                                 
                                 
                             </li>
                         
                             <li class="index-item method">
-                                <a href="#method_ceilFromZero">ceilFromZero</a>
-
-                                
-                                
-                            </li>
-                        
-                            <li class="index-item method">
-                                <a href="#method_floorToZero">floorToZero</a>
-
-                                
-                                
-                            </li>
-                        
-                            <li class="index-item method">
-                                <a href="#method_floorToZero">floorToZero</a>
-
-                                
-                                
-                            </li>
-                        
-                            <li class="index-item method">
-                                <a href="#method_inbetween">inbetween</a>
-
-                                
-                                
-                            </li>
-                        
-                            <li class="index-item method">
-                                <a href="#method_inbetween">inbetween</a>
+                                <a href="#method_parseWithDate">parseWithDate</a>
 
                                 
                                 
@@ -347,8 +337,8 @@
                 <h2 class="off-left">Methods</h2>
 
                 
-                    <div id="method_ceilFromZero" class="method item">
-    <h3 class="name"><code>ceilFromZero</code></h3>
+                    <div id="method_isObject" class="method item">
+    <h3 class="name"><code>isObject</code></h3>
 
     
         <div class="args">
@@ -356,7 +346,13 @@
             
                 <li class="arg">
                     
-                        <code>value</code>
+                        <code>item</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>clone</code>
                     
                 </li>
             
@@ -366,7 +362,7 @@
 
     
         <span class="returns-inline">
-            <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Number" class="crosslink external" target="_blank">Number</a></span>
+            <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a> | <a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array" class="crosslink external" target="_blank">Array</a></span>
         </span>
     
 
@@ -377,6 +373,8 @@
     
 
     
+        <span class="flag static">static</span>
+    
 
     
 
@@ -386,7 +384,7 @@
         
             
                 
-                    <p>Provided by the <a href="../modules/lib/math.js.html">lib/math.js</a> module.</p>
+                    <p>Provided by the <a href="../modules/lib/json.js.html">lib/json.js</a> module.</p>
                 
                 <p>
                 
@@ -395,7 +393,7 @@
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l2781"><code>site&#x2F;dist&#x2F;itagsbuild.js:2781</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l2714"><code>site&#x2F;dist&#x2F;itagsbuild.js:2714</code></a>
         
         </p>
 
@@ -406,9 +404,8 @@
     </div>
 
     <div class="description">
-        <p>Ceils a value from zero up. Native Math.ceil does this for positive values,
-but negative values are ceiled more into the less negative (Math.ceil(-2.3) === -2).
-This method ceiles up from zero: (Math.ceilFromZero(-2.3) === -3)</p>
+        <p>Transforms <code>String</code>-properties into true Date-objects in case they match the Date-syntax.
+To be used whenever you have parsed a JSON.stringified object without a Date-reviver.</p>
 
     </div>
 
@@ -420,14 +417,31 @@ This method ceiles up from zero: (Math.ceilFromZero(-2.3) === -3)</p>
             
                 <li class="param">
                     
-                        <code class="param-name">value</code>
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Number" class="crosslink external" target="_blank">Number</a></span>
+                        <code class="param-name">item</code>
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a> | <a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array" class="crosslink external" target="_blank">Array</a></span>
                     
 
                     
 
                     <div class="param-description">
-                        <p>the original value that should be inbetween the edges</p>
+                        <p>the JSON-parsed object which the date-string fields should be transformed into Dates.</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">clone</code>
+                        <span class="type">Boolean=false</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>whether to clone <code>item</code> and leave it unspoiled. Cloning means a performancehit,
+better leave it <code>false</code>, which will lead into changing <code>item</code> which in fact will equal the returnvalue.</p>
 
                     </div>
 
@@ -445,9 +459,9 @@ This method ceiles up from zero: (Math.ceilFromZero(-2.3) === -3)</p>
             <div class="returns-description">
                 
                     
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Number" class="crosslink external" target="_blank">Number</a></span>:
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a> | <a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array" class="crosslink external" target="_blank">Array</a></span>:
                     
-                    <p>the floored value</p>
+                    <p>the transormed item</p>
 
                 
             </div>
@@ -458,8 +472,8 @@ This method ceiles up from zero: (Math.ceilFromZero(-2.3) === -3)</p>
 </div>
 
                 
-                    <div id="method_ceilFromZero" class="method item">
-    <h3 class="name"><code>ceilFromZero</code></h3>
+                    <div id="method_isObject" class="method item">
+    <h3 class="name"><code>isObject</code></h3>
 
     
         <div class="args">
@@ -467,7 +481,13 @@ This method ceiles up from zero: (Math.ceilFromZero(-2.3) === -3)</p>
             
                 <li class="arg">
                     
-                        <code>value</code>
+                        <code>item</code>
+                    
+                </li>
+            
+                <li class="arg">
+                    
+                        <code>clone</code>
                     
                 </li>
             
@@ -477,7 +497,7 @@ This method ceiles up from zero: (Math.ceilFromZero(-2.3) === -3)</p>
 
     
         <span class="returns-inline">
-            <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Number" class="crosslink external" target="_blank">Number</a></span>
+            <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a> | <a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array" class="crosslink external" target="_blank">Array</a></span>
         </span>
     
 
@@ -488,6 +508,8 @@ This method ceiles up from zero: (Math.ceilFromZero(-2.3) === -3)</p>
     
 
     
+        <span class="flag static">static</span>
+    
 
     
 
@@ -497,7 +519,7 @@ This method ceiles up from zero: (Math.ceilFromZero(-2.3) === -3)</p>
         
             
                 
-                    <p>Provided by the <a href="../modules/lib/math.js.html">lib/math.js</a> module.</p>
+                    <p>Provided by the <a href="../modules/lib/json.js.html">lib/json.js</a> module.</p>
                 
                 <p>
                 
@@ -506,7 +528,7 @@ This method ceiles up from zero: (Math.ceilFromZero(-2.3) === -3)</p>
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l2781"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:2781</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l2714"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:2714</code></a>
         
         </p>
 
@@ -517,9 +539,8 @@ This method ceiles up from zero: (Math.ceilFromZero(-2.3) === -3)</p>
     </div>
 
     <div class="description">
-        <p>Ceils a value from zero up. Native Math.ceil does this for positive values,
-but negative values are ceiled more into the less negative (Math.ceil(-2.3) === -2).
-This method ceiles up from zero: (Math.ceilFromZero(-2.3) === -3)</p>
+        <p>Transforms <code>String</code>-properties into true Date-objects in case they match the Date-syntax.
+To be used whenever you have parsed a JSON.stringified object without a Date-reviver.</p>
 
     </div>
 
@@ -531,14 +552,31 @@ This method ceiles up from zero: (Math.ceilFromZero(-2.3) === -3)</p>
             
                 <li class="param">
                     
-                        <code class="param-name">value</code>
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Number" class="crosslink external" target="_blank">Number</a></span>
+                        <code class="param-name">item</code>
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a> | <a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array" class="crosslink external" target="_blank">Array</a></span>
                     
 
                     
 
                     <div class="param-description">
-                        <p>the original value that should be inbetween the edges</p>
+                        <p>the JSON-parsed object which the date-string fields should be transformed into Dates.</p>
+
+                    </div>
+
+                    
+                </li>
+            
+                <li class="param">
+                    
+                        <code class="param-name">clone</code>
+                        <span class="type">Boolean=false</span>
+                    
+
+                    
+
+                    <div class="param-description">
+                        <p>whether to clone <code>item</code> and leave it unspoiled. Cloning means a performancehit,
+better leave it <code>false</code>, which will lead into changing <code>item</code> which in fact will equal the returnvalue.</p>
 
                     </div>
 
@@ -556,9 +594,9 @@ This method ceiles up from zero: (Math.ceilFromZero(-2.3) === -3)</p>
             <div class="returns-description">
                 
                     
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Number" class="crosslink external" target="_blank">Number</a></span>:
+                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a> | <a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array" class="crosslink external" target="_blank">Array</a></span>:
                     
-                    <p>the floored value</p>
+                    <p>the transormed item</p>
 
                 
             </div>
@@ -569,8 +607,8 @@ This method ceiles up from zero: (Math.ceilFromZero(-2.3) === -3)</p>
 </div>
 
                 
-                    <div id="method_floorToZero" class="method item">
-    <h3 class="name"><code>floorToZero</code></h3>
+                    <div id="method_parseWithDate" class="method item">
+    <h3 class="name"><code>parseWithDate</code></h3>
 
     
         <div class="args">
@@ -578,247 +616,7 @@ This method ceiles up from zero: (Math.ceilFromZero(-2.3) === -3)</p>
             
                 <li class="arg">
                     
-                        <code>value</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-        <span class="returns-inline">
-            <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Number" class="crosslink external" target="_blank">Number</a></span>
-        </span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                    <p>Provided by the <a href="../modules/lib/math.js.html">lib/math.js</a> module.</p>
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/site_dist_itagsbuild.js.html#l2768"><code>site&#x2F;dist&#x2F;itagsbuild.js:2768</code></a>
-        
-        </p>
-
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        <p>Floors a value in the direction to zero. Native Math.floor does this for positive values,
-but negative values are floored more into the negative (Math.floor(-2.3) === -3).
-This method floores into the direction of zero: (Math.floorToZero(-2.3) === -2)</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">value</code>
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Number" class="crosslink external" target="_blank">Number</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>the original value that should be inbetween the edges</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Number" class="crosslink external" target="_blank">Number</a></span>:
-                    
-                    <p>the floored value</p>
-
-                
-            </div>
-        </div>
-    
-
-    
-</div>
-
-                
-                    <div id="method_floorToZero" class="method item">
-    <h3 class="name"><code>floorToZero</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>value</code>
-                    
-                </li>
-            
-            </ul><span class="paren">)</span>
-        </div>
-    
-
-    
-        <span class="returns-inline">
-            <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Number" class="crosslink external" target="_blank">Number</a></span>
-        </span>
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    <div class="meta">
-        
-            
-                
-                    <p>Provided by the <a href="../modules/lib/math.js.html">lib/math.js</a> module.</p>
-                
-                <p>
-                
-                Defined in
-                
-            
-        
-        
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l2768"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:2768</code></a>
-        
-        </p>
-
-
-        
-
-        
-    </div>
-
-    <div class="description">
-        <p>Floors a value in the direction to zero. Native Math.floor does this for positive values,
-but negative values are floored more into the negative (Math.floor(-2.3) === -3).
-This method floores into the direction of zero: (Math.floorToZero(-2.3) === -2)</p>
-
-    </div>
-
-    
-        <div class="params">
-            <h4>Parameters:</h4>
-
-            <ul class="params-list">
-            
-                <li class="param">
-                    
-                        <code class="param-name">value</code>
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Number" class="crosslink external" target="_blank">Number</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>the original value that should be inbetween the edges</p>
-
-                    </div>
-
-                    
-                </li>
-            
-            </ul>
-        </div>
-    
-
-    
-        <div class="returns">
-            <h4>Returns:</h4>
-
-            <div class="returns-description">
-                
-                    
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Number" class="crosslink external" target="_blank">Number</a></span>:
-                    
-                    <p>the floored value</p>
-
-                
-            </div>
-        </div>
-    
-
-    
-</div>
-
-                
-                    <div id="method_inbetween" class="method item">
-    <h3 class="name"><code>inbetween</code></h3>
-
-    
-        <div class="args">
-            <span class="paren">(</span><ul class="args-list inline commas">
-            
-                <li class="arg">
-                    
-                        <code>min</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>value</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>max</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code class="optional">[absoluteValue]</code>
+                        <code>stringifiedObj</code>
                     
                 </li>
             
@@ -848,7 +646,7 @@ This method floores into the direction of zero: (Math.floorToZero(-2.3) === -2)<
         
             
                 
-                    <p>Provided by the <a href="../modules/lib/math.js.html">lib/math.js</a> module.</p>
+                    <p>Provided by the <a href="../modules/lib/json.js.html">lib/json.js</a> module.</p>
                 
                 <p>
                 
@@ -857,7 +655,7 @@ This method floores into the direction of zero: (Math.floorToZero(-2.3) === -2)<
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l2753"><code>site&#x2F;dist&#x2F;itagsbuild.js:2753</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l2703"><code>site&#x2F;dist&#x2F;itagsbuild.js:2703</code></a>
         
         </p>
 
@@ -868,7 +666,7 @@ This method floores into the direction of zero: (Math.floorToZero(-2.3) === -2)<
     </div>
 
     <div class="description">
-        <p>Returns the value, while forcing it to be inbetween the specified edges.</p>
+        <p>Parses a stringified object and creates true <code>Date</code> properties.</p>
 
     </div>
 
@@ -880,7 +678,7 @@ This method floores into the direction of zero: (Math.floorToZero(-2.3) === -2)<
             
                 <li class="param">
                     
-                        <code class="param-name">min</code>
+                        <code class="param-name">stringifiedObj</code>
                         <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Number" class="crosslink external" target="_blank">Number</a></span>
                     
 
@@ -888,55 +686,6 @@ This method floores into the direction of zero: (Math.floorToZero(-2.3) === -2)<
 
                     <div class="param-description">
                         <p>lower-edgde</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">value</code>
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Number" class="crosslink external" target="_blank">Number</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>the original value that should be inbetween the edges</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">max</code>
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Number" class="crosslink external" target="_blank">Number</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>upper-edgde</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[absoluteValue]</code>
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Boolean" class="crosslink external" target="_blank">Boolean</a></span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>whether <code>value</code> should be treaded as an absolute value</p>
 
                     </div>
 
@@ -967,8 +716,8 @@ This method floores into the direction of zero: (Math.floorToZero(-2.3) === -2)<
 </div>
 
                 
-                    <div id="method_inbetween" class="method item">
-    <h3 class="name"><code>inbetween</code></h3>
+                    <div id="method_parseWithDate" class="method item">
+    <h3 class="name"><code>parseWithDate</code></h3>
 
     
         <div class="args">
@@ -976,25 +725,7 @@ This method floores into the direction of zero: (Math.floorToZero(-2.3) === -2)<
             
                 <li class="arg">
                     
-                        <code>min</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>value</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code>max</code>
-                    
-                </li>
-            
-                <li class="arg">
-                    
-                        <code class="optional">[absoluteValue]</code>
+                        <code>stringifiedObj</code>
                     
                 </li>
             
@@ -1024,7 +755,7 @@ This method floores into the direction of zero: (Math.floorToZero(-2.3) === -2)<
         
             
                 
-                    <p>Provided by the <a href="../modules/lib/math.js.html">lib/math.js</a> module.</p>
+                    <p>Provided by the <a href="../modules/lib/json.js.html">lib/json.js</a> module.</p>
                 
                 <p>
                 
@@ -1033,7 +764,7 @@ This method floores into the direction of zero: (Math.floorToZero(-2.3) === -2)<
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l2753"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:2753</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l2703"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:2703</code></a>
         
         </p>
 
@@ -1044,7 +775,7 @@ This method floores into the direction of zero: (Math.floorToZero(-2.3) === -2)<
     </div>
 
     <div class="description">
-        <p>Returns the value, while forcing it to be inbetween the specified edges.</p>
+        <p>Parses a stringified object and creates true <code>Date</code> properties.</p>
 
     </div>
 
@@ -1056,7 +787,7 @@ This method floores into the direction of zero: (Math.floorToZero(-2.3) === -2)<
             
                 <li class="param">
                     
-                        <code class="param-name">min</code>
+                        <code class="param-name">stringifiedObj</code>
                         <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Number" class="crosslink external" target="_blank">Number</a></span>
                     
 
@@ -1064,55 +795,6 @@ This method floores into the direction of zero: (Math.floorToZero(-2.3) === -2)<
 
                     <div class="param-description">
                         <p>lower-edgde</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">value</code>
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Number" class="crosslink external" target="_blank">Number</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>the original value that should be inbetween the edges</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name">max</code>
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Number" class="crosslink external" target="_blank">Number</a></span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>upper-edgde</p>
-
-                    </div>
-
-                    
-                </li>
-            
-                <li class="param">
-                    
-                        <code class="param-name optional">[absoluteValue]</code>
-                        <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Boolean" class="crosslink external" target="_blank">Boolean</a></span>
-                        <span class="flag optional" title="This parameter is optional.">optional</span>
-                    
-
-                    
-
-                    <div class="param-description">
-                        <p>whether <code>value</code> should be treaded as an absolute value</p>
 
                     </div>
 

@@ -38,7 +38,7 @@
             model = {items: []},
             i;
         for (i=0; i<5000; i++) {
-            model.items.push({id: i, price: 100*i, description: 'Desc. '+i, delivertime: 3*i+3});
+            model.items.push({x:5, id: i, price: 100*i, description: 'Desc. '+i, delivertime: 3*i+3});
         }
         iscroller.bindModel(model);
         // ITSA.later(function() {

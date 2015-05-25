@@ -79,6 +79,8 @@
             
                 <li><a href="../classes/ITSA.html">ITSA</a></li>
             
+                <li><a href="../classes/JSON.html">JSON</a></li>
+            
                 <li><a href="../classes/Math.html">Math</a></li>
             
                 <li><a href="../classes/Messages.html">Messages</a></li>
@@ -166,6 +168,8 @@
                 <li><a href="../modules/lib_array.js.html">lib/array.js</a></li>
             
                 <li><a href="../modules/lib_function.js.html">lib/function.js</a></li>
+            
+                <li><a href="../modules/lib_json.js.html">lib/json.js</a></li>
             
                 <li><a href="../modules/lib_math.js.html">lib/math.js</a></li>
             
@@ -477,7 +481,7 @@ module.exports = function (window) {
                         col.sort || (col.sort=&#x27;none&#x27;);
                         sortAttr = &#x27; sort=&quot;&#x27;+col.sort+&#x27;&quot;&#x27;;
                     }
-                    headerContent += &#x27;&lt;span&#x27;+sortAttr+&#x27;&gt;&lt;span is=&quot;th&quot;&gt;&#x27; + col.key + &#x27;&lt;/span&gt;&#x27;+(model.sortable ? &#x27;&lt;span is=&quot;sort&quot;&gt;&lt;/span&gt;&#x27; : &#x27;&#x27;)+&#x27;&lt;/span&gt;&#x27;;
+                    headerContent += &#x27;&lt;span&#x27;+sortAttr+&#x27;&gt;&lt;span is=&quot;th&quot;&gt;&#x27; + (col.label!==undefined ? col.label : col.key) + &#x27;&lt;/span&gt;&#x27;+(model.sortable ? &#x27;&lt;span is=&quot;sort&quot;&gt;&lt;/span&gt;&#x27; : &#x27;&#x27;)+&#x27;&lt;/span&gt;&#x27;;
                 }
                 len = unspecified.length;
                 if (len&gt;0) {

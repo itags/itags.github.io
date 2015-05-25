@@ -79,6 +79,8 @@
             
                 <li><a href="../classes/ITSA.html">ITSA</a></li>
             
+                <li><a href="../classes/JSON.html">JSON</a></li>
+            
                 <li><a href="../classes/Math.html">Math</a></li>
             
                 <li><a href="../classes/Messages.html">Messages</a></li>
@@ -166,6 +168,8 @@
                 <li><a href="../modules/lib_array.js.html">lib/array.js</a></li>
             
                 <li><a href="../modules/lib_function.js.html">lib/function.js</a></li>
+            
+                <li><a href="../modules/lib_json.js.html">lib/json.js</a></li>
             
                 <li><a href="../modules/lib_math.js.html">lib/math.js</a></li>
             
@@ -1134,7 +1138,7 @@ module.exports = function (window) {
                             }
                             def[String(i)] = headerContent;
                             if (addToContent &amp;&amp; (!prevHeaderContentDefinition || !sameHeader(def, prevHeaderContentDefinition, i))) {
-                                itemContent += &#x27;&lt;section class=&quot;header&#x27;+i+&#x27;&quot;&gt;&#x27;+headerContent+&#x27;&lt;/section&gt;&#x27;;
+                                itemContent += &#x27;&lt;section class=&quot;header&#x27;+(i+1)+&#x27;&quot;&gt;&#x27;+headerContent+&#x27;&lt;/section&gt;&#x27;;
                             }
                         }
                     }

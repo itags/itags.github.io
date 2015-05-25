@@ -62,15 +62,9 @@
     <script>
         require('itags');
         var datamodel = {
-                selectvalue: {
-                    value: 4
-                },
-                activated: {
-                    checked: true
-                },
-                name: {
-                    value: 'Harry'
-                }
+                selectvalue: 4,
+                activated: true,
+                name: 'Harry'
             };
         document.bindModel(datamodel, 'i-form');
         document.getElement('i-form').focus();
