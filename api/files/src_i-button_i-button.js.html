@@ -267,6 +267,11 @@ module.exports = function (window) {
                 }
             );
         });
+
+        Event.before(&#x27;tap&#x27;, function(e) {
+            e.preventDefaultContinue();
+        }, &#x27;i-button &gt; button&#x27;);
+
         Event.after(&#x27;tap&#x27;, function(e) {
             var element = e.target.getParent(),
                 model = element.model;
