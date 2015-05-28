@@ -14,7 +14,7 @@
 
 <body>
 
-    <i-chart is="line">
+    <i-chart is="line" y-axis-max="100">
     <!--
         <section is="title">Heigrafiek</section>
         <section is="footer">Footer</section>
@@ -24,7 +24,7 @@
         <section is="y2-axis">y2-as</section>
         [{"legenda":"serie1", "data":[[50,100],[100,120],[150,110],[200,90]]},
          {"legenda":"serie2", "data":[[0,80],[50,110],[100,75],[150,25]]},
-         {"legenda":"serie3", "data":[[20,140],[50,200],[100,180],[125,60]]}]
+         {"legenda":"serie3", "x2-axis":true, "y2-axis":true, "data":[[20,1400],[50,2000],[100,1800],[125,600]]}]
     -->
     </i-chart>
 
@@ -38,7 +38,7 @@
         <section is="y2-axis">y2-as</section>
         [{"legenda":"serie1", "data":[10,15,13,18,35,21,25]},
          {"legenda":"serie2", "data":[2,5,15,11,12,16,14,24,31]},
-         {"legenda":"serie3", "data":[18,10,16,8,5]}]
+         {"legenda":"serie3", "y2-axis":true, "data":[180,100,160,80,50]}]
     -->
     </i-chart>
 
