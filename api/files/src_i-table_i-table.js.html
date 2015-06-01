@@ -286,8 +286,9 @@ module.exports = function (window) {
             cloneItems: function() {
                 // overrule &#x60;cloneItems&#x60; --&gt; not only need they to be cloned, they might also need to be sorted
                 var element = this,
+                    model = element.model,
                     i, len, col, columns;
-                element.$superProp(&#x27;cloneItems&#x27;);
+                element.setData(&#x27;items&#x27;, model.items.deepClone());
                 // life sorting? than sort the table:
                 if (element.model.sortable &amp;&amp; (element.model.sortable.toLowerCase()===&#x27;life&#x27;)) {
                     element._sortItems();
@@ -524,9 +525,11 @@ module.exports = function (window) {
             sync: function() {
                 var element = this,
                     prevColDef = element.getData(&#x27;_columnsCopy&#x27;) || [],
+                    prevItemsDef = element.getData(&#x27;items&#x27;) || [],
                     scrollContainer, maxHeight, vRowChildNodes, vRowChildNode, len, i, vCellNodes, vCellChildNode, j, len2;
 
                 element.model.columns.sameValue(prevColDef) || element.syncCols();
+                element.model.items.sameValue(prevItemsDef) || element.cloneItems();
                 element.$superProp(&#x27;sync&#x27;);
                 if (ITSA.UA.isIE &amp;&amp; ITSA.UA.ieVersion&lt;10) {
                     // we need to calculate the height of each cell of every row and set the max-height as inline height

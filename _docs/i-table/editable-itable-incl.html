@@ -51,11 +51,11 @@
             model.items.push({id: i, price: 100*i, description: 'Desc. '+i, delivertime: 3*i+3});
         }
         itables[0].bindModel(model);
-        // itables[1].bindModel(model);
+        itables[1].bindModel(model);
         ITSA.later(function() {
             // model['start-item'] = 5;
-            model.items[5].price = 999;
-        }, 2000);
+            // model.items[5].price = 999;
+        }, 5000);
 
 
 

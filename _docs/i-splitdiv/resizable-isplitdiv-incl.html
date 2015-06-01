@@ -12,12 +12,11 @@
             left: 50px;
             border: solid 1px #000;
         }
-        i-splitdiv section {
+        i-splitdiv section[section] {
             background-color: #DDD;
             padding: 20px;
         }
         i-splitdiv section[section="second"] {
-            border-left: dotted 4px #000;
             background-color: #EEE;
         }
     </style>
@@ -26,7 +25,7 @@
 
 <body>
 
-    <i-splitdiv horizontal="true" divider="50px" resizable="true">
+    <i-splitdiv class="resize-dashed" horizontal="true" divider="50px" resizable="true">
     <!--
         <section>Content first section</section>
         <section>Content second section</section>

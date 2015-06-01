@@ -276,6 +276,19 @@
     require(&#x27;i-table&#x27;)(window);
     require(&#x27;i-chart-line&#x27;)(window);
 
+    // in case of async requests, we look for the global method: &#x60;window._ITSAscripts2&#x60;
+    // if there, then we execute it. This is used in these situations:
+    //
+    // &lt;script async src=&quot;itsabuild.js&quot;&gt;&lt;/script&gt;
+    // &lt;script async src=&quot;some_second_script.js&quot;&gt;&lt;/script&gt;
+    //
+    // when they need to be executed in order
+    // should &#x60;script2&#x60; be loaded after, then force it to execute itself:
+
+    window._ITSAexecutedScripts || (window._ITSAexecutedScripts={});
+    window._ITSAexecutedScripts.itags = true;
+    (typeof window._ITSAscriptsModel===&#x27;function&#x27;) &amp;&amp; window._ITSAscriptsModel();
+
 })(global.window || require(&#x27;node-win&#x27;));
     </pre>
 </div>

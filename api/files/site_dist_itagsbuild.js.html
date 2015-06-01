@@ -1610,11 +1610,18 @@ require(&#x27;../lib/object.js&#x27;);
         /*jshint +W083 */
                                     // this.$own = prot;
                                     // this.$origMethods = instance.$$orig[finalMethodName];
-                                    var context = this,
-                                        classCarierBkp = context.__classCarier__,
-                                        methodClassCarierBkp = context.__methodClassCarier__,
-                                        origPropBkp = context.__origProp__,
-                                        returnValue;
+                                    var context, classCarierBkp, methodClassCarierBkp, origPropBkp, returnValue;
+                                    // in some specific situations, this method is called without context.
+                                    // can&#x27;t figure out why (it happens when itable changes some of its its item-values)
+                                    // probably reasson is that itable.model.items is not the same as itable.getData(&#x27;_items&#x27;)
+                                    // anyway: to prevent errors here, we must return when there is no context:
+                                    context = this;
+                                    if (!context) {
+                                        return;
+                                    }
+                                    classCarierBkp = context.__classCarier__;
+                                    methodClassCarierBkp = context.__methodClassCarier__;
+                                    origPropBkp = context.__origProp__;
 
                                     context.__methodClassCarier__ = instance;
 
@@ -7947,7 +7954,7 @@ module.exports=require(25)
 },{}],68:[function(require,module,exports){
 module.exports=require(26)
 },{&quot;./lib/matchesselector.js&quot;:66,&quot;./lib/window.console.js&quot;:67}],69:[function(require,module,exports){
-var css = &quot;.itsa-notrans, .itsa-notrans2,\n.itsa-notrans:before, .itsa-notrans2:before,\n.itsa-notrans:after, .itsa-notrans2:after {\n    -webkit-transition: none !important;\n    -moz-transition: none !important;\n    -ms-transition: none !important;\n    -o-transition: all 0s !important; /* opera doesn&#x27;t support none */\n    transition: none !important;\n}\n\n.itsa-no-overflow {\n    overflow: hidden !important;\n}\n\n.itsa-invisible {\n    position: absolute !important;\n}\n\n.itsa-invisible-relative {\n    position: relative !important;\n}\n\n/* don&#x27;t set visibility to hidden --&gt; you cannot set a focus on those items */\n.itsa-invisible,\n.itsa-invisible *,\n.itsa-invisible-relative,\n.itsa-invisible-relative * {\n    opacity: 0 !important;\n}\n\n/* don&#x27;t set visibility to hidden --&gt; you cannot set a focus on those items */\n.itsa-invisible-unfocusable,\n.itsa-invisible-unfocusable * {\n    visibility: hidden !important;\n}\n\n.itsa-transparent {\n    opacity: 0;\n}\n\n/* don&#x27;t set visibility to hidden --&gt; you cannot set a focus on those items */\n.itsa-hidden {\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -9;\n}\n\n.itsa-hidden * {\n    opacity: 0 !important;\n}\n\n.itsa-nodisplay {\n    display: none; !important;\n}\n\n.itsa-block {\n    display: block !important;\n}\n\n.itsa-borderbox {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}&quot;; (require(&quot;/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify&quot;))(css); module.exports = css;
+var css = &quot;.itsa-notrans, .itsa-notrans2,\n.itsa-notrans:before, .itsa-notrans2:before,\n.itsa-notrans:after, .itsa-notrans2:after {\n    -webkit-transition: none !important;\n    -moz-transition: none !important;\n    -ms-transition: none !important;\n    -o-transition: all 0s !important; /* opera doesn&#x27;t support none */\n    transition: none !important;\n}\n\n.itsa-no-overflow {\n    overflow: hidden !important;\n}\n\n.itsa-invisible {\n    position: absolute !important;\n}\n\n.itsa-invisible-relative {\n    position: relative !important;\n}\n\n/* don&#x27;t set visibility to hidden --&gt; you cannot set a focus on those items */\n.itsa-invisible,\n.itsa-invisible *,\n.itsa-invisible-relative,\n.itsa-invisible-relative * {\n    opacity: 0 !important;\n}\n\n/* don&#x27;t set visibility to hidden --&gt; you cannot set a focus on those items */\n.itsa-invisible-unfocusable,\n.itsa-invisible-unfocusable * {\n    visibility: hidden !important;\n}\n\n.itsa-transparent {\n    opacity: 0;\n}\n\n/* don&#x27;t set visibility to hidden --&gt; you cannot set a focus on those items */\n.itsa-hidden {\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -9;\n}\n\n.itsa-hidden * {\n    opacity: 0 !important;\n}\n\n.itsa-nodisplay {\n    display: none !important;\n}\n\n.itsa-block {\n    display: block !important;\n}\n\n.itsa-borderbox {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}&quot;; (require(&quot;/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify&quot;))(css); module.exports = css;
 },{&quot;/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify&quot;:1}],70:[function(require,module,exports){
 module.exports=require(9)
 },{&quot;../lib/object.js&quot;:74,&quot;js-ext/extra/hashmap.js&quot;:71,&quot;polyfill/polyfill-base.js&quot;:81}],71:[function(require,module,exports){
@@ -9792,6 +9799,7 @@ module.exports = function (window) {
         BORDERBOX = ITSA_+&#x27;borderbox&#x27;,
         NO_TRANS = ITSA_+&#x27;notrans&#x27;,
         NO_TRANS2 = NO_TRANS+&#x27;2&#x27;, // needed to prevent removal of NO_TRANS when still needed &#x60;notrans&#x60;
+        ITSA_NODISPLAY = ITSA_+&#x27;nodisplay&#x27;,
         INVISIBLE = ITSA_+&#x27;invisible&#x27;,
         INVISIBLE_RELATIVE = INVISIBLE+&#x27;-relative&#x27;,
         INVISIBLE_UNFOCUSABLE = INVISIBLE+&#x27;-unfocusable&#x27;,
@@ -10721,11 +10729,12 @@ module.exports = function (window) {
             var instance = this,
                 vnode = instance.vnode,
                 prevSuppress = DOCUMENT._suppressMutationEvents || false,
-                i, len, item, createdElement, vnodes, vRefElement, _scripts, scriptcontent,
+                i, len, item, createdElement, vnodes, vRefElement, _scripts, scriptcontent, hasDisplayNode,
             doAppend = function(oneItem) {
                 escape &amp;&amp; (oneItem.nodeType===1) &amp;&amp; (oneItem=DOCUMENT.createTextNode(oneItem.getOuterHTML()));
                 createdElement = refElement ? vnode._insertBefore(oneItem.vnode, refElement.vnode) : vnode._appendChild(oneItem.vnode);
             };
+            // for optimum performance, we &quot;disply: block&quot; the parent node, so that repainting the dom only happens once (when displayed again)
             silent &amp;&amp; DOCUMENT.suppressMutationEvents &amp;&amp; DOCUMENT.suppressMutationEvents(true);
             vnode._noSync()._normalizable(false);
             if (refElement &amp;&amp; (vnode.vChildNodes.indexOf(refElement.vnode)!==-1)) {
@@ -10734,6 +10743,8 @@ module.exports = function (window) {
             }
             (typeof content===STRING) &amp;&amp; (content=htmlToVFragments(content, vnode.ns, allowScripts));
             if (content.isFragment) {
+                hasDisplayNode = instance.hasClass(ITSA_NODISPLAY);
+                hasDisplayNode || instance.setClass(ITSA_NODISPLAY);
                 vnodes = content.vnodes;
                 len = vnodes.length;
                 for (i=0; i&lt;len; i++) {
@@ -10753,18 +10764,24 @@ module.exports = function (window) {
                 }
                 // in case a style-tag was added, we need to cleanup double definitions:
                 content._cleanupStyle &amp;&amp; vnode._cleanupStyle();
+                vnode._normalizable(true)._normalize();
+                hasDisplayNode || instance.removeClass(ITSA_NODISPLAY);
             }
             else if (Array.isArray(content)) {
+                hasDisplayNode = instance.hasClass(ITSA_NODISPLAY);
+                hasDisplayNode || instance.setClass(ITSA_NODISPLAY);
                 len = content.length;
                 for (i=0; i&lt;len; i++) {
                     item = content[i];
                     doAppend(item);
                 }
+                vnode._normalizable(true)._normalize();
+                hasDisplayNode || instance.removeClass(ITSA_NODISPLAY);
             }
             else {
                 doAppend(content);
+                vnode._normalizable(true)._normalize();
             }
-            vnode._normalizable(true)._normalize();
             silent &amp;&amp; DOCUMENT.suppressMutationEvents &amp;&amp; DOCUMENT.suppressMutationEvents(prevSuppress);
             return createdElement;
         };
@@ -12017,13 +12034,14 @@ module.exports = function (window) {
             var instance = this,
                 vnode = instance.vnode,
                 prevSuppress = DOCUMENT._suppressMutationEvents || false,
-                i, len, item, createdElement, vnodes, vChildNodes, _scripts, scriptcontent,
+                i, len, item, createdElement, vnodes, vChildNodes, _scripts, scriptcontent, hasDisplayNode,
             doPrepend = function(oneItem) {
                 escape &amp;&amp; (oneItem.nodeType===1) &amp;&amp; (oneItem=DOCUMENT.createTextNode(oneItem.getOuterHTML()));
                 createdElement = refElement ? vnode._insertBefore(oneItem.vnode, refElement.vnode) : vnode._appendChild(oneItem.vnode);
                 // CAUTIOUS: when using TextNodes, they might get merged (vnode._normalize does this), which leads into disappearance of refElement:
                 refElement = createdElement;
             };
+            // for optimum performance, we &quot;disply: block&quot; the parent node, so that repainting the dom only happens once (when displayed again)
             silent &amp;&amp; DOCUMENT.suppressMutationEvents &amp;&amp; DOCUMENT.suppressMutationEvents(true);
             vnode._noSync()._normalizable(false);
             if (!refElement) {
@@ -12037,6 +12055,8 @@ module.exports = function (window) {
             }
             (typeof content===STRING) &amp;&amp; (content=htmlToVFragments(content, vnode.ns, allowScripts));
             if (content.isFragment) {
+                hasDisplayNode = instance.hasClass(ITSA_NODISPLAY);
+                hasDisplayNode || instance.setClass(ITSA_NODISPLAY);
                 vnodes = content.vnodes;
                 len = vnodes.length;
                 // to manage TextNodes which might get merged, we loop downwards:
@@ -12057,19 +12077,25 @@ module.exports = function (window) {
                 }
                 // in case a style-tag was added, we need to cleanup double definitions:
                 content._cleanupStyle &amp;&amp; vnode._cleanupStyle();
+                vnode._normalizable(true)._normalize();
+                hasDisplayNode || instance.removeClass(ITSA_NODISPLAY);
             }
             else if (Array.isArray(content)) {
+                hasDisplayNode = instance.hasClass(ITSA_NODISPLAY);
+                hasDisplayNode || instance.setClass(ITSA_NODISPLAY);
                 len = content.length;
                 // to manage TextNodes which might get merged, we loop downwards:
                 for (i=len-1; i&gt;=0; i--) {
                     item = content[i];
                     doPrepend(item);
                 }
+                vnode._normalizable(true)._normalize();
+                hasDisplayNode || instance.removeClass(ITSA_NODISPLAY);
             }
             else {
                 doPrepend(content);
+                vnode._normalizable(true)._normalize();
             }
-            vnode._normalizable(true)._normalize();
             silent &amp;&amp; DOCUMENT.suppressMutationEvents &amp;&amp; DOCUMENT.suppressMutationEvents(prevSuppress);
             return createdElement;
         };
@@ -12949,6 +12975,9 @@ module.exports = function (window) {
         ElementPrototype.setHTML = function(val, silent, allowScripts) {
             var instance = this,
                 prevSuppress = DOCUMENT._suppressMutationEvents || false;
+            // DO NOT use &quot;display: block&quot; the parent node (as with append/prepend), for itags mostly re-setHTML without changes
+            // that would lead to more delay when we want
+            // hasDisplayNode || instance.setClass(ITSA_NODISPLAY);
             silent &amp;&amp; DOCUMENT.suppressMutationEvents &amp;&amp; DOCUMENT.suppressMutationEvents(true);
             instance.vnode.setHTML(val, null, allowScripts);
             silent &amp;&amp; DOCUMENT.suppressMutationEvents &amp;&amp; DOCUMENT.suppressMutationEvents(prevSuppress);
@@ -40877,8 +40906,8 @@ module.exports = function (window) {
                     content = &#x27;&#x27;,
                     svgNode;
 
-                if (model[&#x27;x-axis&#x27;]) {
-                    content += &#x27;&lt;section is=&quot;x-axis&quot;&gt;&#x27;+model[&#x27;x-axis&#x27;]+&#x27;&lt;/section&gt;&#x27;;
+                if (model[&#x27;x2-axis&#x27;]) {
+                    content += &#x27;&lt;section is=&quot;x2-axis&quot;&gt;&#x27;+model[&#x27;x2-axis&#x27;]+&#x27;&lt;/section&gt;&#x27;;
                 }
                 content += &#x27;&lt;section is=&quot;grapharea&quot;&gt;&#x27;;
                 if (model[&#x27;y-axis&#x27;]) {
@@ -40894,8 +40923,8 @@ module.exports = function (window) {
                 }
                 content += &#x27;&lt;/section&gt;&#x27;;
 
-                if (model[&#x27;x2-axis&#x27;]) {
-                    content += &#x27;&lt;section is=&quot;x2-axis&quot;&gt;&#x27;+model[&#x27;x-axis&#x27;]+&#x27;&lt;/section&gt;&#x27;;
+                if (model[&#x27;x-axis&#x27;]) {
+                    content += &#x27;&lt;section is=&quot;x-axis&quot;&gt;&#x27;+model[&#x27;x-axis&#x27;]+&#x27;&lt;/section&gt;&#x27;;
                 }
                 return content;
             },
@@ -41054,7 +41083,9 @@ module.exports = function (window) {
                     i, point, x, y, index, indent, svgNode, svgWidth;
                 if (!serieIsArray) {
                     svgNode = element.getData(&#x27;_svgNode&#x27;);
-                    svgWidth = svgNode.offsetWidth; // cannot use node.width, for svg-elements have their own definition of &#x60;width&#x60;
+                    // cannot use node.width, for svg-elements have their own definition of &#x60;width&#x60;
+                    // also: not all browsers support the property &#x27;offsetWidth&#x27; of the svg-element
+                    svgWidth = svgNode.offsetWidth || parseInt(svgNode.getStyle(&#x27;width&#x27;), 10);
                     index = 0;
                     indent = (len&gt;1) ? (svgWidth/(len-1)) : 0;
                 }
@@ -41098,8 +41129,10 @@ module.exports = function (window) {
                     graphData = &#x27;&#x27;,
                     index = 0,
                     svgNode = element.getData(&#x27;_svgNode&#x27;),
-                    svgWidth = svgNode.offsetWidth, // cannot use node.width, for svg-elements have their own definition of &#x60;width&#x60;
-                    svgHeight = svgNode.offsetHeight, // cannot use node.height, for svg-elements have their own definition of &#x60;height&#x60;
+                    // cannot use node.width, for svg-elements have their own definition of &#x60;width&#x60;
+                    // also: not all browsers support the property &#x27;offsetWidth&#x27; of the svg-element
+                    svgWidth = svgNode.offsetWidth || parseInt(svgNode.getStyle(&#x27;width&#x27;), 10),
+                    svgHeight = svgNode.offsetHeight || parseInt(svgNode.getStyle(&#x27;height&#x27;), 10),
                     serieIsArray = (len&gt;0) &amp;&amp; Array.isArray(serieData[0]),
                     xprop = serie[&#x27;x-prop&#x27;],
                     yprop = serie[&#x27;y-prop&#x27;],
@@ -41137,6 +41170,7 @@ module.exports = function (window) {
                 for (i=0; i&lt;len; i++) {
                     point = serieData[i];
                     if (serieIsArray) {
+
                         x = scaleX*(point[0] - minx);
                         value = yprop ? point[1][yprop] : point[1];
                         y = yShift - (scaleY*value);
@@ -41165,7 +41199,7 @@ module.exports = function (window) {
 };
 
 },{&quot;./css/i-chart-line.css&quot;:5563,&quot;i-chart&quot;:5566,&quot;itags.core&quot;:5601}],5565:[function(require,module,exports){
-var css = &quot;/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a &#x60;dummy&#x60; css-rule    */\n/* for the dummy-element: &#x60;itag-css&#x60; --&gt; its property (also dummy) &#x60;i-tag&#x60; */\n/* will define which itag will be css-shadowed                             */\n/* ======================================================================= */\nitag-css {\n    i-tag: i-chart;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-chart:not(.itag-rendered) {\n    /* don&#x27;t set visibility to hidden --&gt; you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-chart:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\ni-chart {\n    margin: 0;\n    display: inline-block;\n    position: relative;\n    vertical-align: top;\n    border: 1px solid #cbcbcb;\n    min-width: 160px; /* equal to the default min-height of a canvans */\n    min-height: 160px; /* seems the default min-height of a canvans */\n    overflow: hidden;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-chart section {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-chart &gt;section {\n    display: -ms-flex;\n    display: -webkit-flex;\n    display: flex;\n    -ms-flex-direction: column;\n    -webkit-flex-direction: column;\n    flex-direction: column;\n    -ms-align-content: stretch;\n    -webkit-align-content: stretch;\n    align-content: stretch;\n    width: 100%;\n    height: 100%;\n}\n\ni-chart section[is=\&quot;title\&quot;] {\n    text-align: center;\n    padding: 0.5em;\n}\n\ni-chart section[is=\&quot;footer\&quot;] {\n    padding: 0.25em 0.5em;\n}\n\ni-chart section[is=\&quot;graph\&quot;] {\n    flex-grow: 1;\n    -ms-flex-grow: 1;\n    -webkit-flex-grow: 1;\n    /* is a flexbox by itself */\n    display: -ms-flex;\n    display: -webkit-flex;\n    display: flex;\n    -ms-flex-direction: column;\n    -webkit-flex-direction: column;\n    flex-direction: column;\n    -ms-align-content: stretch;\n    -webkit-align-content: stretch;\n    align-content: stretch;\n}\n\ni-chart svg {\n    flex-grow: 1;\n    -ms-flex-grow: 1;\n    -webkit-flex-grow: 1;\n    height: 100%;\n    border: 1px solid #cbcbcb;\n    background-color: #F0F0F0;\n}&quot;; (require(&quot;/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify&quot;))(css); module.exports = css;
+var css = &quot;/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a &#x60;dummy&#x60; css-rule    */\n/* for the dummy-element: &#x60;itag-css&#x60; --&gt; its property (also dummy) &#x60;i-tag&#x60; */\n/* will define which itag will be css-shadowed                             */\n/* ======================================================================= */\nitag-css {\n    i-tag: i-chart;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-chart:not(.itag-rendered) {\n    /* don&#x27;t set visibility to hidden --&gt; you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-chart:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\ni-chart {\n    margin: 0;\n    display: inline-block;\n    position: relative;\n    vertical-align: top;\n    border: 1px solid #cbcbcb;\n    min-width: 160px; /* equal to the default min-height of a canvans */\n    min-height: 160px; /* seems the default min-height of a canvans */\n    overflow: hidden;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-chart section {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-chart &gt;section {\n    display: -ms-flex;\n    display: -webkit-flex;\n    display: flex;\n    -ms-flex-direction: column;\n    -webkit-flex-direction: column;\n    flex-direction: column;\n    -ms-align-content: stretch;\n    -webkit-align-content: stretch;\n    align-content: stretch;\n    width: 100%;\n    height: 100%;\n}\n\ni-chart section[is=\&quot;title\&quot;] {\n    text-align: center;\n    padding: 0.5em;\n}\n\ni-chart section[is=\&quot;footer\&quot;] {\n    padding: 0.25em 0.5em;\n}\n\ni-chart section[is=\&quot;graph\&quot;] {\n    flex-grow: 1;\n    -ms-flex-grow: 1;\n    -webkit-flex-grow: 1;\n    /* is a flexbox by itself */\n    display: -ms-flex;\n    display: -webkit-flex;\n    display: flex;\n    -ms-flex-direction: column;\n    -webkit-flex-direction: column;\n    flex-direction: column;\n    -ms-align-content: stretch;\n    -webkit-align-content: stretch;\n    align-content: stretch;\n}\n\ni-chart svg {\n    flex-grow: 1;\n    -ms-flex-grow: 1;\n    -webkit-flex-grow: 1;\n    align-self: stretch;\n    -ms-align-self: stretch;\n    -webkit-align-self: stretch;\n    border: 1px solid #cbcbcb;\n    background-color: #F0F0F0;\n}&quot;; (require(&quot;/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify&quot;))(css); module.exports = css;
 },{&quot;/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify&quot;:1}],5566:[function(require,module,exports){
 module.exports = function (window) {
     &quot;use strict&quot;;
@@ -43068,8 +43102,6 @@ module.exports = function (window) {
                 });
                 // we need to clone the items-array, because the i-table instance can sort on its own:
                 element.cloneItems();
-                // also, set a object-observer on &#x60;items&#x60; --&gt; in case of changes, we need to update
-                model.items.observe(element.cloneItems);
             },
 
             contTag: &#x27;span&#x27;,
@@ -43077,7 +43109,8 @@ module.exports = function (window) {
             cloneItems: function() {
                 var element = this,
                     model = element.model;
-                element.setData(&#x27;items&#x27;, model.items.deepClone());
+                // iscroller doesn&#x27;t need to deepclone the items: it can use its reference:
+                element.setData(&#x27;items&#x27;, model.items);
             },
 
            /**
@@ -43645,7 +43678,6 @@ module.exports = function (window) {
                     model = element.model;
                 unregisterScroller(element);
                 element.getData(&#x27;_map&#x27;).clear();
-                model.items.unobserve(element.cloneItems);
             }
         });
 
@@ -44033,7 +44065,7 @@ module.exports = function (window) {
     return window.ITAGS[itagName];
 };
 },{&quot;./css/i-select.css&quot;:5589,&quot;i-formelement&quot;:5571,&quot;itags.core&quot;:5601}],5591:[function(require,module,exports){
-var css = &quot;/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a &#x60;dummy&#x60; css-rule    */\n/* for the dummy-element: &#x60;itag-css&#x60; --&gt; its property (also dummy) &#x60;i-tag&#x60; */\n/* will define which itag will be css-shadowed                             */\n/* ======================================================================= */\nitag-css {\n    i-tag: i-splitdiv;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-splitdiv:not(.itag-rendered) {\n    /* don&#x27;t set visibility to hidden --&gt; you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-splitdiv:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\ni-splitdiv {\n    margin: 0;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n\n    /* the next css comes from purecss: the class &#x60;.pure-g&#x60;: */\n    letter-spacing: -0.31em; /* Webkit: collapse white-space between units */\n    *letter-spacing: normal; /* reset IE &lt; 8 */\n    word-spacing: -0.43em; /* collapse white-space between units */\n    text-rendering: optimizespeed; /* Webkit: fixes text-rendering: optimizeLegibility */\n    /*\n    Resets the font family back to the OS/browser&#x27;s default sans-serif font,\n    this the same font stack that Normalize.css sets for the &#x60;body&#x60;.\n    */\n    font-family: sans-serif;\n    /*\n    Use flexbox when possible to avoid &#x60;letter-spacing&#x60; side-effects.\n    NOTE: Firefox (as of 25) does not currently support flex-wrap, so the\n    &#x60;-moz-&#x60; prefix version is omitted.\n    */\n    display: -webkit-flex;\n    -webkit-flex-flow: row wrap;\n    /* IE10 uses display: flexbox */\n    display: -ms-flexbox;\n    -ms-flex-flow: row wrap;\n}\n\ni-splitdiv &gt;div {\n    position: relative;\n    overflow: hidden;\n    width: 100%;\n    height: 100%;\n}\n\ni-splitdiv &gt;div &gt;div {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    letter-spacing: normal;\n    word-spacing: normal;\n    vertical-align: top;\n    text-rendering: auto;\n    width: 100%;\n    height: 100%;\n    display: block;\n    position: relative;\n    z-index: 2;\n    overflow: hidden; /* needed to make decrease to low values posible when section has padding */\n}\n\ni-splitdiv.itag-rendered:not(.i-resizing) &gt;div &gt;div:not(.suppress-trans) {\n    -moz-transition: width 0.5s, margin-left 0.5s, padding-left 0.5s, height 0.5s, margin-top 0.5s, padding-top 0.5s;\n    -o-transition: width 0.5s, margin-left 0.5s, padding-left 0.5s, height 0.5s, margin-top 0.5s, padding-top 0.5s;\n    -webkit-transition: width 0.5s, margin-left 0.5s, padding-left 0.5s, height 0.5s, margin-top 0.5s, padding-top 0.5s;\n    transition: width 0.5s, margin-left 0.5s, padding-left 0.5s, height 0.5s, margin-top 0.5s, padding-top 0.5s;\n}\n\ni-splitdiv &gt;div &gt;div.hidden-copy {\n    position: absolute !important;\n    z-index: -1 !important;\n    opacity: 0 !important;\n}\n\ni-splitdiv &gt;div &gt;div &gt;section {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    width: 100%;\n    height: 100%;\n    overflow: scroll;\n}\n\ni-splitdiv &gt;div &gt;div:last-child {\n    z-index: 1;\n}\n\ni-splitdiv[horizontal=\&quot;true\&quot;] &gt;div &gt;div {\n    display: inline-block;\n}\n\ni-splitdiv .resize-handle {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    position: absolute;\n    z-index: -1;\n    width: 100%;\n    height: 16px;\n}\n\ni-splitdiv .resize-handle[plugin-dd=\&quot;true\&quot;] {\n    z-index: 3;\n}\n\ni-splitdiv.i-resizing,\ni-splitdiv .resize-handle[plugin-dd=\&quot;true\&quot;]:hover {\n    cursor: row-resize;\n}\n\ni-splitdiv[horizontal=\&quot;true\&quot;].i-resizing,\ni-splitdiv[horizontal=\&quot;true\&quot;] .resize-handle[plugin-dd=\&quot;true\&quot;]:hover {\n    cursor: col-resize;\n}\n\ni-splitdiv[horizontal=\&quot;true\&quot;] .resize-handle {\n    width: 16px;\n    height: 100%;\n}&quot;; (require(&quot;/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify&quot;))(css); module.exports = css;
+var css = &quot;/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a &#x60;dummy&#x60; css-rule    */\n/* for the dummy-element: &#x60;itag-css&#x60; --&gt; its property (also dummy) &#x60;i-tag&#x60; */\n/* will define which itag will be css-shadowed                             */\n/* ======================================================================= */\nitag-css {\n    i-tag: i-splitdiv;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-splitdiv:not(.itag-rendered) {\n    /* don&#x27;t set visibility to hidden --&gt; you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-splitdiv:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\n/* *******************************************************************\n/* NOTE: splitdivs can be nested!\n * Therefore, we need exaclty define the childposition of the css!\n *********************************************************************/\n\ni-splitdiv {\n    margin: 0;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n\n    /* the next css comes from purecss: the class &#x60;.pure-g&#x60;: */\n    letter-spacing: -0.31em; /* Webkit: collapse white-space between units */\n    *letter-spacing: normal; /* reset IE &lt; 8 */\n    word-spacing: -0.43em; /* collapse white-space between units */\n    text-rendering: optimizespeed; /* Webkit: fixes text-rendering: optimizeLegibility */\n    /*\n    Resets the font family back to the OS/browser&#x27;s default sans-serif font,\n    this the same font stack that Normalize.css sets for the &#x60;body&#x60;.\n    */\n    font-family: sans-serif;\n    /*\n    Use flexbox when possible to avoid &#x60;letter-spacing&#x60; side-effects.\n    NOTE: Firefox (as of 25) does not currently support flex-wrap, so the\n    &#x60;-moz-&#x60; prefix version is omitted.\n    */\n    display: -webkit-flex;\n    -webkit-flex-flow: row wrap;\n    /* IE10 uses display: flexbox */\n    display: -ms-flexbox;\n    -ms-flex-flow: row wrap;\n}\n\n/* container */\ni-splitdiv &gt;div {\n    position: relative;\n    left: 0;\n    top: 0;\n    overflow: hidden;\n    width: 100%;\n    height: 100%;\n    /* is a flexbox */\n    display: -ms-flex;\n    display: -webkit-flex;\n    display: flex;\n    -ms-flex-direction: column;\n    -webkit-flex-direction: column;\n    flex-direction: column;\n    -ms-align-items: center;\n    -webkit-align-items: center;\n    align-items: center;\n    -ms-align-content: stretch;\n    -webkit-align-content: stretch;\n    align-content: stretch;\n}\n\ni-splitdiv[horizontal=\&quot;true\&quot;] &gt;div {\n    -ms-flex-direction: row;\n    -webkit-flex-direction: row;\n    flex-direction: row;\n}\n\ni-splitdiv &gt;div &gt;div[section] {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    align-self: stretch;\n    -ms-align-self: stretch;\n    -webkit-align-self: stretch;\n    display: block;\n    overflow: hidden; /* needed to make decrease to low values posible when section has padding */\n    /* is a flexbox by itself */\n    display: -ms-flex;\n    display: -webkit-flex;\n    display: flex;\n    -ms-flex-direction: column;\n    -webkit-flex-direction: column;\n    flex-direction: column;\n    -ms-align-items: center;\n    -webkit-align-items: center;\n    align-items: center;\n    -ms-align-content: stretch;\n    -webkit-align-content: stretch;\n    align-content: stretch;\n    flex-shrink: 0;\n    -ms-flex-shrink: 0;\n    -webkit-flex-shrink: 0;\n}\n\ni-splitdiv &gt;div &gt;div[section] &gt;section {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    letter-spacing: normal;\n    word-spacing: normal;\n    vertical-align: top;\n    text-rendering: auto;\n    align-self: stretch;\n    -ms-align-self: stretch;\n    -webkit-align-self: stretch;\n    flex-grow: 1;\n    -ms-flex-grow: 1;\n    -webkit-flex-grow: 1;\n    /* overflow: hidden; /* needed to make decrease to low values posible when section has padding */\n    overflow: scroll;\n}\n\ni-splitdiv.itag-rendered:not(.i-resizing) &gt;div &gt;div[section=\&quot;first\&quot;]:not(.suppress-trans) {\n    -moz-transition: width 0.5s, height 0.5s;\n    -o-transition: width 0.5s, height 0.5s;\n    -webkit-transition: width 0.5s, height 0.5s;\n    transition: width 0.5s, height 0.5s;\n}\n\ni-splitdiv &gt;div &gt;div[section=\&quot;second\&quot;] {\n    flex-grow: 1;\n    -ms-flex-grow: 1;\n    -webkit-flex-grow: 1;\n}\n\ni-splitdiv[resizable=\&quot;true\&quot;].resize-dashed &gt;div &gt;div[section=\&quot;first\&quot;] {\n    border-bottom: dashed 2px #666;\n}\n\ni-splitdiv[resizable=\&quot;true\&quot;].resize-dashed &gt;div &gt;div[section=\&quot;second\&quot;] {\n    border-top: dashed 2px #666;\n}\n\ni-splitdiv[resizable=\&quot;true\&quot;].resize-dotted &gt;div &gt;div[section=\&quot;first\&quot;] {\n    border-bottom: dotted 2px #666;\n}\n\ni-splitdiv[resizable=\&quot;true\&quot;].resize-dotted &gt;div &gt;div[section=\&quot;second\&quot;] {\n    border-top: dotted 2px #666;\n}\n\ni-splitdiv[resizable=\&quot;true\&quot;][horizontal=\&quot;true\&quot;].resize-dashed &gt;div &gt;div[section=\&quot;first\&quot;] {\n    border-right: dashed 2px #666;\n    border-bottom: none;\n}\n\ni-splitdiv[resizable=\&quot;true\&quot;][horizontal=\&quot;true\&quot;].resize-dashed &gt;div &gt;div[section=\&quot;second\&quot;] {\n    border-left: dashed 2px #666;\n    border-top: none;\n}\n\ni-splitdiv[resizable=\&quot;true\&quot;][horizontal=\&quot;true\&quot;].resize-dotted &gt;div &gt;div[section=\&quot;first\&quot;] {\n    border-right: dotted 2px #666;\n    border-bottom: none;\n}\n\ni-splitdiv[resizable=\&quot;true\&quot;][horizontal=\&quot;true\&quot;].resize-dotted &gt;div &gt;div[section=\&quot;second\&quot;] {\n    border-left: dotted 2px #666;\n    border-top: none;\n}\n\ni-splitdiv[resizable=\&quot;true\&quot;].resize-light &gt;div &gt;div[section=\&quot;first\&quot;] {\n    border-right-color: #EEE;\n    border-bottom-color: #EEE;\n}\n\ni-splitdiv[resizable=\&quot;true\&quot;].resize-light &gt;div &gt;div[section=\&quot;second\&quot;] {\n    border-left-color: #EEE;\n    border-top-color: #EEE;\n}\n\ni-splitdiv .resize-handle {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    position: absolute;\n    z-index: 999;\n    width: 100%;\n    height: 16px;\n    bottom: 8px;\n    left: 0;\n    display: none;\n}\n\ni-splitdiv[resizable=\&quot;true\&quot;] &gt;div &gt;div.resize-handle {\n    display: block;\n}\n\ni-splitdiv.i-resizing,\ni-splitdiv &gt;div &gt;div.resize-handle:hover {\n    cursor: row-resize;\n}\n\ni-splitdiv[horizontal=\&quot;true\&quot;].i-resizing,\ni-splitdiv[horizontal=\&quot;true\&quot;] &gt;div &gt;div.resize-handle:hover {\n    cursor: col-resize;\n}\n\ni-splitdiv[horizontal=\&quot;true\&quot;] &gt;div &gt;div.resize-handle {\n    width: 16px;\n    height: 100%;\n    bottom: 0;\n    right: 8;\n}&quot;; (require(&quot;/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify&quot;))(css); module.exports = css;
 },{&quot;/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify&quot;:1}],5592:[function(require,module,exports){
 module.exports = function (window) {
     &quot;use strict&quot;;
@@ -44049,56 +44081,33 @@ module.exports = function (window) {
 
     if (!window.ITAGS[itagName]) {
 
-        Event.after(&#x27;dd&#x27;, function(e) {
-            // start dragging
-            var node = e.target,
-                isplitdiv = node.inside(&#x27;i-splitdiv&#x27;),
-                dragPromise = e.dd;
-            isplitdiv.setData(&#x27;_dragging&#x27;, true);
-            isplitdiv.setClass(&#x27;i-resizing&#x27;);
-            dragPromise.finally(function() {
-                isplitdiv.removeData(&#x27;_dragging&#x27;);
-                isplitdiv.removeClass(&#x27;i-resizing&#x27;);
+        Event.after(&#x27;mousedown&#x27;, function(e) {
+            var element = e.target.inside(&#x27;i-splitdiv&#x27;),
+                section1 = element.getData(&#x27;_section1&#x27;),
+                model = element.model,
+                horizontal = model.horizontal,
+                size = horizontal ? &#x27;width&#x27; : &#x27;height&#x27;,
+                maxSize = element[size] - (parseInt(element.getStyle(&#x27;border-left-&#x27;+size), 10) || null) - (parseInt(element.getStyle(&#x27;border-right-&#x27;+size), 10) || 0),
+                startPos, initialSize, moveListener;
+            element.setClass(&#x27;i-resizing&#x27;);
+            startPos = horizontal ? e.clientX : e.clientY;
+            initialSize = section1[size];
+            moveListener = Event.after(&#x27;mousemove&#x27;, function(e2) {
+                var newPos = horizontal ? e2.clientX : e2.clientY,
+                    difference = newPos - startPos,
+                    newSize = Math.inbetween(0, initialSize + difference, maxSize);
+                model.divider = newSize+&#x27;px&#x27;;
             });
-        }, &#x27;i-splitdiv .resize-handle&#x27;);
 
-        Event.before(&#x27;dd-drag&#x27;, function(e) {
-            var node = e.target,
-                isplitdiv = node.inside(&#x27;i-splitdiv&#x27;),
-                // divider = isplitdiv.getData(&#x27;_divider&#x27;),
-                model = isplitdiv.model,
-                horizontal = model.horizontal,
-                dimension = horizontal ? &#x27;width&#x27; : &#x27;height&#x27;,
-                start = horizontal ? &#x27;left&#x27; : &#x27;top&#x27;,
-                end = horizontal ? &#x27;right&#x27; : &#x27;bottom&#x27;,
-                borderStart = parseInt(isplitdiv.getStyle(&#x27;border-&#x27;+start+&#x27;-&#x27;+dimension) || 0, 10),
-                borderEnd = parseInt(isplitdiv.getStyle(&#x27;border-&#x27;+end+&#x27;-&#x27;+dimension) || 0, 10),
-                extra = isplitdiv[start] + borderStart,
-                min = (model[&#x27;divider-min&#x27;] || 0),
-                max = (model[&#x27;divider-max&#x27;] || isplitdiv[dimension]),
-                maxSize = isplitdiv[dimension] - borderStart - borderEnd;
-            min = Math.max(0, min);
-            max = Math.min(maxSize, max);
-            min += extra;
-            max += extra;
-            if ((e[(horizontal ? &#x27;x&#x27; : &#x27;y&#x27;)+&#x27;Mouse&#x27;]&lt;min) || (e[(horizontal ? &#x27;x&#x27; : &#x27;y&#x27;)+&#x27;Mouse&#x27;]&gt;max)) {
-                e.preventDefault();
-            }
-        }, &#x27;i-splitdiv .resize-handle&#x27;);
-
-        Event.after(&#x27;dd-drag&#x27;, function(e) {
-            var node = e.target,
-                isplitdiv = node.inside(&#x27;i-splitdiv&#x27;),
-                divider = isplitdiv.getData(&#x27;_divider&#x27;),
-                model = isplitdiv.model,
-                horizontal = model.horizontal,
-                dimension = horizontal ? &#x27;width&#x27; : &#x27;height&#x27;,
-                start = horizontal ? &#x27;left&#x27; : &#x27;top&#x27;,
-                halfSplitSize = Math.round(divider[dimension]/2),
-                borderStart = parseInt(isplitdiv.getStyle(&#x27;border-&#x27;+start+&#x27;-&#x27;+dimension) || 0, 10);
-            model.divider = (divider[start]-isplitdiv[start]-borderStart+halfSplitSize) +&#x27;px&#x27;;
-
-        }, &#x27;i-splitdiv .resize-handle&#x27;);
+            Event.onceAfter(&#x27;mouseup&#x27;, function(e3) {
+                var newPos = horizontal ? e3.clientX : e3.clientY,
+                    difference = newPos - startPos,
+                    newSize = Math.inbetween(0, initialSize + difference, maxSize);
+                moveListener.detach();
+                element.removeClass(&#x27;i-resizing&#x27;);
+                model.divider = newSize+&#x27;px&#x27;;
+            });
+        }, &#x27;i-splitdiv[resizable=&quot;true&quot;] .resize-handle&#x27;);
 
         Itag = DOCUMENT.defineItag(itagName, {
             attrs: {
@@ -44116,120 +44125,55 @@ module.exports = function (window) {
                     container = element.append(&#x27;&lt;div&gt;&lt;/div&gt;&#x27;);
                 if (sections[0]) {
                     sections[0].setAttr(&#x27;section&#x27;, &#x27;first&#x27;, true);
-                    element.setData(&#x27;_section1&#x27;, container.append(&#x27;&lt;div&gt;&#x27;+sections[0].getOuterHTML(null, true)+&#x27;&lt;/div&gt;&#x27;));
-                    element.setData(&#x27;_section1HiddenCopy&#x27;, container.addSystemElement(&#x27;&lt;div class=&quot;hidden-copy suppress-trans&quot;&gt;&lt;/div&gt;&#x27;));
+                    element.setData(&#x27;_section1&#x27;, container.append(&#x27;&lt;div section=&quot;first&quot;&gt;&#x27;+sections[0].getOuterHTML(null, true)+&#x27;&lt;/div&gt;&#x27;));
+                     // add the divider:
+                    element.setData(&#x27;_divider&#x27;, container.addSystemElement(&#x27;&lt;div class=&quot;resize-handle&quot;&gt;&lt;/div&gt;&#x27;));
                 }
                 if (sections[1]) {
                     sections[1].setAttr(&#x27;section&#x27;, &#x27;second&#x27;, true);
-                    element.setData(&#x27;_section2&#x27;, container.append(&#x27;&lt;div&gt;&#x27;+sections[1].getOuterHTML(null, true)+&#x27;&lt;/div&gt;&#x27;));
+                    element.setData(&#x27;_section2&#x27;, container.append(&#x27;&lt;div section=&quot;second&quot;&gt;&#x27;+sections[1].getOuterHTML(null, true)+&#x27;&lt;/div&gt;&#x27;));
                 }
-                 // add the divider, but not silently --&gt; we need to enable the dd-plugin to render:
-                element.setData(&#x27;_divider&#x27;, container.addSystemElement(&#x27;&lt;div class=&quot;resize-handle&quot; plugin-constrain=&quot;true&quot; constrain-selector=&quot;i-splitdiv&quot;&gt;&lt;/div&gt;&#x27;, false, false));
             },
 
             sync: function() {
                 var element = this,
                     model = element.model,
                     section1 = element.getData(&#x27;_section1&#x27;),
-                    section1HiddenCopy = element.getData(&#x27;_section1HiddenCopy&#x27;),
                     section2 = element.getData(&#x27;_section2&#x27;),
                     dividerNode = element.getData(&#x27;_divider&#x27;),
                     divider = model.divider,
-                    size, indent, removeSize, removeIndent, value, isDragging, prevDivider, reversed;
+                    size, removeSize, value, indent;
                 if (section1 &amp;&amp; section2) {
-                    isDragging = element.getData(&#x27;_dragging&#x27;);
-                    prevDivider = element.getData(&#x27;_prevDivider&#x27;) || divider;
                     if (model.horizontal) {
                         size = &#x27;width&#x27;;
-                        indent = &#x27;left&#x27;;
                         removeSize = &#x27;height&#x27;;
-                        removeIndent = &#x27;top&#x27;;
+                        indent = &#x27;left&#x27;;
                     }
                     else {
                         size = &#x27;height&#x27;;
-                        indent = &#x27;top&#x27;;
                         removeSize = &#x27;width&#x27;;
-                        removeIndent = &#x27;left&#x27;;
+                        indent = &#x27;top&#x27;;
                     }
-                    dividerNode[model.resizable ? &#x27;plug&#x27; : &#x27;unplug&#x27;](&#x27;dd&#x27;);
                     value = model[&#x27;dividerNode-min&#x27;];
                     if (value) {
                         section1.setInlineStyle(&#x27;min-&#x27;+size, value);
-                        section1HiddenCopy.setInlineStyle(&#x27;min-&#x27;+size, value);
                     }
                     else {
                         section1.removeInlineStyle(&#x27;min-&#x27;+size);
-                        section1HiddenCopy.removeInlineStyle(&#x27;min-&#x27;+size);
                     }
                     value = model[&#x27;dividerNode-max&#x27;];
                     if (value) {
                         section1.setInlineStyle(&#x27;max-&#x27;+size, value);
-                        section1HiddenCopy.setInlineStyle(&#x27;max-&#x27;+size, value);
                     }
                     else {
                         section1.removeInlineStyle(&#x27;max-&#x27;+size);
-                        section1HiddenCopy.removeInlineStyle(&#x27;max-&#x27;+size);
                     }
                     section1.removeInlineStyle(&#x27;min-&#x27;+removeSize);
                     section1.removeInlineStyle(&#x27;max-&#x27;+removeSize);
                     section1.removeInlineStyle(removeSize);
-                    section1HiddenCopy.setInlineStyle(size, divider);
-                    section1HiddenCopy.removeInlineStyle(&#x27;min-&#x27;+removeSize);
-                    section1HiddenCopy.removeInlineStyle(&#x27;max-&#x27;+removeSize);
-                    section1HiddenCopy.removeInlineStyle(removeSize);
-                    // now use, the true width of section1 to set the offset of section2:
-                    // in case &#x60;dividerNode&#x60; is set in pixels, we can use it straight ahead
-                    // in all other cases we need to calculate the width --&gt; CAUTIOUS: this might be set with transition!
-                    if (!isDragging &amp;&amp; !divider.endsWith(&#x27;px&#x27;)) {
-                        // we need to go async --&gt; section1 might have itags that need rendering
-                        ITSA.async(function() {
-                            section1HiddenCopy.setHTML(section1.getHTML(null, true), true);
-                            value = section1HiddenCopy[size];
-                            reversed = (value&gt;=prevDivider);
-                            if (reversed) {
-                                section2.setInlineStyles([
-                                    {property: &#x27;margin-&#x27;+indent, value: -value+&#x27;px&#x27;},
-                                    {property: &#x27;padding-&#x27;+indent, value: value+&#x27;px&#x27;}
-                                ]);
-                            }
-                            section1.setInlineStyle(size, value+&#x27;px&#x27;, null, true).finally(function() {
-                                section1.setClass(&#x27;suppress-trans&#x27;);
-                                section1.setInlineStyle(size, divider);
-                                section1.removeClass(&#x27;suppress-trans&#x27;);
-                            });
-                            if (!reversed) {
-                                section2.setInlineStyles([
-                                    {property: &#x27;margin-&#x27;+indent, value: -value+&#x27;px&#x27;},
-                                    {property: &#x27;padding-&#x27;+indent, value: value+&#x27;px&#x27;}
-                                ]);
-                            }
-                            section2.removeInlineStyle(&#x27;margin-&#x27;+removeIndent);
-                            section2.removeInlineStyle(&#x27;padding-&#x27;+removeIndent);
-                            if (!isDragging) {
-                                dividerNode.setInlineStyle(indent, (value-(dividerNode[size]/2))+&#x27;px&#x27;);
-                                dividerNode.removeInlineStyle(removeIndent);
-                            }
-                            element.setData(&#x27;_prevDivider&#x27;, value);
-                        });
-                    }
-                    else {
-                        value = parseInt(divider, 10);
-                        // in case of expanding: first make right area smaller
-                        reversed = (value&gt;=prevDivider);
-                        reversed || section1.setInlineStyle(size, divider);
-                        section2.setInlineStyles([
-                            {property: &#x27;margin-&#x27;+indent, value: -value+&#x27;px&#x27;},
-                            {property: &#x27;padding-&#x27;+indent, value: value+&#x27;px&#x27;}
-                        ]);
-                        reversed &amp;&amp; section1.setInlineStyle(size, divider);
-                        section2.removeInlineStyle(&#x27;margin-&#x27;+removeIndent);
-                        section2.removeInlineStyle(&#x27;padding-&#x27;+removeIndent);
-                        if (!isDragging) {
-                            dividerNode.setInlineStyle(indent, (value-(dividerNode[size]/2))+&#x27;px&#x27;);
-                            dividerNode.removeInlineStyle(removeIndent);
-                        }
-                        element.setData(&#x27;_prevDivider&#x27;, value);
-                    }
+                    value = divider;
+                    section1.setInlineStyle(size, value);
+                    dividerNode.setInlineStyle(indent, (section1[size] - Math.round((dividerNode[size])/2))+&#x27;px&#x27;);
                 }
             },
 
@@ -44660,14 +44604,32 @@ module.exports = function (window) {
             rowIndex = parseInt(rowNode.getAttr(&#x27;data-index&#x27;), 10),
             itable = rowNode.inside(&#x27;i-table&#x27;),
             modelitems = itable.model.items,
-            property = tdNode.getAttr(&#x27;prop&#x27;);
-            // item = modelitems[rowIndex];
+            property = tdNode.getAttr(&#x27;prop&#x27;),
+            newValue = inputNode.getValue(),
+            validValue;
 
-// modelitems[rowIndex][property] = 999;
-// console.warn(modelitems[rowIndex][property]);
-        modelitems[rowIndex][property] = inputNode.getValue();
-
-
+        // first determine the previous &#x60;type&#x60; --&gt; we need the same type after changing!
+        switch (typeof modelitems[rowIndex][property]) {
+            case &#x27;boolean&#x27;:
+                validValue = newValue.validateBoolean();
+                newValue = (newValue===&#x27;true&#x27;);
+                break;
+            case &#x27;number&#x27;:
+                validValue = newValue.validateFloat();
+                newValue = parseFloat(newValue);
+                break;
+            case &#x27;date&#x27;:
+                validValue = newValue.validateDate();
+                newValue = newValue.toDate();
+                break;
+            case &#x27;string&#x27;:
+                validValue = true;
+                break;
+            default:
+                validValue = true;
+        }
+        // now we have &#x60;newValue&#x60; in its true type. We can set it now:
+        validValue &amp;&amp; (modelitems[rowIndex][property]=newValue);
         delete itable.model.editCell;
         itable.removeClass(&#x27;editing&#x27;);
     }, &#x27;i-table input&#x27;);
@@ -44727,8 +44689,9 @@ module.exports = function (window) {
             cloneItems: function() {
                 // overrule &#x60;cloneItems&#x60; --&gt; not only need they to be cloned, they might also need to be sorted
                 var element = this,
+                    model = element.model,
                     i, len, col, columns;
-                element.$superProp(&#x27;cloneItems&#x27;);
+                element.setData(&#x27;items&#x27;, model.items.deepClone());
                 // life sorting? than sort the table:
                 if (element.model.sortable &amp;&amp; (element.model.sortable.toLowerCase()===&#x27;life&#x27;)) {
                     element._sortItems();
@@ -44965,9 +44928,11 @@ module.exports = function (window) {
             sync: function() {
                 var element = this,
                     prevColDef = element.getData(&#x27;_columnsCopy&#x27;) || [],
+                    prevItemsDef = element.getData(&#x27;items&#x27;) || [],
                     scrollContainer, maxHeight, vRowChildNodes, vRowChildNode, len, i, vCellNodes, vCellChildNode, j, len2;
 
                 element.model.columns.sameValue(prevColDef) || element.syncCols();
+                element.model.items.sameValue(prevItemsDef) || element.cloneItems();
                 element.$superProp(&#x27;sync&#x27;);
                 if (ITSA.UA.isIE &amp;&amp; ITSA.UA.ieVersion&lt;10) {
                     // we need to calculate the height of each cell of every row and set the max-height as inline height
@@ -53468,10 +53433,23 @@ function hasOwnProperty(obj, prop) {
     require(&#x27;i-table&#x27;)(window);
     require(&#x27;i-chart-line&#x27;)(window);
 
+    // in case of async requests, we look for the global method: &#x60;window._ITSAscripts2&#x60;
+    // if there, then we execute it. This is used in these situations:
+    //
+    // &lt;script async src=&quot;itsabuild.js&quot;&gt;&lt;/script&gt;
+    // &lt;script async src=&quot;some_second_script.js&quot;&gt;&lt;/script&gt;
+    //
+    // when they need to be executed in order
+    // should &#x60;script2&#x60; be loaded after, then force it to execute itself:
+
+    window._ITSAexecutedScripts || (window._ITSAexecutedScripts={});
+    window._ITSAexecutedScripts.itags = true;
+    (typeof window._ITSAscriptsModel===&#x27;function&#x27;) &amp;&amp; window._ITSAscriptsModel();
+
 })(global.window || require(&#x27;node-win&#x27;));
 }).call(this,typeof global !== &quot;undefined&quot; ? global : typeof self !== &quot;undefined&quot; ? self : typeof window !== &quot;undefined&quot; ? window : {})
 },{&quot;./extra/dialog&quot;:5560,&quot;i-button&quot;:5562,&quot;i-chart-line&quot;:5564,&quot;i-checkbox&quot;:5568,&quot;i-form&quot;:5570,&quot;i-formvalue&quot;:5572,&quot;i-input&quot;:5574,&quot;i-label&quot;:5576,&quot;i-link&quot;:5578,&quot;i-menu&quot;:5580,&quot;i-nav&quot;:5582,&quot;i-parcel&quot;:5584,&quot;i-reset&quot;:5586,&quot;i-scroller&quot;:5588,&quot;i-select&quot;:5590,&quot;i-splitdiv&quot;:5592,&quot;i-statusbar&quot;:5594,&quot;i-table&quot;:5597,&quot;i-tabpane&quot;:5599,&quot;node-win&quot;:5548}]},{},[]);
-
+require(&#x27;itags&#x27;);
     </pre>
 </div>
 
