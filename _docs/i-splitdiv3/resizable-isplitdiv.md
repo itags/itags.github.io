@@ -1,5 +1,5 @@
 ---
-module: i-splitdiv#threedivs
+module: i-splitdiv#threesections
 maintainer: Marco Asbreuk
 title: resizable i-splitdiv
 intro: ""

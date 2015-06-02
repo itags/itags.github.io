@@ -1,5 +1,5 @@
 ---
-module: i-splitdiv#threedivs
+module: i-splitdiv#threesections
 itsaclassname:
 version: 0.0.1
 modulesize: 5.78

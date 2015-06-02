@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>Simple i-splitdiv</title>
+    <style type="text/css">
+        i-splitdiv {
+            width: 500px;
+            height: 190px;
+            position: absolute;
+            top: 50px;
+            left: 50px;
+            border: solid 1px #000;
+        }
+        i-splitdiv section[section] {
+            background-color: #DDD;
+            padding: 20px;
+        }
+        i-splitdiv section[section="second"] {
+            background-color: #EEE;
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <i-splitdiv is="secondfixed" class="resize-dashed" horizontal="true" divider="50px" resizable="true">
+    <!--
+        <section>Content first section</section>
+        <section>Content second section</section>
+    -->
+    </i-splitdiv>
+    <script src="../../dist/itagsbuild.js"></script>
+    <script>
+        require('itags');
+    </script>
+
+</body>
+
+</html>

@@ -1,5 +1,5 @@
 ---
-module: i-splitdiv#threedivs
+module: i-splitdiv#threesections
 maintainer: Marco Asbreuk
 title: changed by model
 intro: ""
