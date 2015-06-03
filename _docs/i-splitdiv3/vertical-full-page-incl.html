@@ -9,13 +9,26 @@
         }
         i-splitdiv section[section] {
             background-color: #DDD;
-            padding: 20px;
         }
         i-splitdiv section[section="second"] {
             background-color: #EEE;
         }
         i-splitdiv section[section="third"] {
             background-color: #CCC;
+        }
+        #full {
+            height: 80%;
+            overflow: hidden;
+            background-color: #F00;
+        }
+        .full-empty {
+            flex-grow: 0 !important;
+            -ms-flex-grow: 0 !important;
+            -webkit-flex-grow: 0 !important;
+            flex-shrink: 0 !important;
+            -ms-flex-shrink: 0 !important;
+            -webkit-flex-shrink: 0 !important;
+            height: 0;
         }
     </style>
 
@@ -26,7 +39,10 @@
     <i-splitdiv is="threesections" class="resize-dashed" full-page="true">
     <!--
         <section>Content first section</section>
-        <section>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br>Content second section<br></section>
+        <section>
+            <div id="full">Content second</div>
+            <div class="full-empty"></div>
+        </section>
         <section>Content third section</section>
     -->
     </i-splitdiv>
