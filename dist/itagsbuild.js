@@ -4354,7 +4354,7 @@ module.exports.async = _async;
 module.exports.later = function (callbackFn, timeout, periodic) {
 	console.log(NAME, 'later --> timeout: '+timeout+'ms | periodic: '+periodic);
 	var canceled = false;
-	if (!timeout) {
+	if (typeof timeout!=='number') {
 		return _async(callbackFn);
 	}
 	var wrapper = function() {
@@ -13635,9 +13635,7 @@ module.exports = function (window) {
             */
             height: {
                 get: function() {
-                    // also: not all browsers support the property 'offsetHeight' of the svg-element
-                    // therefore the backup to getStyle('height');
-                    return this.offsetHeight || parseInt(this.getStyle('height'), 10) || 0;
+                    return this.offsetHeight;
                 },
                 set: function(val) {
                     var instance = this,
@@ -13658,7 +13656,7 @@ module.exports = function (window) {
             *
             * Values are numbers without unity.
             *
-            * @property innerWidth
+            * @property innerHeight
             * @type {Number}
             * @since 0.0.1
             */
@@ -13765,9 +13763,7 @@ module.exports = function (window) {
             */
             width: {
                 get: function() {
-                    // also: not all browsers support the property 'offsetWidth' of the svg-element
-                    // therefore the backup to getStyle('width');
-                    return this.offsetWidth || parseInt(this.getStyle('width'), 10) || 0;
+                    return this.offsetWidth;
                 },
                 set: function(val) {
                     var instance = this,
@@ -13783,6 +13779,123 @@ module.exports = function (window) {
         });
 
     }(window.Element.prototype));
+
+
+    // Modify SVGElement:
+    (function(SVGlementPrototype) {
+
+        Object.defineProperties(SVGlementPrototype, {
+
+           /**
+            * Gets or set the height of the element in pixels. Included are padding and border, not any margins.
+            *
+            * The getter is calculating through `offsetHeight`, the setter will set inline css-style for the height.
+            *
+            * Values are numbers without unity.
+            *
+            * @property svgHeight
+            * @for SVGElement
+            * @type {Number}
+            * @since 0.0.1
+            */
+            svgHeight: {
+                get: function() {
+                    return parseInt(this.getStyle('height'), 10) || 0;
+                },
+                set: function(val) {
+                    var instance = this,
+                        dif;
+                    instance.setClass(INVISIBLE);
+                    instance.setInlineStyle(HEIGHT, val + PX);
+                    dif = (instance.svgHeight-val);
+                    (dif!==0) && (instance.setInlineStyle(HEIGHT, (val - dif) + PX));
+                    instance.removeClass(INVISIBLE);
+                }
+            },
+
+           /**
+            * Gets or set the innerHeight of the element in pixels. Excluded the borders.
+            * Included are padding.
+            *
+            * The getter is calculating through `offsetHeight`, the setter will set inline css-style for the height.
+            *
+            * Values are numbers without unity.
+            *
+            * @property innerHeight
+            * @type {Number}
+            * @since 0.0.1
+            */
+            innerHeight: {
+                get: function() {
+                    var instance = this,
+                        borderTop = parseInt(instance.getStyle('border-top-width'), 10) || 0,
+                        borderBottom = parseInt(instance.getStyle('border-bottom-width'), 10) || 0;
+                    return instance.svgHeight - borderTop - borderBottom;
+                },
+                set: function(val) {
+                    var instance = this,
+                        borderTop = parseInt(instance.getStyle('border-top-width'), 10) || 0,
+                        borderBottom = parseInt(instance.getStyle('border-bottom-width'), 10) || 0;
+                    instance.svgHeight = val + borderTop + borderBottom;
+                }
+            },
+
+           /**
+            * Gets or set the innerHeight of the element in pixels. Excluded the borders.
+            * Included are padding.
+            *
+            * The getter is calculating through `offsetHeight`, the setter will set inline css-style for the height.
+            *
+            * Values are numbers without unity.
+            *
+            * @property innerWidth
+            * @type {Number}
+            * @since 0.0.1
+            */
+            innerWidth: {
+                get: function() {
+                    var instance = this,
+                        borderLeft = parseInt(instance.getStyle('border-left-width'), 10) || 0,
+                        borderRight = parseInt(instance.getStyle('border-right-width'), 10) || 0;
+                    return instance.svgWidth - borderLeft - borderRight;
+                },
+                set: function(val) {
+                    var instance = this,
+                        borderLeft = parseInt(instance.getStyle('border-left-width'), 10) || 0,
+                        borderRight = parseInt(instance.getStyle('border-right-width'), 10) || 0;
+                    instance.svgWidth = val + borderLeft + borderRight;
+                }
+            },
+
+           /**
+            * Gets or set the width of the element in pixels. Included are padding and border, not any margins.
+            *
+            * The getter is calculating through `offsetHeight`, the setter will set inline css-style for the width.
+            *
+            * Values are numbers without unity.
+            *
+            * @property svgWidth
+            * @type {Number}
+            * @since 0.0.1
+            */
+            svgWidth: {
+                get: function() {
+                    return parseInt(this.getStyle('width'), 10) || 0;
+                },
+                set: function(val) {
+                    var instance = this,
+                        dif;
+                    instance.setClass(INVISIBLE);
+                    instance.setInlineStyle(WIDTH, val + PX);
+                    dif = (instance.svgWidth-val);
+                    (dif!==0) && (instance.setInlineStyle(WIDTH, (val - dif) + PX));
+                    instance.removeClass(INVISIBLE);
+                }
+            }
+
+        });
+
+    }(window.SVGElement.prototype));
 
     setupObserver = function() {
         // configuration of the observer:
@@ -40676,7 +40789,7 @@ module.exports = function (window) {
 };
 
 },{"./css/i-button.css":5561,"i-formelement":5571,"itags.core":5605}],5563:[function(require,module,exports){
-var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` */\n/* will define which itag will be css-shadowed                             */\n/* ======================================================================= */\nitag-css {\n    i-tag: i-chart-line;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n/* ================================= */\n\n\ni-chart section[is=\"x-axis\"],\ni-chart section[is=\"x2-axis\"],\ni-chart section[is=\"y-axis\"],\ni-chart section[is=\"y2-axis\"] {\n    text-align: center;\n    padding: 0.1em;\n    font-size: 0.8em;\n}\n\ni-chart section[is=\"y-axis\"],\ni-chart section[is=\"y2-axis\"] {\n    -ms-transform: rotate(90deg);\n    -webkit-transform: rotate(90deg);\n    transform: rotate(90deg);\n    height: 1em;\n}\n\ni-chart section[is=\"grapharea\"] {\n    flex-grow: 1;\n    -ms-flex-grow: 1;\n    -webkit-flex-grow: 1;\n    /* is a flexbox by itself */\n    display: -ms-flex;\n    display: -webkit-flex;\n    display: flex;\n    -ms-flex-direction: row;\n    -webkit-flex-direction: row;\n    flex-direction: row;\n    -ms-align-items: center;\n    -webkit-align-items: center;\n    align-items: center;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` */\n/* will define which itag will be css-shadowed                             */\n/* ======================================================================= */\nitag-css {\n    i-tag: i-chart-line;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n/* ================================= */\n\n\ni-chart section[is=\"x-axis\"],\ni-chart section[is=\"x2-axis\"],\ni-chart section[is=\"y-axis\"],\ni-chart section[is=\"y2-axis\"] {\n    text-align: center;\n    padding: 0.1em;\n    font-size: 0.8em;\n    white-space: nowrap;\n}\n\ni-chart section[is=\"y-axis\"],\ni-chart section[is=\"y2-axis\"] {\n    -ms-transform: rotate(90deg);\n    -webkit-transform: rotate(90deg);\n    transform: rotate(90deg);\n    height: 1em;\n}\n\ni-chart section[is=\"chartarea\"] {\n    flex-grow: 1;\n    -ms-flex-grow: 1;\n    -webkit-flex-grow: 1;\n    /* is a flexbox by itself */\n    display: -ms-flex;\n    display: -webkit-flex;\n    display: flex;\n    -ms-flex-direction: row;\n    -webkit-flex-direction: row;\n    flex-direction: row;\n    -ms-align-items: center;\n    -webkit-align-items: center;\n    align-items: center;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
 },{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],5564:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
@@ -40716,6 +40829,38 @@ module.exports = function (window) {
             init: function() {
             },
 
+            fitSizes: function() {
+                var element = this,
+                    svgNode = element.getSVGNode(),
+                    width, height, sectionNode, parentNode;
+                if (svgNode) {
+                    // because svgNode.svgHeight returns falsy falues in some browsers (flexbox-issue), we need to calculate:
+                    height = element.innerHeight;
+                    width = element.innerWidth;
+                    // decrease height:
+                    sectionNode = element.getElement('section[is="title"]');
+                    sectionNode && (height-=sectionNode.height);
+                    sectionNode = element.getElement('section[is="footer"]');
+                    sectionNode && (height-=sectionNode.height);
+                    parentNode = svgNode.inside('section[is="chart"]');
+                    sectionNode = parentNode.getElement('section[is="x-axis"]');
+                    sectionNode && (height-=sectionNode.height);
+                    sectionNode = parentNode.getElement('section[is="x2-axis"]');
+                    sectionNode && (height-=sectionNode.height);
+                    // decrease width:
+                    parentNode = svgNode.inside('section[is="chartarea"]');
+                    sectionNode = parentNode.getElement('section[is="y-axis"]');
+                    sectionNode && (width-=sectionNode.height); // NOT width: node is rotated!
+                    sectionNode = parentNode.getElement('section[is="y2-axis"]');
+                    sectionNode && (width-=sectionNode.height); // NOT width: node is rotated!
+                    // now we specificly set the height on the svg-node:
+                    svgNode.setInlineStyles([
+                        {property: 'width', value: width+'px'},
+                        {property: 'height', value: height+'px'}
+                    ]);
+                }
+            },
+
             renderGraph: function() {
                 var element = this,
                     model = element.model,
@@ -40725,15 +40870,20 @@ module.exports = function (window) {
                 if (model['x2-axis']) {
                     content += '<section is="x2-axis">'+model['x2-axis']+'</section>';
                 }
-                content += '<section is="grapharea">';
+                content += '<section is="chartarea">';
                 if (model['y-axis']) {
                     content += '<section is="y-axis">'+model['y-axis']+'</section>';
                 }
                 // at this stage, we must retain the current content of the svg-element
                 // it will be updated by `createSeries`, but we need to pass through the current values, to prevent
                 // the vdom from clearing and resetting, which basicly would mean no diffing-advangage
-                svgNode = element.getData('_svgNode');
-                content += svgNode ? svgNode.getOuterHTML() : '<svg></svg>';
+                svgNode = element.getSVGNode();
+                if (svgNode) {
+                    content += svgNode.getOuterHTML();
+                }
+                else {
+                    content += '<svg></svg>';
+                }
                 if (model['y2-axis']) {
                     content += '<section is="y2-axis">'+model['y2-axis']+'</section>';
                 }
@@ -40770,12 +40920,7 @@ module.exports = function (window) {
                     len = series.length,
                     graphs = '',
                     markerDefs = '',
-                    i, serie, legend, svgNode, boundaries, useX2, useY2, serieBoundaries, extra, legendString;
-
-                if (!element.hasData('_svgNode')) {
-                    element.setData('_svgNode', element.getElement('svg'));
-                }
-                svgNode = element.getData('_svgNode');
+                    i, serie, legend, boundaries, useX2, useY2, serieBoundaries, extra, legendString;
 
                 var markerSize = 3;
                 var refCorrection = markerSize/2;
@@ -40783,7 +40928,7 @@ module.exports = function (window) {
                 // therefore, IE gets all markers as separate rectancles...
                 if (model.markers) {
                     markerDefs = '<defs>'+
-                                     '<marker id="i-graph_marker-1" markerWidth="'+markerSize+'" markerHeight="'+markerSize+'" refX="'+refCorrection+'" refY="'+refCorrection+'" markerUnits="strokeWidth">'+
+                                     '<marker id="i-chart_marker-1" markerWidth="'+markerSize+'" markerHeight="'+markerSize+'" refX="'+refCorrection+'" refY="'+refCorrection+'" markerUnits="strokeWidth">'+
                                          '<rect x="0" y="0" width="'+markerSize+'" height="'+markerSize+'" style="fill:#F00" />'+
                                      '</marker>'+
                                  '</defs>';
@@ -40879,10 +41024,10 @@ module.exports = function (window) {
                     serie = series[i];
                     legend = serie.legend;
                     legendString = legend ? ' i-serie="'+legend+'"' : '';
-                    graphs += '<polyline'+legendString+' points="'+element.generateSerieData(serie, boundaries)+'" fill="none" stroke="#000" stroke-width="3" marker-end="url(#i-graph_marker-1)" marker-start="url(#i-graph_marker-1)" marker-mid="url(#i-graph_marker-1)" />';
+                    graphs += '<polyline'+legendString+' points="'+element.generateSerieData(serie, boundaries)+'" fill="none" stroke="#000" stroke-width="10" marker-end="url(#i-chart_marker-1)" marker-start="url(#i-chart_marker-1)" marker-mid="url(#i-chart_marker-1)" />';
                 }
 
-                svgNode.setHTML(markerDefs+graphs);
+                element.getSVGNode().setHTML(markerDefs+graphs);
             },
 
             getSeriesBoundaries: function(serie) {
@@ -40896,14 +41041,10 @@ module.exports = function (window) {
                     serieIsArray = (len>0) && Array.isArray(data[0]),
                     xprop = serie['x-prop'],
                     yprop = serie['y-prop'],
-                    i, point, x, y, index, indent, svgNode, svgWidth;
+                    i, point, x, y, index, indent;
                 if (!serieIsArray) {
-                    svgNode = element.getData('_svgNode');
-                    // cannot use node.width, for svg-elements have their own definition of `width`
-                    // also: not all browsers support the property 'offsetWidth' of the svg-element
-                    svgWidth = svgNode.width;
                     index = 0;
-                    indent = (len>1) ? (svgWidth/(len-1)) : 0;
+                    indent = (len>1) ? (element.getViewBoxWidth()/(len-1)) : 0;
                 }
                 for (i=0; i<len; i++) {
                     point = data[i];
@@ -40944,14 +41085,10 @@ module.exports = function (window) {
                     len = serieData.length,
                     graphData = '',
                     index = 0,
-                    svgNode = element.getData('_svgNode'),
-                    // cannot use node.width, for svg-elements have their own definition of `width`
-                    // also: not all browsers support the property 'offsetWidth' of the svg-element
-                    svgWidth = svgNode.width,
-                    svgHeight = svgNode.height,
                     serieIsArray = (len>0) && Array.isArray(serieData[0]),
                     xprop = serie['x-prop'],
                     yprop = serie['y-prop'],
+                    svgWidth = element.getViewBoxWidth(),
                     indent, i, point, x, y, yShift,
                     minx, maxx, miny, maxy, scaleX, scaleY, value;
                 if (len===0) {
@@ -40981,12 +41118,11 @@ module.exports = function (window) {
                     // now we calculate a scalecorrection because of the size of the svg-canvas:
                     scaleX = svgWidth/(maxx-minx);
                 }
-                scaleY = svgHeight/(maxy-miny);
+                scaleY = element.getViewBoxHeight()/(maxy-miny);
                 yShift = scaleY*(maxy-miny);
                 for (i=0; i<len; i++) {
                     point = serieData[i];
                     if (serieIsArray) {
-
                         x = scaleX*(point[0] - minx);
                         value = yprop ? point[1][yprop] : point[1];
                         y = yShift - (scaleY*value);
@@ -41015,7 +41151,7 @@ module.exports = function (window) {
 };
 
 },{"./css/i-chart-line.css":5563,"i-chart":5566,"itags.core":5605}],5565:[function(require,module,exports){
-var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` */\n/* will define which itag will be css-shadowed                             */\n/* ======================================================================= */\nitag-css {\n    i-tag: i-chart;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-chart:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-chart:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\ni-chart {\n    background-color: #FFF;\n    margin: 0;\n    display: inline-block;\n    position: relative;\n    vertical-align: top;\n    border: 1px solid #cbcbcb;\n    min-width: 160px; /* equal to the default min-height of a canvans */\n    min-height: 160px; /* seems the default min-height of a canvans */\n    overflow: hidden;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-chart section {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-chart >section {\n    display: -ms-flex;\n    display: -webkit-flex;\n    display: flex;\n    -ms-flex-direction: column;\n    -webkit-flex-direction: column;\n    flex-direction: column;\n    -ms-align-content: stretch;\n    -webkit-align-content: stretch;\n    align-content: stretch;\n    width: 100%;\n    height: 100%;\n}\n\ni-chart section[is=\"title\"] {\n    text-align: center;\n    padding: 0.5em;\n}\n\ni-chart section[is=\"footer\"] {\n    padding: 0.25em 0.5em;\n}\n\ni-chart section[is=\"graph\"] {\n    flex-grow: 1;\n    -ms-flex-grow: 1;\n    -webkit-flex-grow: 1;\n    /* is a flexbox by itself */\n    display: -ms-flex;\n    display: -webkit-flex;\n    display: flex;\n    -ms-flex-direction: column;\n    -webkit-flex-direction: column;\n    flex-direction: column;\n    -ms-align-content: stretch;\n    -webkit-align-content: stretch;\n    align-content: stretch;\n}\n\ni-chart svg {\n    flex-grow: 1;\n    -ms-flex-grow: 1;\n    -webkit-flex-grow: 1;\n    align-self: stretch;\n    -ms-align-self: stretch;\n    -webkit-align-self: stretch;\n    border: 1px solid #cbcbcb;\n    background-color: #F0F0F0;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
+var css = "/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a `dummy` css-rule    */\n/* for the dummy-element: `itag-css` --> its property (also dummy) `i-tag` */\n/* will define which itag will be css-shadowed                             */\n/* ======================================================================= */\nitag-css {\n    i-tag: i-chart;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-chart:not(.itag-rendered) {\n    /* don't set visibility to hidden --> you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-chart:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\ni-chart {\n    background-color: #FFF;\n    margin: 0;\n    display: inline-block;\n    position: relative;\n    vertical-align: top;\n    border: 1px solid #cbcbcb;\n    min-width: 160px; /* equal to the default min-height of a canvans */\n    min-height: 160px; /* seems the default min-height of a canvans */\n    overflow: hidden;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-chart section {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-chart >section {\n    display: -ms-flex;\n    display: -webkit-flex;\n    display: flex;\n    -ms-flex-direction: column;\n    -webkit-flex-direction: column;\n    flex-direction: column;\n    -ms-align-content: stretch;\n    -webkit-align-content: stretch;\n    align-content: stretch;\n    width: 100%;\n    height: 100%;\n}\n\ni-chart section[is=\"title\"] {\n    text-align: center;\n    padding: 0.5em;\n}\n\ni-chart section[is=\"footer\"] {\n    padding: 0.25em 0.5em;\n}\n\ni-chart section[is=\"chart\"] {\n    flex-grow: 1;\n    -ms-flex-grow: 1;\n    -webkit-flex-grow: 1;\n    /* is a flexbox by itself */\n    display: -ms-flex;\n    display: -webkit-flex;\n    display: flex;\n    -ms-flex-direction: column;\n    -webkit-flex-direction: column;\n    flex-direction: column;\n    -ms-align-content: stretch;\n    -webkit-align-content: stretch;\n    align-content: stretch;\n}\n\ni-chart svg {\n    border: 1px solid #cbcbcb;\n    background-color: #F0F0F0;\n}"; (require("/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify"))(css); module.exports = css;
 },{"/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify":1}],5566:[function(require,module,exports){
 module.exports = function (window) {
     "use strict";
@@ -41026,9 +41162,31 @@ module.exports = function (window) {
         itagName = 'i-chart', // <-- define your own itag-name here
         DOCUMENT = window.document,
         ITSA = window.ITSA,
-        Itag;
+        AUTO_EXPAND_DELAY = 200,
+        SVG_WIDTH = 5120, // 5*1024
+        SVG_HEIGHT = 5120, // 5*1024
+        charts = [],
+        Itag, autoExpandCharts, registerChart, unregisterChart;
 
     if (!window.ITAGS[itagName]) {
+
+        registerChart = function(iscroller) {
+            charts.push(iscroller);
+        };
+
+        unregisterChart = function(iscroller) {
+            charts.remove(iscroller);
+        };
+
+        autoExpandCharts = function() {
+            ITSA.later(function() {
+                var len = charts.length,
+                    i;
+                for (i=0; i<len; i++) {
+                    charts[i].fitSizes();
+                }
+            }, AUTO_EXPAND_DELAY, true);
+        };
 
         Itag = DOCUMENT.defineItag(itagName, {
             attrs: {
@@ -41069,6 +41227,9 @@ module.exports = function (window) {
                     var is = sectionNode.getAttr('is');
                     is && element.defineWhenUndefined(is, sectionNode.getHTML()); // sets element.model.someprop = somevalue; when not defined yet
                 });
+                element.itagReady().then(function() {
+                    registerChart(element);
+                });
             },
 
             render: function() {
@@ -41084,11 +41245,16 @@ module.exports = function (window) {
                 if (model.title) {
                     content += '<section is="title">'+model.title+'</section>';
                 }
-                content += '<section is="graph">'+element.renderGraph()+'</section>';
+                content += '<section is="chart">'+element.renderGraph()+'</section>';
                 if (model.footer) {
                     content += '<section is="footer">'+model.footer+'</section>';
                 }
                 container.setHTML(content);
+                if (!element.hasData('_firstSync')) {
+                    element.setData('_firstSync', true);
+                    element.setViewBox();
+                    element.fitSizes();
+                }
                 element.createSeries();
             },
 
@@ -41099,10 +41265,69 @@ module.exports = function (window) {
             createSeries: function() {
                 // needs to be done AFTER the dom has the svg-area, because some types need to calculate its sizes
                 // in oder to be able to set the series at the right position
+            },
+
+            getViewBoxWidth: function() {
+                return SVG_WIDTH;
+            },
+
+            getViewBoxHeight: function() {
+                return SVG_HEIGHT;
+            },
+
+            getSVGHeight: function() {
+                var element = this,
+                    svgNode = element.getSVGNode();
+                return svgNode ? svgNode.svgHeight : 0;
+            },
+
+            getSVGNode: function () {
+                var element = this,
+                    svgNode;
+                if (!element.hasData('_svgNode')) {
+                    svgNode = element.getElement('svg');
+                    svgNode && (element.setData('_svgNode', svgNode));
+                }
+                return element.getData('_svgNode');
+            },
+
+            setViewBox: function() {
+                var element = this,
+                    svgNode = element.getSVGNode();
+                if (svgNode) {
+                    svgNode.setAttr('viewBox', '0 0 '+element.getViewBoxWidth()+' '+element.getViewBoxHeight());
+                    svgNode.setAttr('preserveAspectRatio', 'none');
+                }
+            },
+
+            fitSizes: function() {
+                var element = this,
+                    svgNode = element.getSVGNode(),
+                    width, height, sectionNode, parentNode;
+                if (svgNode) {
+                    // because svgNode.svgHeight returns falsy falues in some browsers (flexbox-issue), we need to calculate:
+                    height = element.innerHeight;
+                    width =  element.innerWidth;
+                    sectionNode = element.getElement('section[is="title"]');
+                    sectionNode && (height-=sectionNode.height);
+                    sectionNode = element.getElement('section[is="footer"]');
+                    sectionNode && (height-=sectionNode.height);
+                    // now we specificly set the height on the svg-node:
+                    svgNode.setInlineStyles([
+                        {property: 'width', value: width+'px'},
+                        {property: 'height', value: height+'px'}
+                    ]);
+                }
+            },
+
+            destroy: function() {
+                var element = this;
+                unregisterChart(element);
             }
 
         });
 
+        autoExpandCharts();
         window.ITAGS[itagName] = Itag;
     }
 
@@ -42442,6 +42667,7 @@ module.exports = function (window) {
             }
         });
         itagCore.setContentVisibility(Itag, true);
+        itagCore.setLazyBinding(Itag, true);
         window.ITAGS[itagName] = Itag;
     }
 
@@ -42886,7 +43112,8 @@ module.exports = function (window) {
                        .defineWhenUndefined('item-size', itemsize)
                        .defineWhenUndefined('start-item', startItem)
                         // set the reset-value to the inital-value in case `reset-value` was not present
-                       .defineWhenUndefined('reset-value', value);
+                       .defineWhenUndefined('reset-value', value)
+                       .defineWhenUndefined('items', []);
 
                 // store headernodes when defined:
                 if (headerNodes && !element.headers) {
@@ -44666,6 +44893,7 @@ module.exports = function (window) {
                 catch(err) {
                     model.columns = [];
                 }
+                element.uniqueId = ITSA.idGenerator('i-table');
             },
 
             attrs: {
@@ -44686,7 +44914,9 @@ module.exports = function (window) {
                     model = element.model,
                     i, len, col, columns;
                 element.setData('items', model.items.deepClone());
-                // life sorting? than sort the table:
+                // second time: for sync comparision: might be different from `items`, because `items` can be sorted
+                element.setData('_itemsCopy', model.items.deepClone()); // second time: for sync comparision
+                // life sorting? then sort the table:
                 if (element.model.sortable && (element.model.sortable.toLowerCase()==='life')) {
                     element._sortItems();
                 }
@@ -44819,6 +45049,7 @@ module.exports = function (window) {
                 // set element css:
                 element.addSystemElement(css, false, true);
                 element.$superProp('render');
+                element.setAttr('i-id', element.uniqueId);
                 // fixedheadernode is only available after render of iscroller:
                 fixedHeaderNode = element.getData('_fixedHeaderNode');
                 fixedHeaderNode.setAttr('is', 'thead')
@@ -44841,7 +45072,6 @@ module.exports = function (window) {
                     cssNode = element.getElement('>style', true),
                     unspecified = [],
                     i, col, width, remaining, index;
-
                 for (i=0; i<len; i++) {
                     col = columns[i];
                     if (typeof col==='string') {
@@ -44862,10 +45092,10 @@ module.exports = function (window) {
                             }
                         }
                         occupied += width;
-                        css += 'i-table section.i-table-row >section:nth-child('+(i+1)+'), '+
-                               'i-table section.i-table-row >section:nth-child('+(i+1)+') section[is="td"], '+
-                               'i-table >section[is="thead"] >span:nth-child('+(i+1)+'), '+
-                               'i-table >section[is="thead"] >span:nth-child('+(i+1)+') span[is="th"] '+
+                        css += 'i-table[i-id="'+element.uniqueId+'"] section.i-table-row >section:nth-child('+(i+1)+'), '+
+                               'i-table[i-id="'+element.uniqueId+'"] section.i-table-row >section:nth-child('+(i+1)+') section[is="td"], '+
+                               'i-table[i-id="'+element.uniqueId+'"] >section[is="thead"] >span:nth-child('+(i+1)+'), '+
+                               'i-table[i-id="'+element.uniqueId+'"] >section[is="thead"] >span:nth-child('+(i+1)+') span[is="th"] '+
                                '{width: '+width+'px;'+((width===0) ? 'height:0;' : '')+'}';
                     }
                     else {
@@ -44886,10 +45116,10 @@ module.exports = function (window) {
                     remaining = Math.max(0, availableWidth - occupied)/len;
                     for (i=0; i<len; i++) {
                         index = unspecified[i];
-                        css += 'i-table section.i-table-row >section:nth-child('+(index+1)+'), '+
-                               'i-table section.i-table-row >section:nth-child('+(index+1)+') section[is="td"], '+
-                               'i-table >section[is="thead"] >span:nth-child('+(index+1)+'), '+
-                               'i-table >section[is="thead"] >span:nth-child('+(index+1)+') span[is="th"] '+
+                        css += 'i-table[i-id="'+element.uniqueId+'"] section.i-table-row >section:nth-child('+(index+1)+'), '+
+                               'i-table[i-id="'+element.uniqueId+'"] section.i-table-row >section:nth-child('+(index+1)+') section[is="td"], '+
+                               'i-table[i-id="'+element.uniqueId+'"] >section[is="thead"] >span:nth-child('+(index+1)+'), '+
+                               'i-table[i-id="'+element.uniqueId+'"] >section[is="thead"] >span:nth-child('+(index+1)+') span[is="th"] '+
                                '{width: '+remaining+'px;'+((remaining<0.5) ? 'height:0;' : '')+'}';
                         occupied += remaining;
                     }
@@ -44902,14 +45132,14 @@ module.exports = function (window) {
                     width += (availableWidth - occupied);
                     occupied = availableWidth; // needed for setting container width later on
                     len = columns.length; // redefine for it was changed
-                    css += 'i-table section.i-table-row >section:nth-child('+len+'), '+
-                           'i-table section.i-table-row >section:nth-child('+len+') section[is="td"], '+
-                           'i-table >section[is="thead"] >span:nth-child('+len+'), '+
-                           'i-table >section[is="thead"] >span:nth-child('+len+') span[is="th"] '+
+                    css += 'i-table[i-id="'+element.uniqueId+'"] section.i-table-row >section:nth-child('+len+'), '+
+                           'i-table[i-id="'+element.uniqueId+'"] section.i-table-row >section:nth-child('+len+') section[is="td"], '+
+                           'i-table[i-id="'+element.uniqueId+'"] >section[is="thead"] >span:nth-child('+len+'), '+
+                           'i-table[i-id="'+element.uniqueId+'"] >section[is="thead"] >span:nth-child('+len+') span[is="th"] '+
                            '{width: '+width+'px;'+((width===0) ? 'height:0;' : '')+'}';
 
                 }
-                css += 'i-table >section[is="thead"], i-table >span {width:'+occupied+'px}';
+                css += 'i-table[i-id="'+element.uniqueId+'"] >section[is="thead"], i-table[i-id="'+element.uniqueId+'"] >span {width:'+occupied+'px}';
                 cssNode.setText(css);
                 // no node.templateHeaders, but predefined:
                 fixedHeaderNode.setHTML(headerContent);
@@ -44922,11 +45152,15 @@ module.exports = function (window) {
             sync: function() {
                 var element = this,
                     prevColDef = element.getData('_columnsCopy') || [],
-                    prevItemsDef = element.getData('items') || [],
+                    prevItemsDef = element.getData('_itemsCopy') || [],
                     scrollContainer, maxHeight, vRowChildNodes, vRowChildNode, len, i, vCellNodes, vCellChildNode, j, len2;
 
                 element.model.columns.sameValue(prevColDef) || element.syncCols();
+
+
                 element.model.items.sameValue(prevItemsDef) || element.cloneItems();
+
+
                 element.$superProp('sync');
                 if (ITSA.UA.isIE && ITSA.UA.ieVersion<10) {
                     // we need to calculate the height of each cell of every row and set the max-height as inline height
@@ -46255,7 +46489,7 @@ module.exports = function (window) {
             // sync, but do this after the element is created:
             // in the next eventcycle:
             async(function(){
-                var needsToBind = domElement.lazyBind || (domElement.getAttr('lazybind')==='true');
+                var needsToBind = (domElement.lazyBind  && (domElement.getAttr('lazybind')!=='false')) || (domElement.getAttr('lazybind')==='true');
                 // only if no modelbinding is needed, we can directly init, sync and make ready,
                 // otherwise we need to make this done by  `bindModel`
                 BINDING_LIST.some(function(value, selector) {

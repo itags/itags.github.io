@@ -11,20 +11,21 @@ includeexample: 20em
 
 ```html
 <body>
-    <i-tabpane>
-        <i-item>Content first page</i-item>
-        <i-item>Content second page</i-item>
-        <i-item><i-head>item3 header</i-head>page 3</i-item>
-        <i-item>Content fourth page</i-item>
-        <i-item>Content fifth page</i-item>
-    </i-tabpane>
+    <i-statusbar events="*:message"></i-statusbar>
 </body>
 ```
 
 ```js
 <script src="itagsbuild-min.js"></script>
 <script>
-    require('itags');
-    document.getElement('i-select').focus();
+    ITSA.later(function() {
+        ITSA.alert('I am the first alert');
+        ITSA.alert('I a second first alert');
+    }, 2000);
+
+    ITSA.later(function() {
+        ITSA.warn('i am a warning');
+    }, 3000);
+
 </script>
 ```

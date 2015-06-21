@@ -11,7 +11,7 @@ includeexample: 20em
 
 ```html
 <body>
-    <i-parcel>
+    <i-parcel lazybind="false">
     <!--
         I am <b>just</b> plain text.
     -->
@@ -21,7 +21,4 @@ includeexample: 20em
 
 ```js
 <script src="itagsbuild-min.js"></script>
-<script>
-    require('itags');
-</script>
 ```

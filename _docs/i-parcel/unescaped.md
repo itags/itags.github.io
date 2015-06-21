@@ -11,11 +11,12 @@ includeexample: 20em
 
 ```html
 <body>
-    <i-parcel lazybind="true">
+    <i-parcel>
     <!--
-        Escaped will look like: <%= what %>.
+        Escaped: <%= what %>
         <br>
-        Unescaped will look like: <%=raw what %>.
+        <br>
+        Unescaped: <%=raw what %>
     -->
     </i-parcel>
 </body>
@@ -24,7 +25,6 @@ includeexample: 20em
 ```js
 <script src="itagsbuild-min.js"></script>
 <script>
-    require('itags');
     var iparcel = document.getElement('i-parcel'),
         model = {what: 'a <b>template</b>'};
     iparcel.bindModel(model);

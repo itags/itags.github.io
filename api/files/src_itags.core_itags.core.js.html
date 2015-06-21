@@ -101,6 +101,8 @@
             
                 <li><a href="../classes/String.html">String</a></li>
             
+                <li><a href="../classes/SVGElement.html">SVGElement</a></li>
+            
                 <li><a href="../classes/USERAGENT.html">USERAGENT</a></li>
             
                 <li><a href="../classes/Utils.html">Utils</a></li>
@@ -1196,7 +1198,7 @@ module.exports = function (window) {
             // sync, but do this after the element is created:
             // in the next eventcycle:
             async(function(){
-                var needsToBind = domElement.lazyBind || (domElement.getAttr(&#x27;lazybind&#x27;)===&#x27;true&#x27;);
+                var needsToBind = (domElement.lazyBind  &amp;&amp; (domElement.getAttr(&#x27;lazybind&#x27;)!==&#x27;false&#x27;)) || (domElement.getAttr(&#x27;lazybind&#x27;)===&#x27;true&#x27;);
                 // only if no modelbinding is needed, we can directly init, sync and make ready,
                 // otherwise we need to make this done by  &#x60;bindModel&#x60;
                 BINDING_LIST.some(function(value, selector) {

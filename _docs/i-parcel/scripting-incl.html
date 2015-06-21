@@ -8,7 +8,7 @@
 
 <body>
 
-    <i-parcel lazybind="true">
+    <i-parcel>
     <!--
         I am <% if (age>=18) { %><%= adultMessage %><% } else { %><%= childMessage %><% } %>.
     -->
@@ -16,17 +16,19 @@
 
     <script src="../../dist/itagsbuild.js"></script>
     <script>
-        require('itags');
         var iparcel = document.getElement('i-parcel'),
             model = {
                 age: 17,
                 adultMessage: 'an adult',
                 childMessage: 'a child'
             };
+
         iparcel.bindModel(model);
+
         ITSA.later(function() {
             model.age = 18;
-        }, 1500);
+        }, 3000);
+
     </script>
 
 </body>

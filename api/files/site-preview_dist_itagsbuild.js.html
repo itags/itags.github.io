@@ -101,6 +101,8 @@
             
                 <li><a href="../classes/String.html">String</a></li>
             
+                <li><a href="../classes/SVGElement.html">SVGElement</a></li>
+            
                 <li><a href="../classes/USERAGENT.html">USERAGENT</a></li>
             
                 <li><a href="../classes/Utils.html">Utils</a></li>
@@ -4594,7 +4596,7 @@ module.exports.async = _async;
 module.exports.later = function (callbackFn, timeout, periodic) {
     console.log(NAME, &#x27;later --&gt; timeout: &#x27;+timeout+&#x27;ms | periodic: &#x27;+periodic);
     var canceled = false;
-    if (!timeout) {
+    if (typeof timeout!==&#x27;number&#x27;) {
         return _async(callbackFn);
     }
     var wrapper = function() {
@@ -13875,9 +13877,7 @@ module.exports = function (window) {
             */
             height: {
                 get: function() {
-                    // also: not all browsers support the property &#x27;offsetHeight&#x27; of the svg-element
-                    // therefore the backup to getStyle(&#x27;height&#x27;);
-                    return this.offsetHeight || parseInt(this.getStyle(&#x27;height&#x27;), 10) || 0;
+                    return this.offsetHeight;
                 },
                 set: function(val) {
                     var instance = this,
@@ -13898,7 +13898,7 @@ module.exports = function (window) {
             *
             * Values are numbers without unity.
             *
-            * @property innerWidth
+            * @property innerHeight
             * @type {Number}
             * @since 0.0.1
             */
@@ -14005,9 +14005,7 @@ module.exports = function (window) {
             */
             width: {
                 get: function() {
-                    // also: not all browsers support the property &#x27;offsetWidth&#x27; of the svg-element
-                    // therefore the backup to getStyle(&#x27;width&#x27;);
-                    return this.offsetWidth || parseInt(this.getStyle(&#x27;width&#x27;), 10) || 0;
+                    return this.offsetWidth;
                 },
                 set: function(val) {
                     var instance = this,
@@ -14023,6 +14021,123 @@ module.exports = function (window) {
         });
 
     }(window.Element.prototype));
+
+
+    // Modify SVGElement:
+    (function(SVGlementPrototype) {
+
+        Object.defineProperties(SVGlementPrototype, {
+
+           /**
+            * Gets or set the height of the element in pixels. Included are padding and border, not any margins.
+            *
+            * The getter is calculating through &#x60;offsetHeight&#x60;, the setter will set inline css-style for the height.
+            *
+            * Values are numbers without unity.
+            *
+            * @property svgHeight
+            * @for SVGElement
+            * @type {Number}
+            * @since 0.0.1
+            */
+            svgHeight: {
+                get: function() {
+                    return parseInt(this.getStyle(&#x27;height&#x27;), 10) || 0;
+                },
+                set: function(val) {
+                    var instance = this,
+                        dif;
+                    instance.setClass(INVISIBLE);
+                    instance.setInlineStyle(HEIGHT, val + PX);
+                    dif = (instance.svgHeight-val);
+                    (dif!==0) &amp;&amp; (instance.setInlineStyle(HEIGHT, (val - dif) + PX));
+                    instance.removeClass(INVISIBLE);
+                }
+            },
+
+           /**
+            * Gets or set the innerHeight of the element in pixels. Excluded the borders.
+            * Included are padding.
+            *
+            * The getter is calculating through &#x60;offsetHeight&#x60;, the setter will set inline css-style for the height.
+            *
+            * Values are numbers without unity.
+            *
+            * @property innerHeight
+            * @type {Number}
+            * @since 0.0.1
+            */
+            innerHeight: {
+                get: function() {
+                    var instance = this,
+                        borderTop = parseInt(instance.getStyle(&#x27;border-top-width&#x27;), 10) || 0,
+                        borderBottom = parseInt(instance.getStyle(&#x27;border-bottom-width&#x27;), 10) || 0;
+                    return instance.svgHeight - borderTop - borderBottom;
+                },
+                set: function(val) {
+                    var instance = this,
+                        borderTop = parseInt(instance.getStyle(&#x27;border-top-width&#x27;), 10) || 0,
+                        borderBottom = parseInt(instance.getStyle(&#x27;border-bottom-width&#x27;), 10) || 0;
+                    instance.svgHeight = val + borderTop + borderBottom;
+                }
+            },
+
+           /**
+            * Gets or set the innerHeight of the element in pixels. Excluded the borders.
+            * Included are padding.
+            *
+            * The getter is calculating through &#x60;offsetHeight&#x60;, the setter will set inline css-style for the height.
+            *
+            * Values are numbers without unity.
+            *
+            * @property innerWidth
+            * @type {Number}
+            * @since 0.0.1
+            */
+            innerWidth: {
+                get: function() {
+                    var instance = this,
+                        borderLeft = parseInt(instance.getStyle(&#x27;border-left-width&#x27;), 10) || 0,
+                        borderRight = parseInt(instance.getStyle(&#x27;border-right-width&#x27;), 10) || 0;
+                    return instance.svgWidth - borderLeft - borderRight;
+                },
+                set: function(val) {
+                    var instance = this,
+                        borderLeft = parseInt(instance.getStyle(&#x27;border-left-width&#x27;), 10) || 0,
+                        borderRight = parseInt(instance.getStyle(&#x27;border-right-width&#x27;), 10) || 0;
+                    instance.svgWidth = val + borderLeft + borderRight;
+                }
+            },
+
+           /**
+            * Gets or set the width of the element in pixels. Included are padding and border, not any margins.
+            *
+            * The getter is calculating through &#x60;offsetHeight&#x60;, the setter will set inline css-style for the width.
+            *
+            * Values are numbers without unity.
+            *
+            * @property svgWidth
+            * @type {Number}
+            * @since 0.0.1
+            */
+            svgWidth: {
+                get: function() {
+                    return parseInt(this.getStyle(&#x27;width&#x27;), 10) || 0;
+                },
+                set: function(val) {
+                    var instance = this,
+                        dif;
+                    instance.setClass(INVISIBLE);
+                    instance.setInlineStyle(WIDTH, val + PX);
+                    dif = (instance.svgWidth-val);
+                    (dif!==0) &amp;&amp; (instance.setInlineStyle(WIDTH, (val - dif) + PX));
+                    instance.removeClass(INVISIBLE);
+                }
+            }
+
+        });
+
+    }(window.SVGElement.prototype));
 
     setupObserver = function() {
         // configuration of the observer:
@@ -40916,7 +41031,7 @@ module.exports = function (window) {
 };
 
 },{&quot;./css/i-button.css&quot;:5561,&quot;i-formelement&quot;:5571,&quot;itags.core&quot;:5605}],5563:[function(require,module,exports){
-var css = &quot;/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a &#x60;dummy&#x60; css-rule    */\n/* for the dummy-element: &#x60;itag-css&#x60; --&gt; its property (also dummy) &#x60;i-tag&#x60; */\n/* will define which itag will be css-shadowed                             */\n/* ======================================================================= */\nitag-css {\n    i-tag: i-chart-line;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n/* ================================= */\n\n\ni-chart section[is=\&quot;x-axis\&quot;],\ni-chart section[is=\&quot;x2-axis\&quot;],\ni-chart section[is=\&quot;y-axis\&quot;],\ni-chart section[is=\&quot;y2-axis\&quot;] {\n    text-align: center;\n    padding: 0.1em;\n    font-size: 0.8em;\n}\n\ni-chart section[is=\&quot;y-axis\&quot;],\ni-chart section[is=\&quot;y2-axis\&quot;] {\n    -ms-transform: rotate(90deg);\n    -webkit-transform: rotate(90deg);\n    transform: rotate(90deg);\n    height: 1em;\n}\n\ni-chart section[is=\&quot;grapharea\&quot;] {\n    flex-grow: 1;\n    -ms-flex-grow: 1;\n    -webkit-flex-grow: 1;\n    /* is a flexbox by itself */\n    display: -ms-flex;\n    display: -webkit-flex;\n    display: flex;\n    -ms-flex-direction: row;\n    -webkit-flex-direction: row;\n    flex-direction: row;\n    -ms-align-items: center;\n    -webkit-align-items: center;\n    align-items: center;\n}&quot;; (require(&quot;/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify&quot;))(css); module.exports = css;
+var css = &quot;/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a &#x60;dummy&#x60; css-rule    */\n/* for the dummy-element: &#x60;itag-css&#x60; --&gt; its property (also dummy) &#x60;i-tag&#x60; */\n/* will define which itag will be css-shadowed                             */\n/* ======================================================================= */\nitag-css {\n    i-tag: i-chart-line;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n/* ================================= */\n\n\ni-chart section[is=\&quot;x-axis\&quot;],\ni-chart section[is=\&quot;x2-axis\&quot;],\ni-chart section[is=\&quot;y-axis\&quot;],\ni-chart section[is=\&quot;y2-axis\&quot;] {\n    text-align: center;\n    padding: 0.1em;\n    font-size: 0.8em;\n    white-space: nowrap;\n}\n\ni-chart section[is=\&quot;y-axis\&quot;],\ni-chart section[is=\&quot;y2-axis\&quot;] {\n    -ms-transform: rotate(90deg);\n    -webkit-transform: rotate(90deg);\n    transform: rotate(90deg);\n    height: 1em;\n}\n\ni-chart section[is=\&quot;chartarea\&quot;] {\n    flex-grow: 1;\n    -ms-flex-grow: 1;\n    -webkit-flex-grow: 1;\n    /* is a flexbox by itself */\n    display: -ms-flex;\n    display: -webkit-flex;\n    display: flex;\n    -ms-flex-direction: row;\n    -webkit-flex-direction: row;\n    flex-direction: row;\n    -ms-align-items: center;\n    -webkit-align-items: center;\n    align-items: center;\n}&quot;; (require(&quot;/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify&quot;))(css); module.exports = css;
 },{&quot;/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify&quot;:1}],5564:[function(require,module,exports){
 module.exports = function (window) {
     &quot;use strict&quot;;
@@ -40956,6 +41071,38 @@ module.exports = function (window) {
             init: function() {
             },
 
+            fitSizes: function() {
+                var element = this,
+                    svgNode = element.getSVGNode(),
+                    width, height, sectionNode, parentNode;
+                if (svgNode) {
+                    // because svgNode.svgHeight returns falsy falues in some browsers (flexbox-issue), we need to calculate:
+                    height = element.innerHeight;
+                    width = element.innerWidth;
+                    // decrease height:
+                    sectionNode = element.getElement(&#x27;section[is=&quot;title&quot;]&#x27;);
+                    sectionNode &amp;&amp; (height-=sectionNode.height);
+                    sectionNode = element.getElement(&#x27;section[is=&quot;footer&quot;]&#x27;);
+                    sectionNode &amp;&amp; (height-=sectionNode.height);
+                    parentNode = svgNode.inside(&#x27;section[is=&quot;chart&quot;]&#x27;);
+                    sectionNode = parentNode.getElement(&#x27;section[is=&quot;x-axis&quot;]&#x27;);
+                    sectionNode &amp;&amp; (height-=sectionNode.height);
+                    sectionNode = parentNode.getElement(&#x27;section[is=&quot;x2-axis&quot;]&#x27;);
+                    sectionNode &amp;&amp; (height-=sectionNode.height);
+                    // decrease width:
+                    parentNode = svgNode.inside(&#x27;section[is=&quot;chartarea&quot;]&#x27;);
+                    sectionNode = parentNode.getElement(&#x27;section[is=&quot;y-axis&quot;]&#x27;);
+                    sectionNode &amp;&amp; (width-=sectionNode.height); // NOT width: node is rotated!
+                    sectionNode = parentNode.getElement(&#x27;section[is=&quot;y2-axis&quot;]&#x27;);
+                    sectionNode &amp;&amp; (width-=sectionNode.height); // NOT width: node is rotated!
+                    // now we specificly set the height on the svg-node:
+                    svgNode.setInlineStyles([
+                        {property: &#x27;width&#x27;, value: width+&#x27;px&#x27;},
+                        {property: &#x27;height&#x27;, value: height+&#x27;px&#x27;}
+                    ]);
+                }
+            },
+
             renderGraph: function() {
                 var element = this,
                     model = element.model,
@@ -40965,15 +41112,20 @@ module.exports = function (window) {
                 if (model[&#x27;x2-axis&#x27;]) {
                     content += &#x27;&lt;section is=&quot;x2-axis&quot;&gt;&#x27;+model[&#x27;x2-axis&#x27;]+&#x27;&lt;/section&gt;&#x27;;
                 }
-                content += &#x27;&lt;section is=&quot;grapharea&quot;&gt;&#x27;;
+                content += &#x27;&lt;section is=&quot;chartarea&quot;&gt;&#x27;;
                 if (model[&#x27;y-axis&#x27;]) {
                     content += &#x27;&lt;section is=&quot;y-axis&quot;&gt;&#x27;+model[&#x27;y-axis&#x27;]+&#x27;&lt;/section&gt;&#x27;;
                 }
                 // at this stage, we must retain the current content of the svg-element
                 // it will be updated by &#x60;createSeries&#x60;, but we need to pass through the current values, to prevent
                 // the vdom from clearing and resetting, which basicly would mean no diffing-advangage
-                svgNode = element.getData(&#x27;_svgNode&#x27;);
-                content += svgNode ? svgNode.getOuterHTML() : &#x27;&lt;svg&gt;&lt;/svg&gt;&#x27;;
+                svgNode = element.getSVGNode();
+                if (svgNode) {
+                    content += svgNode.getOuterHTML();
+                }
+                else {
+                    content += &#x27;&lt;svg&gt;&lt;/svg&gt;&#x27;;
+                }
                 if (model[&#x27;y2-axis&#x27;]) {
                     content += &#x27;&lt;section is=&quot;y2-axis&quot;&gt;&#x27;+model[&#x27;y2-axis&#x27;]+&#x27;&lt;/section&gt;&#x27;;
                 }
@@ -41010,12 +41162,7 @@ module.exports = function (window) {
                     len = series.length,
                     graphs = &#x27;&#x27;,
                     markerDefs = &#x27;&#x27;,
-                    i, serie, legend, svgNode, boundaries, useX2, useY2, serieBoundaries, extra, legendString;
-
-                if (!element.hasData(&#x27;_svgNode&#x27;)) {
-                    element.setData(&#x27;_svgNode&#x27;, element.getElement(&#x27;svg&#x27;));
-                }
-                svgNode = element.getData(&#x27;_svgNode&#x27;);
+                    i, serie, legend, boundaries, useX2, useY2, serieBoundaries, extra, legendString;
 
                 var markerSize = 3;
                 var refCorrection = markerSize/2;
@@ -41023,7 +41170,7 @@ module.exports = function (window) {
                 // therefore, IE gets all markers as separate rectancles...
                 if (model.markers) {
                     markerDefs = &#x27;&lt;defs&gt;&#x27;+
-                                     &#x27;&lt;marker id=&quot;i-graph_marker-1&quot; markerWidth=&quot;&#x27;+markerSize+&#x27;&quot; markerHeight=&quot;&#x27;+markerSize+&#x27;&quot; refX=&quot;&#x27;+refCorrection+&#x27;&quot; refY=&quot;&#x27;+refCorrection+&#x27;&quot; markerUnits=&quot;strokeWidth&quot;&gt;&#x27;+
+                                     &#x27;&lt;marker id=&quot;i-chart_marker-1&quot; markerWidth=&quot;&#x27;+markerSize+&#x27;&quot; markerHeight=&quot;&#x27;+markerSize+&#x27;&quot; refX=&quot;&#x27;+refCorrection+&#x27;&quot; refY=&quot;&#x27;+refCorrection+&#x27;&quot; markerUnits=&quot;strokeWidth&quot;&gt;&#x27;+
                                          &#x27;&lt;rect x=&quot;0&quot; y=&quot;0&quot; width=&quot;&#x27;+markerSize+&#x27;&quot; height=&quot;&#x27;+markerSize+&#x27;&quot; style=&quot;fill:#F00&quot; /&gt;&#x27;+
                                      &#x27;&lt;/marker&gt;&#x27;+
                                  &#x27;&lt;/defs&gt;&#x27;;
@@ -41119,10 +41266,10 @@ module.exports = function (window) {
                     serie = series[i];
                     legend = serie.legend;
                     legendString = legend ? &#x27; i-serie=&quot;&#x27;+legend+&#x27;&quot;&#x27; : &#x27;&#x27;;
-                    graphs += &#x27;&lt;polyline&#x27;+legendString+&#x27; points=&quot;&#x27;+element.generateSerieData(serie, boundaries)+&#x27;&quot; fill=&quot;none&quot; stroke=&quot;#000&quot; stroke-width=&quot;3&quot; marker-end=&quot;url(#i-graph_marker-1)&quot; marker-start=&quot;url(#i-graph_marker-1)&quot; marker-mid=&quot;url(#i-graph_marker-1)&quot; /&gt;&#x27;;
+                    graphs += &#x27;&lt;polyline&#x27;+legendString+&#x27; points=&quot;&#x27;+element.generateSerieData(serie, boundaries)+&#x27;&quot; fill=&quot;none&quot; stroke=&quot;#000&quot; stroke-width=&quot;10&quot; marker-end=&quot;url(#i-chart_marker-1)&quot; marker-start=&quot;url(#i-chart_marker-1)&quot; marker-mid=&quot;url(#i-chart_marker-1)&quot; /&gt;&#x27;;
                 }
 
-                svgNode.setHTML(markerDefs+graphs);
+                element.getSVGNode().setHTML(markerDefs+graphs);
             },
 
             getSeriesBoundaries: function(serie) {
@@ -41136,14 +41283,10 @@ module.exports = function (window) {
                     serieIsArray = (len&gt;0) &amp;&amp; Array.isArray(data[0]),
                     xprop = serie[&#x27;x-prop&#x27;],
                     yprop = serie[&#x27;y-prop&#x27;],
-                    i, point, x, y, index, indent, svgNode, svgWidth;
+                    i, point, x, y, index, indent;
                 if (!serieIsArray) {
-                    svgNode = element.getData(&#x27;_svgNode&#x27;);
-                    // cannot use node.width, for svg-elements have their own definition of &#x60;width&#x60;
-                    // also: not all browsers support the property &#x27;offsetWidth&#x27; of the svg-element
-                    svgWidth = svgNode.width;
                     index = 0;
-                    indent = (len&gt;1) ? (svgWidth/(len-1)) : 0;
+                    indent = (len&gt;1) ? (element.getViewBoxWidth()/(len-1)) : 0;
                 }
                 for (i=0; i&lt;len; i++) {
                     point = data[i];
@@ -41184,14 +41327,10 @@ module.exports = function (window) {
                     len = serieData.length,
                     graphData = &#x27;&#x27;,
                     index = 0,
-                    svgNode = element.getData(&#x27;_svgNode&#x27;),
-                    // cannot use node.width, for svg-elements have their own definition of &#x60;width&#x60;
-                    // also: not all browsers support the property &#x27;offsetWidth&#x27; of the svg-element
-                    svgWidth = svgNode.width,
-                    svgHeight = svgNode.height,
                     serieIsArray = (len&gt;0) &amp;&amp; Array.isArray(serieData[0]),
                     xprop = serie[&#x27;x-prop&#x27;],
                     yprop = serie[&#x27;y-prop&#x27;],
+                    svgWidth = element.getViewBoxWidth(),
                     indent, i, point, x, y, yShift,
                     minx, maxx, miny, maxy, scaleX, scaleY, value;
                 if (len===0) {
@@ -41221,12 +41360,11 @@ module.exports = function (window) {
                     // now we calculate a scalecorrection because of the size of the svg-canvas:
                     scaleX = svgWidth/(maxx-minx);
                 }
-                scaleY = svgHeight/(maxy-miny);
+                scaleY = element.getViewBoxHeight()/(maxy-miny);
                 yShift = scaleY*(maxy-miny);
                 for (i=0; i&lt;len; i++) {
                     point = serieData[i];
                     if (serieIsArray) {
-
                         x = scaleX*(point[0] - minx);
                         value = yprop ? point[1][yprop] : point[1];
                         y = yShift - (scaleY*value);
@@ -41255,7 +41393,7 @@ module.exports = function (window) {
 };
 
 },{&quot;./css/i-chart-line.css&quot;:5563,&quot;i-chart&quot;:5566,&quot;itags.core&quot;:5605}],5565:[function(require,module,exports){
-var css = &quot;/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a &#x60;dummy&#x60; css-rule    */\n/* for the dummy-element: &#x60;itag-css&#x60; --&gt; its property (also dummy) &#x60;i-tag&#x60; */\n/* will define which itag will be css-shadowed                             */\n/* ======================================================================= */\nitag-css {\n    i-tag: i-chart;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-chart:not(.itag-rendered) {\n    /* don&#x27;t set visibility to hidden --&gt; you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-chart:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\ni-chart {\n    margin: 0;\n    display: inline-block;\n    position: relative;\n    vertical-align: top;\n    border: 1px solid #cbcbcb;\n    min-width: 160px; /* equal to the default min-height of a canvans */\n    min-height: 160px; /* seems the default min-height of a canvans */\n    overflow: hidden;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-chart section {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-chart &gt;section {\n    display: -ms-flex;\n    display: -webkit-flex;\n    display: flex;\n    -ms-flex-direction: column;\n    -webkit-flex-direction: column;\n    flex-direction: column;\n    -ms-align-content: stretch;\n    -webkit-align-content: stretch;\n    align-content: stretch;\n    width: 100%;\n    height: 100%;\n}\n\ni-chart section[is=\&quot;title\&quot;] {\n    text-align: center;\n    padding: 0.5em;\n}\n\ni-chart section[is=\&quot;footer\&quot;] {\n    padding: 0.25em 0.5em;\n}\n\ni-chart section[is=\&quot;graph\&quot;] {\n    flex-grow: 1;\n    -ms-flex-grow: 1;\n    -webkit-flex-grow: 1;\n    /* is a flexbox by itself */\n    display: -ms-flex;\n    display: -webkit-flex;\n    display: flex;\n    -ms-flex-direction: column;\n    -webkit-flex-direction: column;\n    flex-direction: column;\n    -ms-align-content: stretch;\n    -webkit-align-content: stretch;\n    align-content: stretch;\n}\n\ni-chart svg {\n    flex-grow: 1;\n    -ms-flex-grow: 1;\n    -webkit-flex-grow: 1;\n    align-self: stretch;\n    -ms-align-self: stretch;\n    -webkit-align-self: stretch;\n    border: 1px solid #cbcbcb;\n    background-color: #F0F0F0;\n}&quot;; (require(&quot;/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify&quot;))(css); module.exports = css;
+var css = &quot;/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a &#x60;dummy&#x60; css-rule    */\n/* for the dummy-element: &#x60;itag-css&#x60; --&gt; its property (also dummy) &#x60;i-tag&#x60; */\n/* will define which itag will be css-shadowed                             */\n/* ======================================================================= */\nitag-css {\n    i-tag: i-chart;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-chart:not(.itag-rendered) {\n    /* don&#x27;t set visibility to hidden --&gt; you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-chart:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\ni-chart {\n    background-color: #FFF;\n    margin: 0;\n    display: inline-block;\n    position: relative;\n    vertical-align: top;\n    border: 1px solid #cbcbcb;\n    min-width: 160px; /* equal to the default min-height of a canvans */\n    min-height: 160px; /* seems the default min-height of a canvans */\n    overflow: hidden;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-chart section {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\ni-chart &gt;section {\n    display: -ms-flex;\n    display: -webkit-flex;\n    display: flex;\n    -ms-flex-direction: column;\n    -webkit-flex-direction: column;\n    flex-direction: column;\n    -ms-align-content: stretch;\n    -webkit-align-content: stretch;\n    align-content: stretch;\n    width: 100%;\n    height: 100%;\n}\n\ni-chart section[is=\&quot;title\&quot;] {\n    text-align: center;\n    padding: 0.5em;\n}\n\ni-chart section[is=\&quot;footer\&quot;] {\n    padding: 0.25em 0.5em;\n}\n\ni-chart section[is=\&quot;chart\&quot;] {\n    flex-grow: 1;\n    -ms-flex-grow: 1;\n    -webkit-flex-grow: 1;\n    /* is a flexbox by itself */\n    display: -ms-flex;\n    display: -webkit-flex;\n    display: flex;\n    -ms-flex-direction: column;\n    -webkit-flex-direction: column;\n    flex-direction: column;\n    -ms-align-content: stretch;\n    -webkit-align-content: stretch;\n    align-content: stretch;\n}\n\ni-chart svg {\n    border: 1px solid #cbcbcb;\n    background-color: #F0F0F0;\n}&quot;; (require(&quot;/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify&quot;))(css); module.exports = css;
 },{&quot;/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify&quot;:1}],5566:[function(require,module,exports){
 module.exports = function (window) {
     &quot;use strict&quot;;
@@ -41266,9 +41404,31 @@ module.exports = function (window) {
         itagName = &#x27;i-chart&#x27;, // &lt;-- define your own itag-name here
         DOCUMENT = window.document,
         ITSA = window.ITSA,
-        Itag;
+        AUTO_EXPAND_DELAY = 200,
+        SVG_WIDTH = 5120, // 5*1024
+        SVG_HEIGHT = 5120, // 5*1024
+        charts = [],
+        Itag, autoExpandCharts, registerChart, unregisterChart;
 
     if (!window.ITAGS[itagName]) {
+
+        registerChart = function(iscroller) {
+            charts.push(iscroller);
+        };
+
+        unregisterChart = function(iscroller) {
+            charts.remove(iscroller);
+        };
+
+        autoExpandCharts = function() {
+            ITSA.later(function() {
+                var len = charts.length,
+                    i;
+                for (i=0; i&lt;len; i++) {
+                    charts[i].fitSizes();
+                }
+            }, AUTO_EXPAND_DELAY, true);
+        };
 
         Itag = DOCUMENT.defineItag(itagName, {
             attrs: {
@@ -41309,6 +41469,9 @@ module.exports = function (window) {
                     var is = sectionNode.getAttr(&#x27;is&#x27;);
                     is &amp;&amp; element.defineWhenUndefined(is, sectionNode.getHTML()); // sets element.model.someprop = somevalue; when not defined yet
                 });
+                element.itagReady().then(function() {
+                    registerChart(element);
+                });
             },
 
             render: function() {
@@ -41324,11 +41487,16 @@ module.exports = function (window) {
                 if (model.title) {
                     content += &#x27;&lt;section is=&quot;title&quot;&gt;&#x27;+model.title+&#x27;&lt;/section&gt;&#x27;;
                 }
-                content += &#x27;&lt;section is=&quot;graph&quot;&gt;&#x27;+element.renderGraph()+&#x27;&lt;/section&gt;&#x27;;
+                content += &#x27;&lt;section is=&quot;chart&quot;&gt;&#x27;+element.renderGraph()+&#x27;&lt;/section&gt;&#x27;;
                 if (model.footer) {
                     content += &#x27;&lt;section is=&quot;footer&quot;&gt;&#x27;+model.footer+&#x27;&lt;/section&gt;&#x27;;
                 }
                 container.setHTML(content);
+                if (!element.hasData(&#x27;_firstSync&#x27;)) {
+                    element.setData(&#x27;_firstSync&#x27;, true);
+                    element.setViewBox();
+                    element.fitSizes();
+                }
                 element.createSeries();
             },
 
@@ -41339,10 +41507,69 @@ module.exports = function (window) {
             createSeries: function() {
                 // needs to be done AFTER the dom has the svg-area, because some types need to calculate its sizes
                 // in oder to be able to set the series at the right position
+            },
+
+            getViewBoxWidth: function() {
+                return SVG_WIDTH;
+            },
+
+            getViewBoxHeight: function() {
+                return SVG_HEIGHT;
+            },
+
+            getSVGHeight: function() {
+                var element = this,
+                    svgNode = element.getSVGNode();
+                return svgNode ? svgNode.svgHeight : 0;
+            },
+
+            getSVGNode: function () {
+                var element = this,
+                    svgNode;
+                if (!element.hasData(&#x27;_svgNode&#x27;)) {
+                    svgNode = element.getElement(&#x27;svg&#x27;);
+                    svgNode &amp;&amp; (element.setData(&#x27;_svgNode&#x27;, svgNode));
+                }
+                return element.getData(&#x27;_svgNode&#x27;);
+            },
+
+            setViewBox: function() {
+                var element = this,
+                    svgNode = element.getSVGNode();
+                if (svgNode) {
+                    svgNode.setAttr(&#x27;viewBox&#x27;, &#x27;0 0 &#x27;+element.getViewBoxWidth()+&#x27; &#x27;+element.getViewBoxHeight());
+                    svgNode.setAttr(&#x27;preserveAspectRatio&#x27;, &#x27;none&#x27;);
+                }
+            },
+
+            fitSizes: function() {
+                var element = this,
+                    svgNode = element.getSVGNode(),
+                    width, height, sectionNode, parentNode;
+                if (svgNode) {
+                    // because svgNode.svgHeight returns falsy falues in some browsers (flexbox-issue), we need to calculate:
+                    height = element.innerHeight;
+                    width =  element.innerWidth;
+                    sectionNode = element.getElement(&#x27;section[is=&quot;title&quot;]&#x27;);
+                    sectionNode &amp;&amp; (height-=sectionNode.height);
+                    sectionNode = element.getElement(&#x27;section[is=&quot;footer&quot;]&#x27;);
+                    sectionNode &amp;&amp; (height-=sectionNode.height);
+                    // now we specificly set the height on the svg-node:
+                    svgNode.setInlineStyles([
+                        {property: &#x27;width&#x27;, value: width+&#x27;px&#x27;},
+                        {property: &#x27;height&#x27;, value: height+&#x27;px&#x27;}
+                    ]);
+                }
+            },
+
+            destroy: function() {
+                var element = this;
+                unregisterChart(element);
             }
 
         });
 
+        autoExpandCharts();
         window.ITAGS[itagName] = Itag;
     }
 
@@ -42682,6 +42909,7 @@ module.exports = function (window) {
             }
         });
         itagCore.setContentVisibility(Itag, true);
+        itagCore.setLazyBinding(Itag, true);
         window.ITAGS[itagName] = Itag;
     }
 
@@ -43126,7 +43354,8 @@ module.exports = function (window) {
                        .defineWhenUndefined(&#x27;item-size&#x27;, itemsize)
                        .defineWhenUndefined(&#x27;start-item&#x27;, startItem)
                         // set the reset-value to the inital-value in case &#x60;reset-value&#x60; was not present
-                       .defineWhenUndefined(&#x27;reset-value&#x27;, value);
+                       .defineWhenUndefined(&#x27;reset-value&#x27;, value)
+                       .defineWhenUndefined(&#x27;items&#x27;, []);
 
                 // store headernodes when defined:
                 if (headerNodes &amp;&amp; !element.headers) {
@@ -44616,7 +44845,7 @@ module.exports = function (window) {
 };
 
 },{&quot;./css/i-statusbar.css&quot;:5597,&quot;itags.core&quot;:5605}],5599:[function(require,module,exports){
-var css = &quot;/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a &#x60;dummy&#x60; css-rule    */\n/* for the dummy-element: &#x60;itag-css&#x60; --&gt; its property (also dummy) &#x60;i-tag&#x60; */\n/* will define which itag will be css-shadowed                             */\n/* ======================================================================= */\nitag-css {\n    i-tag: i-table;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-table:not(.itag-rendered) {\n    /* don&#x27;t set visibility to hidden --&gt; you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-table:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\ni-table {\n    margin: 0;\n    display: inline-block;\n    position: relative;\n    vertical-align: top;\n    border: 1px solid #cbcbcb;\n    min-width: 1em;\n    min-height: 1em;\n    overflow: hidden;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\n/* simulation of table-element: */\ni-table &gt;span {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    position: relative;\n    width: 100%;\n    display: block;\n}\n\n/* simulation of tr-element: */\ni-table section.i-table-row {\n    position: relative;\n    width: auto;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    /* the next css comes from purecss: the class &#x60;.pure-g&#x60;: */\n}\n\n/* the next css comes from purecss: the class &#x60;.pure-g&#x60;: */\ni-table section.i-table-row {\n    letter-spacing: -0.31em; /* Webkit: collapse white-space between units */\n    *letter-spacing: normal; /* reset IE &lt; 8 */\n    word-spacing: -0.43em; /* collapse white-space between units */\n    text-rendering: optimizespeed; /* Webkit: fixes text-rendering: optimizeLegibility */\n\n    /*\n    Resets the font family back to the OS/browser&#x27;s default sans-serif font,\n    this the same font stack that Normalize.css sets for the &#x60;body&#x60;.\n    */\n    font-family: sans-serif;\n\n    /*\n    Use flexbox when possible to avoid &#x60;letter-spacing&#x60; side-effects.\n\n    NOTE: Firefox (as of 25) does not currently support flex-wrap, so the\n    &#x60;-moz-&#x60; prefix version is omitted.\n    */\n\n    display: block;\n    display: -webkit-flex;\n    display: -ms-flexbox;\n    display: flex;\n    -webkit-flex-flow: row wrap;\n    -ms-flex-flow: row wrap;\n    flex-flow: row wrap;\n}\n\ni-table section.i-table-row section {\n    float: left;\n    display: inline-block;\n    display: -webkit-flex;\n    display: -ms-flexbox;\n    display: flex;\n    -webkit-flex-flow: row wrap;\n    -ms-flex-flow: row wrap;\n    flex-flow: row wrap;\n}\n\n/* overrule z-index dragged element --&gt; must be kept below.fixed-header */\ni-table .dd-high-z {\n    z-index: 896 !important;\n}\n\n/* simulation of td-element: */\ni-table section[is=\&quot;td\&quot;] {\n    margin: 0;\n    padding: 0.32em 0.5em;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    border-left: 1px solid #cbcbcb;\n    border-width: 0 0 0 1px;\n    overflow: hidden;\n    display: inline-block;\n    letter-spacing: normal;\n    word-spacing: normal;\n    vertical-align: top;\n    text-rendering: auto;\n    /* DO NOT set height inside flex-box for it won&#x27;t stretch anymore */\n    /* height: 100%; */\n}\n\ni-table section[is=\&quot;td\&quot;][data-editing=\&quot;true\&quot;] {\n    padding: 0;\n}\n\ni-table section[is=\&quot;td\&quot;][data-editing=\&quot;true\&quot;] input {\n    width: 100%;\n}\n\ni-table section[is=\&quot;td\&quot;][data-editing=\&quot;true\&quot;] input {\n    padding: 0.32em 0.5em;\n    border: none;\n    border-radius: 0;\n    box-shadow: inset 0px 0px 0px 2px #129FEA;\n}\n\ni-table section.i-table-row.empty {\n    opacity: 0;\n}\n\ni-table section[is=\&quot;thead\&quot;] {\n    position: absolute;\n    left: 0;\n    top: 0;\n    width: 100%;\n    z-index: 898;\n    margin: 0;\n    padding: 0;\n    background: #e0e0e0;\n    color: #000;\n    text-align: left;\n    vertical-align: middle;\n}\n\ni-table span.copy-node,\ni-table[sortable=\&quot;true\&quot;] span[is=\&quot;sort\&quot;],\ni-table section[is=\&quot;thead\&quot;] &gt;span,\ni-table section.i-table-row &gt;section {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    margin: 0;\n    padding: 0;\n    float: left;\n    overflow: hidden;\n}\n\ni-table section[is=\&quot;thead\&quot;] &gt;span {\n    position: relative;\n}\n/* simulation of th-element: */\ni-table span[is=\&quot;th\&quot;] {\n    margin: 0;\n    padding: 0.32em 0.5em;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    /*float: left;*/\n    overflow: hidden;\n    display: inline-block;\n    letter-spacing: normal;\n    word-spacing: normal;\n    vertical-align: top;\n    text-rendering: auto;\n    text-overflow: ellipsis;\n    overflow: hidden;\n    white-space: nowrap;\n    border-left: 1px solid #cbcbcb;\n    border-width: 0 0 0 1px;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    -khtml-user-select: none;\n    -webkit-user-select: none;\n    user-select: none;\n    cursor: default;\n    font-weight: bold;\n}\n\ni-table section[is=\&quot;thead\&quot;].col-dragging span[is=\&quot;th\&quot;],\ni-table span.copy-node span[is=\&quot;th\&quot;] {\n    cursor: move;\n}\n\ni-table section[is=\&quot;thead\&quot;] span:first-child span[is=\&quot;th\&quot;],\ni-table section.i-table-row &gt;section:first-child section[is=\&quot;td\&quot;] {\n    border-left-width: 0;\n}\n\n/* need double: resize for mouseover, resizing when busy resizing */\ni-table section[is=\&quot;thead\&quot;].resize span[is=\&quot;th\&quot;],\ni-table section[is=\&quot;thead\&quot;].resizing span[is=\&quot;th\&quot;],\ni-table section[is=\&quot;thead\&quot;].resize span[is=\&quot;sort\&quot;],\ni-table section[is=\&quot;thead\&quot;].resizing span[is=\&quot;sort\&quot;] {\n    cursor: col-resize;\n}\n\ni-table span.copy-node {\n    position: absolute;\n    z-index: 899;\n    background-color: #666;\n    color: #FFF;\n    box-shadow: 0 0 0 1px rgba(255,255,255, 0.15) inset;\n    padding-left: 1px; /* replacement of original border-left-width */\n}\n\ni-table[sortable=\&quot;true\&quot;] span.copy-node span[is=\&quot;sort\&quot;] {\n    top: -9999px;\n    left: -9999px;\n}\n\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span.i-hover[sort=\&quot;none\&quot;],\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;none\&quot;]:hover,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;none\&quot;]:focus,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span.i-hover[sort=\&quot;up\&quot;],\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;up\&quot;]:hover,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;up\&quot;]:focus,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span.i-hover[sort=\&quot;down\&quot;],\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;down\&quot;]:hover,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;down\&quot;]:focus {\n    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=&#x27;#00000000&#x27;, endColorstr=&#x27;#1a000000&#x27;,GradientType=0);\n    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(transparent), color-stop(40%, rgba(0,0,0, 0.05)), to(rgba(0,0,0, 0.10)));\n    background-image: -webkit-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: -moz-linear-gradient(top, rgba(0,0,0, 0.05) 0%, rgba(0,0,0, 0.10));\n    background-image: -o-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n}\n\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;none\&quot;]:focus,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;up\&quot;]:focus,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;down\&quot;]:focus {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.6) inset;\n}\n\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;none\&quot;].i-hover:focus,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;none\&quot;]:hover:focus,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;up\&quot;].i-hover:focus,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;up\&quot;]:hover:focus,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;down\&quot;].i-hover:focus,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;down\&quot;]:hover:focus {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.7) inset;\n}\n\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;none\&quot;].i-active.i-hover,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;none\&quot;].i-active:hover,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;none\&quot;].i-active.i-hover:focus,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;none\&quot;].i-active:hover:focus,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;up\&quot;].i-active.i-hover,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;up\&quot;].i-active:hover,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;up\&quot;].i-active.i-hover:focus,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;up\&quot;].i-active:hover:focus,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;down\&quot;].i-active.i-hover,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;down\&quot;].i-active:hover,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;down\&quot;].i-active.i-hover:focus,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;down\&quot;].i-active:hover:focus {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.8) inset, 0 0 6px rgba(0,0,0, 0.4) inset;\n    border-left: solid 1px rgba(0,0,0, 0.8);\n}\n\n\ni-table[sortable=\&quot;true\&quot;] span:focus {\n    outline: 0;\n}\n\ni-table span.copy-node.first-child {\n    padding-left: 0;\n}\n\ni-table span.copy-node span[is=\&quot;th\&quot;] {\n    border: none !important;\n}\n\ni-table span.vertical-insert {\n    position: absolute;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    width: 6px;\n    height: 100%;\n    top: 0;\n    background-color: #666;\n    z-index: 897;\n}\n\ni-table section.col-dragging:not(.fixed-header),\ni-table span.col-dragging {\n    opacity: 0.3 !important;\n}\n\n/*\nstriping:\n   even - #fff (white)\n   odd  - #f2f2f2 (light gray)\n*/\ni-table.striped .i-table-row.even section[is=\&quot;td\&quot;] {\n    background-color: #FFF;\n}\n\ni-table.striped .i-table-row.odd section[is=\&quot;td\&quot;] {\n    background-color: #f2f2f2;\n}\n\n/* BORDERED TABLES */\ni-table.bordered section[is=\&quot;td\&quot;] {\n    border-bottom: 1px solid #cbcbcb;\n}\n\ni-table.bordered section.i-table-row:last-child &gt; section[is=\&quot;td\&quot;],\ni-table.horizontal section.i-table-row:last-child &gt; section[is=\&quot;td\&quot;] {\n    border-bottom-width: 0;\n}\n\n\n/* HORIZONTAL BORDERED TABLES */\n\ni-table.horizontal section[is=\&quot;td\&quot;],\ni-table.horizontal span[is=\&quot;th\&quot;] {\n    border-width: 0 0 1px 0;\n    border-bottom: 1px solid #cbcbcb;\n}\n\ni-table[sortable=\&quot;true\&quot;] span[is=\&quot;sort\&quot;] {\n    position: absolute;\n    width: 1em;\n    height: 100%;\n    top: 0;\n    right: 0;\n    cursor: pointer;\n}\n\ni-table[sortable=\&quot;true\&quot;] span[is=\&quot;sort\&quot;]:before {\n    content: &#x27; &#x27;;\n    border-left: 0.4em solid rgba(0, 0, 0, 0);\n    border-right: 0.4em solid rgba(0, 0, 0, 0);\n    border-bottom: 0.5em solid #AAA;\n    right: 0.15em;\n    position: absolute;\n    top: 0.3em;\n}\n\ni-table[sortable=\&quot;true\&quot;] span[is=\&quot;sort\&quot;]:after {\n    content: &#x27; &#x27;;\n    border-left: 0.4em solid rgba(0, 0, 0, 0);\n    border-right: 0.4em solid rgba(0, 0, 0, 0);\n    border-top: 0.5em solid #AAA;\n    left: 0.1em;\n    position: absolute;\n    top: 1em;\n}\n\ni-table[sortable=\&quot;true\&quot;] span[sort=\&quot;down\&quot;] span[is=\&quot;sort\&quot;]:before {\n    border-bottom-color: #000;\n    top: 0.7em;\n}\n\ni-table[sortable=\&quot;true\&quot;] span[sort=\&quot;down\&quot;] span[is=\&quot;sort\&quot;]:after {\n    border-top: none;\n}\n\ni-table[sortable=\&quot;true\&quot;] span[sort=\&quot;up\&quot;] span[is=\&quot;sort\&quot;]:before {\n    border-bottom: none;\n}\n\ni-table[sortable=\&quot;true\&quot;] span[sort=\&quot;up\&quot;] span[is=\&quot;sort\&quot;]:after {\n    border-top-color: #000;\n    top: 0.7em;\n}\n\ni-table[sortable=\&quot;true\&quot;] span[sort=\&quot;hidden\&quot;] span[is=\&quot;sort\&quot;]:before,\ni-table[sortable=\&quot;true\&quot;] span[sort=\&quot;hidden\&quot;] span[is=\&quot;sort\&quot;]:after {\n    border: none;\n}\n\ni-table[sortable=\&quot;true\&quot;] span[is=\&quot;th\&quot;] {\n    padding-right: 1em;\n    cursor: pointer;\n}\n\ni-table[sortable=\&quot;true\&quot;] span[sort=\&quot;hidden\&quot;] span[is=\&quot;sort\&quot;],\ni-table[sortable=\&quot;true\&quot;] span[sort=\&quot;hidden\&quot;] span[is=\&quot;th\&quot;] {\n    cursor: default;\n}&quot;; (require(&quot;/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify&quot;))(css); module.exports = css;
+var css = &quot;/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n/* Definition of itag shadow-css is done by defining a &#x60;dummy&#x60; css-rule    */\n/* for the dummy-element: &#x60;itag-css&#x60; --&gt; its property (also dummy) &#x60;i-tag&#x60; */\n/* will define which itag will be css-shadowed                             */\n/* ======================================================================= */\nitag-css {\n    i-tag: i-table;  /* set the property-value to the proper itag */\n}\n/* ======================================================================= */\n/* ======================================================================= */\n/* ======================================================================= */\n\n\n/* ================================= */\n/* set invisiblity when not rendered */\n/* ================================= */\ni-table:not(.itag-rendered) {\n    /* don&#x27;t set visibility to hidden --&gt; you cannot set a focus on those items */\n    opacity: 0 !important;\n    position: absolute !important;\n    left: -9999px !important;\n    top: -9999px !important;\n    z-index: -1;\n}\n\ni-table:not(.itag-rendered) * {\n    opacity: 0 !important;\n}\n/* ================================= */\n\ni-table {\n    background-color: #CCC; /* when no cols in display */\n    margin: 0;\n    display: inline-block;\n    position: relative;\n    vertical-align: top;\n    border: 1px solid #cbcbcb;\n    min-width: 1em;\n    min-height: 1em;\n    overflow: hidden;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n}\n\n/* simulation of table-element: */\ni-table &gt;span {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    position: relative;\n    width: 100%;\n    display: block;\n}\n\n/* simulation of tr-element: */\ni-table section.i-table-row {\n    position: relative;\n    width: auto;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    /* the next css comes from purecss: the class &#x60;.pure-g&#x60;: */\n}\n\n/* the next css comes from purecss: the class &#x60;.pure-g&#x60;: */\ni-table section.i-table-row {\n    letter-spacing: -0.31em; /* Webkit: collapse white-space between units */\n    *letter-spacing: normal; /* reset IE &lt; 8 */\n    word-spacing: -0.43em; /* collapse white-space between units */\n    text-rendering: optimizespeed; /* Webkit: fixes text-rendering: optimizeLegibility */\n\n    /*\n    Resets the font family back to the OS/browser&#x27;s default sans-serif font,\n    this the same font stack that Normalize.css sets for the &#x60;body&#x60;.\n    */\n    font-family: sans-serif;\n\n    /*\n    Use flexbox when possible to avoid &#x60;letter-spacing&#x60; side-effects.\n\n    NOTE: Firefox (as of 25) does not currently support flex-wrap, so the\n    &#x60;-moz-&#x60; prefix version is omitted.\n    */\n\n    display: block;\n    display: -webkit-flex;\n    display: -ms-flexbox;\n    display: flex;\n    -webkit-flex-flow: row wrap;\n    -ms-flex-flow: row wrap;\n    flex-flow: row wrap;\n}\n\ni-table section.i-table-row section {\n    float: left;\n    display: inline-block;\n    display: -webkit-flex;\n    display: -ms-flexbox;\n    display: flex;\n    -webkit-flex-flow: row wrap;\n    -ms-flex-flow: row wrap;\n    flex-flow: row wrap;\n}\n\n/* overrule z-index dragged element --&gt; must be kept below.fixed-header */\ni-table .dd-high-z {\n    z-index: 896 !important;\n}\n\n/* simulation of td-element: */\ni-table section[is=\&quot;td\&quot;] {\n    margin: 0;\n    padding: 0.32em 0.5em;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    border-left: 1px solid #cbcbcb;\n    border-width: 0 0 0 1px;\n    overflow: hidden;\n    display: inline-block;\n    letter-spacing: normal;\n    word-spacing: normal;\n    vertical-align: top;\n    text-rendering: auto;\n    /* DO NOT set height inside flex-box for it won&#x27;t stretch anymore */\n    /* height: 100%; */\n}\n\ni-table section[is=\&quot;td\&quot;][data-editing=\&quot;true\&quot;] {\n    padding: 0;\n}\n\ni-table section[is=\&quot;td\&quot;][data-editing=\&quot;true\&quot;] input {\n    width: 100%;\n}\n\ni-table section[is=\&quot;td\&quot;][data-editing=\&quot;true\&quot;] input {\n    padding: 0.32em 0.5em;\n    border: none;\n    border-radius: 0;\n    box-shadow: inset 0px 0px 0px 2px #129FEA;\n}\n\ni-table section.i-table-row.empty {\n    opacity: 0;\n}\n\ni-table section[is=\&quot;thead\&quot;] {\n    position: absolute;\n    left: 0;\n    top: 0;\n    width: 100%;\n    z-index: 898;\n    margin: 0;\n    padding: 0;\n    background: #e0e0e0;\n    color: #000;\n    text-align: left;\n    vertical-align: middle;\n}\n\ni-table span.copy-node,\ni-table[sortable=\&quot;true\&quot;] span[is=\&quot;sort\&quot;],\ni-table section[is=\&quot;thead\&quot;] &gt;span,\ni-table section.i-table-row &gt;section {\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    margin: 0;\n    padding: 0;\n    float: left;\n    overflow: hidden;\n}\n\ni-table section[is=\&quot;thead\&quot;] &gt;span {\n    position: relative;\n}\n/* simulation of th-element: */\ni-table span[is=\&quot;th\&quot;] {\n    margin: 0;\n    padding: 0.32em 0.5em;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    /*float: left;*/\n    overflow: hidden;\n    display: inline-block;\n    letter-spacing: normal;\n    word-spacing: normal;\n    vertical-align: top;\n    text-rendering: auto;\n    text-overflow: ellipsis;\n    overflow: hidden;\n    white-space: nowrap;\n    border-left: 1px solid #cbcbcb;\n    border-width: 0 0 0 1px;\n    -moz-user-select: none;\n    -ms-user-select: none;\n    -khtml-user-select: none;\n    -webkit-user-select: none;\n    user-select: none;\n    cursor: default;\n    font-weight: bold;\n}\n\ni-table section[is=\&quot;thead\&quot;].col-dragging span[is=\&quot;th\&quot;],\ni-table span.copy-node span[is=\&quot;th\&quot;] {\n    cursor: move;\n}\n\ni-table section[is=\&quot;thead\&quot;] span:first-child span[is=\&quot;th\&quot;],\ni-table section.i-table-row &gt;section:first-child section[is=\&quot;td\&quot;] {\n    border-left-width: 0;\n}\n\n/* need double: resize for mouseover, resizing when busy resizing */\ni-table section[is=\&quot;thead\&quot;].resize span[is=\&quot;th\&quot;],\ni-table section[is=\&quot;thead\&quot;].resizing span[is=\&quot;th\&quot;],\ni-table section[is=\&quot;thead\&quot;].resize span[is=\&quot;sort\&quot;],\ni-table section[is=\&quot;thead\&quot;].resizing span[is=\&quot;sort\&quot;] {\n    cursor: col-resize;\n}\n\ni-table span.copy-node {\n    position: absolute;\n    z-index: 899;\n    background-color: #666;\n    color: #FFF;\n    box-shadow: 0 0 0 1px rgba(255,255,255, 0.15) inset;\n    padding-left: 1px; /* replacement of original border-left-width */\n}\n\ni-table[sortable=\&quot;true\&quot;] span.copy-node span[is=\&quot;sort\&quot;] {\n    top: -9999px;\n    left: -9999px;\n}\n\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span.i-hover[sort=\&quot;none\&quot;],\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;none\&quot;]:hover,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;none\&quot;]:focus,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span.i-hover[sort=\&quot;up\&quot;],\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;up\&quot;]:hover,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;up\&quot;]:focus,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span.i-hover[sort=\&quot;down\&quot;],\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;down\&quot;]:hover,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;down\&quot;]:focus {\n    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=&#x27;#00000000&#x27;, endColorstr=&#x27;#1a000000&#x27;,GradientType=0);\n    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(transparent), color-stop(40%, rgba(0,0,0, 0.05)), to(rgba(0,0,0, 0.10)));\n    background-image: -webkit-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: -moz-linear-gradient(top, rgba(0,0,0, 0.05) 0%, rgba(0,0,0, 0.10));\n    background-image: -o-linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n    background-image: linear-gradient(transparent, rgba(0,0,0, 0.05) 40%, rgba(0,0,0, 0.10));\n}\n\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;none\&quot;]:focus,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;up\&quot;]:focus,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;down\&quot;]:focus {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.6) inset;\n}\n\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;none\&quot;].i-hover:focus,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;none\&quot;]:hover:focus,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;up\&quot;].i-hover:focus,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;up\&quot;]:hover:focus,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;down\&quot;].i-hover:focus,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;down\&quot;]:hover:focus {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.7) inset;\n}\n\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;none\&quot;].i-active.i-hover,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;none\&quot;].i-active:hover,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;none\&quot;].i-active.i-hover:focus,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;none\&quot;].i-active:hover:focus,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;up\&quot;].i-active.i-hover,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;up\&quot;].i-active:hover,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;up\&quot;].i-active.i-hover:focus,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;up\&quot;].i-active:hover:focus,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;down\&quot;].i-active.i-hover,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;down\&quot;].i-active:hover,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;down\&quot;].i-active.i-hover:focus,\ni-table[sortable=\&quot;true\&quot;] section[is=\&quot;thead\&quot;]:not(.resize):not(.resizing) span[sort=\&quot;down\&quot;].i-active:hover:focus {\n    box-shadow: 0 0 0 1px rgba(0,0,0, 0.8) inset, 0 0 6px rgba(0,0,0, 0.4) inset;\n    border-left: solid 1px rgba(0,0,0, 0.8);\n}\n\n\ni-table[sortable=\&quot;true\&quot;] span:focus {\n    outline: 0;\n}\n\ni-table span.copy-node.first-child {\n    padding-left: 0;\n}\n\ni-table span.copy-node span[is=\&quot;th\&quot;] {\n    border: none !important;\n}\n\ni-table span.vertical-insert {\n    position: absolute;\n    -webkit-box-sizing: border-box;\n    -moz-box-sizing: border-box;\n    box-sizing: border-box;\n    width: 6px;\n    height: 100%;\n    top: 0;\n    background-color: #666;\n    z-index: 897;\n}\n\ni-table section.col-dragging:not(.fixed-header),\ni-table span.col-dragging {\n    opacity: 0.3 !important;\n}\n\n/*\nstriping:\n   even - #fff (white)\n   odd  - #f2f2f2 (light gray)\n*/\ni-table.striped .i-table-row.even section[is=\&quot;td\&quot;] {\n    background-color: #FFF;\n}\n\ni-table.striped .i-table-row.odd section[is=\&quot;td\&quot;] {\n    background-color: #f2f2f2;\n}\n\n/* BORDERED TABLES */\ni-table.bordered section[is=\&quot;td\&quot;] {\n    border-bottom: 1px solid #cbcbcb;\n}\n\ni-table.bordered section.i-table-row:last-child &gt; section[is=\&quot;td\&quot;],\ni-table.horizontal section.i-table-row:last-child &gt; section[is=\&quot;td\&quot;] {\n    border-bottom-width: 0;\n}\n\n\n/* HORIZONTAL BORDERED TABLES */\n\ni-table.horizontal section[is=\&quot;td\&quot;],\ni-table.horizontal span[is=\&quot;th\&quot;] {\n    border-width: 0 0 1px 0;\n    border-bottom: 1px solid #cbcbcb;\n}\n\ni-table[sortable=\&quot;true\&quot;] span[is=\&quot;sort\&quot;] {\n    position: absolute;\n    width: 1em;\n    height: 100%;\n    top: 0;\n    right: 0;\n    cursor: pointer;\n}\n\ni-table[sortable=\&quot;true\&quot;] span[is=\&quot;sort\&quot;]:before {\n    content: &#x27; &#x27;;\n    border-left: 0.4em solid rgba(0, 0, 0, 0);\n    border-right: 0.4em solid rgba(0, 0, 0, 0);\n    border-bottom: 0.5em solid #AAA;\n    right: 0.15em;\n    position: absolute;\n    top: 0.3em;\n}\n\ni-table[sortable=\&quot;true\&quot;] span[is=\&quot;sort\&quot;]:after {\n    content: &#x27; &#x27;;\n    border-left: 0.4em solid rgba(0, 0, 0, 0);\n    border-right: 0.4em solid rgba(0, 0, 0, 0);\n    border-top: 0.5em solid #AAA;\n    left: 0.1em;\n    position: absolute;\n    top: 1em;\n}\n\ni-table[sortable=\&quot;true\&quot;] span[sort=\&quot;down\&quot;] span[is=\&quot;sort\&quot;]:before {\n    border-bottom-color: #000;\n    top: 0.7em;\n}\n\ni-table[sortable=\&quot;true\&quot;] span[sort=\&quot;down\&quot;] span[is=\&quot;sort\&quot;]:after {\n    border-top: none;\n}\n\ni-table[sortable=\&quot;true\&quot;] span[sort=\&quot;up\&quot;] span[is=\&quot;sort\&quot;]:before {\n    border-bottom: none;\n}\n\ni-table[sortable=\&quot;true\&quot;] span[sort=\&quot;up\&quot;] span[is=\&quot;sort\&quot;]:after {\n    border-top-color: #000;\n    top: 0.7em;\n}\n\ni-table[sortable=\&quot;true\&quot;] span[sort=\&quot;hidden\&quot;] span[is=\&quot;sort\&quot;]:before,\ni-table[sortable=\&quot;true\&quot;] span[sort=\&quot;hidden\&quot;] span[is=\&quot;sort\&quot;]:after {\n    border: none;\n}\n\ni-table[sortable=\&quot;true\&quot;] span[is=\&quot;th\&quot;] {\n    padding-right: 1em;\n    cursor: pointer;\n}\n\ni-table[sortable=\&quot;true\&quot;] span[sort=\&quot;hidden\&quot;] span[is=\&quot;sort\&quot;],\ni-table[sortable=\&quot;true\&quot;] span[sort=\&quot;hidden\&quot;] span[is=\&quot;th\&quot;] {\n    cursor: default;\n}&quot;; (require(&quot;/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify&quot;))(css); module.exports = css;
 },{&quot;/Volumes/Data/Marco/Documenten Marco/GitHub/itags.contributor/node_modules/cssify&quot;:1}],5600:[function(require,module,exports){
 module.exports = function (window) {
     &quot;use strict&quot;;
@@ -44906,6 +45135,7 @@ module.exports = function (window) {
                 catch(err) {
                     model.columns = [];
                 }
+                element.uniqueId = ITSA.idGenerator(&#x27;i-table&#x27;);
             },
 
             attrs: {
@@ -44926,7 +45156,9 @@ module.exports = function (window) {
                     model = element.model,
                     i, len, col, columns;
                 element.setData(&#x27;items&#x27;, model.items.deepClone());
-                // life sorting? than sort the table:
+                // second time: for sync comparision: might be different from &#x60;items&#x60;, because &#x60;items&#x60; can be sorted
+                element.setData(&#x27;_itemsCopy&#x27;, model.items.deepClone()); // second time: for sync comparision
+                // life sorting? then sort the table:
                 if (element.model.sortable &amp;&amp; (element.model.sortable.toLowerCase()===&#x27;life&#x27;)) {
                     element._sortItems();
                 }
@@ -45059,6 +45291,7 @@ module.exports = function (window) {
                 // set element css:
                 element.addSystemElement(css, false, true);
                 element.$superProp(&#x27;render&#x27;);
+                element.setAttr(&#x27;i-id&#x27;, element.uniqueId);
                 // fixedheadernode is only available after render of iscroller:
                 fixedHeaderNode = element.getData(&#x27;_fixedHeaderNode&#x27;);
                 fixedHeaderNode.setAttr(&#x27;is&#x27;, &#x27;thead&#x27;)
@@ -45081,7 +45314,6 @@ module.exports = function (window) {
                     cssNode = element.getElement(&#x27;&gt;style&#x27;, true),
                     unspecified = [],
                     i, col, width, remaining, index;
-
                 for (i=0; i&lt;len; i++) {
                     col = columns[i];
                     if (typeof col===&#x27;string&#x27;) {
@@ -45102,10 +45334,10 @@ module.exports = function (window) {
                             }
                         }
                         occupied += width;
-                        css += &#x27;i-table section.i-table-row &gt;section:nth-child(&#x27;+(i+1)+&#x27;), &#x27;+
-                               &#x27;i-table section.i-table-row &gt;section:nth-child(&#x27;+(i+1)+&#x27;) section[is=&quot;td&quot;], &#x27;+
-                               &#x27;i-table &gt;section[is=&quot;thead&quot;] &gt;span:nth-child(&#x27;+(i+1)+&#x27;), &#x27;+
-                               &#x27;i-table &gt;section[is=&quot;thead&quot;] &gt;span:nth-child(&#x27;+(i+1)+&#x27;) span[is=&quot;th&quot;] &#x27;+
+                        css += &#x27;i-table[i-id=&quot;&#x27;+element.uniqueId+&#x27;&quot;] section.i-table-row &gt;section:nth-child(&#x27;+(i+1)+&#x27;), &#x27;+
+                               &#x27;i-table[i-id=&quot;&#x27;+element.uniqueId+&#x27;&quot;] section.i-table-row &gt;section:nth-child(&#x27;+(i+1)+&#x27;) section[is=&quot;td&quot;], &#x27;+
+                               &#x27;i-table[i-id=&quot;&#x27;+element.uniqueId+&#x27;&quot;] &gt;section[is=&quot;thead&quot;] &gt;span:nth-child(&#x27;+(i+1)+&#x27;), &#x27;+
+                               &#x27;i-table[i-id=&quot;&#x27;+element.uniqueId+&#x27;&quot;] &gt;section[is=&quot;thead&quot;] &gt;span:nth-child(&#x27;+(i+1)+&#x27;) span[is=&quot;th&quot;] &#x27;+
                                &#x27;{width: &#x27;+width+&#x27;px;&#x27;+((width===0) ? &#x27;height:0;&#x27; : &#x27;&#x27;)+&#x27;}&#x27;;
                     }
                     else {
@@ -45126,10 +45358,10 @@ module.exports = function (window) {
                     remaining = Math.max(0, availableWidth - occupied)/len;
                     for (i=0; i&lt;len; i++) {
                         index = unspecified[i];
-                        css += &#x27;i-table section.i-table-row &gt;section:nth-child(&#x27;+(index+1)+&#x27;), &#x27;+
-                               &#x27;i-table section.i-table-row &gt;section:nth-child(&#x27;+(index+1)+&#x27;) section[is=&quot;td&quot;], &#x27;+
-                               &#x27;i-table &gt;section[is=&quot;thead&quot;] &gt;span:nth-child(&#x27;+(index+1)+&#x27;), &#x27;+
-                               &#x27;i-table &gt;section[is=&quot;thead&quot;] &gt;span:nth-child(&#x27;+(index+1)+&#x27;) span[is=&quot;th&quot;] &#x27;+
+                        css += &#x27;i-table[i-id=&quot;&#x27;+element.uniqueId+&#x27;&quot;] section.i-table-row &gt;section:nth-child(&#x27;+(index+1)+&#x27;), &#x27;+
+                               &#x27;i-table[i-id=&quot;&#x27;+element.uniqueId+&#x27;&quot;] section.i-table-row &gt;section:nth-child(&#x27;+(index+1)+&#x27;) section[is=&quot;td&quot;], &#x27;+
+                               &#x27;i-table[i-id=&quot;&#x27;+element.uniqueId+&#x27;&quot;] &gt;section[is=&quot;thead&quot;] &gt;span:nth-child(&#x27;+(index+1)+&#x27;), &#x27;+
+                               &#x27;i-table[i-id=&quot;&#x27;+element.uniqueId+&#x27;&quot;] &gt;section[is=&quot;thead&quot;] &gt;span:nth-child(&#x27;+(index+1)+&#x27;) span[is=&quot;th&quot;] &#x27;+
                                &#x27;{width: &#x27;+remaining+&#x27;px;&#x27;+((remaining&lt;0.5) ? &#x27;height:0;&#x27; : &#x27;&#x27;)+&#x27;}&#x27;;
                         occupied += remaining;
                     }
@@ -45142,14 +45374,14 @@ module.exports = function (window) {
                     width += (availableWidth - occupied);
                     occupied = availableWidth; // needed for setting container width later on
                     len = columns.length; // redefine for it was changed
-                    css += &#x27;i-table section.i-table-row &gt;section:nth-child(&#x27;+len+&#x27;), &#x27;+
-                           &#x27;i-table section.i-table-row &gt;section:nth-child(&#x27;+len+&#x27;) section[is=&quot;td&quot;], &#x27;+
-                           &#x27;i-table &gt;section[is=&quot;thead&quot;] &gt;span:nth-child(&#x27;+len+&#x27;), &#x27;+
-                           &#x27;i-table &gt;section[is=&quot;thead&quot;] &gt;span:nth-child(&#x27;+len+&#x27;) span[is=&quot;th&quot;] &#x27;+
+                    css += &#x27;i-table[i-id=&quot;&#x27;+element.uniqueId+&#x27;&quot;] section.i-table-row &gt;section:nth-child(&#x27;+len+&#x27;), &#x27;+
+                           &#x27;i-table[i-id=&quot;&#x27;+element.uniqueId+&#x27;&quot;] section.i-table-row &gt;section:nth-child(&#x27;+len+&#x27;) section[is=&quot;td&quot;], &#x27;+
+                           &#x27;i-table[i-id=&quot;&#x27;+element.uniqueId+&#x27;&quot;] &gt;section[is=&quot;thead&quot;] &gt;span:nth-child(&#x27;+len+&#x27;), &#x27;+
+                           &#x27;i-table[i-id=&quot;&#x27;+element.uniqueId+&#x27;&quot;] &gt;section[is=&quot;thead&quot;] &gt;span:nth-child(&#x27;+len+&#x27;) span[is=&quot;th&quot;] &#x27;+
                            &#x27;{width: &#x27;+width+&#x27;px;&#x27;+((width===0) ? &#x27;height:0;&#x27; : &#x27;&#x27;)+&#x27;}&#x27;;
 
                 }
-                css += &#x27;i-table &gt;section[is=&quot;thead&quot;], i-table &gt;span {width:&#x27;+occupied+&#x27;px}&#x27;;
+                css += &#x27;i-table[i-id=&quot;&#x27;+element.uniqueId+&#x27;&quot;] &gt;section[is=&quot;thead&quot;], i-table[i-id=&quot;&#x27;+element.uniqueId+&#x27;&quot;] &gt;span {width:&#x27;+occupied+&#x27;px}&#x27;;
                 cssNode.setText(css);
                 // no node.templateHeaders, but predefined:
                 fixedHeaderNode.setHTML(headerContent);
@@ -45162,11 +45394,15 @@ module.exports = function (window) {
             sync: function() {
                 var element = this,
                     prevColDef = element.getData(&#x27;_columnsCopy&#x27;) || [],
-                    prevItemsDef = element.getData(&#x27;items&#x27;) || [],
+                    prevItemsDef = element.getData(&#x27;_itemsCopy&#x27;) || [],
                     scrollContainer, maxHeight, vRowChildNodes, vRowChildNode, len, i, vCellNodes, vCellChildNode, j, len2;
 
                 element.model.columns.sameValue(prevColDef) || element.syncCols();
+
+
                 element.model.items.sameValue(prevItemsDef) || element.cloneItems();
+
+
                 element.$superProp(&#x27;sync&#x27;);
                 if (ITSA.UA.isIE &amp;&amp; ITSA.UA.ieVersion&lt;10) {
                     // we need to calculate the height of each cell of every row and set the max-height as inline height
@@ -46495,7 +46731,7 @@ module.exports = function (window) {
             // sync, but do this after the element is created:
             // in the next eventcycle:
             async(function(){
-                var needsToBind = domElement.lazyBind || (domElement.getAttr(&#x27;lazybind&#x27;)===&#x27;true&#x27;);
+                var needsToBind = (domElement.lazyBind  &amp;&amp; (domElement.getAttr(&#x27;lazybind&#x27;)!==&#x27;false&#x27;)) || (domElement.getAttr(&#x27;lazybind&#x27;)===&#x27;true&#x27;);
                 // only if no modelbinding is needed, we can directly init, sync and make ready,
                 // otherwise we need to make this done by  &#x60;bindModel&#x60;
                 BINDING_LIST.some(function(value, selector) {

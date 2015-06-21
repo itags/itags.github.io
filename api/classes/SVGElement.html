@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>window - Itsa</title>
+    <title>SVGElement - Itsa</title>
     <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -236,22 +236,18 @@
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-                        <h1>window Class</h1>
+                        <h1>SVGElement Class</h1>
 <div class="box meta">
     
 
     
 
     
-        <div class="foundat">
-            Defined in: <a href="../files/site-preview_dist_itagsbuild.js.html#l33154"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:33154</code></a>
-        </div>
-    
 
     
         
-            Module: <a href="../modules/lib_array.js.html">lib/array.js</a><br>
-            Parent Module: <a href="../modules/js-ext.html">js-ext</a>
+            Module: <a href="../modules/extend-element.html">extend-element</a><br>
+            Parent Module: <a href="../modules/vdom.html">vdom</a>
         
     
 
@@ -261,10 +257,7 @@
 
 
 <div class="box intro">
-    <p>Emulation of browser <code>window</code> and <code>dom</code>. Just enough to make ITSA work.</p>
-<p><i>Copyright (c) 2014 ITSA - <a href="https://github.com/itsa">https://github.com/itsa</a></i>
-New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">http://choosealicense.com/licenses/bsd-3-clause/</a></p>
-
+    
 </div>
 
 
@@ -294,21 +287,56 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
                     <ul class="index-list properties">
                         
                             <li class="index-item property">
-                                <a href="#property_ITAGS">ITAGS</a>
+                                <a href="#property_innerHeight">innerHeight</a>
 
                                 
                                 
                             </li>
                         
                             <li class="index-item property">
-                                <a href="#property_ITAGS">ITAGS</a>
+                                <a href="#property_innerHeight">innerHeight</a>
 
                                 
                                 
                             </li>
                         
                             <li class="index-item property">
-                                <a href="#property_ITAGS">ITAGS</a>
+                                <a href="#property_innerWidth">innerWidth</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item property">
+                                <a href="#property_innerWidth">innerWidth</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item property">
+                                <a href="#property_svgHeight">svgHeight</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item property">
+                                <a href="#property_svgHeight">svgHeight</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item property">
+                                <a href="#property_svgWidth">svgWidth</a>
+
+                                
+                                
+                            </li>
+                        
+                            <li class="index-item property">
+                                <a href="#property_svgWidth">svgWidth</a>
 
                                 
                                 
@@ -330,9 +358,9 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
                 <h2 class="off-left">Properties</h2>
 
                 
-                    <div id="property_ITAGS" class="property item">
-    <h3 class="name"><code>ITAGS</code></h3>
-    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
+                    <div id="property_innerHeight" class="property item">
+    <h3 class="name"><code>innerHeight</code></h3>
+    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Number" class="crosslink external" target="_blank">Number</a></span>
 
     
 
@@ -346,8 +374,6 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
         
             
                 
-                    <p>Provided by the <a href="../modules/itags.core.html">itags.core</a> module.</p>
-                
                 <p>
                 
                 Defined in
@@ -355,7 +381,7 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
             
         
         
-        <a href="../files/site_dist_itagsbuild.js.html#l45619"><code>site&#x2F;dist&#x2F;itagsbuild.js:45619</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l13816"><code>site&#x2F;dist&#x2F;itagsbuild.js:13816</code></a>
         
         </p>
 
@@ -367,7 +393,10 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
     </div>
 
     <div class="description">
-        <p>Internal hash containing all ITAG-Class definitions.</p>
+        <p>Gets or set the innerHeight of the element in pixels. Excluded the borders.
+Included are padding.</p>
+<p>The getter is calculating through <code>offsetHeight</code>, the setter will set inline css-style for the height.</p>
+<p>Values are numbers without unity.</p>
 
     </div>
 
@@ -379,9 +408,9 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
 </div>
 
                 
-                    <div id="property_ITAGS" class="property item">
-    <h3 class="name"><code>ITAGS</code></h3>
-    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
+                    <div id="property_innerHeight" class="property item">
+    <h3 class="name"><code>innerHeight</code></h3>
+    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Number" class="crosslink external" target="_blank">Number</a></span>
 
     
 
@@ -395,8 +424,6 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
         
             
                 
-                    <p>Provided by the <a href="../modules/itags.core.html">itags.core</a> module.</p>
-                
                 <p>
                 
                 Defined in
@@ -404,7 +431,7 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
             
         
         
-        <a href="../files/site-preview_dist_itagsbuild.js.html#l45619"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:45619</code></a>
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l13816"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:13816</code></a>
         
         </p>
 
@@ -416,7 +443,10 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
     </div>
 
     <div class="description">
-        <p>Internal hash containing all ITAG-Class definitions.</p>
+        <p>Gets or set the innerHeight of the element in pixels. Excluded the borders.
+Included are padding.</p>
+<p>The getter is calculating through <code>offsetHeight</code>, the setter will set inline css-style for the height.</p>
+<p>Values are numbers without unity.</p>
 
     </div>
 
@@ -428,9 +458,9 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
 </div>
 
                 
-                    <div id="property_ITAGS" class="property item">
-    <h3 class="name"><code>ITAGS</code></h3>
-    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object" class="crosslink external" target="_blank">Object</a></span>
+                    <div id="property_innerWidth" class="property item">
+    <h3 class="name"><code>innerWidth</code></h3>
+    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Number" class="crosslink external" target="_blank">Number</a></span>
 
     
 
@@ -444,8 +474,6 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
         
             
                 
-                    <p>Provided by the <a href="../modules/itags.core.html">itags.core</a> module.</p>
-                
                 <p>
                 
                 Defined in
@@ -453,7 +481,7 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
             
         
         
-        <a href="../files/src_itags.core_itags.core.js.html#l86"><code>src&#x2F;itags.core&#x2F;itags.core.js:86</code></a>
+        <a href="../files/site_dist_itagsbuild.js.html#l13843"><code>site&#x2F;dist&#x2F;itagsbuild.js:13843</code></a>
         
         </p>
 
@@ -465,7 +493,256 @@ New BSD License - <a href="http://choosealicense.com/licenses/bsd-3-clause/">htt
     </div>
 
     <div class="description">
-        <p>Internal hash containing all ITAG-Class definitions.</p>
+        <p>Gets or set the innerHeight of the element in pixels. Excluded the borders.
+Included are padding.</p>
+<p>The getter is calculating through <code>offsetHeight</code>, the setter will set inline css-style for the height.</p>
+<p>Values are numbers without unity.</p>
+
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="property_innerWidth" class="property item">
+    <h3 class="name"><code>innerWidth</code></h3>
+    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Number" class="crosslink external" target="_blank">Number</a></span>
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l13843"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:13843</code></a>
+        
+        </p>
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Gets or set the innerHeight of the element in pixels. Excluded the borders.
+Included are padding.</p>
+<p>The getter is calculating through <code>offsetHeight</code>, the setter will set inline css-style for the height.</p>
+<p>Values are numbers without unity.</p>
+
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="property_svgHeight" class="property item">
+    <h3 class="name"><code>svgHeight</code></h3>
+    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Number" class="crosslink external" target="_blank">Number</a></span>
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site_dist_itagsbuild.js.html#l13789"><code>site&#x2F;dist&#x2F;itagsbuild.js:13789</code></a>
+        
+        </p>
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Gets or set the height of the element in pixels. Included are padding and border, not any margins.</p>
+<p>The getter is calculating through <code>offsetHeight</code>, the setter will set inline css-style for the height.</p>
+<p>Values are numbers without unity.</p>
+
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="property_svgHeight" class="property item">
+    <h3 class="name"><code>svgHeight</code></h3>
+    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Number" class="crosslink external" target="_blank">Number</a></span>
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l13789"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:13789</code></a>
+        
+        </p>
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Gets or set the height of the element in pixels. Included are padding and border, not any margins.</p>
+<p>The getter is calculating through <code>offsetHeight</code>, the setter will set inline css-style for the height.</p>
+<p>Values are numbers without unity.</p>
+
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="property_svgWidth" class="property item">
+    <h3 class="name"><code>svgWidth</code></h3>
+    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Number" class="crosslink external" target="_blank">Number</a></span>
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site_dist_itagsbuild.js.html#l13870"><code>site&#x2F;dist&#x2F;itagsbuild.js:13870</code></a>
+        
+        </p>
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Gets or set the width of the element in pixels. Included are padding and border, not any margins.</p>
+<p>The getter is calculating through <code>offsetHeight</code>, the setter will set inline css-style for the width.</p>
+<p>Values are numbers without unity.</p>
+
+    </div>
+
+    
+
+    
+
+    
+</div>
+
+                
+                    <div id="property_svgWidth" class="property item">
+    <h3 class="name"><code>svgWidth</code></h3>
+    <span class="type"><a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Number" class="crosslink external" target="_blank">Number</a></span>
+
+    
+
+    
+
+    
+
+    
+
+    <div class="meta">
+        
+            
+                
+                <p>
+                
+                Defined in
+                
+            
+        
+        
+        <a href="../files/site-preview_dist_itagsbuild.js.html#l13870"><code>site-preview&#x2F;dist&#x2F;itagsbuild.js:13870</code></a>
+        
+        </p>
+
+        
+
+        
+            <p>Available since 0.0.1</p>
+        
+    </div>
+
+    <div class="description">
+        <p>Gets or set the width of the element in pixels. Included are padding and border, not any margins.</p>
+<p>The getter is calculating through <code>offsetHeight</code>, the setter will set inline css-style for the width.</p>
+<p>Values are numbers without unity.</p>
 
     </div>
 

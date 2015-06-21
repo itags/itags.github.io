@@ -23,7 +23,6 @@ includeexample: 20em
         padding: 20px;
     }
     i-splitdiv section[section="second"] {
-        border-left: dotted 4px #000;
         background-color: #EEE;
     }
 </style>
@@ -31,7 +30,7 @@ includeexample: 20em
 
 ```html
 <body>
-    <i-splitdiv horizontal="true" divider="50px" resizable="true">
+    <i-splitdiv class="resize-dashed" horizontal="true" divider="50px" resizable="true">
     <!--
         <section>Content first section</section>
         <section>Content second section</section>
@@ -42,7 +41,4 @@ includeexample: 20em
 
 ```js
 <script src="itagsbuild-min.js"></script>
-<script>
-    require('itags');
-</script>
 ```

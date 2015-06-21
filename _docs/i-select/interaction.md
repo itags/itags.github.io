@@ -26,7 +26,17 @@ includeexample: 20em
 ```js
 <script src="itagsbuild-min.js"></script>
 <script>
-    require('itags');
-    document.getElement('i-select').focus();
+    var iselectNode = document.getElement('i-select');
+
+    node.focus();
+
+    ITSA.later(function() {
+        iselectNode.model.expanded = true;
+    }, 2000);
+
+    ITSA.later(function() {
+        iselectNode.model.expanded = false;
+    }, 4000);
+
 </script>
 ```

@@ -8,23 +8,72 @@ includeexample: 20em
 
 <p>Code-example:</p>
 
+```css
+<style type="text/css">
+    i-form {
+        border: solid 1px #000;
+    }
+    i-form.focussed {
+        border: solid 1px #F00;
+    }
+</style>
+```
 
 ```html
 <body>
-    <i-select value="2" primary-button="true">
-        <i-item>item1</i-item>
-        <i-item>item2</i-item>
-        <i-item><i-head>item3 header</i-head>item3 content</i-item>
-        <i-item>item4</i-item>
-        <i-item>item5</i-item>
-    </i-select>
-</body>
+    <i-form class="i-aligned" lazybind="true">
+        <!--
+            <legend>An Aligned Form</legend>
+            <i-label><!==Username:==></i-label><i-input i-prop="name" reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+            <i-label><!==Username:==></i-label><i-input i-prop="name" reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+            <i-label><!==Username:==></i-label><i-input i-prop="name" reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+            <i-label><!==Username:==></i-label>
+                <i-select i-prop="selectvalue">
+                    <!==
+                        <option>item1</option>
+                        <option>item2</option>
+                        <option><span is="button">item3 header</span>item3 content</option>
+                        <option>item4</option>
+                        <option>item5</option>
+                    ==>
+                </i-select>
+            <fieldset class="i-group">
+                <i-label><!==Username:==></i-label><i-input i-prop="name" reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+                <i-label><!==Username:==></i-label><i-input i-prop="name" reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+                <i-label><!==Username:==></i-label><i-input i-prop="name" reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+            </fieldset>
+            <fieldset>
+                <i-label><!==Activated:==></i-label><i-checkbox i-prop="activated">
+                    <!==
+                        <option>ON</option>
+                        <option>OFF</option>
+                    ==>
+                </i-checkbox>
+                <i-label><!==Activated:==></i-label><i-checkbox i-prop="activated"></i-checkbox>
+                <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+                <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+                <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+            </fieldset>
+            <fieldset>
+                <i-button is="reset"><!==Reset==></i-button>
+                <i-button><!==Cancel==></i-button>
+                <i-button><!==Ignore==></i-button>
+                <i-button><!==Retry==></i-button>
+            </fieldset>
+        -->
+    </i-form></body>
 ```
 
 ```js
 <script src="itagsbuild-min.js"></script>
 <script>
-    require('itags');
-    document.getElement('i-select').focus();
+        var datamodel = {
+                selectvalue: 4,
+                activated: true,
+                name: 'Harry'
+            };
+        document.bindModel(datamodel, 'i-form');
+        document.getElement('i-form').focus();
+
 </script>
 ```

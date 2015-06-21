@@ -1,12 +1,12 @@
 # Site settings
-title: ITSA modules
+title: Itags
 email: contact@itsa.io
 description: ""
-version: "0.0.4"
+version: "0.0.1"
 baseurl: ""
 url: "http://itsa.github.io"
-twitter_username: ItsaModules
-github_username:  itsa
+twitter_username: Itags
+github_username:  itags
 
 # Build settings
 markdown: redcarpet

@@ -21,6 +21,11 @@ includeexample: 20em
 <div id="test"></div>
 <p>Code-example:</p>
 
+```css
+<style type="text/css">
+    i-tabpane {height: 15em; width: 40em;}
+</style>
+```
 
 ```html
 <body>

@@ -11,7 +11,7 @@ includeexample: 20em
 
 ```html
 <body>
-    <i-parcel lazybind="true">
+    <i-parcel>
     <!--
         I am <b>just</b> {what}.
     -->
@@ -22,7 +22,6 @@ includeexample: 20em
 ```js
 <script src="itagsbuild-min.js"></script>
 <script>
-    require('itags');
     var iparcel = document.getElement('i-parcel'),
         model = {what: 'a template'};
     iparcel.bindModel(model);

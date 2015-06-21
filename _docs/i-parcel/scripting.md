@@ -11,7 +11,7 @@ includeexample: 20em
 
 ```html
 <body>
-    <i-parcel lazybind="true">
+    <i-parcel>
     <!--
         I am <% if (age>=18) { %><%= adultMessage %><% } else { %><%= childMessage %><% } %>.
     -->
@@ -22,13 +22,18 @@ includeexample: 20em
 ```js
 <script src="itagsbuild-min.js"></script>
 <script>
-    require('itags');
     var iparcel = document.getElement('i-parcel'),
         model = {
-            age: 20,
+            age: 17,
             adultMessage: 'an adult',
             childMessage: 'a child'
         };
+
     iparcel.bindModel(model);
+
+    ITSA.later(function() {
+        model.age = 18;
+    }, 3000);
+
 </script>
 ```

@@ -101,6 +101,8 @@
             
                 <li><a href="../classes/String.html">String</a></li>
             
+                <li><a href="../classes/SVGElement.html">SVGElement</a></li>
+            
                 <li><a href="../classes/USERAGENT.html">USERAGENT</a></li>
             
                 <li><a href="../classes/Utils.html">Utils</a></li>
@@ -269,6 +271,7 @@ module.exports = function (window) {
                 catch(err) {
                     model.columns = [];
                 }
+                element.uniqueId = ITSA.idGenerator(&#x27;i-table&#x27;);
             },
 
             attrs: {
@@ -289,7 +292,9 @@ module.exports = function (window) {
                     model = element.model,
                     i, len, col, columns;
                 element.setData(&#x27;items&#x27;, model.items.deepClone());
-                // life sorting? than sort the table:
+                // second time: for sync comparision: might be different from &#x60;items&#x60;, because &#x60;items&#x60; can be sorted
+                element.setData(&#x27;_itemsCopy&#x27;, model.items.deepClone()); // second time: for sync comparision
+                // life sorting? then sort the table:
                 if (element.model.sortable &amp;&amp; (element.model.sortable.toLowerCase()===&#x27;life&#x27;)) {
                     element._sortItems();
                 }
@@ -422,6 +427,7 @@ module.exports = function (window) {
                 // set element css:
                 element.addSystemElement(css, false, true);
                 element.$superProp(&#x27;render&#x27;);
+                element.setAttr(&#x27;i-id&#x27;, element.uniqueId);
                 // fixedheadernode is only available after render of iscroller:
                 fixedHeaderNode = element.getData(&#x27;_fixedHeaderNode&#x27;);
                 fixedHeaderNode.setAttr(&#x27;is&#x27;, &#x27;thead&#x27;)
@@ -444,7 +450,6 @@ module.exports = function (window) {
                     cssNode = element.getElement(&#x27;&gt;style&#x27;, true),
                     unspecified = [],
                     i, col, width, remaining, index;
-
                 for (i=0; i&lt;len; i++) {
                     col = columns[i];
                     if (typeof col===&#x27;string&#x27;) {
@@ -465,10 +470,10 @@ module.exports = function (window) {
                             }
                         }
                         occupied += width;
-                        css += &#x27;i-table section.i-table-row &gt;section:nth-child(&#x27;+(i+1)+&#x27;), &#x27;+
-                               &#x27;i-table section.i-table-row &gt;section:nth-child(&#x27;+(i+1)+&#x27;) section[is=&quot;td&quot;], &#x27;+
-                               &#x27;i-table &gt;section[is=&quot;thead&quot;] &gt;span:nth-child(&#x27;+(i+1)+&#x27;), &#x27;+
-                               &#x27;i-table &gt;section[is=&quot;thead&quot;] &gt;span:nth-child(&#x27;+(i+1)+&#x27;) span[is=&quot;th&quot;] &#x27;+
+                        css += &#x27;i-table[i-id=&quot;&#x27;+element.uniqueId+&#x27;&quot;] section.i-table-row &gt;section:nth-child(&#x27;+(i+1)+&#x27;), &#x27;+
+                               &#x27;i-table[i-id=&quot;&#x27;+element.uniqueId+&#x27;&quot;] section.i-table-row &gt;section:nth-child(&#x27;+(i+1)+&#x27;) section[is=&quot;td&quot;], &#x27;+
+                               &#x27;i-table[i-id=&quot;&#x27;+element.uniqueId+&#x27;&quot;] &gt;section[is=&quot;thead&quot;] &gt;span:nth-child(&#x27;+(i+1)+&#x27;), &#x27;+
+                               &#x27;i-table[i-id=&quot;&#x27;+element.uniqueId+&#x27;&quot;] &gt;section[is=&quot;thead&quot;] &gt;span:nth-child(&#x27;+(i+1)+&#x27;) span[is=&quot;th&quot;] &#x27;+
                                &#x27;{width: &#x27;+width+&#x27;px;&#x27;+((width===0) ? &#x27;height:0;&#x27; : &#x27;&#x27;)+&#x27;}&#x27;;
                     }
                     else {
@@ -489,10 +494,10 @@ module.exports = function (window) {
                     remaining = Math.max(0, availableWidth - occupied)/len;
                     for (i=0; i&lt;len; i++) {
                         index = unspecified[i];
-                        css += &#x27;i-table section.i-table-row &gt;section:nth-child(&#x27;+(index+1)+&#x27;), &#x27;+
-                               &#x27;i-table section.i-table-row &gt;section:nth-child(&#x27;+(index+1)+&#x27;) section[is=&quot;td&quot;], &#x27;+
-                               &#x27;i-table &gt;section[is=&quot;thead&quot;] &gt;span:nth-child(&#x27;+(index+1)+&#x27;), &#x27;+
-                               &#x27;i-table &gt;section[is=&quot;thead&quot;] &gt;span:nth-child(&#x27;+(index+1)+&#x27;) span[is=&quot;th&quot;] &#x27;+
+                        css += &#x27;i-table[i-id=&quot;&#x27;+element.uniqueId+&#x27;&quot;] section.i-table-row &gt;section:nth-child(&#x27;+(index+1)+&#x27;), &#x27;+
+                               &#x27;i-table[i-id=&quot;&#x27;+element.uniqueId+&#x27;&quot;] section.i-table-row &gt;section:nth-child(&#x27;+(index+1)+&#x27;) section[is=&quot;td&quot;], &#x27;+
+                               &#x27;i-table[i-id=&quot;&#x27;+element.uniqueId+&#x27;&quot;] &gt;section[is=&quot;thead&quot;] &gt;span:nth-child(&#x27;+(index+1)+&#x27;), &#x27;+
+                               &#x27;i-table[i-id=&quot;&#x27;+element.uniqueId+&#x27;&quot;] &gt;section[is=&quot;thead&quot;] &gt;span:nth-child(&#x27;+(index+1)+&#x27;) span[is=&quot;th&quot;] &#x27;+
                                &#x27;{width: &#x27;+remaining+&#x27;px;&#x27;+((remaining&lt;0.5) ? &#x27;height:0;&#x27; : &#x27;&#x27;)+&#x27;}&#x27;;
                         occupied += remaining;
                     }
@@ -505,14 +510,14 @@ module.exports = function (window) {
                     width += (availableWidth - occupied);
                     occupied = availableWidth; // needed for setting container width later on
                     len = columns.length; // redefine for it was changed
-                    css += &#x27;i-table section.i-table-row &gt;section:nth-child(&#x27;+len+&#x27;), &#x27;+
-                           &#x27;i-table section.i-table-row &gt;section:nth-child(&#x27;+len+&#x27;) section[is=&quot;td&quot;], &#x27;+
-                           &#x27;i-table &gt;section[is=&quot;thead&quot;] &gt;span:nth-child(&#x27;+len+&#x27;), &#x27;+
-                           &#x27;i-table &gt;section[is=&quot;thead&quot;] &gt;span:nth-child(&#x27;+len+&#x27;) span[is=&quot;th&quot;] &#x27;+
+                    css += &#x27;i-table[i-id=&quot;&#x27;+element.uniqueId+&#x27;&quot;] section.i-table-row &gt;section:nth-child(&#x27;+len+&#x27;), &#x27;+
+                           &#x27;i-table[i-id=&quot;&#x27;+element.uniqueId+&#x27;&quot;] section.i-table-row &gt;section:nth-child(&#x27;+len+&#x27;) section[is=&quot;td&quot;], &#x27;+
+                           &#x27;i-table[i-id=&quot;&#x27;+element.uniqueId+&#x27;&quot;] &gt;section[is=&quot;thead&quot;] &gt;span:nth-child(&#x27;+len+&#x27;), &#x27;+
+                           &#x27;i-table[i-id=&quot;&#x27;+element.uniqueId+&#x27;&quot;] &gt;section[is=&quot;thead&quot;] &gt;span:nth-child(&#x27;+len+&#x27;) span[is=&quot;th&quot;] &#x27;+
                            &#x27;{width: &#x27;+width+&#x27;px;&#x27;+((width===0) ? &#x27;height:0;&#x27; : &#x27;&#x27;)+&#x27;}&#x27;;
 
                 }
-                css += &#x27;i-table &gt;section[is=&quot;thead&quot;], i-table &gt;span {width:&#x27;+occupied+&#x27;px}&#x27;;
+                css += &#x27;i-table[i-id=&quot;&#x27;+element.uniqueId+&#x27;&quot;] &gt;section[is=&quot;thead&quot;], i-table[i-id=&quot;&#x27;+element.uniqueId+&#x27;&quot;] &gt;span {width:&#x27;+occupied+&#x27;px}&#x27;;
                 cssNode.setText(css);
                 // no node.templateHeaders, but predefined:
                 fixedHeaderNode.setHTML(headerContent);
@@ -525,11 +530,15 @@ module.exports = function (window) {
             sync: function() {
                 var element = this,
                     prevColDef = element.getData(&#x27;_columnsCopy&#x27;) || [],
-                    prevItemsDef = element.getData(&#x27;items&#x27;) || [],
+                    prevItemsDef = element.getData(&#x27;_itemsCopy&#x27;) || [],
                     scrollContainer, maxHeight, vRowChildNodes, vRowChildNode, len, i, vCellNodes, vCellChildNode, j, len2;
 
                 element.model.columns.sameValue(prevColDef) || element.syncCols();
+
+
                 element.model.items.sameValue(prevItemsDef) || element.cloneItems();
+
+
                 element.$superProp(&#x27;sync&#x27;);
                 if (ITSA.UA.isIE &amp;&amp; ITSA.UA.ieVersion&lt;10) {
                     // we need to calculate the height of each cell of every row and set the max-height as inline height

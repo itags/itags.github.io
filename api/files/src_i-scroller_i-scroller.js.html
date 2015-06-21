@@ -101,6 +101,8 @@
             
                 <li><a href="../classes/String.html">String</a></li>
             
+                <li><a href="../classes/SVGElement.html">SVGElement</a></li>
+            
                 <li><a href="../classes/USERAGENT.html">USERAGENT</a></li>
             
                 <li><a href="../classes/Utils.html">Utils</a></li>
@@ -577,7 +579,8 @@ module.exports = function (window) {
                        .defineWhenUndefined(&#x27;item-size&#x27;, itemsize)
                        .defineWhenUndefined(&#x27;start-item&#x27;, startItem)
                         // set the reset-value to the inital-value in case &#x60;reset-value&#x60; was not present
-                       .defineWhenUndefined(&#x27;reset-value&#x27;, value);
+                       .defineWhenUndefined(&#x27;reset-value&#x27;, value)
+                       .defineWhenUndefined(&#x27;items&#x27;, []);
 
                 // store headernodes when defined:
                 if (headerNodes &amp;&amp; !element.headers) {

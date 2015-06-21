@@ -10,8 +10,8 @@
         }
         i-table {
             width: 500px;
-            height: 40%;
-            top: 120px;
+            height: 500px;
+            top: 20px;
             left: 50px;
             font-size: 120%;
         }
@@ -33,11 +33,10 @@
 
     <script src="../../dist/itagsbuild-min.js"></script>
     <script>
-        require('itags');
         var iscroller = document.getElement('i-table'),
             model = {items: []},
             i;
-        for (i=0; i<5000; i++) {
+        for (i=0; i<10000; i++) {
             model.items.push({id: i, price: 100*i, description: 'Desc. '+i, delivertime: 3*i+3});
         }
         iscroller.bindModel(model);
@@ -51,7 +50,7 @@
             // model['start-item'] = 25;
 
 
-
+/*
 
         ITSA.later(function() {
             // model['start-item'] = 28.75;
@@ -59,6 +58,7 @@
         ITSA.Event.after('*:selected', function(e) {
             console.warn(e);
         });
+*/
     </script>
 
 </body>
