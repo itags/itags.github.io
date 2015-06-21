@@ -1,0 +1,78 @@
+
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>Simple i-table</title>
+    <style type="text/css">
+        html, body {
+            height: 100%;
+        }
+        i-table {
+            width: 500px;
+            height: 40%;
+            top: 120px;
+            left: 50px;
+            font-size: 120%;
+            margin-right: 1em !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <i-table start-item="1" editable="true" resizable="true" class="striped bordered">
+    <!--
+        [{"key": "id", "width": 50},
+         {"key": "price", "width": 50},
+         {"key": "description", "width": 150},
+         {"key": "delivertime", "width": 50}]
+    -->
+    </i-table>
+
+    <i-table start-item="1" editable="true" resizable="true" class="striped bordered">
+    <!--
+        [{"key": "id", "width": 50},
+         {"key": "price", "width": 50},
+         {"key": "description", "width": 150},
+         {"key": "delivertime", "width": 50}]
+    -->
+    </i-table>
+
+    <!-- `sortRendered` means: sort by the rendered array's value, not the value that is in the array -->
+
+    <script src="../../dist/itagsbuild.js"></script>
+    <script>
+        require('itags');
+        var itables = document.getAll('i-table'),
+            model = {items: []},
+            i;
+        for (i=0; i<5000; i++) {
+            model.items.push({id: i, price: 100*i, description: 'Desc. '+i, delivertime: 3*i+3});
+        }
+        itables[0].bindModel(model);
+        itables[1].bindModel(model);
+        ITSA.later(function() {
+            // model['start-item'] = 5;
+            // model.items[5].price = 999;
+        }, 5000);
+
+
+
+// --> MAG NOOI HOGER DAN AANTAL!!!
+            // model['start-item'] = 25;
+
+
+
+
+        ITSA.later(function() {
+            // model['start-item'] = 28.75;
+        }, 5000);
+        ITSA.Event.after('*:selected', function(e) {
+            console.warn(e);
+        });
+    </script>
+
+</body>
+
+</html>

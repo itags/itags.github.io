@@ -1,0 +1,36 @@
+
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>Simple i-form</title>
+    <style type="text/css">
+        i-form {
+            border: solid 1px #000;
+        }
+        i-form.focussed {
+            border: solid 4px #F00;
+        }
+    </style>
+</head>
+
+<body>
+
+    <i-form class="i-aligned" lazybind="true">
+        <!--
+            <i-label><!==Your username:==></i-label><i-formvalue><!==username==></i-formvalue>
+        -->
+    </i-form>
+
+    <script src="../../dist/itagsbuild.js"></script>
+    <script>
+        require('itags');
+        var datamodel = {
+                username: 1
+            };
+        document.bindModel(datamodel, 'i-form');
+    </script>
+
+</body>
+
+</html>

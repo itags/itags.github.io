@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>src/i-form/i-form.js - Itsa</title>
+    <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
+    <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
+    <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
+    <link rel="shortcut icon" type="image/png" href="../assets/favicon.png">
+    <script src="http://yui.yahooapis.com/combo?3.9.1/build/yui/yui-min.js"></script>
+</head>
+<body class="yui3-skin-sam">
+
+<div id="doc">
+    <div id="hd" class="yui3-g header">
+        <div class="yui3-u-3-4">
+            
+                <h1><img src="../assets/css/logo.png" title="Itsa"></h1>
+            
+        </div>
+        <div class="yui3-u-1-4 version">
+            <em>API Docs for: 0.0.1</em>
+        </div>
+    </div>
+    <div id="bd" class="yui3-g">
+
+        <div class="yui3-u-1-4">
+            <div id="docs-sidebar" class="sidebar apidocs">
+                <div id="api-list">
+    <h2 class="off-left">APIs</h2>
+    <div id="api-tabview" class="tabview">
+        <ul class="tabs">
+            <li><a href="#api-classes">Classes</a></li>
+            <li><a href="#api-modules">Modules</a></li>
+        </ul>
+
+        <div id="api-tabview-filter">
+            <input type="search" id="api-filter" placeholder="Type to filter APIs">
+        </div>
+
+        <div id="api-tabview-panel">
+            <ul id="api-classes" class="apis classes">
+            
+                <li><a href="../classes/Array.html">Array</a></li>
+            
+                <li><a href="../classes/BaseClass.html">BaseClass</a></li>
+            
+                <li><a href="../classes/Classes.html">Classes</a></li>
+            
+                <li><a href="../classes/DD.html">DD</a></li>
+            
+                <li><a href="../classes/Dialog.html">Dialog</a></li>
+            
+                <li><a href="../classes/document.html">document</a></li>
+            
+                <li><a href="../classes/Element.html">Element</a></li>
+            
+                <li><a href="../classes/ElementArray.html">ElementArray</a></li>
+            
+                <li><a href="../classes/Event.html">Event</a></li>
+            
+                <li><a href="../classes/Event.Emitter.html">Event.Emitter</a></li>
+            
+                <li><a href="../classes/Event.Listener.html">Event.Listener</a></li>
+            
+                <li><a href="../classes/FocusManager.html">FocusManager</a></li>
+            
+                <li><a href="../classes/Function.html">Function</a></li>
+            
+                <li><a href="../classes/HTMLElement.html">HTMLElement</a></li>
+            
+                <li><a href="../classes/Icons.html">Icons</a></li>
+            
+                <li><a href="../classes/IO.html">IO</a></li>
+            
+                <li><a href="../classes/ItagBaseClass.html">ItagBaseClass</a></li>
+            
+                <li><a href="../classes/itagCore.html">itagCore</a></li>
+            
+                <li><a href="../classes/ITSA.html">ITSA</a></li>
+            
+                <li><a href="../classes/JSON.html">JSON</a></li>
+            
+                <li><a href="../classes/Math.html">Math</a></li>
+            
+                <li><a href="../classes/Messages.html">Messages</a></li>
+            
+                <li><a href="../classes/Node.html">Node</a></li>
+            
+                <li><a href="../classes/NodePlugin.html">NodePlugin</a></li>
+            
+                <li><a href="../classes/NS-vdom.html">NS-vdom</a></li>
+            
+                <li><a href="../classes/Object.html">Object</a></li>
+            
+                <li><a href="../classes/Panel.html">Panel</a></li>
+            
+                <li><a href="../classes/Promise.html">Promise</a></li>
+            
+                <li><a href="../classes/Promise.Resolver.html">Promise.Resolver</a></li>
+            
+                <li><a href="../classes/String.html">String</a></li>
+            
+                <li><a href="../classes/SVGElement.html">SVGElement</a></li>
+            
+                <li><a href="../classes/USERAGENT.html">USERAGENT</a></li>
+            
+                <li><a href="../classes/Utils.html">Utils</a></li>
+            
+                <li><a href="../classes/vnode.html">vnode</a></li>
+            
+                <li><a href="../classes/window.html">window</a></li>
+            
+            </ul>
+
+            <ul id="api-modules" class="apis modules">
+            
+                <li><a href="../modules/attribute-extractor.html">attribute-extractor</a></li>
+            
+                <li><a href="../modules/dialog.html">dialog</a></li>
+            
+                <li><a href="../modules/drag.html">drag</a></li>
+            
+                <li><a href="../modules/drag-drop.html">drag-drop</a></li>
+            
+                <li><a href="../modules/element-array.html">element-array</a></li>
+            
+                <li><a href="../modules/event.html">event</a></li>
+            
+                <li><a href="../modules/event-blurnode.html">event-blurnode</a></li>
+            
+                <li><a href="../modules/event-dom.html">event-dom</a></li>
+            
+                <li><a href="../modules/event-emitter.html">event-emitter</a></li>
+            
+                <li><a href="../modules/event-focusnode.html">event-focusnode</a></li>
+            
+                <li><a href="../modules/event-hover.html">event-hover</a></li>
+            
+                <li><a href="../modules/event-listener.html">event-listener</a></li>
+            
+                <li><a href="../modules/event-mobile.html">event-mobile</a></li>
+            
+                <li><a href="../modules/extend-document.html">extend-document</a></li>
+            
+                <li><a href="../modules/extend-element.html">extend-element</a></li>
+            
+                <li><a href="../modules/extra_classes.js.html">extra/classes.js</a></li>
+            
+                <li><a href="../modules/focusmanager.html">focusmanager</a></li>
+            
+                <li><a href="../modules/html-parser.html">html-parser</a></li>
+            
+                <li><a href="../modules/icons.html">icons</a></li>
+            
+                <li><a href="../modules/io.html">io</a></li>
+            
+                <li><a href="../modules/io-cors.html">io-cors</a></li>
+            
+                <li><a href="../modules/io-transfer.html">io-transfer</a></li>
+            
+                <li><a href="../modules/io-xml.html">io-xml</a></li>
+            
+                <li><a href="../modules/itags.core.html">itags.core</a></li>
+            
+                <li><a href="../modules/itsa.build.html">itsa.build</a></li>
+            
+                <li><a href="../modules/js-ext.html">js-ext</a></li>
+            
+                <li><a href="../modules/lib_array.js.html">lib/array.js</a></li>
+            
+                <li><a href="../modules/lib_function.js.html">lib/function.js</a></li>
+            
+                <li><a href="../modules/lib_json.js.html">lib/json.js</a></li>
+            
+                <li><a href="../modules/lib_math.js.html">lib/math.js</a></li>
+            
+                <li><a href="../modules/lib_object.js.html">lib/object.js</a></li>
+            
+                <li><a href="../modules/lib_promise.s.html">lib/promise.s</a></li>
+            
+                <li><a href="../modules/lib_string.js.html">lib/string.js</a></li>
+            
+                <li><a href="../modules/messages.html">messages</a></li>
+            
+                <li><a href="../modules/node-parser.html">node-parser</a></li>
+            
+                <li><a href="../modules/node-plugin.html">node-plugin</a></li>
+            
+                <li><a href="../modules/node-win.html">node-win</a></li>
+            
+                <li><a href="../modules/panel.html">panel</a></li>
+            
+                <li><a href="../modules/useragent.html">useragent</a></li>
+            
+                <li><a href="../modules/utils.html">utils</a></li>
+            
+                <li><a href="../modules/vdom.html">vdom</a></li>
+            
+                <li><a href="../modules/vdom-ns.html">vdom-ns</a></li>
+            
+                <li><a href="../modules/vnode.html">vnode</a></li>
+            
+            </ul>
+        </div>
+    </div>
+</div>
+
+            </div>
+        </div>
+        <div class="yui3-u-3-4">
+                <div id="api-options">
+        Show:
+        <label for="api-show-inherited">
+            <input type="checkbox" id="api-show-inherited" checked>
+            Inherited
+        </label>
+
+        <label for="api-show-protected">
+            <input type="checkbox" id="api-show-protected">
+            Protected
+        </label>
+
+        <label for="api-show-private">
+            <input type="checkbox" id="api-show-private">
+            Private
+        </label>
+        <label for="api-show-deprecated">
+            <input type="checkbox" id="api-show-deprecated">
+            Deprecated
+        </label>
+
+    </div>
+
+
+            <div class="apidocs">
+                <div id="docs-main">
+                    <div class="content">
+                        <h1 class="file-heading">File: src/i-form/i-form.js</h1>
+
+<div class="file">
+    <pre class="code prettyprint linenums">
+module.exports = function (window) {
+    &quot;use strict&quot;;
+
+    require(&#x27;./css/i-form.css&#x27;);
+
+    var NAME = &#x27;[i-form]: &#x27;,
+        itagName = &#x27;i-form&#x27;, // &lt;-- define your own itag-name here
+        itagCore = require(&#x27;itags.core&#x27;)(window),
+        DOCUMENT = window.document,
+        ITSA = window.ITSA,
+        Event = ITSA.Event,
+        DEFAULT_KEYUP = &#x27;shift+9&#x27;,
+        DEFAULT_KEYDOWN = &#x27;9&#x27;,
+        DEFAULT_KEYENTER = &#x27;39&#x27;,
+        DEFAULT_KEYLEAVE = &#x27;27&#x27;,
+        DEFAULT_SELECTOR = &#x27;[itag-formelement]&#x27;,
+        DEFAULT_LOOP = true,
+        Itag;
+
+    if (!window.ITAGS[itagName]) {
+
+        Event.before(itagName+&#x27;:manualfocus&#x27;, function(e) {
+            var element = e.target;
+            e.preventDefault();
+            element.itagReady().then(
+                function() {
+                    element.focus();
+                }
+            );
+        });
+
+        Event.after(&#x27;i-button:tap&#x27;, function(e) {
+            var ibutton = e.target,
+                iform = ibutton.inside(&#x27;i-form&#x27;);
+            if (iform &amp;&amp; !iform.model.disabled &amp;&amp; !iform.invalid(true)) {
+                iform.emitAction({
+                    button: ibutton,
+                    buttonType: e.buttonType
+                });
+            }
+        }, &#x27;i-form&#x27;);
+
+        Event.defineEvent(&#x27;i-form:reset&#x27;)
+             .defaultFn(function(e) {
+                 e.target.reset();
+             });
+
+        Event.after(&#x27;i-button#reset:tap&#x27;, function(e) {
+            var ibutton = e.target,
+                iform = ibutton.inside(&#x27;i-form&#x27;);
+            if (iform &amp;&amp; !iform.model.disabled) {
+                /**
+                * Emitted when a the i-select changes its value
+                *
+                * @event i-form:reset
+                * @param e {Object} eventobject including:
+                * @param e.target {HtmlElement} the i-form element
+                * @param e.button {HTMLElement} the i-button#reset that caused the reset
+                * @since 0.1
+                */
+                iform.emit(&#x27;reset&#x27;, {
+                    button: ibutton
+                });
+            }
+        }, &#x27;i-form&#x27;);
+
+        Itag = DOCUMENT.defineItag(itagName, {
+            attrs: {
+                &#x27;active-labels&#x27;: &#x27;boolean&#x27;, // to give labels functionality of focussing on itags
+                disabled: &#x27;boolean&#x27;
+            },
+
+            init: function() {
+                var element = this;
+                element._waitBeforeReady = window.Promise.manage();
+                // now activate the focusmanager:
+                element.plug(&#x27;fm&#x27;, {
+                    keyup: element.getAttr(&#x27;fm-keyup&#x27;) || element.defFmKeyup(),
+                    keydown: element.getAttr(&#x27;fm-keydown&#x27;) || element.defFmKeydown(),
+                    keyenter: element.getAttr(&#x27;fm-keyenter&#x27;) || element.defFmKeyenter(),
+                    keyleave: element.getAttr(&#x27;fm-keyleave&#x27;) || element.defFmKeyleave(),
+                    noloop: element.getAttr(&#x27;fm-noloop&#x27;) || element.defFmLoop(),
+                    manage: element.getAttr(&#x27;fm-manage&#x27;) || element.defFmSelector(),
+                });
+                element.databinders = [];
+            },
+
+            render: function() {
+                var element = this,
+                    designNode = element.getItagContainer(),
+                    allFormElements = [],
+                    children, i, len, allElements, itagElement;
+
+                // we must add a classname to the i-form and remove it when all
+                // i-form-elements are ready. This we need to prevent the i-form-elements
+                // to show some initial value before they are bounded
+                // now we add all i-form-elements that need to wait for bounded data to a hash
+
+                // fully set the designNode&#x27;s content into the i-form:
+                element.setHTML(designNode.getHTML(null, true));
+                allElements = element.getAll(&#x27;*&#x27;);
+                len = allElements.length;
+                for (i=0; i&lt;len; i++) {
+                    itagElement = allElements[i];
+                    itagElement.isItag() &amp;&amp; (allFormElements[allFormElements.length]=itagElement);
+                }
+                if (allFormElements.length&gt;0) {
+                    element.setClass(&#x27;hide-children&#x27;);
+                    children = [];
+                    allFormElements.forEach(function(formElement) {
+                        // first tell the element it needs to wait for data:
+                        formElement.hasAttribute(&#x27;i-prop&#x27;) &amp;&amp; formElement.setAttr(&#x27;lazybind&#x27;, &#x27;true&#x27;);
+                        // now add the readypromise to the hash:
+                        formElement._showItagPromise = window.Promise.manage();
+                        children[children.length] = formElement._showItagPromise;
+                        formElement.itagReady().finally(formElement._showItagPromise.fulfill);
+                    });
+                    window.Promise.finishAll(children).then(
+                        function() {
+                            element.removeClass(&#x27;hide-children&#x27;);
+                            element._waitBeforeReady.fulfill();
+                        }
+                    );
+                }
+                ITSA.async(function() {
+                    element.bind();
+                });
+            },
+
+            itagReady: function() {
+                var element = this;
+                element._itagReady || (element._itagReady=window.Promise.manage());
+                return element._itagReady.then(element._waitBeforeReady);
+            },
+
+            defFmSelector: function() {
+                return DEFAULT_SELECTOR;
+            },
+
+            defFmKeyup: function() {
+                return DEFAULT_KEYUP;
+            },
+
+            defFmKeydown: function() {
+                return DEFAULT_KEYDOWN;
+            },
+
+            defFmKeyenter: function() {
+                return DEFAULT_KEYENTER;
+            },
+
+            defFmKeyleave: function() {
+                return DEFAULT_KEYLEAVE;
+            },
+
+            defFmLoop: function() {
+                return DEFAULT_LOOP;
+            },
+
+            emitAction: function(payload) {
+                /**
+                * Emitted when an i-button is pressed inside the i-form
+                * and the i-form is not disabled and validated.
+                *
+                * @event i-form:action
+                * @param e {Object} eventobject including:
+                * @param e.target {HtmlElement} the i-form element
+                * @param e.button {HtmlElement} the i-button that was pressed
+                * @param e.buttonType {String}
+                * @since 0.1
+                */
+                this.emit(&#x27;action&#x27;, payload);
+            },
+
+            _afterBindModel: function() {
+                this.unbind();
+                this.bind();
+            },
+
+            bind: function() {
+                var element = this,
+                    databinders = element.databinders,
+                    model = element.model,
+                    allFormElements, propertyModel;
+                allFormElements = element.getAll(&#x27;[i-prop]&#x27;);
+                allFormElements.forEach(function(formElement) {
+                    var property = formElement.getAttr(&#x27;i-prop&#x27;);
+                    if (property) {
+                        propertyModel = model[property];
+                        if (propertyModel!==undefined) {
+                            // in case the property consists of a &#x27;non&#x27;-object,
+                            // than it has to be the &#x60;value&#x60; of the model that should be passed through.
+                            if (!Object.isObject(propertyModel)) {
+                                propertyModel = {};
+                                propertyModel[formElement.valueProperty] = model[property];
+                            }
+                            databinders[databinders.length] = formElement.bindModel(propertyModel, true);
+                        }
+                        else {
+                            // fulfill the promise from the hash, to make the hash completely fulfilled and the i-form to show:
+                            formElement._showItagPromise &amp;&amp; formElement._showItagPromise.fulfill();
+                            console.warn(NAME+&#x27;Form-element waits for prop: &#x27;+property+&#x27;, but this property is not bound. Will show the form, but not this element.&#x27;);
+                        }
+                    }
+                });
+            },
+
+            currentToReset: function() {
+                // will set the current value as the reset-value: for all form elements
+                this.getAll(&#x27;[itag-formelement]&#x27;).forEach(function(element) {
+                    element.currentToReset &amp;&amp; element.currentToReset();
+                });
+            },
+
+            getValues: function() {
+                // will read the current form-values and return them as an object
+                var response = {},
+                    property;
+                this.getAll(&#x27;[itag-formelement]&#x27;).forEach(function(element) {
+                    if (element.getValue) {
+                        property = element.getAttr(&#x27;i-prop&#x27;) || element.getAttr(&#x27;name&#x27;) || ITSA.idGenerator(&#x27;undefined&#x27;);
+                        response[property] = element.getValue();
+                    }
+                });
+                return response;
+            },
+
+            reset: function() {
+                // will reset all form elements
+                this.getAll(&#x27;[itag-formelement]&#x27;).forEach(function(element) {
+                    element.reset &amp;&amp; element.reset();
+                });
+            },
+
+            invalid: function(focus) {
+                // will reset all form elements
+                var childElement;
+                this.getAll(&#x27;[itag-formelement]&#x27;).some(function(element) {
+                    element.invalid &amp;&amp; element.invalid() &amp;&amp; (childElement=element);
+                    return childElement;
+                });
+                focus &amp;&amp; childElement &amp;&amp; childElement.focus();
+                return childElement;
+            },
+
+            unbind: function() {
+                var element = this;
+                element.databinders.forEach(function(databinder) {
+                    databinder.detach();
+                });
+            },
+
+            destroy: function() {
+                this.unbind();
+            }
+
+        }, false); // not subclassable, for we mostly need the css which should be retained
+
+        itagCore.setContentVisibility(Itag, true);
+
+        window.ITAGS[itagName] = Itag;
+    }
+
+    return window.ITAGS[itagName];
+};
+
+    </pre>
+</div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="../assets/vendor/prettify/prettify-min.js"></script>
+<script>prettyPrint();</script>
+<script src="../assets/js/yui-prettify.js"></script>
+<script src="../assets/../api.js"></script>
+<script src="../assets/js/api-filter.js"></script>
+<script src="../assets/js/api-list.js"></script>
+<script src="../assets/js/api-search.js"></script>
+<script src="../assets/js/apidocs.js"></script>
+</body>
+</html>

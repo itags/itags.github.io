@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>src/i-select/i-select.js - Itsa</title>
+    <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
+    <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
+    <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
+    <link rel="shortcut icon" type="image/png" href="../assets/favicon.png">
+    <script src="http://yui.yahooapis.com/combo?3.9.1/build/yui/yui-min.js"></script>
+</head>
+<body class="yui3-skin-sam">
+
+<div id="doc">
+    <div id="hd" class="yui3-g header">
+        <div class="yui3-u-3-4">
+            
+                <h1><img src="../assets/css/logo.png" title="Itsa"></h1>
+            
+        </div>
+        <div class="yui3-u-1-4 version">
+            <em>API Docs for: 0.0.1</em>
+        </div>
+    </div>
+    <div id="bd" class="yui3-g">
+
+        <div class="yui3-u-1-4">
+            <div id="docs-sidebar" class="sidebar apidocs">
+                <div id="api-list">
+    <h2 class="off-left">APIs</h2>
+    <div id="api-tabview" class="tabview">
+        <ul class="tabs">
+            <li><a href="#api-classes">Classes</a></li>
+            <li><a href="#api-modules">Modules</a></li>
+        </ul>
+
+        <div id="api-tabview-filter">
+            <input type="search" id="api-filter" placeholder="Type to filter APIs">
+        </div>
+
+        <div id="api-tabview-panel">
+            <ul id="api-classes" class="apis classes">
+            
+                <li><a href="../classes/Array.html">Array</a></li>
+            
+                <li><a href="../classes/BaseClass.html">BaseClass</a></li>
+            
+                <li><a href="../classes/Classes.html">Classes</a></li>
+            
+                <li><a href="../classes/DD.html">DD</a></li>
+            
+                <li><a href="../classes/Dialog.html">Dialog</a></li>
+            
+                <li><a href="../classes/document.html">document</a></li>
+            
+                <li><a href="../classes/Element.html">Element</a></li>
+            
+                <li><a href="../classes/ElementArray.html">ElementArray</a></li>
+            
+                <li><a href="../classes/Event.html">Event</a></li>
+            
+                <li><a href="../classes/Event.Emitter.html">Event.Emitter</a></li>
+            
+                <li><a href="../classes/Event.Listener.html">Event.Listener</a></li>
+            
+                <li><a href="../classes/FocusManager.html">FocusManager</a></li>
+            
+                <li><a href="../classes/Function.html">Function</a></li>
+            
+                <li><a href="../classes/HTMLElement.html">HTMLElement</a></li>
+            
+                <li><a href="../classes/Icons.html">Icons</a></li>
+            
+                <li><a href="../classes/IO.html">IO</a></li>
+            
+                <li><a href="../classes/ItagBaseClass.html">ItagBaseClass</a></li>
+            
+                <li><a href="../classes/itagCore.html">itagCore</a></li>
+            
+                <li><a href="../classes/ITSA.html">ITSA</a></li>
+            
+                <li><a href="../classes/JSON.html">JSON</a></li>
+            
+                <li><a href="../classes/Math.html">Math</a></li>
+            
+                <li><a href="../classes/Messages.html">Messages</a></li>
+            
+                <li><a href="../classes/Node.html">Node</a></li>
+            
+                <li><a href="../classes/NodePlugin.html">NodePlugin</a></li>
+            
+                <li><a href="../classes/NS-vdom.html">NS-vdom</a></li>
+            
+                <li><a href="../classes/Object.html">Object</a></li>
+            
+                <li><a href="../classes/Panel.html">Panel</a></li>
+            
+                <li><a href="../classes/Promise.html">Promise</a></li>
+            
+                <li><a href="../classes/Promise.Resolver.html">Promise.Resolver</a></li>
+            
+                <li><a href="../classes/String.html">String</a></li>
+            
+                <li><a href="../classes/SVGElement.html">SVGElement</a></li>
+            
+                <li><a href="../classes/USERAGENT.html">USERAGENT</a></li>
+            
+                <li><a href="../classes/Utils.html">Utils</a></li>
+            
+                <li><a href="../classes/vnode.html">vnode</a></li>
+            
+                <li><a href="../classes/window.html">window</a></li>
+            
+            </ul>
+
+            <ul id="api-modules" class="apis modules">
+            
+                <li><a href="../modules/attribute-extractor.html">attribute-extractor</a></li>
+            
+                <li><a href="../modules/dialog.html">dialog</a></li>
+            
+                <li><a href="../modules/drag.html">drag</a></li>
+            
+                <li><a href="../modules/drag-drop.html">drag-drop</a></li>
+            
+                <li><a href="../modules/element-array.html">element-array</a></li>
+            
+                <li><a href="../modules/event.html">event</a></li>
+            
+                <li><a href="../modules/event-blurnode.html">event-blurnode</a></li>
+            
+                <li><a href="../modules/event-dom.html">event-dom</a></li>
+            
+                <li><a href="../modules/event-emitter.html">event-emitter</a></li>
+            
+                <li><a href="../modules/event-focusnode.html">event-focusnode</a></li>
+            
+                <li><a href="../modules/event-hover.html">event-hover</a></li>
+            
+                <li><a href="../modules/event-listener.html">event-listener</a></li>
+            
+                <li><a href="../modules/event-mobile.html">event-mobile</a></li>
+            
+                <li><a href="../modules/extend-document.html">extend-document</a></li>
+            
+                <li><a href="../modules/extend-element.html">extend-element</a></li>
+            
+                <li><a href="../modules/extra_classes.js.html">extra/classes.js</a></li>
+            
+                <li><a href="../modules/focusmanager.html">focusmanager</a></li>
+            
+                <li><a href="../modules/html-parser.html">html-parser</a></li>
+            
+                <li><a href="../modules/icons.html">icons</a></li>
+            
+                <li><a href="../modules/io.html">io</a></li>
+            
+                <li><a href="../modules/io-cors.html">io-cors</a></li>
+            
+                <li><a href="../modules/io-transfer.html">io-transfer</a></li>
+            
+                <li><a href="../modules/io-xml.html">io-xml</a></li>
+            
+                <li><a href="../modules/itags.core.html">itags.core</a></li>
+            
+                <li><a href="../modules/itsa.build.html">itsa.build</a></li>
+            
+                <li><a href="../modules/js-ext.html">js-ext</a></li>
+            
+                <li><a href="../modules/lib_array.js.html">lib/array.js</a></li>
+            
+                <li><a href="../modules/lib_function.js.html">lib/function.js</a></li>
+            
+                <li><a href="../modules/lib_json.js.html">lib/json.js</a></li>
+            
+                <li><a href="../modules/lib_math.js.html">lib/math.js</a></li>
+            
+                <li><a href="../modules/lib_object.js.html">lib/object.js</a></li>
+            
+                <li><a href="../modules/lib_promise.s.html">lib/promise.s</a></li>
+            
+                <li><a href="../modules/lib_string.js.html">lib/string.js</a></li>
+            
+                <li><a href="../modules/messages.html">messages</a></li>
+            
+                <li><a href="../modules/node-parser.html">node-parser</a></li>
+            
+                <li><a href="../modules/node-plugin.html">node-plugin</a></li>
+            
+                <li><a href="../modules/node-win.html">node-win</a></li>
+            
+                <li><a href="../modules/panel.html">panel</a></li>
+            
+                <li><a href="../modules/useragent.html">useragent</a></li>
+            
+                <li><a href="../modules/utils.html">utils</a></li>
+            
+                <li><a href="../modules/vdom.html">vdom</a></li>
+            
+                <li><a href="../modules/vdom-ns.html">vdom-ns</a></li>
+            
+                <li><a href="../modules/vnode.html">vnode</a></li>
+            
+            </ul>
+        </div>
+    </div>
+</div>
+
+            </div>
+        </div>
+        <div class="yui3-u-3-4">
+                <div id="api-options">
+        Show:
+        <label for="api-show-inherited">
+            <input type="checkbox" id="api-show-inherited" checked>
+            Inherited
+        </label>
+
+        <label for="api-show-protected">
+            <input type="checkbox" id="api-show-protected">
+            Protected
+        </label>
+
+        <label for="api-show-private">
+            <input type="checkbox" id="api-show-private">
+            Private
+        </label>
+        <label for="api-show-deprecated">
+            <input type="checkbox" id="api-show-deprecated">
+            Deprecated
+        </label>
+
+    </div>
+
+
+            <div class="apidocs">
+                <div id="docs-main">
+                    <div class="content">
+                        <h1 class="file-heading">File: src/i-select/i-select.js</h1>
+
+<div class="file">
+    <pre class="code prettyprint linenums">
+/**
+ * Provides several methods that override native Element-methods to work with the vdom.
+ *
+ *
+ * &lt;i&gt;Copyright (c) 2014 ITSA - https://github.com/itsa&lt;/i&gt;
+ * &lt;br&gt;
+ * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
+ *
+ * @module vdom
+ * @submodule extend-element
+ * @class Element
+ * @since 0.0.1
+*/
+
+
+/*
+* attributes:
+* value, expanded, invalid-value
+*/
+
+require(&#x27;./css/i-select.css&#x27;);
+
+var DELAY_BLURCLOSE = 125,
+    SUPPRESS_DELAY = 175;
+
+module.exports = function (window) {
+    &quot;use strict&quot;;
+
+    require(&#x27;itags.core&#x27;)(window);
+
+    var DEFAULT_INVALID_VALUE = &#x27;choose&#x27;,
+        itagName = &#x27;i-select&#x27;,
+        ITSA = window.ITSA,
+        async = ITSA.async,
+        later = ITSA.later,
+        Event = ITSA.Event,
+        HIDDEN = &#x27;itsa-hidden&#x27;,
+        SHOW = &#x27;i-select-show&#x27;,
+        Itag, IFormElement;
+
+    if (!window.ITAGS[itagName]) {
+
+        IFormElement = require(&#x27;i-formelement&#x27;)(window);
+
+        Event.before(itagName+&#x27;:manualfocus&#x27;, function(e) {
+            // the i-select itself is unfocussable, but its button is
+            // we need to patch &#x60;manualfocus&#x60;,
+            // which is emitted on node.focus()
+            // a focus by userinteraction will always appear on the button itself
+            // so we don&#x27;t bother that
+            var element = e.target;
+            e.preventDefault();
+            element.itagReady().then(
+                function() {
+                    var button = element.getElement(&#x27;button&#x27;);
+                    button &amp;&amp; button.focus(true);
+                }
+            );
+        });
+
+        Event.before(&#x27;keydown&#x27;, function(e) {
+            if (e.keyCode===40) {
+                // prevent minus windowscroll:
+                e.preventDefaultContinue();
+            }
+        }, &#x27;i-select &gt; button&#x27;);
+
+        Event.before(&#x27;tap&#x27;, function(e) {
+            // prevent nested focusmanager (parent) to refocus on the button:
+            e._noFocus = true;
+        }, &#x27;i-select &gt; button&#x27;);
+
+        Event.after([&#x27;tap&#x27;, &#x27;keydown&#x27;], function(e) {
+            var element = e.target.getParent(),
+                e_type = e.type,
+                model, ulNode, liNode, inactive;
+            if ((e_type===&#x27;tap&#x27;) || (e.keyCode===40)) {
+                model = element.model;
+                if (e.keyCode===40) {
+                    e.preventDefault();
+                    model.expanded = true;
+                }
+                else {
+                    inactive = element.hasData(&#x27;_suppressClose&#x27;);
+                    if (inactive) {
+                        console.info(&#x27;not reacting to &#x27;+e_type+&#x27;-event: button is in pauzed state&#x27;);
+                        return;
+                    }
+                    model.expanded = !model.expanded;
+                    if (!model.expanded) {
+                        liNode = element.getElement(&#x27;span[plugin-fm=&quot;true&quot;] &gt;option[fm-defaultitem]&#x27;);
+                        liNode &amp;&amp; liNode.focus();
+                    }
+                }
+                if (model.expanded) {
+                    ulNode = element.getElement(&#x27;span[plugin-fm=&quot;true&quot;]&#x27;);
+                    ulNode &amp;&amp; ulNode.focus();
+                }
+                if (model.expanded || (e_type===&#x27;tap&#x27;)) {
+                    element.setData(&#x27;_suppressClose&#x27;, true);
+                    later(function() {
+                        element.removeData(&#x27;_suppressClose&#x27;);
+                    }, SUPPRESS_DELAY);
+                }
+            }
+        }, &#x27;i-select &gt; button&#x27;);
+
+        Event.after([&#x27;tap&#x27;, &#x27;keypress&#x27;], function(e) {
+            var liNode = e.target,
+                e_type = e.type,
+                element, index, ulNode, model, inactive;
+            if ((e_type===&#x27;tap&#x27;) || (e.keyCode===13)) {
+                element = liNode.inside(&#x27;i-select&#x27;);
+                model = element.model;
+                // check for model.expanded --&gt; a hidden selectbox might react on an enterpress
+                if (model.expanded) {
+                    inactive = element.hasData(&#x27;_suppressClose&#x27;);
+                    if (inactive) {
+                        console.info(&#x27;not reacting to &#x27;+e_type+&#x27;-event: button is in pauzed state&#x27;);
+                        return;
+                    }
+                    model = element.model;
+                    ulNode = liNode.getParent();
+                    index = ulNode.getAll(&#x27;option&#x27;).indexOf(liNode);
+                    model.expanded = false;
+                    model.value = index;
+                    if (e_type===&#x27;tap&#x27;) {
+                        element.setData(&#x27;_suppressClose&#x27;, true);
+                        later(function() {
+                            element.removeData(&#x27;_suppressClose&#x27;);
+                        }, SUPPRESS_DELAY);
+                        ulNode = element.getElement(&#x27;span[plugin-fm=&quot;true&quot;]&#x27;);
+                        ulNode &amp;&amp; ulNode.focus();
+                    }
+                    // prevent that the focus will be reset to the focusmanager
+                    // when re-synced --&gt; we want the focus on the button:
+                    ulNode.removeClass(&#x27;focussed&#x27;);
+                    async(function() {
+                        element.focus();
+                    });
+                }
+            }
+        }, &#x27;i-select span[plugin-fm=&quot;true&quot;] &gt; option&#x27;);
+
+        Event.defineEvent(itagName+&#x27;:valuechange&#x27;).unPreventable();
+
+        Event.after(itagName+&#x27;:change&#x27;, function(e) {
+            var element = e.target,
+                prevValue = element.getData(&#x27;i-select-value&#x27;),
+                model = element.model,
+                newValue = model.value;
+            if (prevValue!==newValue) {
+                /**
+                * Emitted when a the i-select changes its value
+                *
+                * @event i-select:valuechange
+                * @param e {Object} eventobject including:
+                * @param e.target {HtmlElement} the i-select element
+                * @param e.prevValue {Number} the selected item, starting with 1
+                * @param e.newValue {Number} the selected item, starting with 1
+                * @param e.buttonText {String} the text that will appear on the button
+                * @param e.listText {String} the text as it is in the list
+                * @since 0.1
+                */
+                element.emit(&#x27;valuechange&#x27;, {
+                    prevValue: prevValue,
+                    newValue: newValue,
+                    buttonText: model.buttonTexts[newValue] || model.items[newValue],
+                    listText: model.items[newValue]
+                });
+            }
+            element.setData(&#x27;i-select-value&#x27;, newValue);
+        });
+
+        Itag = IFormElement.subClass(itagName, {
+            /*
+             *
+             * @property attrs
+             * @type Object
+             * @since 0.0.1
+            */
+            attrs: {
+                expanded: &#x27;boolean&#x27;,
+                disabled: &#x27;boolean&#x27;,
+                value: &#x27;string&#x27;,
+                required: &#x27;boolean&#x27;,
+                &#x27;i-prop&#x27;: &#x27;string&#x27;,
+                &#x27;invalid-value&#x27;: &#x27;string&#x27;,
+                &#x27;reset-value&#x27;: &#x27;string&#x27;
+            },
+
+           /**
+            * Redefines the childNodes of both the vnode as well as its related dom-node. The new
+            * definition replaces any previous nodes. (without touching unmodified nodes).
+            *
+            * Syncs the new vnode&#x27;s childNodes with the dom.
+            *
+            * @method init
+            * @chainable
+            * @since 0.0.1
+            */
+            init: function() {
+                var element = this,
+                    designNode = element.getItagContainer(),
+                    itemNodes = designNode.getAll(&#x27;&gt;option&#x27;),
+                    items = [],
+                    buttonTexts = [],
+                    value = element.model.value || -1;
+                itemNodes.forEach(function(node, i) {
+                    var header = node.getElement(&#x27;span[is=&quot;button&quot;]&#x27;);
+                    if (header) {
+                        buttonTexts[i] = header.getHTML();
+                    }
+                    items[items.length] = node.getHTML(header);
+                });
+
+                element.defineWhenUndefined(&#x27;value&#x27;, value)
+                       .defineWhenUndefined(&#x27;items&#x27;, items)
+                       .defineWhenUndefined(&#x27;buttonTexts&#x27;, buttonTexts)
+                        // set the reset-value to the inital-value in case &#x60;reset-value&#x60; was not present
+                       .defineWhenUndefined(&#x27;reset-value&#x27;, value);
+
+                // store its current value, so that valueChange-event can fire:
+                element.setData(&#x27;i-select-value&#x27;, value);
+
+                element.cleanupEvents();
+                element.setupEvents();
+            },
+
+           /**
+            * Redefines the childNodes of both the vnode as well as its related dom-node. The new
+            * definition replaces any previous nodes. (without touching unmodified nodes).
+            *
+            * Syncs the new vnode&#x27;s childNodes with the dom.
+            *
+            * @method render
+            * @chainable
+            * @since 0.0.1
+            */
+            render: function() {
+                var element = this,
+                    content;
+                // building the template of the itag:
+                content = &#x27;&lt;button&gt;&lt;span class=&quot;pointer&quot;&gt;&lt;/span&gt;&lt;span class=&quot;btntext&quot;&gt;&lt;/span&gt;&lt;/button&gt;&#x27;;
+                // first: outerdiv which will be relative positioned
+                // next: innerdiv which will be absolute positioned
+                // also: hide the container by default --&gt; updateUI could make it shown
+                content += &#x27;&lt;span class=&quot;itsa-hidden&quot;&gt;&#x27; +
+                             &#x27;&lt;span&gt;&#x27;+
+                               &#x27;&lt;span plugin-fm=&quot;true&quot; fm-manage=&quot;option&quot; fm-keyup=&quot;38&quot; fm-keydown=&quot;40&quot; fm-noloop=&quot;true&quot;&gt;&lt;/span&gt;&#x27;;
+                             &#x27;&lt;/span&gt;&#x27;+
+                           &#x27;&lt;/span&gt;&#x27;;
+                // set the content:
+                element.setHTML(content);
+            },
+
+            cleanupEvents: function() {
+                this._outsideListener &amp;&amp; this._outsideListener.detach();
+            },
+
+            setupEvents: function() {
+                var element = this;
+                // because the tapoutside event is not set through element.salfAfter, we need to detach the event when needed:
+                element._outsideListener = Event.after(&#x27;tapoutside&#x27;, function(e) {
+                    async(function() {
+                        if (!element.hasData(&#x27;_suppressClose&#x27;) &amp;&amp; !element.contains(e.sourceTarget)) {
+                            element.model.expanded = false;
+                        }
+                    });
+                }, &#x27;i-select&#x27;);
+                element.selfAfter(
+                    &#x27;blurnode&#x27;,
+                    function(e) {
+                        if (e.target===element) {
+                            // at the end of the eventstack: give &#x60;blurnode&#x60; a way to set the &#x27;_suppressClose&#x27;-data when needed
+                            // need a bit more time because there is time inbetween the blur vs click events
+                            later(function() {
+                                if (!element.hasData(&#x27;_suppressClose&#x27;)) {
+                                    element.model.expanded = false;
+                                }
+                            }, DELAY_BLURCLOSE);
+                        }
+                    }
+                );
+            },
+
+           /**
+            * Redefines the childNodes of both the vnode as well as its related dom-node. The new
+            * definition replaces any previous nodes. (without touching unmodified nodes).
+            *
+            * Syncs the new vnode&#x27;s childNodes with the dom.
+            *
+            * @method _setChildNodes
+            * @param newVChildNodes {Array} array with vnodes which represent the new childNodes
+            * @private
+            * @chainable
+            * @since 0.0.1
+            */
+            sync: function() {
+                // inside sync, YOU CANNOT change attributes which are part of &#x60;attrs&#x60; !!!
+                // those actions will be ignored.
+
+                // BE CAREFUL to start async actions here:
+                // be aware that before ending, this method can run again
+                // if you do, then make sure to handle possible running
+                // async actions well !!!
+                var element = this,
+                    model = element.model,
+                    items = model.items || [],
+                    buttonTexts = model.buttonTexts,
+                    value = model.value,
+                    item, content, buttonText, len, i,
+                    button, container, itemsContainer, hiddenTimer;
+
+                len = items.length;
+                (value&gt;len) &amp;&amp; (value=-1);
+
+                if (value&gt;=0) {
+                    buttonText = buttonTexts[value] || items[value];
+                }
+                else {
+                    buttonText = model[&#x27;invalid-value&#x27;] || DEFAULT_INVALID_VALUE;
+                }
+
+                // rebuild the button:
+                button = element.getElement(&#x27;button&#x27;);
+                button.toggleClass(&#x27;i-nonexpandable&#x27;, (len&lt;2));
+                button.getElement(&#x27;span.btntext&#x27;).setHTML(buttonText);
+
+                container = element.getElement(&#x27;&gt;span&#x27;);
+
+                if (model.expanded &amp;&amp; !model.disabled &amp;&amp; !element.hasClass(&#x27;i-disabled&#x27;) &amp;&amp; (len&gt;1)) {
+                    hiddenTimer = container.getData(&#x27;_hiddenTimer&#x27;);
+                    hiddenTimer &amp;&amp; hiddenTimer.cancel();
+                    container.setClass(SHOW);
+                    container.removeClass(HIDDEN);
+                }
+                else {
+                    container.removeClass(SHOW);
+                    // hide the layer completely: we need to access anything underneath:
+                    hiddenTimer = later(function() {
+                        container.setClass(HIDDEN);
+                    }, 110);
+                    container.setData(&#x27;_hiddenTimer&#x27;, hiddenTimer);
+                }
+
+                itemsContainer = element.getElement(&#x27;span[plugin-fm=&quot;true&quot;]&#x27;);
+                content = &#x27;&#x27;;
+                for (i=0; i&lt;len; i++) {
+                    item = items[i];
+                    content += &#x27;&lt;option&#x27;+((i===value) ? &#x27; class=&quot;selected&quot; fm-defaultitem=&quot;true&quot;&#x27; : &#x27;&#x27;)+&#x27;&gt;&#x27;+item+&#x27;&lt;/option&gt;&#x27;;
+                }
+
+                // set the items:
+                itemsContainer.setHTML(content, true);
+            },
+
+            invalid: function() {
+                var model = this.model;
+                return model.required &amp;&amp; (model.value === -1);
+            },
+
+            destroy: function() {
+                this.cleanupEvents();
+            }
+        });
+
+        window.ITAGS[itagName] = Itag;
+    }
+
+    return window.ITAGS[itagName];
+};
+    </pre>
+</div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="../assets/vendor/prettify/prettify-min.js"></script>
+<script>prettyPrint();</script>
+<script src="../assets/js/yui-prettify.js"></script>
+<script src="../assets/../api.js"></script>
+<script src="../assets/js/api-filter.js"></script>
+<script src="../assets/js/api-list.js"></script>
+<script src="../assets/js/api-search.js"></script>
+<script src="../assets/js/apidocs.js"></script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+# Site settings
+title: Itags
+email: contact@itsa.io
+description: ""
+version: "0.0.1"
+baseurl: ""
+url: "http://itsa.github.io"
+twitter_username: Itags
+github_username:  itags
+
+# Build settings
+markdown: redcarpet
+
+redcarpet:
+  input: GFM
+  extensions: [with_toc_data, prettify, hard_wrap]
+
+collections:
+  docs:
+    output: true
+
+# Defaults per scope
+defaults:
+  -
+    scope:
+      path: ""
+      type: docs
+    values:
+      layout: module # overrides previous default layout
+      category: module

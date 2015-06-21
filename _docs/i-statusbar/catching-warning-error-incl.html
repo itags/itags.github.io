@@ -1,0 +1,30 @@
+
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>Simple i-form</title>
+</head>
+
+<body>
+
+    <i-statusbar events="*:warn, *:error"></i-statusbar>
+
+    <script src="../../dist/itagsbuild.js"></script>
+    <script>
+        require('itags');
+        ITSA.async(function() {
+            ITSA.alert('I am the first alert');
+            ITSA.alert('I a second first alert');
+            ITSA.catchErrors(true);
+            throw new Error('An error occured');
+        });
+
+        ITSA.later(function() {
+            ITSA.warn('i am a warning');
+        }, 1500);
+    </script>
+
+</body>
+
+</html>

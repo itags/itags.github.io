@@ -1,0 +1,29 @@
+
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>i-parcel with template</title>
+</head>
+
+<body>
+
+    <i-parcel>
+    <!--
+        Escaped: <%= what %>
+        <br>
+        <br>
+        Unescaped: <%=raw what %>
+    -->
+    </i-parcel>
+
+    <script src="../../dist/itagsbuild.js"></script>
+    <script>
+        var iparcel = document.getElement('i-parcel'),
+            model = {what: 'a <b>template</b>'};
+        iparcel.bindModel(model);
+    </script>
+
+</body>
+
+</html>

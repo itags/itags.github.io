@@ -1,0 +1,73 @@
+
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>Simple i-scroller</title>
+    <style type="text/css">
+        html, body {
+            height: 100%;
+        }
+        i-scroller {
+            width: 200px;
+            height: 100px;
+            top: 70px;
+            left: 50px;
+            border: solid 5px #000 !important;
+        }
+        .item.odd {
+            background-color: #DDD;
+        }
+        i-scroller span.item {
+            text-align: center;
+            line-height: 2em;
+            font-weight: bold;
+            font-size: 120%;
+        }
+    </style>
+</head>
+
+<body>
+
+    <i-scroller>
+    <!--
+        {nr}
+    -->
+    </i-scroller>
+
+    <i-scroller id="second">
+    <!--
+        {nr}
+    -->
+    </i-scroller>
+
+    <script src="../../dist/itagsbuild.js"></script>
+    <script>
+        require('itags');
+        var iscroller = document.getElement('i-scroller'),
+            model = {items: []},
+            model2 = {items: []},
+            i;
+        for (i=0; i<5000; i++) {
+            model.items.push({nr: i});
+            model2.items.push({nr: i});
+        }
+        iscroller.bindModel(model);
+
+        var iscroller2 = document.getElement('#second');
+        iscroller2.bindModel(model2);
+
+
+        ITSA.later(function() {
+            iscroller.swipe(10000, 250);
+        }, 1500);
+
+        ITSA.later(function() {
+            iscroller2.swipe(10000, 250);
+        }, 1200);
+
+    </script>
+
+</body>
+
+</html>
