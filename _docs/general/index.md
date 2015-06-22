@@ -92,7 +92,7 @@ The `sync`-method should be used to re-set any innerNodes. Because `itags` are u
 `Object.observe` on element.model is the prefered way of keeping the itags up to date. At this moment only supported by Chrome and Opera. Whenever element.model changes, the according itag-instance will update its relevant attributes and will invoke its sync-method.
 
 
-###Finilazer###
+###Finalizer###
 For browsers that do not support this `Object.observe`, we make use of a special feature: a `finilizer`. What happens is that after every eventcycle (either Event, XHR or setTimeout) all itags will refresh in a same way that Object.observe did for its own instance. This may seem heavy, but refreshing is done by the vdom using diffing: nothing will change if there is nothing to change. We choosed this way of keeping up to date, because it is preferable above polling for changes in the modeldata (which could consist a huge numer of objects considering large arrays). There is no wasted polling and there won't be any missing updates: <u>changes in modeldata don't come out of the blue</u> --> they always happen after the eventcycle needed to perform some action.
 
 Some dom-events are likely to not effect any element.model data. To enlighten the system, these events do not lead into a direct resyncing of the itags, but are delayed to happen only once a second. Read more about these events (and how to make them directly resync) here..
