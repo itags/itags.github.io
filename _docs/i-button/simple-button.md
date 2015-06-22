@@ -6,7 +6,9 @@ intro: ""
 includeexample:
 ---
 
+<div>
 <i-button class="i-primary"><!--Click me--></i-button>
+</div>
 
 <script src="../../dist/itagsbuild-min.js"></script>
 <script>
