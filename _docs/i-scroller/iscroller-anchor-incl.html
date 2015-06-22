@@ -35,9 +35,8 @@
     -->
     </i-scroller>
 
-    <script src="../../dist/itagsbuild.js"></script>
+    <script src="../../dist/itagsbuild-min.js"></script>
     <script>
-        require('itags');
         var iscroller = document.getElement('i-scroller'),
             model = {items: []},
             infonode = document.getElement('#infonode'),
@@ -46,17 +45,6 @@
             model.items.push({nr: i, uri: 'http://itsasbreuk.nl/'+i});
         }
         iscroller.bindModel(model);
-
-        ITSA.later(function() {
-            scrollContainer || (scrollContainer=iscroller.getElement('>span'));
-            infonode.setHTML('scrolledPages: '+scrollContainer.getData('_scrolledPages')+' | '+scrollContainer.getData('sp'));
-        }, 100, 10);
-
-        ITSA.later(function() {
-            // model['start-item'] = 315;
-            model['start-item'] = 295;
-        }, 1000);
-
     </script>
 
 </body>

@@ -3,28 +3,26 @@ module: i-button
 maintainer: Marco Asbreuk
 title: Simple i-button
 intro: ""
-includeexample: 10em
+includeexample:
 ---
 
-<p>Code-example:</p>
+<i-button class="i-primary"><!--Click me--></i-button>
+
+<script src="../../dist/itagsbuild-min.js"></script>
+<script>
+    document.getElement('i-button').focus();
+</script>
+
+<p class="spaced">Code-example:</p>
 
 
 ```html
-<body>
-    <i-select value="2" primary-button="true">
-        <i-item>item1</i-item>
-        <i-item>item2</i-item>
-        <i-item><i-head>item3 header</i-head>item3 content</i-item>
-        <i-item>item4</i-item>
-        <i-item>item5</i-item>
-    </i-select>
-</body>
+<i-button class="i-primary"><!--Click me--></i-button>
 ```
 
 ```js
 <script src="itagsbuild-min.js"></script>
 <script>
-    require('itags');
-    document.getElement('i-select').focus();
+    document.getElement('i-button').focus();
 </script>
 ```

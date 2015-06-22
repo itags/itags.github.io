@@ -11,10 +11,10 @@
   <head>
     <title>{{ page.title }}</title>
     {% if filename == "index.html" %}
-        <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.5.0/pure-min.css">
+        <link rel="stylesheet" href="../../assets/pure.css">
     {% endif %}
     {% if page.includeexample %}
-        <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.5.0/pure-min.css">
+        <link rel="stylesheet" href="../../assets/pure.css">
     {% endif %}
     <link rel="stylesheet" type="text/css" href="../../assets/syntax.css" media="screen">
     <link rel="stylesheet" type="text/css" href="../../assets/main.css" media="screen">
@@ -72,7 +72,9 @@
             {{ content }}
         </div>
         <div class="pure-u-1 right-col">
+<!--
             <a class="pure-button pure-button-primary pure-button-bordered" target="_blank" href="../../api/modules/{{ page.module }}.html">API Docs</a>
+-->
             {% if filename == "index.html" %}
                 {% include toc.html %}
             {% endif %}

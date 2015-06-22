@@ -1,5 +1,5 @@
 ---
-module: i-form
+module: xi-form
 maintainer: Marco Asbreuk
 title: Simple i-form
 intro: ""

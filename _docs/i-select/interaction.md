@@ -28,7 +28,7 @@ includeexample: 20em
 <script>
     var iselectNode = document.getElement('i-select');
 
-    node.focus();
+    iselectNode.focus();
 
     ITSA.later(function() {
         iselectNode.model.expanded = true;

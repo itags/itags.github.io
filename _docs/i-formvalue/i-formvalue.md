@@ -3,26 +3,24 @@ module: i-formvalue
 maintainer: Marco Asbreuk
 title: Using i-formvalue
 intro: ""
-includeexample: 10m
+includeexample: 2em
 ---
 
 <p>Code-example:</p>
 
 
 ```html
-<body>
-    <i-link href="http://itsasbreuk.nl" target="_blank">
+<i-form class="i-aligned" lazybind="true">
     <!--
-    Click here to visit itsasbreuk.nl
+        <i-label><!==Your username:==></i-label><i-formvalue><!==username==></i-formvalue>
     -->
-    </i-link>
-</body>
+</i-form>
 ```
 
 ```js
 <script src="itagsbuild-min.js"></script>
 <script>
-    require('itags');
-    document.getElement('i-link').focus();
+    var datamodel = {username: 1};
+    document.bindModel(datamodel, 'i-form');
 </script>
 ```

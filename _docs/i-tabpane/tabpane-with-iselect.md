@@ -41,16 +41,16 @@ includeexample: 20em
 ```js
 <script src="itagsbuild-min.js"></script>
 <script>
-        var model = {
-            value: 4,
-            'primary-button': true
-        };
-        var inputmodel = {
-            value: 'Harry'
-        };
-        document.bindModel(model, 'i-select');
-        document.bindModel(inputmodel, 'i-input');
-        document.getElement('i-tabpane').focus();
+    var model = {
+        value: 4,
+        'primary-button': true
+    };
+    var inputmodel = {
+        value: 'Harry'
+    };
+    document.bindModel(model, 'i-select');
+    document.bindModel(inputmodel, 'i-input');
+    document.getElement('i-tabpane').focus();
 
 </script>
 ```

@@ -22,7 +22,6 @@ includeexample: 10m
 ```js
 <script src="itagsbuild-min.js"></script>
 <script>
-    require('itags');
     document.getElement('i-link').focus();
 </script>
 ```

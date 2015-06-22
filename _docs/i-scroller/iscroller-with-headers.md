@@ -10,23 +10,25 @@ includeexample: 20em
 
 
 ```html
-<body>
-    <i-select value="2" class="i-primary">
-    <!--
-        <option>item1</option>
-        <option>item2</option>
-        <option><span is="button">item3 header</span>item3 content</option>
-        <option>item4</option>
-        <option>item5</option>
-    -->
-    </i-select>
-</body>
+<i-scroller start-item="300">
+<!--
+    <section is="header">{header1}</section>
+    <section is="header">{header2}</section>
+    {nr}
+-->
+</i-scroller>
 ```
 
 ```js
 <script src="itagsbuild-min.js"></script>
 <script>
-    require('itags');
-    document.getElement('i-select').focus();
+    var iscroller = document.getElement('i-scroller'),
+        model = {items: []},
+        infonode = document.getElement('#infonode'),
+        i, scrollContainer;
+    for (i=0; i<1500; i++) {
+        model.items.push({nr: i, header1: Math.floor(i/10), header2: Math.floor(i/5)});
+    }
+    iscroller.bindModel(model);
 </script>
 ```

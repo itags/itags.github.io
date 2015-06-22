@@ -2,8 +2,8 @@
 module: general
 itsaclassname:
 version: 0.0.1
-modulesize: 1.69
-dependencies: "js-ext, io, polyfill, utils, vdom, event-dom"
+modulesize:
+dependencies:
 maintainer: Marco Asbreuk
 title: Itag Classes
 intro: "Defining Itag Classes to create itag - custom elements"

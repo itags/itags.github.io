@@ -3,7 +3,7 @@ module: i-form
 maintainer: Marco Asbreuk
 title: i-form with a data-object
 intro: ""
-includeexample: 20em
+includeexample: 50em
 ---
 
 <p>Code-example:</p>
@@ -20,48 +20,48 @@ includeexample: 20em
 ```
 
 ```html
-<body>
-    <i-form class="i-aligned" lazybind="true">
-        <!--
-            <legend>An Aligned Form</legend>
+<i-form class="i-aligned" lazybind="true">
+    <!--
+        <legend>An Aligned Form</legend>
+        <i-label><!==Username:==></i-label><i-input i-prop="name" reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+        <i-label><!==Username:==></i-label><i-input i-prop="name" reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+        <i-label><!==Username:==></i-label><i-input i-prop="name" reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+        <i-label><!==Username:==></i-label>
+            <i-select i-prop="selectvalue">
+                <!==
+                    <option>item1</option>
+                    <option>item2</option>
+                    <option><span is="button">item3 header</span>item3 content</option>
+                    <option>item4</option>
+                    <option>item5</option>
+                ==>
+            </i-select>
+        <fieldset class="i-group">
             <i-label><!==Username:==></i-label><i-input i-prop="name" reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
             <i-label><!==Username:==></i-label><i-input i-prop="name" reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
             <i-label><!==Username:==></i-label><i-input i-prop="name" reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
-            <i-label><!==Username:==></i-label>
-                <i-select i-prop="selectvalue">
-                    <!==
-                        <option>item1</option>
-                        <option>item2</option>
-                        <option><span is="button">item3 header</span>item3 content</option>
-                        <option>item4</option>
-                        <option>item5</option>
-                    ==>
-                </i-select>
-            <fieldset class="i-group">
-                <i-label><!==Username:==></i-label><i-input i-prop="name" reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
-                <i-label><!==Username:==></i-label><i-input i-prop="name" reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
-                <i-label><!==Username:==></i-label><i-input i-prop="name" reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
-            </fieldset>
-            <fieldset>
-                <i-label><!==Activated:==></i-label><i-checkbox i-prop="activated">
-                    <!==
-                        <option>ON</option>
-                        <option>OFF</option>
-                    ==>
-                </i-checkbox>
-                <i-label><!==Activated:==></i-label><i-checkbox i-prop="activated"></i-checkbox>
-                <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
-                <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
-                <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
-            </fieldset>
-            <fieldset>
-                <i-button is="reset"><!==Reset==></i-button>
-                <i-button><!==Cancel==></i-button>
-                <i-button><!==Ignore==></i-button>
-                <i-button><!==Retry==></i-button>
-            </fieldset>
-        -->
-    </i-form></body>
+        </fieldset>
+        <fieldset>
+            <i-label><!==Activated:==></i-label><i-checkbox i-prop="activated">
+                <!==
+                    <option>ON</option>
+                    <option>OFF</option>
+                ==>
+            </i-checkbox>
+            <i-label><!==Activated:==></i-label><i-checkbox i-prop="activated"></i-checkbox>
+            <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+            <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+            <i-label><!==Username:==></i-label><i-input reset-value="nobody" placeholder="Say your name"><!==Marco==></i-input>
+        </fieldset>
+        <fieldset>
+            <i-button is="reset"><!==Reset==></i-button>
+            <i-button><!==Cancel==></i-button>
+            <i-button><!==Ignore==></i-button>
+            <i-button><!==Retry==></i-button>
+        </fieldset>
+    -->
+</i-form>
+
 ```
 
 ```js

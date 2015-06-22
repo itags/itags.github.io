@@ -1,7 +1,7 @@
 ---
-module: i-scroller
+module: xi-menu
 maintainer: Marco Asbreuk
-title: simple i-scroller 5
+title: simple horizontal menu
 intro: ""
 includeexample: 20em
 ---

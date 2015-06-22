@@ -10,21 +10,21 @@ includeexample: 10m
 
 
 ```html
-<body>
-    <i-select value="2" primary-button="true">
-        <i-item>item1</i-item>
-        <i-item>item2</i-item>
-        <i-item><i-head>item3 header</i-head>item3 content</i-item>
-        <i-item>item4</i-item>
-        <i-item>item5</i-item>
-    </i-select>
-</body>
+<i-form class="i-aligned" active-labels="true">
+    <!--
+        <i-label><!==First name:==></i-label>
+        <i-input><!==oh==></i-input>
+        <i-label><!==First name:==></i-label>
+        <i-input><!==oh==></i-input>
+        <i-label><!==First name:==></i-label>
+        <i-input><!==oh==></i-input>
+    -->
+</i-form>
 ```
 
 ```js
 <script src="itagsbuild-min.js"></script>
 <script>
-    require('itags');
-    document.getElement('i-select').focus();
+    document.getElement('i-form').focus();
 </script>
 ```
