@@ -145,10 +145,10 @@ controlModel.pane = 3;
 ###Prevent initial setup###
 In the example above, the itag will be rendered at its first time, making the first tab selected. After binding the model, the second tab gets selected, which will lead to flickering of the tabpane. To prevent this, you could try to use `document.bindModel()` before the itag is on the page, but that only works when content is updated later.
 
-A better way to let rendering wait for the model, is by set the attribute: `bound-model="true"`:
+A better way to let rendering wait for the model, is by set the attribute: `lazybind="true"`:
 ####Example binding object with delayed rendering####
 ```html
-<i-tabpane id="my-tabpane" bound-model="true">
+<i-tabpane id="my-tabpane" lazybind="true">
     <!--
         <section>Content first page</section>
         <section>Content second page</section>
