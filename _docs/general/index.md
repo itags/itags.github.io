@@ -500,6 +500,37 @@ Note that regArray.length gets its updated value in the next event-cycle, so che
 
 
 
+#CSS#
+
+Developing Itags need special attention concerning CSS. Other frameworks use the `shadowdom` to prevent `css bleed-in` and `css bleed-through`, which are inteferences of CSS outside the custom-element with the custom-element itself. Because Itags are serverside-renderable, they don't have a shadowdom. Preventing these CSS-issues needs special care when designing Itags.
+
+
+`Note: the current version (0.0.1) is not yet using this css-specification`
+
+##Prevent bleed-in##
+
+To prevent outerside CSS to effect the Itags, *all Element-types* are `fully` declared with !important and all prepended with the class-name `itag-rendered`:
+
+```css
+.itag-rendered div {background-color: transparent !important; ...}
+.itag-rendered button {background-color: E6E6E6 !important; ...}
+.itag-rendered a {color: #000 !important;...}
+```
+
+This css is delivered by the core-module (itags.core).
+
+
+##Prevent bleed-through##
+
+To prevent Itag its CSS to effect Elements outside, *all Itag its CSS* that is defined bythe Itag, should be prepended with the `Element-name`:
+
+```css
+i-select.itag-rendered li {color: red !important;}
+```
+
+To make sure to overrule the "prevented bleed-in"-styles, `!important` should be used once again as well as defining both the Element-type as well as the class-name `itag-rendered`.
+
+
 #Events#
 
 ##Event-listener##
