@@ -3,19 +3,10 @@ module: i-button
 maintainer: Marco Asbreuk
 title: Simple i-button
 intro: ""
-includeexample:
+includeexample: 5em
 ---
 
-<div>
-<i-button class="i-primary"><!--Click me--></i-button>
-</div>
-
-<script src="../../dist/itagsbuild-min.js"></script>
-<script>
-    document.getElement('i-button').focus();
-</script>
-
-<p class="spaced">Code-example:</p>
+<p>Code-example:</p>
 
 
 ```html

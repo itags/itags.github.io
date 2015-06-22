@@ -1,15 +1,12 @@
----
-module: i-button
-maintainer: Marco Asbreuk
-title: Multiple i-button
-intro: ""
-includeexample: 5em
----
 
-<p>Code-example:</p>
+<!DOCTYPE HTML>
+<html>
 
+<head>
+    <title>Simple i-checkbox</title>
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.5.0/pure-min.css">
+</head>
 
-```html
 <body plugin-fm="true" fm-manage="[itag-formelement], .normal">
     <i-button class="i-primary"><!--Click me--></i-button>
     <button class="normal pure-button pure-button-primary">Click me</button>
@@ -34,18 +31,11 @@ includeexample: 5em
     -->
     </i-select>
 
-    <script src="../../dist/itagsbuild.js"></script>
+    <script src="../../dist/itagsbuild-min.js"></script>
     <script>
-        require('itags');
         document.getElement('i-button').focus();
     </script>
 
 </body>
-```
 
-```js
-<script src="itagsbuild-min.js"></script>
-<script>
-    document.getElement('i-button').focus();
-</script>
-```
+</html>
