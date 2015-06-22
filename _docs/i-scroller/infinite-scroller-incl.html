@@ -41,9 +41,8 @@
     -->
     </i-scroller>
 
-    <script src="../../dist/itagsbuild.js"></script>
+    <script src="../../dist/itagsbuild-min.js"></script>
     <script>
-        require('itags');
         var iscroller = document.getElement('i-scroller'),
             model = {items: []},
             model2 = {items: []},
@@ -65,7 +64,6 @@
         ITSA.later(function() {
             iscroller2.swipe(10000, 250);
         }, 1200);
-
     </script>
 
 </body>

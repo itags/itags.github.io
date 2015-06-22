@@ -1,5 +1,5 @@
 ---
-module: i-tabpane
+module: xi-tabpane
 maintainer: Marco Asbreuk
 title: i-tabpane by markup
 intro: ""

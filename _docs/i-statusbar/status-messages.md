@@ -10,21 +10,31 @@ includeexample: 20em
 
 
 ```html
-<body>
-    <i-tabpane>
-        <i-item>Content first page</i-item>
-        <i-item>Content second page</i-item>
-        <i-item><i-head>item3 header</i-head>page 3</i-item>
-        <i-item>Content fourth page</i-item>
-        <i-item>Content fifth page</i-item>
-    </i-tabpane>
-</body>
+<i-button id="button-get1"><!-- Click me to get server-data --></i-button>
+<i-button id="button-get2"><!-- Click me to get a lot of server-data --></i-button>
+<i-statusbar events="*:statusmessage"></i-statusbar>
 ```
 
 ```js
 <script src="itagsbuild-min.js"></script>
 <script>
-    require('itags');
-    document.getElement('i-select').focus();
+    var url1 = 'http://servercors.itsa.io/example?example=1',
+        url2 = 'http://servercors.itsa.io/example/stream';
+
+    ITSA.Event.after(
+        'tap',
+        function() {
+            ITSA.IO.get(url1);
+        },
+        '#button-get1'
+    );
+
+    ITSA.Event.after(
+        'tap',
+        function() {
+            ITSA.IO.read(url2, {example: 1});
+        },
+        '#button-get2'
+    );
 </script>
 ```

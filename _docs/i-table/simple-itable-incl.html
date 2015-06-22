@@ -31,9 +31,8 @@
 
     <!-- `sortRendered` means: sort by the rendered array's value, not the value that is in the array -->
 
-    <script src="../../dist/itagsbuild.js"></script>
+    <script src="../../dist/itagsbuild-min.js"></script>
     <script>
-        require('itags');
         var iscroller = document.getElement('i-table'),
             model = {items: []},
             i;
@@ -53,12 +52,12 @@
 
 
 
-        ITSA.later(function() {
+        // ITSA.later(function() {
             // model['start-item'] = 28.75;
-        }, 5000);
-        ITSA.Event.after('*:selected', function(e) {
-            console.warn(e);
-        });
+        // }, 5000);
+        // ITSA.Event.after('*:selected', function(e) {
+        //     console.warn(e);
+        // });
     </script>
 
 </body>

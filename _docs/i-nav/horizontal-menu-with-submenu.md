@@ -10,23 +10,27 @@ includeexample: 20em
 
 
 ```html
-<body>
-    <i-select value="2" class="i-primary">
-    <!--
-        <option>item1</option>
-        <option>item2</option>
-        <option><span is="button">item3 header</span>item3 content</option>
-        <option>item4</option>
-        <option>item5</option>
-    -->
-    </i-select>
-</body>
+<i-nav horizontal="true">
+<!--
+    <option href="#">page1</option>
+    <option>
+        page2
+        <i-nav>
+        <!==
+            <option href="#">page2.1</option>
+        ==>
+        </i-nav>
+    </option>
+    <option href="#">page3</option>
+    <option href="#">page4</option>
+    <option href="#">page5</option>
+-->
+</i-nav>
 ```
 
 ```js
 <script src="itagsbuild-min.js"></script>
 <script>
-    require('itags');
-    document.getElement('i-select').focus();
+    document.getElement('i-nav').focus();
 </script>
 ```

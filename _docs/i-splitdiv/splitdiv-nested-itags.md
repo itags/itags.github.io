@@ -48,7 +48,4 @@ includeexample: 20em
 
 ```js
 <script src="itagsbuild-min.js"></script>
-<script>
-    require('itags');
-</script>
 ```

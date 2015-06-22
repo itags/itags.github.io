@@ -10,23 +10,35 @@ includeexample: 20em
 
 
 ```html
-<body>
-    <i-select value="2" class="i-primary">
-    <!--
-        <option>item1</option>
-        <option>item2</option>
-        <option><span is="button">item3 header</span>item3 content</option>
-        <option>item4</option>
-        <option>item5</option>
-    -->
-    </i-select>
-</body>
+<i-table start-item="1" editable="true" resizable="true" class="striped bordered">
+<!--
+    [{"key": "id", "width": 50},
+     {"key": "price", "width": 50},
+     {"key": "description", "width": 150},
+     {"key": "delivertime", "width": 50}]
+-->
+</i-table>
+
+<i-table start-item="1" editable="true" resizable="true" class="striped bordered">
+<!--
+    [{"key": "id", "width": 50},
+     {"key": "price", "width": 50},
+     {"key": "description", "width": 150},
+     {"key": "delivertime", "width": 50}]
+-->
+</i-table>
 ```
 
 ```js
 <script src="itagsbuild-min.js"></script>
 <script>
-    require('itags');
-    document.getElement('i-select').focus();
+    var itables = document.getAll('i-table'),
+        model = {items: []},
+        i;
+    for (i=0; i<5000; i++) {
+        model.items.push({id: i, price: 100*i, description: 'Desc. '+i, delivertime: 3*i+3});
+    }
+    itables[0].bindModel(model);
+    itables[1].bindModel(model);
 </script>
 ```

@@ -1,5 +1,5 @@
 ---
-module: i-menu
+module: xi-menu
 maintainer: Marco Asbreuk
 title: simple vertical menu
 intro: ""

@@ -43,7 +43,6 @@ includeexample: 20em
 ```js
 <script src="itagsbuild-min.js"></script>
 <script>
-    require('itags');
     ITSA.later(function() {
         document.getElement('i-splitdiv').model.divider = '125px';
     }, 1000);

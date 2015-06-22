@@ -67,12 +67,6 @@
             };
         document.bindModel(datamodel, 'i-form');
         document.getElement('i-form').focus();
-        ITSA.Event.after('i-form:action', function(e) {
-            console.warn('form asks for action '+JSON.stringify(e.target.model));
-        });
-        ITSA.Event.after('i-form:reset', function(e) {
-            console.warn('form resetted '+JSON.stringify(e.target.model));
-        });
     </script>
 
 </body>

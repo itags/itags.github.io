@@ -37,9 +37,8 @@
     -->
     </i-scroller>
 
-    <script src="../../dist/itagsbuild.js"></script>
+    <script src="../../dist/itagsbuild-min.js"></script>
     <script>
-        require('itags');
         var iscroller = document.getElement('i-scroller'),
             model = {items: []},
             infonode = document.getElement('#infonode'),
@@ -48,33 +47,6 @@
             model.items.push({nr: i, header1: Math.floor(i/10), header2: Math.floor(i/5)});
         }
         iscroller.bindModel(model);
-
-        ITSA.later(function() {
-            scrollContainer || (scrollContainer=iscroller.getElement('>span'));
-            infonode.setHTML('scrolledPages: '+scrollContainer.getData('_scrolledPages'));
-        }, 100, 10);
-
-        ITSA.later(function() {
-            // model['start-item'] = 315;
-            // model['start-item'] = 295;
-        }, 1000);
-/*
-        ITSA.later(function() {
-            iscroller.swipe(600, 200)
-            .then(function() {
-                return iscroller.swipe(600, 200);
-            })
-            .then(function() {
-                return iscroller.swipe(600, 200);
-            })
-            .then(function() {
-                return iscroller.swipe(-600, 200);
-            })
-            .then(function() {
-                return iscroller.swipe(-600, 200);
-            });
-        }, 1000);
-*/
     </script>
 
 </body>
