@@ -3,7 +3,7 @@ module: general
 maintainer: Marco Asbreuk
 title: Pseudo-classing itags
 intro: "This example shows how to pseudoclass an itag-definition, which can be used in the DOM"
-includeexample: 10em
+includeexample:
 ---
 
 <p>Code-example:</p>

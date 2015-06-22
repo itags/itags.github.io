@@ -3,7 +3,7 @@ module: general
 maintainer: Marco Asbreuk
 title: Sub-classing itags
 intro: "This example shows how to subclass an itag-definition, which can be used in the DOM"
-includeexample: 10em
+includeexample:
 ---
 
 <p>Code-example:</p>
