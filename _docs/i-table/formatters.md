@@ -14,7 +14,7 @@ includeexample: 20em
 <!--
     [{"key": "id", "width": 75, "sort": "hidden"},
      {"key": "description", "width": 150, "formatter": "Desc. {id}"},
-     {"key": "price", "width": 100, "formatter": "<% if (price===0) {%>for free<% } else { %>Euro <%=price%><% } %>"}]
+     {"key": "price", "width": 100, "formatter": "<% if (price===0) { %>for free<% } else { %>Euro <%=price%><% } %>"}]
 -->
 </i-table>
 ```
