@@ -3615,7 +3615,7 @@ Object.merge = function() {
  * @return {Object} new object with the prototype specified.
  */
 Object.newProto = function(obj, proto, clone) {
-    return clone ? obj.deepClone(true, proto) : Object.create(proto).merge(obj);
+    return clone ? obj.deepClone(true, proto) : Object.create(proto).merge(obj, {force: true});
 };
 
 /**
@@ -45133,6 +45133,7 @@ module.exports = function (window) {
                     model.columns = JSON.parse(model.template);
                 }
                 catch(err) {
+                    console.warn(err);
                     model.columns = [];
                 }
                 element.uniqueId = ITSA.idGenerator(&#x27;i-table&#x27;);
@@ -45435,19 +45436,26 @@ module.exports = function (window) {
                 formatter = col.formatter;
                 (value===undefined) &amp;&amp; (value=&#x27;&#x27;);
                 if (formatter) {
+console.warn(&#x27;getCellContent fase 1&#x27;);
                     if (formatter.indexOf(&#x27;&lt;%&#x27;)!==-1) {
+console.warn(&#x27;getCellContent fase 2&#x27;);
                         cellContent = microtemplate(formatter, value);
                     }
                     else if (/{\S+}/.test(formatter)) {
+console.warn(&#x27;getCellContent fase 3 --&gt; &#x27;+value);
+console.warn(item);
                         cellContent = formatter.substitute(value);
                     }
                     else {
+console.warn(&#x27;getCellContent fase 4&#x27;);
                         cellContent = formatter;
                     }
                 }
                 else {
+console.warn(&#x27;getCellContent fase 5&#x27;);
                     cellContent = value;
                 }
+console.warn(&#x27;getCellContent fase 5&#x27;);
                 return cellContent;
             },
 

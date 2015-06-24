@@ -3373,7 +3373,7 @@ Object.merge = function() {
  * @return {Object} new object with the prototype specified.
  */
 Object.newProto = function(obj, proto, clone) {
-    return clone ? obj.deepClone(true, proto) : Object.create(proto).merge(obj);
+    return clone ? obj.deepClone(true, proto) : Object.create(proto).merge(obj, {force: true});
 };
 
 /**
@@ -44891,6 +44891,7 @@ module.exports = function (window) {
                     model.columns = JSON.parse(model.template);
                 }
                 catch(err) {
+                    console.warn(err);
                     model.columns = [];
                 }
                 element.uniqueId = ITSA.idGenerator('i-table');
@@ -45189,21 +45190,21 @@ module.exports = function (window) {
 
             getCellContent: function(item, col) {
                 var value, formatter, cellContent;
-                value = item[col.key];
                 formatter = col.formatter;
-                (value===undefined) && (value='');
                 if (formatter) {
                     if (formatter.indexOf('<%')!==-1) {
-                        cellContent = microtemplate(formatter, value);
+                        cellContent = microtemplate(formatter, item);
                     }
                     else if (/{\S+}/.test(formatter)) {
-                        cellContent = formatter.substitute(value);
+                        cellContent = formatter.substitute(item);
                     }
                     else {
                         cellContent = formatter;
                     }
                 }
                 else {
+                    value = item[col.key];
+                    (value===undefined) && (value='');
                     cellContent = value;
                 }
                 return cellContent;

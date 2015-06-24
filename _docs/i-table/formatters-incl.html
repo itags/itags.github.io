@@ -1,0 +1,47 @@
+
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>Simple i-table</title>
+    <style type="text/css">
+        html, body {
+            height: 100%;
+        }
+        i-table {
+            width: 500px;
+            height: 500px;
+            top: 20px;
+            left: 50px;
+            font-size: 120%;
+        }
+    </style>
+</head>
+
+<body>
+
+    <i-table class="striped bordered">
+    <!--
+        [{"key": "id", "width": 75, "sort": "hidden"},
+         {"key": "description", "width": 150, "formatter": "Desc. {id}"},
+         {"key": "price", "width": 100, "formatter": "<% if (price===0) {%>for free<% } else { %>Euro <%=price%><% } %>"}]
+    -->
+    </i-table>
+
+    <script src="../../dist/itagsbuild.js"></script>
+    <script>
+        var iscroller = document.getElement('i-table'),
+            model = {items: []},
+            i;
+        for (i=0; i<100; i++) {
+            model.items.push({
+                id: i,
+                price: (i<3) ? 0 : 100*i
+            });
+        }
+        iscroller.bindModel(model);
+    </script>
+
+</body>
+
+</html>
