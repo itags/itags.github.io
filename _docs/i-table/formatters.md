@@ -10,12 +10,11 @@ includeexample: 20em
 
 
 ```html
-<i-table start-item="1" reorderable="true" resizable="true" sortable="true" class="striped bordered">
+<i-table class="striped bordered">
 <!--
     [{"key": "id", "width": 75, "sort": "hidden"},
-     {"key": "price", "width": 100, "sort": "down", "sortRendered": true},
-     {"key": "description", "width": 150},
-     {"key": "delivertime"}]
+     {"key": "description", "width": 150, "formatter": "Desc. {id}"},
+     {"key": "price", "width": 100, "formatter": "<% if (price===0) {%>for free<% } else { %>Euro <%=price%><% } %>"}]
 -->
 </i-table>
 ```
@@ -26,8 +25,11 @@ includeexample: 20em
     var iscroller = document.getElement('i-table'),
         model = {items: []},
         i;
-    for (i=0; i<10000; i++) {
-        model.items.push({id: i, price: 100*i, description: 'Desc. '+i, delivertime: 3*i+3});
+    for (i=0; i<100; i++) {
+        model.items.push({
+            id: i,
+            price: (i<3) ? 0 : 100*i
+        });
     }
     iscroller.bindModel(model);
 </script>
