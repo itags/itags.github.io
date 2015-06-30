@@ -251,11 +251,45 @@ module.exports = function (window) {
         microtemplate = require(&#x27;i-parcel/lib/microtemplate.js&#x27;),
         IScroller = require(&#x27;i-scroller&#x27;)(window),
         RESIZE_MARGIN = 5,
+        Event = ITSA.Event,
         Itag;
 
     if (!window.ITAGS[itagName]) {
 
         require(&#x27;./global-events.js&#x27;)(window);
+
+        Event.after(&#x27;tap&#x27;, function(e) {
+            var node = e.target,
+                element = node.inside(&#x27;i-table&#x27;),
+                model = element.model,
+                prevValue, newValue;
+            if (model[&#x27;rows-selectable&#x27;].toLowerCase()===&#x27;true&#x27;) {
+                element.getAll(&#x27;section.i-table-row.selected&#x27;).removeClass(&#x27;selected&#x27;);
+                node.setClass(&#x27;selected&#x27;);
+                newValue = node.getAttr(&#x27;data-index&#x27;);
+                prevValue = model[&#x27;rows-selected&#x27;];
+                if (prevValue!==newValue) {
+                    model[&#x27;rows-selected&#x27;] = newValue;
+                    /**
+                    * Emitted when a the i-select changes its value
+                    *
+                    * @event i-select:valuechange
+                    * @param e {Object} eventobject including:
+                    * @param e.target {HtmlElement} the i-select element
+                    * @param e.prevValue {Number} the selected item, starting with 1
+                    * @param e.newValue {Number} the selected item, starting with 1
+                    * @param e.buttonText {String} the text that will appear on the button
+                    * @param e.listText {String} the text as it is in the list
+                    * @since 0.1
+                    */
+                    element.emit(&#x27;rowselect&#x27;, {
+                        prevValue: prevValue,
+                        newValue: newValue,
+                        node: node
+                    });
+                }
+            }
+        }, &#x27;i-table[rows-selectable] section.i-table-row&#x27;);
 
         Itag = IScroller.subClass(itagName, {
 
@@ -269,7 +303,7 @@ module.exports = function (window) {
                     model.columns = JSON.parse(model.template);
                 }
                 catch(err) {
-                    console.warn(err);
+                    console.warn(itagName, &#x27; template is not a JSON object&#x27;);
                     model.columns = [];
                 }
                 element.uniqueId = ITSA.idGenerator(&#x27;i-table&#x27;);
@@ -279,7 +313,11 @@ module.exports = function (window) {
                 reorderable: &#x27;boolean&#x27;,
                 resizable: &#x27;boolean&#x27;,
                 sortable: &#x27;string&#x27;,
-                sort: &#x27;string&#x27;
+                sort: &#x27;string&#x27;,
+                &#x27;row-class&#x27;: &#x27;string&#x27;,
+                &#x27;row-data&#x27;: &#x27;string&#x27;,
+                &#x27;rows-selected&#x27;: &#x27;string&#x27;,
+                &#x27;rows-selectable&#x27;: &#x27;string&#x27;
             },
 
             // adjust behaviour of the iscroller:
@@ -474,7 +512,7 @@ module.exports = function (window) {
                         css += &#x27;i-table[i-id=&quot;&#x27;+element.uniqueId+&#x27;&quot;] section.i-table-row &gt;section:nth-child(&#x27;+(i+1)+&#x27;), &#x27;+
                                &#x27;i-table[i-id=&quot;&#x27;+element.uniqueId+&#x27;&quot;] section.i-table-row &gt;section:nth-child(&#x27;+(i+1)+&#x27;) section[is=&quot;td&quot;], &#x27;+
                                &#x27;i-table[i-id=&quot;&#x27;+element.uniqueId+&#x27;&quot;] &gt;section[is=&quot;thead&quot;] &gt;span:nth-child(&#x27;+(i+1)+&#x27;), &#x27;+
-                               &#x27;i-table[i-id=&quot;&#x27;+element.uniqueId+&#x27;&quot;] &gt;section[is=&quot;thead&quot;] &gt;span:nth-child(&#x27;+(i+1)+&#x27;) span[is=&quot;th&quot;] &#x27;+
+                               &#x27;i-table[i-id=&quot;&#x27;+element.uniqueId+&#x27;&quot;] &gt;section[is=&quot;thead&quot;] &gt;span:nth-child(&#x27;+(i+1)+&#x27;) section[is=&quot;th&quot;] &#x27;+
                                &#x27;{width: &#x27;+width+&#x27;px;&#x27;+((width===0) ? &#x27;height:0;&#x27; : &#x27;&#x27;)+&#x27;}&#x27;;
                     }
                     else {
@@ -591,33 +629,97 @@ module.exports = function (window) {
             drawItem: function(oneItem, prevItem, index) {
                 var element = this,
                     model = element.model,
-                    editCell = model.editCell,
                     columns = model.columns,
                     odd = ((index%2)!==0),
                     draggedCol = element.getData(&#x27;_draggedCol&#x27;),
-                    rowContent = &#x27;&lt;section data-index=&quot;&#x27;+index+&#x27;&quot; class=&quot;i-table-row &#x27;+(odd ? &#x27; odd&#x27; : &#x27; even&#x27;)+&#x27;&quot;&gt;&#x27;,
-                    len, i, col, cellContent, dataEditing;
+                    rowClass = model[&#x27;row-class&#x27;],
+                    rowData = model[&#x27;row-data&#x27;],
+                    rowSelectedClass = model[&#x27;rows-selected&#x27;],
+                    selectedClass = &#x27;&#x27;,
+                    extraRowData = &#x27;&#x27;,
+                    len, i, col, cellContent, className, cellClass, extraRowClass, rowContent;
                 if (!Object.isObject(oneItem)) {
                     console.warn(&#x27;table item is no object!&#x27;);
                     return;
                 }
+                if (rowSelectedClass) {
+                    if (rowSelectedClass[0]===&#x27;[&#x27;) {
+                        try {
+                            rowSelectedClass = JSON.parse(rowSelectedClass);
+                            rowSelectedClass.contains(index) &amp;&amp; (selectedClass=&#x27; selected&#x27;);
+                        }
+                        catch (err) {
+                            console.warn(&#x27;Invalid Array for rows-selected&#x27;);
+                            rowSelectedClass = [];
+                        }
+                    }
+                    else {
+                        // DO NOT type-compare, for rowSelectedClass is a String and index is a Number
+                        (rowSelectedClass==index) &amp;&amp; (selectedClass=&#x27; selected&#x27;);
+                    }
+                }
+                extraRowClass = rowClass ? &#x27; &#x27;+element.templater(oneItem, rowClass, index) : &#x27;&#x27;;
+                if (rowData) {
+                    extraRowData = &#x27; data-row=&quot;&#x27;+element.templater(oneItem, rowData, index)+&#x27;&quot;&#x27;;
+                }
+                rowContent = &#x27;&lt;section data-index=&quot;&#x27;+index+&#x27;&quot;&#x27;+extraRowData+&#x27; class=&quot;i-table-row &#x27;+(odd ? &#x27; odd&#x27; : &#x27; even&#x27;)+selectedClass+extraRowClass+&#x27;&quot;&gt;&#x27;,
                 len = columns.length;
                 for (i=0; i&lt;len; i++) {
                     col = columns[i];
-                    // NEED DOUBLE SPAN!
+                    // NEED DOUBLE SECTION!
                     // outer section has padding=0, so we can easily resize below padding, while the padding is applied to the inner section.
-                    if (editCell &amp;&amp; element.hasClass(&#x27;editing&#x27;) &amp;&amp; (editCell.col===i) &amp;&amp; (editCell.row===index)) {
-                        cellContent = &#x27;&lt;input value=&quot;&#x27;+(oneItem[col.key] || &#x27;&#x27;)+&#x27;&quot; /&gt;&#x27;;
-                        dataEditing = &#x27;  data-editing=&quot;true&quot;&#x27;;
-                    }
-                    else {
-                        cellContent = element.getCellContent(oneItem, col);
-                        dataEditing = &#x27;&#x27;;
-                    }
-                    rowContent += &#x27;&lt;section&gt;&lt;section is=&quot;td&quot;&#x27;+dataEditing+&#x27; prop=&quot;&#x27;+col.key+&#x27;&quot;&#x27;+((draggedCol===i) ? &#x27; class=&quot;col-dragging&quot;&#x27; : &#x27;&#x27;)+&#x27;&gt;&#x27; + cellContent + &#x27;&lt;/section&gt;&lt;/section&gt;&#x27;;
+                    cellContent = element.cellContent(col, oneItem, index, i);
+                    cellClass = col[&#x27;class&#x27;];
+                    className = cellClass ? (&#x27; &#x27;+element.cellClass(oneItem, cellClass, index, cellContent)) : &#x27;&#x27;;
+                    (draggedCol===i) &amp;&amp; (className+=&#x27; col-dragging&#x27;);
+                    (className.trim()!==&#x27;&#x27;) &amp;&amp; (className=&#x27; class=&quot;&#x27;+className+&#x27;&quot;&#x27;);
+                    rowContent += &#x27;&lt;section&gt;&lt;section is=&quot;td&quot;&#x27;+className+cellContent.data+&#x27; prop=&quot;&#x27;+col.key+&#x27;&quot;&gt;&#x27; + cellContent.content + &#x27;&lt;/section&gt;&lt;/section&gt;&#x27;;
                 }
                 rowContent += &#x27;&lt;/section&gt;&#x27;;
                 return rowContent;
+            },
+
+            cellContent: function(col, oneItem, rowIndex, colIndex, attributeData) {
+                var element = this,
+                    model = element.model,
+                    editCell = model.editCell,
+                    content, data;
+                if (editCell &amp;&amp; element.hasClass(&#x27;editing&#x27;) &amp;&amp; (editCell.col===colIndex) &amp;&amp; (editCell.row===rowIndex)) {
+                    content = &#x27;&lt;input value=&quot;&#x27;+(oneItem[col.key] || &#x27;&#x27;)+&#x27;&quot; /&gt;&#x27;;
+                    data = (attributeData ? (&#x27; &#x27;+attributeData) : &#x27;&#x27;) + &#x27; data-editing=&quot;true&quot;&#x27;;
+                }
+                else {
+                    content = element.getCellContent(oneItem, col);
+                    data = (attributeData ? (&#x27; &#x27;+attributeData) : &#x27;&#x27;);
+                }
+                return {
+                    data: data,
+                    content: content
+                };
+            },
+
+            cellClass: function(oneItem, classFormatter, index /*, cellContentObj */) {
+                return this.templater(oneItem, classFormatter, index);
+            },
+
+            getItems: function(/* tdNode */) {
+                return this.model.items;
+            },
+
+            templater: function(item, formatter /*, index */) {
+                var returnValue;
+                if (formatter) {
+                    if (formatter.indexOf(&#x27;&lt;%&#x27;)!==-1) {
+                        returnValue = microtemplate(formatter, item);
+                    }
+                    else if (/{\S+}/.test(formatter)) {
+                        returnValue = formatter.substitute(item);
+                    }
+                    else {
+                        returnValue = formatter;
+                    }
+                }
+                return returnValue;
             },
 
             destroy: function() {

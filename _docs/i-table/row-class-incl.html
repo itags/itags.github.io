@@ -15,25 +15,22 @@
             left: 50px;
             font-size: 120%;
         }
-        i-table section[is="td"].red {
+        i-table section.red section[is="td"] {
             background-color: #F00 !important;
         }
-        i-table section[is="td"].green {
+        i-table section.green section[is="td"] {
             background-color: #0F0 !important;
-        }
-        i-table section[is="td"].blue {
-            background-color: #00F !important;
         }
     </style>
 </head>
 
 <body>
 
-    <i-table class="striped bordered">
+    <i-table class="striped bordered" row-class="<% if (price===0) {%>red<% } else { %>green<% } %>">
     <!--
         [{"key": "id", "width": 75, "sort": "hidden"},
-         {"key": "description", "width": 150, "formatter": "Desc. {id}", "class": "red"},
-         {"key": "price", "width": 100, "formatter": "<% if (price===0) {%>for free<% } else { %>Euro <%=price%><% } %>", "class":"<% if (price===0) {%>green<% } else { %>blue<% } %>"}]
+         {"key": "description", "width": 150, "formatter": "Desc. {id}"},
+         {"key": "price", "width": 100}]
     -->
     </i-table>
 

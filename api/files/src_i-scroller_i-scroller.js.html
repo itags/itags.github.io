@@ -334,7 +334,6 @@ module.exports = function (window) {
         Event.after(&#x27;dd&#x27;, function(e) {
             // start dragging
             var node = e.target,
-                sourceNode = e.sourceTarget,
                 iscroller = node.getParent(),
                 scrollContainer = iscroller.getData(&#x27;_scrollContainer&#x27;),
                 dragPromise = e.dd,

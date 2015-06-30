@@ -1269,9 +1269,9 @@ module.exports = function (window) {
     DOCUMENT.bindModel = function(model, selector, mergeCurrent, fineGrain) {
         console.log(NAME+&#x27;bindModel&#x27;);
         var documentElement = DOCUMENT.documentElement,
-            listener, elements, observer;
-        if ((typeof selector === &#x27;string&#x27;) &amp;&amp; (selector.length&gt;0) &amp;&amp; !BINDING_LIST[selector]) {
-            BINDING_LIST[selector] = true;
+            listener, elements, observer, returnObject;
+        if ((typeof selector === &#x27;string&#x27;) &amp;&amp; (selector.length&gt;0)) {
+            BINDING_LIST[selector] &amp;&amp; BINDING_LIST[selector].detach();
             elements = documentElement.getAll(selector);
             elements.forEach(function(element) {
                 itagCore.bindModel(element, (typeof fineGrain===&#x27;function&#x27;) ? fineGrain(element, model) : model, mergeCurrent);
@@ -1282,7 +1282,7 @@ module.exports = function (window) {
             }, function(e) {
                 return e.target.matches(selector);
             });
-            return {
+            returnObject = {
                 detach: function() {
                     listener.detach();
                     elements = documentElement.getAll(selector);
@@ -1293,6 +1293,8 @@ module.exports = function (window) {
                     delete BINDING_LIST[selector];
                 }
             };
+            BINDING_LIST[selector] = returnObject;
+            return returnObject;
         }
         // else
         return {
