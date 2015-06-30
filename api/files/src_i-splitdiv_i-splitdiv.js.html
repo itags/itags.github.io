@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>src/itags.build/itags.build.js - Itsa</title>
+    <title>src/i-splitdiv/i-splitdiv.js - Itsa</title>
     <link rel="stylesheet" href="http://yui.yahooapis.com/3.9.1/build/cssgrids/cssgrids-min.css">
     <link rel="stylesheet" href="../assets/vendor/prettify/prettify-min.css">
     <link rel="stylesheet" href="../assets/css/main.css" id="site_styles">
@@ -236,65 +236,183 @@
             <div class="apidocs">
                 <div id="docs-main">
                     <div class="content">
-                        <h1 class="file-heading">File: src/itags.build/itags.build.js</h1>
+                        <h1 class="file-heading">File: src/i-splitdiv/i-splitdiv.js</h1>
 
 <div class="file">
     <pre class="code prettyprint linenums">
-/**
- * The ITSA module is an aggregator for all the individual modules that the library uses.
- * The developer is free to use it as it is or tailor it to contain whatever modules
- * he/she might need in the global namespace.
- *
- * The modules themselves work quite well independent of this module and can be used
- * separately without the need of them being integrated under one globa namespace.
- *
- *
- * &lt;i&gt;Copyright (c) 2014 ITSA - https://github.com/itsa&lt;/i&gt;
- * New BSD License - http://choosealicense.com/licenses/bsd-3-clause/
- *
- * @module itsa.build
- *
-*/
-(function (window) {
-
+module.exports = function (window) {
     &quot;use strict&quot;;
-    require(&#x27;./extra/dialog&#x27;);
-    require(&#x27;i-tabpane&#x27;)(window);
-    require(&#x27;i-select&#x27;)(window);
-    require(&#x27;i-parcel&#x27;)(window);
-    require(&#x27;i-label&#x27;)(window);
-    require(&#x27;i-input&#x27;)(window);
-    require(&#x27;i-button&#x27;)(window);
-    require(&#x27;i-reset&#x27;)(window);
-    require(&#x27;i-form&#x27;)(window);
-    require(&#x27;i-formvalue&#x27;)(window);
-    require(&#x27;i-checkbox&#x27;)(window);
-    require(&#x27;i-statusbar&#x27;)(window);
-    require(&#x27;i-menu&#x27;)(window);
-    require(&#x27;i-nav&#x27;)(window);
-    require(&#x27;i-link&#x27;)(window);
-    require(&#x27;i-splitdiv&#x27;)(window);
-    require(&#x27;i-splitdiv-secondfixed&#x27;)(window);
-    require(&#x27;i-splitdiv3&#x27;)(window);
-    require(&#x27;i-scroller&#x27;)(window);
-    require(&#x27;i-table&#x27;)(window);
-    require(&#x27;i-table-multisource&#x27;)(window);
-    require(&#x27;i-chart-line&#x27;)(window);
 
-    // in case of async requests, we look for the global method: &#x60;window._ITSAscripts2&#x60;
-    // if there, then we execute it. This is used in these situations:
-    //
-    // &lt;script async src=&quot;itsabuild.js&quot;&gt;&lt;/script&gt;
-    // &lt;script async src=&quot;some_second_script.js&quot;&gt;&lt;/script&gt;
-    //
-    // when they need to be executed in order
-    // should &#x60;script2&#x60; be loaded after, then force it to execute itself:
+    require(&#x27;./css/i-splitdiv.css&#x27;); // &lt;-- define your own itag-name here
 
-    window._ITSAexecutedScripts || (window._ITSAexecutedScripts={});
-    window._ITSAexecutedScripts.itags = true;
-    (typeof window._ITSAscriptsModel===&#x27;function&#x27;) &amp;&amp; window._ITSAscriptsModel();
+    var itagCore = require(&#x27;itags.core&#x27;)(window),
+        itagName = &#x27;i-splitdiv&#x27;, // &lt;-- define your own itag-name here
+        DOCUMENT = window.document,
+        documentElement = DOCUMENT.documentElement,
+        bodyElement = DOCUMENT.body,
+        ITSA = window.ITSA,
+        Event = ITSA.Event,
+        DIVIDER = &#x27;divider&#x27;,
+        Itag;
 
-})(global.window || require(&#x27;node-win&#x27;));
+    if (!window.ITAGS[itagName]) {
+
+        Event.after(&#x27;mousedown&#x27;, function(e) {
+            var resizeNode = e.target,
+                element = resizeNode.inside(&#x27;i-splitdiv&#x27;),
+                sectionId = resizeNode.getData(&#x27;_section&#x27;),
+                reverseResize = resizeNode.getData(&#x27;_reverse&#x27;),
+                modelDivider = DIVIDER + (sectionId-1),
+                section = element.getData(&#x27;_section&#x27;+sectionId),
+                borderSection = resizeNode.getData(&#x27;_borderNode&#x27;),
+                model = element.model,
+                horizontal = model.horizontal,
+                size = horizontal ? &#x27;width&#x27; : &#x27;height&#x27;,
+                maxSize = element[&#x27;inner&#x27;+ (horizontal ? &#x27;Width&#x27; : &#x27;Height&#x27;)] - (parseInt(borderSection.getStyle(&#x27;border-&#x27;+(horizontal ? (reverseResize ? &#x27;right&#x27; : &#x27;left&#x27;) : (reverseResize ? &#x27;bottom&#x27; : &#x27;top&#x27;))+&#x27;-width&#x27;), 10) || 0),
+                startPos, initialSize, moveListener, setNewSize;
+            setNewSize = function(newSize) {
+                var prevSize = model[modelDivider];
+                if (newSize!==prevSize) {
+                    model[modelDivider] = newSize;
+                    /**
+                    * Emitted when a the i-select changes its value
+                    *
+                    * @event i-select:valuechange
+                    * @param e {Object} eventobject including:
+                    * @param e.target {HtmlElement} the i-select element
+                    * @param e.prevValue {Number} the selected item, starting with 1
+                    * @param e.newValue {Number} the selected item, starting with 1
+                    * @param e.buttonText {String} the text that will appear on the button
+                    * @param e.listText {String} the text as it is in the list
+                    * @since 0.1
+                    */
+                    element.emit(&#x27;dividerchange&#x27;, {
+                        prevValue: prevSize,
+                        newValue: newSize
+                    });
+                }
+            };
+            if ((modelDivider===DIVIDER+&#x27;0&#x27;) || (modelDivider===DIVIDER+&#x27;1&#x27;)) {
+                modelDivider = DIVIDER;
+            }
+            element.setClass(&#x27;i-resizing&#x27;);
+            startPos = horizontal ? e.clientX : e.clientY;
+            initialSize = section[size];
+            moveListener = Event.after(&#x27;mousemove&#x27;, function(e2) {
+                var newPos = horizontal ? e2.clientX : e2.clientY,
+                    difference = newPos - startPos,
+                    newSize;
+                reverseResize &amp;&amp; (difference=-difference);
+                newSize = Math.inbetween(0, initialSize + difference, maxSize) + &#x27;px&#x27;;
+                setNewSize(newSize);
+            });
+
+            Event.onceAfter(&#x27;mouseup&#x27;, function(e3) {
+                var newPos = horizontal ? e3.clientX : e3.clientY,
+                    difference = newPos - startPos,
+                    newSize;
+                reverseResize &amp;&amp; (difference=-difference);
+                newSize = Math.inbetween(0, initialSize + difference, maxSize) + &#x27;px&#x27;;
+                moveListener.detach();
+                element.removeClass(&#x27;i-resizing&#x27;);
+                setNewSize(newSize);
+            });
+        }, &#x27;i-splitdiv &gt;section &gt;section.resize-handle&#x27;);
+
+        Itag = DOCUMENT.defineItag(itagName, {
+            attrs: {
+                horizontal: &#x27;boolean&#x27;,
+                divider: &#x27;string&#x27;,
+                &#x27;divider-min&#x27;: &#x27;string&#x27;,
+                &#x27;divider-max&#x27;: &#x27;string&#x27;,
+                resizable: &#x27;boolean&#x27;,
+                &#x27;full-page&#x27;: &#x27;boolean&#x27;
+            },
+
+            render: function() {
+                var element = this,
+                    designNode = element.getItagContainer(),
+                    sections = designNode.getAll(&#x27;&gt;section&#x27;),
+                    container = element.append(&#x27;&lt;section&gt;&lt;/section&gt;&#x27;),
+                    divider, node;
+                if (sections[0]) {
+                    sections[0].setAttr(&#x27;section&#x27;, &#x27;first&#x27;, true);
+                    element.setData(&#x27;_section1&#x27;, container.append(&#x27;&lt;section container=&quot;first&quot;&gt;&#x27;+sections[0].getOuterHTML(null, true)+&#x27;&lt;/section&gt;&#x27;));
+                     // add the divider:
+                    divider = container.addSystemElement(&#x27;&lt;section class=&quot;resize-handle first&quot;&gt;&lt;/section&gt;&#x27;);
+                    divider.setData(&#x27;_section&#x27;, 1);
+                    element.setData(&#x27;_divider1&#x27;, divider);
+                }
+                if (sections[1]) {
+                    sections[1].setAttr(&#x27;section&#x27;, &#x27;second&#x27;, true);
+                    node = container.append(&#x27;&lt;section container=&quot;second&quot;&gt;&#x27;+sections[1].getOuterHTML(null, true)+&#x27;&lt;/section&gt;&#x27;);
+                    element.setData(&#x27;_section2&#x27;, node);
+                    divider &amp;&amp; divider.setData(&#x27;_borderNode&#x27;, node);
+                }
+                if (element.model[&#x27;full-page&#x27;]) {
+                    documentElement.setClass(&#x27;i-splitdiv-full-page&#x27;);
+                    bodyElement.setClass(&#x27;i-splitdiv-full-page&#x27;);
+                }
+            },
+
+            sync: function() {
+                var element = this,
+                    model = element.model,
+                    section1 = element.getData(&#x27;_section1&#x27;),
+                    section2 = element.getData(&#x27;_section2&#x27;),
+                    dividerNode = element.getData(&#x27;_divider1&#x27;),
+                    reverseResize = dividerNode.getData(&#x27;_reverse&#x27;),
+                    resizeSection = element.getData(&#x27;_section&#x27;+dividerNode.getData(&#x27;_section&#x27;)),
+                    divider = model.divider,
+                    size, removeSize, value, indent;
+                if (section1 &amp;&amp; section2) {
+                    if (model.horizontal) {
+                        size = &#x27;width&#x27;;
+                        removeSize = &#x27;height&#x27;;
+                        indent = reverseResize ? &#x27;right&#x27; : &#x27;left&#x27;;
+                    }
+                    else {
+                        size = &#x27;height&#x27;;
+                        removeSize = &#x27;width&#x27;;
+                        indent = reverseResize ? &#x27;bottom&#x27; : &#x27;top&#x27;;
+                    }
+                    value = model[&#x27;divider-min&#x27;];
+                    if (value) {
+                        resizeSection.setInlineStyle(&#x27;min-&#x27;+size, value);
+                    }
+                    else {
+                        resizeSection.removeInlineStyle(&#x27;min-&#x27;+size);
+                    }
+                    value = model[&#x27;divider-max&#x27;];
+                    if (value) {
+                        resizeSection.setInlineStyle(&#x27;max-&#x27;+size, value);
+                    }
+                    else {
+                        resizeSection.removeInlineStyle(&#x27;max-&#x27;+size);
+                    }
+                    resizeSection.removeInlineStyle(&#x27;min-&#x27;+removeSize);
+                    resizeSection.removeInlineStyle(&#x27;max-&#x27;+removeSize);
+                    resizeSection.removeInlineStyle(removeSize);
+                    value = divider;
+                    resizeSection.setInlineStyle(size, value);
+                    dividerNode.setInlineStyle(indent, (resizeSection[size] - Math.round(dividerNode[size]/2))+&#x27;px&#x27;);
+                }
+            },
+
+            destroy: function() {
+                if (this.model[&#x27;full-page&#x27;]) {
+                    documentElement.removeClass(&#x27;i-splitdiv-full-page&#x27;);
+                    bodyElement.removeClass(&#x27;i-splitdiv-full-page&#x27;);
+                }
+            }
+        });
+
+        itagCore.setContentVisibility(Itag, true);
+        window.ITAGS[itagName] = Itag;
+    }
+
+    return window.ITAGS[itagName];
+};
     </pre>
 </div>
 

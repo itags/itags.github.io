@@ -1,0 +1,54 @@
+
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>Simple i-table</title>
+    <style type="text/css">
+        html, body {
+            height: 100%;
+        }
+        i-table {
+            width: 500px;
+            height: 40%;
+            top: 120px;
+            left: 50px;
+            font-size: 120%;
+        }
+        i-table section[is="td"].different{
+            background-color: #F00 !important;
+            color: #FFF !important;
+        }
+    </style>
+</head>
+
+<body>
+
+    <i-table is="multisource" sortable="true" class="striped bordered">
+    <!--
+        [{"key": "id", "width": 50},
+         {"key": "description", "width": 150},
+         {"key": "description", "source": 2, "width": 150, "class":"<% if ($1.colormatch!==$2.colormatch) {%>different<% } %>"}]
+    -->
+    </i-table>
+
+    <!-- `sortRendered` means: sort by the rendered array's value, not the value that is in the array -->
+
+    <script src="../../dist/itagsbuild-min.js"></script>
+    <script>
+        var iscroller = document.getElement('i-table'),
+            model = {
+                items: [],
+                items2: []
+            },
+            i;
+        for (i=0; i<4; i++) {
+            model.items.push({id: i, description: 'Description '+i, colormatch: Math.round(i/3)});
+            model.items2.push({id: i, description: 'Second description '+i, colormatch: Math.floor(i/3)});
+        }
+        iscroller.bindModel(model);
+    </script>
+
+</body>
+
+</html>

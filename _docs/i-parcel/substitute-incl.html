@@ -17,8 +17,12 @@
     <script src="../../dist/itagsbuild-min.js"></script>
     <script>
         var iparcel = document.getElement('i-parcel'),
-            model = {what: 'a template'};
+            model = {what: 'a template'},
+            model2 = {what: 'the second one'};
         iparcel.bindModel(model);
+        ITSA.later(function() {
+            iparcel.bindModel(model2);
+        }, 1000);
     </script>
 
 </body>
